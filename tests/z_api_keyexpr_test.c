@@ -24,13 +24,13 @@
 void canonize() {
     char keyexpr[256];
     int8_t err;
-    uintptr_t len_old, len_new;
+    size_t len_old, len_new;
 
     strcpy(keyexpr, "a/**/**/c");
     len_old = len_new = strlen(keyexpr);
-    printf("'%s', len = %lu -> ", keyexpr, len_old);
+    printf("'%s', len = %zu -> ", keyexpr, len_old);
     err = z_keyexpr_canonize(keyexpr, &len_new);
-    printf("'%s', len = %lu, err = %d\n", keyexpr, len_new, err);
+    printf("'%s', len = %zu, err = %d\n", keyexpr, len_new, err);
     assert(err == 0);
     assert(len_new == len_old - 3);
     assert(strcmp(keyexpr, "a/**/c") == 0);
@@ -45,7 +45,7 @@ void canonize() {
     strcpy(keyexpr, "a/**/**/c");
     z_view_keyexpr_t key_expr_canonized;
     z_view_keyexpr_from_str_autocanonize(&key_expr_canonized, keyexpr);
-    assert(z_view_keyexpr_check(&key_expr_canonized) == true);
+    assert(z_view_keyexpr_is_empty(&key_expr_canonized) == false);
     assert(strcmp(keyexpr, "a/**/c") == 0);
     z_view_string_t key_exp_canonized_bytes;
     z_keyexpr_as_view_string(z_loan(key_expr_canonized), &key_exp_canonized_bytes);
@@ -86,18 +86,18 @@ void undeclare() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    z_open(&s, z_move(config));
+    z_open(&s, z_move(config), NULL);
 
     z_view_keyexpr_t view_ke;
     z_view_keyexpr_from_str(&view_ke, "test/thr");
     z_owned_keyexpr_t ke;
-    z_declare_keyexpr(&ke, z_loan(s), z_loan(view_ke));
-    assert(z_keyexpr_check(&ke));
-    z_undeclare_keyexpr(&ke, z_loan(s));
-    assert(!z_keyexpr_check(&ke));
+    z_declare_keyexpr(z_loan(s), &ke, z_loan(view_ke));
+    assert(z_internal_keyexpr_check(&ke));
+    z_undeclare_keyexpr(z_loan(s), z_move(ke));
+    assert(!z_internal_keyexpr_check(&ke));
 }
 
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
 void relation_to() {
     z_view_keyexpr_t foobar, foostar, barstar;
     z_view_keyexpr_from_str(&foobar, "foo/bar");
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
     includes();
     intersects();
     undeclare();
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
     relation_to();
 #endif
 }

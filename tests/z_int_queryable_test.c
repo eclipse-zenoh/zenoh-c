@@ -30,7 +30,7 @@ const uint64_t TEST_SN = 24;
 const uint64_t TEST_TS = 401706000;
 const uint8_t TEST_ID = 123;
 
-void query_handler(const z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t *query, void *context) {
     static int value_num = 0;
 
     z_view_string_t params;
@@ -45,7 +45,7 @@ void query_handler(const z_loaned_query_t *query, void *context) {
     // z_owned_source_info_t source_info;
     // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
 
-    // options.source_info = &source_info;
+    // options.source_info = z_move(source_info);
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, values[value_num]);
@@ -63,7 +63,7 @@ int run_queryable() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         return -1;
     }
@@ -71,10 +71,10 @@ int run_queryable() {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, keyexpr);
+    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
     z_owned_queryable_t qable;
     ;
-    if (z_declare_queryable(&qable, z_loan(s), z_loan(ke), z_move(callback), NULL) != Z_OK) {
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), NULL) != Z_OK) {
         printf("Unable to create queryable.\n");
         return -1;
     }
@@ -82,8 +82,8 @@ int run_queryable() {
     SEM_POST(sem);
     z_sleep_s(10);
 
-    z_undeclare_queryable(z_move(qable));
-    z_close(z_move(s));
+    z_drop(z_move(qable));
+    z_drop(z_move(s));
     return 0;
 }
 
@@ -93,7 +93,7 @@ int run_get() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    if (z_open(&s, z_move(config))) {
+    if (z_open(&s, z_move(config), NULL)) {
         perror("Unable to open session!");
         return -1;
     }
@@ -114,14 +114,14 @@ int run_get() {
 
             const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
             z_owned_string_t payload_string;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+            z_bytes_to_string(z_sample_payload(sample), &payload_string);
             if (strncmp(values[val_num], z_string_data(z_loan(payload_string)), z_string_len(z_loan(payload_string)))) {
                 perror("Unexpected value received");
                 z_drop(z_move(payload_string));
                 exit(-1);
             }
 
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
             const z_loaned_source_info_t *source_info = z_sample_source_info(sample);
             if (source_info == NULL) {
                 perror("Unexpected null source_info");
@@ -163,7 +163,7 @@ int run_get() {
         }
         z_drop(z_move(handler));
     }
-    z_close(z_move(s));
+    z_drop(z_move(s));
 
     return 0;
 }

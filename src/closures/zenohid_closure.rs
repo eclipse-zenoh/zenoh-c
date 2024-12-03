@@ -17,88 +17,96 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef},
+    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_id_t,
 };
+/// @brief A zenoh id-processing closure.
+///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
-///
-/// Closures are not guaranteed not to be called concurrently.
-///
-/// It is guaranteed that:
-///   - `call` will never be called once `drop` has started.
-///   - `drop` will only be called **once**, and **after every** `call` has ended.
-///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
 #[repr(C)]
 pub struct z_owned_closure_zid_t {
-    /// An optional pointer to a closure state.
-    context: *mut c_void,
-    /// A callback function.
-    call: Option<extern "C" fn(z_id: &z_id_t, context: *mut c_void)>,
-    /// An optional function that will be called upon closure drop.
-    drop: Option<extern "C" fn(context: *mut c_void)>,
+    _context: *mut c_void,
+    _call: Option<extern "C" fn(z_id: &z_id_t, context: *mut c_void)>,
+    _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
-/// Loaned closure.
+/// @brief Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_zid_t {
     _0: [usize; 3],
 }
 
-decl_c_type!(owned(z_owned_closure_zid_t), loaned(z_loaned_closure_zid_t));
+/// @brief Moved closure.
+#[repr(C)]
+pub struct z_moved_closure_zid_t {
+    pub _this: z_owned_closure_zid_t,
+}
 
-impl z_owned_closure_zid_t {
-    pub fn empty() -> Self {
+decl_c_type!(
+    owned(z_owned_closure_zid_t),
+    loaned(z_loaned_closure_zid_t),
+    moved(z_moved_closure_zid_t),
+);
+
+impl Default for z_owned_closure_zid_t {
+    fn default() -> Self {
         z_owned_closure_zid_t {
-            context: std::ptr::null_mut(),
-            call: None,
-            drop: None,
+            _context: std::ptr::null_mut(),
+            _call: None,
+            _drop: None,
         }
     }
+}
 
+impl z_owned_closure_zid_t {
     pub fn is_empty(&self) -> bool {
-        self.call.is_none() && self.drop.is_none() && self.context.is_null()
+        self._call.is_none() && self._drop.is_none() && self._context.is_null()
     }
 }
 unsafe impl Send for z_owned_closure_zid_t {}
 unsafe impl Sync for z_owned_closure_zid_t {}
 impl Drop for z_owned_closure_zid_t {
     fn drop(&mut self) {
-        if let Some(drop) = self.drop {
-            drop(self.context)
+        if let Some(drop) = self._drop {
+            drop(self._context)
         }
     }
 }
 
-/// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+/// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_zid_check(this: &z_owned_closure_zid_t) -> bool {
-    !this.is_empty()
+pub unsafe extern "C" fn z_internal_closure_zid_check(this_: &z_owned_closure_zid_t) -> bool {
+    !this_.is_empty()
 }
 
-/// Constructs a null closure.
+/// @brief Constructs a null closure.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_closure_zid_null(this: &mut MaybeUninit<z_owned_closure_zid_t>) {
-    this.write(z_owned_closure_zid_t::empty());
+pub unsafe extern "C" fn z_internal_closure_zid_null(
+    this_: &mut MaybeUninit<z_owned_closure_zid_t>,
+) {
+    this_.write(z_owned_closure_zid_t::default());
 }
-/// Calls the closure. Calling an uninitialized closure is a no-op.
+
+/// @brief Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
     let closure = closure.as_owned_c_type_ref();
-    match closure.call {
-        Some(call) => call(z_id, closure.context),
+    match closure._call {
+        Some(call) => call(z_id, closure._context),
         None => {
             tracing::error!("Attempted to call an uninitialized closure!");
         }
     }
 }
-/// Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
+
+/// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
 #[no_mangle]
-pub extern "C" fn z_closure_zid_drop(closure: &mut z_owned_closure_zid_t) {
-    let mut empty_closure = z_owned_closure_zid_t::empty();
-    std::mem::swap(&mut empty_closure, closure);
+pub extern "C" fn z_closure_zid_drop(closure_: &mut z_moved_closure_zid_t) {
+    let _ = closure_.take_rust_type();
 }
+
 impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
@@ -110,15 +118,49 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
             std::mem::drop(unsafe { Box::from_raw(this as *mut F) })
         }
         z_owned_closure_zid_t {
-            context: this,
-            call: Some(call::<F>),
-            drop: Some(drop::<F>),
+            _context: this,
+            _call: Some(call::<F>),
+            _drop: Some(drop::<F>),
         }
     }
 }
 
-/// Vorrows closure.
+/// @brief Borrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
     closure.as_loaned_c_type_ref()
+}
+
+/// @brief Mutably borrows closure.
+#[no_mangle]
+pub extern "C" fn z_closure_zid_loan_mut(
+    closure: &z_owned_closure_zid_t,
+) -> &z_loaned_closure_zid_t {
+    closure.as_loaned_c_type_ref()
+}
+
+/// @brief Constructs closure.
+///
+/// Closures are not guaranteed not to be called concurrently.
+///
+/// It is guaranteed that:
+///   - `call` will never be called once `drop` has started.
+///   - `drop` will only be called **once**, and **after every** `call` has ended.
+///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+/// @param this_: uninitialized memory location where new closure will be constructed.
+/// @param call: a closure body.
+/// @param drop: an optional function to be called once on closure drop.
+/// @param context: closure context.
+#[no_mangle]
+pub extern "C" fn z_closure_zid(
+    this: &mut MaybeUninit<z_owned_closure_zid_t>,
+    call: Option<extern "C" fn(z_id: &z_id_t, context: *mut c_void)>,
+    drop: Option<extern "C" fn(context: *mut c_void)>,
+    context: *mut c_void,
+) {
+    this.write(z_owned_closure_zid_t {
+        _context: context,
+        _call: call,
+        _drop: drop,
+    });
 }

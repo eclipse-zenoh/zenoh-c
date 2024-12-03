@@ -26,7 +26,8 @@ use crate::{
     z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
 };
 
-/// A callbacks for ShmProviderBackend
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Callbacks for ShmProviderBackend.
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_provider_backend_callbacks_t {
@@ -73,9 +74,7 @@ where
             );
             match result.assume_init().as_rust_type_mut().take() {
                 Some(val) => val,
-                None => Err(zenoh::shm::ZAllocError::Other(
-                    "Callback returned empty result".into(),
-                )),
+                None => Err(zenoh::shm::ZAllocError::Other),
             }
         }
     }

@@ -18,7 +18,7 @@
 #undef NDEBUG
 #include <assert.h>
 
-void cb(const struct z_loaned_reply_t *reply, void *context) {}
+void cb(struct z_loaned_reply_t *reply, void *context) {}
 void drop(void *context) {}
 
 void put() {
@@ -26,7 +26,7 @@ void put() {
     z_config_default(&config);
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         exit(-1);
     }
@@ -36,13 +36,13 @@ void put() {
     z_put_options_t opts;
     z_put_options_default(&opts);
     z_owned_bytes_t payload, attachment;
-    z_bytes_serialize_from_int32(&attachment, 16);
-    opts.attachment = &attachment;
-    z_bytes_serialize_from_int32(&payload, 16);
+    z_bytes_copy_from_str(&attachment, "abc");
+    opts.attachment = z_move(attachment);
+    z_bytes_copy_from_str(&payload, "cde");
     z_put(z_loan(s), z_loan(ke), z_move(payload), &opts);
-    assert(!z_check(payload));
-    assert(!z_check(attachment));
-    z_close(z_move(s));
+    assert(!z_internal_check(payload));
+    assert(!z_internal_check(attachment));
+    z_drop(z_move(s));
 }
 
 void get() {
@@ -50,7 +50,7 @@ void get() {
     z_config_default(&config);
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         exit(-1);
     }
@@ -60,21 +60,21 @@ void get() {
     z_get_options_t opts;
     z_get_options_default(&opts);
     z_owned_bytes_t payload, attachment;
-    z_bytes_serialize_from_int32(&attachment, 16);
-    opts.payload = &payload;
-    z_bytes_serialize_from_int32(&payload, 16);
-    opts.attachment = &attachment;
+    z_bytes_copy_from_str(&attachment, "abc");
+    opts.payload = z_move(payload);
+    z_bytes_copy_from_str(&payload, "cde");
+    opts.attachment = z_move(attachment);
     z_owned_closure_reply_t closure;
     z_closure(&closure, cb, drop, NULL);
 
     z_get(z_loan(s), z_loan(ke), "", z_move(closure), &opts);
-    assert(!z_check(payload));
-    assert(!z_check(attachment));
-    z_close(z_move(s));
+    assert(!z_internal_check(payload));
+    assert(!z_internal_check(attachment));
+    z_drop(z_move(s));
 }
 
 int main(int argc, char **argv) {
-    zc_init_logger();
+    zc_try_init_log_from_env();
     put();
     get();
 }

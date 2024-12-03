@@ -30,7 +30,7 @@ typedef struct context_t {
 const char* token1_expr = "zenoh/liveliness/test/1";
 const char* token2_expr = "zenoh/liveliness/test/2";
 
-void on_receive(const z_loaned_sample_t* s, void* context) {
+void on_receive(z_loaned_sample_t* s, void* context) {
     context_t* c = (context_t*)context;
     const z_loaned_keyexpr_t* k = z_sample_keyexpr(s);
     z_view_string_t ks;
@@ -63,33 +63,33 @@ void test_liveliness_sub() {
     z_view_keyexpr_from_str(&k1, token1_expr);
     z_view_keyexpr_from_str(&k2, token2_expr);
 
-    z_open(&s1, z_move(c1));
-    z_open(&s2, z_move(c2));
+    z_open(&s1, z_move(c1), NULL);
+    z_open(&s2, z_move(c2), NULL);
 
     z_owned_closure_sample_t closure;
     context_t context = {false, false, false, false};
     z_closure(&closure, on_receive, NULL, (void*)(&context));
 
     z_owned_subscriber_t sub;
-    zc_liveliness_declare_subscriber(&sub, z_loan(s2), z_loan(k), z_move(closure), NULL);
+    z_liveliness_declare_subscriber(z_loan(s2), &sub, z_loan(k), z_move(closure), NULL);
 
     z_sleep_s(1);
-    zc_owned_liveliness_token_t t1, t2;
-    zc_liveliness_declare_token(&t1, z_loan(s1), z_loan(k1), NULL);
-    zc_liveliness_declare_token(&t2, z_loan(s1), z_loan(k2), NULL);
+    z_owned_liveliness_token_t t1, t2;
+    z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
+    z_liveliness_declare_token(z_loan(s1), &t2, z_loan(k2), NULL);
 
     z_sleep_s(1);
 
     assert(context.token1_put);
     assert(context.token2_put);
 
-    zc_liveliness_undeclare_token(z_move(t1));
+    z_liveliness_undeclare_token(z_move(t1));
     z_sleep_s(1);
 
     assert(context.token1_drop);
     assert(!context.token2_drop);
 
-    zc_liveliness_undeclare_token(z_move(t2));
+    z_liveliness_undeclare_token(z_move(t2));
     z_sleep_s(1);
     assert(context.token2_drop);
 }
@@ -105,19 +105,19 @@ void test_liveliness_get() {
     z_view_keyexpr_from_str(&k, expr);
     z_view_keyexpr_from_str(&k1, token1_expr);
 
-    z_open(&s1, z_move(c1));
-    z_open(&s2, z_move(c2));
+    z_open(&s1, z_move(c1), NULL);
+    z_open(&s2, z_move(c2), NULL);
 
     z_sleep_s(1);
-    zc_owned_liveliness_token_t t1;
-    zc_liveliness_declare_token(&t1, z_loan(s1), z_loan(k1), NULL);
+    z_owned_liveliness_token_t t1;
+    z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
     z_sleep_s(1);
 
     z_owned_fifo_handler_reply_t handler;
     z_owned_closure_reply_t cb;
     z_fifo_channel_reply_new(&cb, &handler, 3);
 
-    zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
+    z_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
     z_owned_reply_t reply;
     assert(z_recv(z_loan(handler), &reply) == Z_OK);
     assert(z_reply_is_ok(z_loan(reply)));
@@ -134,7 +134,7 @@ void test_liveliness_get() {
     z_sleep_s(1);
     z_fifo_channel_reply_new(&cb, &handler, 3);
 
-    zc_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
+    z_liveliness_get(z_loan(s2), z_loan(k), z_move(cb), NULL);
     assert(z_recv(z_loan(handler), &reply) == Z_CHANNEL_DISCONNECTED);
 
     z_drop(z_move(handler));

@@ -32,26 +32,19 @@ int main(int argc, char** argv) {
     }
     size_t value_len = value ? strlen(value) : 0;
 
+    zc_init_log_from_env_or("error");
+
     z_view_keyexpr_t keyexpr;
     if (z_view_keyexpr_from_str(&keyexpr, expr) < 0) {
         printf("%s is not a valid key expression", expr);
         exit(-1);
     }
+
     z_owned_config_t config;
     z_config_default(&config);
 
-    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
-    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
-        printf(
-            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized value\n",
-            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
-        exit(-1);
-    }
-
     if (argc > 3) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
+        if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -62,7 +55,7 @@ int main(int argc, char** argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config))) {
+    if (z_open(&s, z_move(config), NULL)) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -77,7 +70,7 @@ int main(int argc, char** argv) {
     // Allocate SHM Buffer
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc(&alloc, z_loan(provider), value_len, alignment);
-    if (!z_check(alloc.buf)) {
+    if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...");
         return -1;
     }
@@ -99,14 +92,14 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     if (value != NULL) {
-        if (!z_bytes_serialize_from_shm(&payload, z_move(shm))) {
+        if (!z_bytes_from_shm(&payload, z_move(shm))) {
             printf("Unexpected failure during SHM buffer serialization...\n");
             return -1;
         }
-        opts.payload = &payload;
+        opts.payload = z_move(payload);
     }
     z_get(z_loan(s), z_loan(keyexpr), "", z_move(closure),
-          z_move(opts));  // here, the send is moved and will be dropped by zenoh when adequate
+          &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
 
     while (z_recv(z_loan(handler), &reply) == Z_OK) {
@@ -117,7 +110,7 @@ int main(int argc, char** argv) {
             z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
 
             z_owned_string_t reply_str;
-            z_bytes_deserialize_into_string(z_sample_payload(sample), &reply_str);
+            z_bytes_to_string(z_sample_payload(sample), &reply_str);
 
             printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
                    (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
@@ -129,7 +122,7 @@ int main(int argc, char** argv) {
     }
 
     z_drop(z_move(handler));
-    z_close(z_move(s));
+    z_drop(z_move(s));
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));

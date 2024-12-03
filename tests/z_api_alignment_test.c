@@ -24,26 +24,24 @@
 #define URI "demo/example/**/*"
 #define SCOUTING_TIMEOUT "1000"
 
-char *value = "Test value";
+const char *value = "Test value";
 
-#ifdef UNSTABLE
 volatile unsigned int zids = 0;
 void zid_handler(const z_id_t *id, void *arg) {
     (void)(arg);
     (void)(id);
     zids++;
 }
-#endif
 
 volatile unsigned int hellos = 0;
-void hello_handler(const z_loaned_hello_t *hello, void *arg) {
+void hello_handler(z_loaned_hello_t *hello, void *arg) {
     (void)(arg);
     (void)(hello);
     hellos++;
 }
 
 volatile unsigned int queries = 0;
-void query_handler(const z_loaned_query_t *query, void *arg) {
+void query_handler(z_loaned_query_t *query, void *arg) {
     queries++;
 
     const z_loaned_keyexpr_t *query_ke = z_query_keyexpr(query);
@@ -71,7 +69,7 @@ void query_handler(const z_loaned_query_t *query, void *arg) {
 }
 
 volatile unsigned int replies = 0;
-void reply_handler(const z_loaned_reply_t *reply, void *arg) {
+void reply_handler(z_loaned_reply_t *reply, void *arg) {
     replies++;
 
     if (z_reply_is_ok(reply)) {
@@ -91,7 +89,7 @@ void reply_handler(const z_loaned_reply_t *reply, void *arg) {
 }
 
 volatile unsigned int datas = 0;
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t *sample, void *arg) {
     datas++;
 
     z_view_string_t k_str;
@@ -107,15 +105,15 @@ int main(int argc, char **argv) {
     setbuf(stdout, NULL);
 
 #ifdef ZENOH_C
-    zc_init_logger();
+    zc_try_init_log_from_env();
 #endif
 
     z_view_keyexpr_t key_demo_example, key_demo_example_a, key_demo_example_starstar;
     z_view_keyexpr_from_str(&key_demo_example, "demo/example");
     z_view_keyexpr_from_str(&key_demo_example_a, "demo/example/a");
     z_view_keyexpr_from_str(&key_demo_example_starstar, "demo/example/**");
-    _Bool _ret_bool = z_view_keyexpr_check(&key_demo_example);
-    assert(_ret_bool == true);
+    bool _ret_bool = z_view_keyexpr_is_empty(&key_demo_example);
+    assert(_ret_bool == false);
 
     _ret_bool = z_keyexpr_includes(z_loan(key_demo_example_starstar), z_loan(key_demo_example_a));
     assert(_ret_bool);
@@ -163,7 +161,7 @@ int main(int argc, char **argv) {
 
     z_owned_config_t _ret_config;
     z_config_default(&_ret_config);
-    assert(z_check(_ret_config));
+    assert(z_internal_check(_ret_config));
     z_drop(z_move(_ret_config));
 #ifdef ZENOH_PICO
     _ret_int8 = zp_config_insert(z_loan(_ret_config), Z_CONFIG_PEER_KEY, z_string_make(argv[1]));
@@ -176,7 +174,7 @@ int main(int argc, char **argv) {
 #ifdef ZENOH_PICO
     z_owned_scouting_config_t _ret_sconfig;
     z_scouting_config_default(&_ret_sconfig);
-    assert(z_check(_ret_sconfig));
+    assert(z_internal_check(_ret_sconfig));
     _ret_int8 =
         zp_scouting_config_insert(z_loan(_ret_sconfig), Z_CONFIG_SCOUTING_TIMEOUT_KEY, z_string_make(SCOUTING_TIMEOUT));
     assert(_ret_int8 == 0);
@@ -198,16 +196,14 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
 
     z_owned_session_t s1;
-    assert(0 == z_open(&s1, z_move(_ret_config)));
-    assert(z_check(s1));
+    assert(0 == z_open(&s1, z_move(_ret_config), NULL));
+    assert(z_internal_check(s1));
 
-#ifdef UNSTABLE
     z_id_t _ret_zid = z_info_zid(z_loan(s1));
-    printf("Session 1 with PID: 0x");
-    for (unsigned long i = 0; i < sizeof(_ret_zid); i++) {
-        printf("%.2X", _ret_zid.id[i]);
-    }
-    printf("\n");
+    z_owned_string_t str;
+    z_id_to_string(&_ret_zid, &str);
+    printf("Session 1 with PID: 0x%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 
     z_owned_closure_zid_t _ret_closure_zid;
     z_closure(&_ret_closure_zid, zid_handler, NULL, NULL);
@@ -222,7 +218,6 @@ int main(int argc, char **argv) {
 
     z_sleep_s(SLEEP);
     assert(zids == 1);
-#endif
 
 #ifdef ZENOH_PICO
     zp_task_read_options_t _ret_read_opt = zp_task_read_options_default();
@@ -243,16 +238,14 @@ int main(int argc, char **argv) {
 #endif
 
     z_owned_session_t s2;
-    assert(0 == z_open(&s2, z_move(_ret_config)));
-    assert(z_check(s2));
+    assert(0 == z_open(&s2, z_move(_ret_config), NULL));
+    assert(z_internal_check(s2));
 
-#ifdef UNSTABLE
+#if defined(Z_FEATURE_UNSTABLE_API)
     _ret_zid = z_info_zid(z_loan(s2));
-    printf("Session 2 with PID: 0x");
-    for (unsigned long i = 0; i < sizeof(_ret_zid); i++) {
-        printf("%.2X", _ret_zid.id[i]);
-    }
-    printf("\n");
+    z_id_to_string(&_ret_zid, &str);
+    printf("Session 2 with PID: 0x%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 #endif
 
 #ifdef ZENOH_PICO
@@ -264,32 +257,32 @@ int main(int argc, char **argv) {
 
     const z_loaned_session_t *ls1 = z_loan(s1);
     z_owned_closure_sample_t _ret_closure_sample;
-    z_closure(&_ret_closure_sample, data_handler, NULL, ls1);
+    z_closure(&_ret_closure_sample, data_handler, NULL, (void *)ls1);
     z_subscriber_options_t _ret_sub_opt;
     z_subscriber_options_default(&_ret_sub_opt);
 
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr_str);
     z_owned_subscriber_t _ret_sub;
-    z_declare_subscriber(&_ret_sub, z_loan(s2), z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
-    assert(z_check(_ret_sub));
+    z_declare_subscriber(z_loan(s2), &_ret_sub, z_loan(ke), z_move(_ret_closure_sample), &_ret_sub_opt);
+    assert(z_internal_check(_ret_sub));
 
     z_sleep_s(SLEEP);
 
     char s1_res[64];
-    sprintf(s1_res, "%s/chunk/%d", keyexpr_str, 1);
+    snprintf(s1_res, 64, "%s/chunk/%d", keyexpr_str, 1);
     z_view_keyexpr_t s1_key;
     z_view_keyexpr_from_str(&s1_key, s1_res);
     z_owned_keyexpr_t _ret_expr;
-    z_declare_keyexpr(&_ret_expr, z_loan(s1), z_loan(s1_key));
-    assert(z_check(_ret_expr));
+    z_declare_keyexpr(z_loan(s1), &_ret_expr, z_loan(s1_key));
+    assert(z_internal_check(_ret_expr));
     z_put_options_t _ret_put_opt;
     z_put_options_default(&_ret_put_opt);
     _ret_put_opt.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     // TODO: set encoding option
 
     z_owned_bytes_t payload;
-    z_bytes_serialize_from_str(&payload, value);
+    z_bytes_copy_from_str(&payload, value);
     _ret_int8 = z_put(z_loan(s1), z_loan(_ret_expr), z_move(payload), &_ret_put_opt);
     assert(_ret_int8 == 0);
 
@@ -304,22 +297,21 @@ int main(int argc, char **argv) {
     z_sleep_s(SLEEP);
     assert(datas == 2);
 
-    _ret_int8 = z_undeclare_keyexpr(z_move(_ret_expr), z_loan(s1));
+    _ret_int8 = z_undeclare_keyexpr(z_loan(s1), z_move(_ret_expr));
     assert(_ret_int8 == 0);
-    assert(!z_check(_ret_expr));
+    assert(!z_internal_check(_ret_expr));
 
-    _ret_int8 = z_undeclare_subscriber(z_move(_ret_sub));
-    assert(_ret_int8 == 0);
+    z_drop(z_move(_ret_sub));
 
     // TODO: test for pull subscriber
 
     z_owned_closure_query_t _ret_closure_query;
-    z_closure(&_ret_closure_query, query_handler, NULL, ls1);
+    z_closure(&_ret_closure_query, query_handler, NULL, (void *)ls1);
     z_queryable_options_t _ret_qle_opt;
     z_queryable_options_default(&_ret_qle_opt);
     z_owned_queryable_t qle;
-    z_declare_queryable(&qle, z_loan(s1), z_loan(s1_key), z_move(_ret_closure_query), &_ret_qle_opt);
-    assert(z_check(qle));
+    z_declare_queryable(z_loan(s1), &qle, z_loan(s1_key), z_move(_ret_closure_query), &_ret_qle_opt);
+    assert(z_internal_check(qle));
 
     z_sleep_s(SLEEP);
 
@@ -341,7 +333,7 @@ int main(int argc, char **argv) {
     assert(queries == 1);
     assert(replies == 1);
 
-    _ret_int8 = z_undeclare_queryable(z_move(qle));
+    z_drop(z_move(qle));
     assert(_ret_int8 == 0);
 
 #ifdef ZENOH_PICO
@@ -349,15 +341,17 @@ int main(int argc, char **argv) {
     zp_stop_lease_task(z_loan(s1));
 #endif
 
-    _ret_int8 = z_close(z_move(s1));
+    _ret_int8 = z_close(z_loan_mut(s1), NULL);
     assert(_ret_int8 == 0);
+    z_drop(z_move(s1));
 
 #ifdef ZENOH_PICO
     zp_stop_read_task(z_loan(s2));
     zp_stop_lease_task(z_loan(s2));
 #endif
-    _ret_int8 = z_close(z_move(s2));
+    _ret_int8 = z_close(z_loan_mut(s2), NULL);
     assert(_ret_int8 == 0);
+    z_drop(z_move(s2));
 
     z_sleep_s(SLEEP * 5);
 

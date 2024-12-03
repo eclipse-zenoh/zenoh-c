@@ -14,18 +14,19 @@
 
 use std::{mem::MaybeUninit, ptr::null};
 
-use zenoh::prelude::*;
-use zenoh_ext::SessionExt;
+use zenoh::Wait;
+use zenoh_ext::{PublicationCacheBuilder, SessionExt};
 
 use crate::{
     result,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_keyexpr_t, z_loaned_session_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{zc_locality_default, zc_locality_t};
 
-/// Options passed to the `ze_declare_publication_cache()` function.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     /// The prefix used for queryable.
@@ -41,42 +42,38 @@ pub struct ze_publication_cache_options_t {
     pub resources_limit: usize,
 }
 
-/// Constructs the default value for `ze_publication_cache_options_t`.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_publication_cache_options_default(this: &mut ze_publication_cache_options_t) {
-    *this = ze_publication_cache_options_t {
+pub extern "C" fn ze_publication_cache_options_default(
+    this: &mut MaybeUninit<ze_publication_cache_options_t>,
+) {
+    this.write(ze_publication_cache_options_t {
         queryable_prefix: null(),
         #[cfg(feature = "unstable")]
         queryable_origin: zc_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,
-    };
+    });
 }
 
-pub use crate::opaque_types::{ze_loaned_publication_cache_t, ze_owned_publication_cache_t};
+pub use crate::opaque_types::{
+    ze_loaned_publication_cache_t, ze_moved_publication_cache_t, ze_owned_publication_cache_t,
+};
 decl_c_type!(
-    owned(ze_owned_publication_cache_t, Option<zenoh_ext::PublicationCache<'static>>),
-    loaned(ze_loaned_publication_cache_t, zenoh_ext::PublicationCache<'static>)
+    owned(
+        ze_owned_publication_cache_t,
+        option zenoh_ext::PublicationCache,
+    ),
+    loaned(ze_loaned_publication_cache_t),
 );
 
-/// Constructs and declares a publication cache.
-///
-/// @param this_: An uninitialized location in memory where publication cache will be constructed.
-/// @param session: A Zenoh session.
-/// @param key_expr: The key expression to publish to.
-/// @param options: Additional options for the publication cache.
-///
-/// @returns 0 in case of success, negative error code otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_declare_publication_cache(
-    this: &mut MaybeUninit<ze_owned_publication_cache_t>,
-    session: &z_loaned_session_t,
-    key_expr: &z_loaned_keyexpr_t,
-    options: Option<&mut ze_publication_cache_options_t>,
-) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+fn _declare_publication_cache_inner<'a, 'b, 'c>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
+    options: Option<&'c mut ze_publication_cache_options_t>,
+) -> PublicationCacheBuilder<'a, 'b, 'c> {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut p = session.declare_publication_cache(key_expr);
@@ -95,6 +92,27 @@ pub extern "C" fn ze_declare_publication_cache(
             p = p.queryable_prefix(queryable_prefix.clone());
         }
     }
+    p
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs and declares a publication cache.
+///
+/// @param session: A Zenoh session.
+/// @param pub_cache: An uninitialized location in memory where publication cache will be constructed.
+/// @param key_expr: The key expression to publish to.
+/// @param options: Additional options for the publication cache.
+///
+/// @returns 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn ze_declare_publication_cache(
+    session: &z_loaned_session_t,
+    pub_cache: &mut MaybeUninit<ze_owned_publication_cache_t>,
+    key_expr: &z_loaned_keyexpr_t,
+    options: Option<&mut ze_publication_cache_options_t>,
+) -> result::z_result_t {
+    let this = pub_cache.as_rust_type_mut_uninit();
+    let p = _declare_publication_cache_inner(session, key_expr, options);
     match p.wait() {
         Ok(publication_cache) => {
             this.write(Some(publication_cache));
@@ -108,39 +126,94 @@ pub extern "C" fn ze_declare_publication_cache(
     }
 }
 
-/// Constructs a publication cache in a gravestone state.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
+///
+/// @param session: A Zenoh session.
+/// @param key_expr: The key expression to publish to.
+/// @param options: Additional options for the publication cache.
+///
+/// @returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_null(this: &mut MaybeUninit<ze_owned_publication_cache_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn ze_declare_background_publication_cache(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    options: Option<&mut ze_publication_cache_options_t>,
+) -> result::z_result_t {
+    let p = _declare_publication_cache_inner(session, key_expr, options);
+    match p.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            tracing::error!("{}", e);
+            result::Z_EGENERIC
+        }
+    }
 }
 
-/// Returns ``true`` if publication cache is valid, ``false`` otherwise.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_check(this: &ze_owned_publication_cache_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn ze_internal_publication_cache_null(
+    this_: &mut MaybeUninit<ze_owned_publication_cache_t>,
+) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Undeclares and drops publication cache.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn ze_internal_publication_cache_check(
+    this_: &ze_owned_publication_cache_t,
+) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Drops publication cache and resets it to its gravestone state.
+/// This is equivalent to calling `ze_undeclare_publication_cache()` and discarding its return value.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn ze_publication_cache_drop(this: &mut ze_moved_publication_cache_t) {
+    std::mem::drop(this.take_rust_type())
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the key expression of the publication cache.
+#[no_mangle]
+pub extern "C" fn ze_publication_cache_keyexpr(
+    this_: &ze_loaned_publication_cache_t,
+) -> &z_loaned_keyexpr_t {
+    this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Borrows publication cache.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_publication_cache_loan(
+    this_: &ze_owned_publication_cache_t,
+) -> &ze_loaned_publication_cache_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Undeclares publication cache.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_undeclare_publication_cache(
-    this: &mut ze_owned_publication_cache_t,
+    this: &mut ze_moved_publication_cache_t,
 ) -> result::z_result_t {
-    if let Some(p) = this.as_rust_type_mut().take() {
+    if let Some(p) = this.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }
     }
     result::Z_OK
-}
-
-/// Drops publication cache. Also attempts to undeclare it.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_drop(this: &mut ze_owned_publication_cache_t) {
-    ze_undeclare_publication_cache(this);
 }

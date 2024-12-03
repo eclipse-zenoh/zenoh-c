@@ -25,22 +25,13 @@ int main(int argc, char **argv) {
     char *keyexpr = "test/thr";
     size_t len = atoi(argv[1]);
 
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     z_config_default(&config);
 
-    // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
-    // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
-    // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
-        printf(
-            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized value\n",
-            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
-        exit(-1);
-    }
-
     if (argc > 2) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
+        if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -50,7 +41,7 @@ int main(int argc, char **argv) {
     }
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -62,7 +53,7 @@ int main(int argc, char **argv) {
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &options)) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), &options)) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
@@ -77,7 +68,7 @@ int main(int argc, char **argv) {
     printf("Allocating single SHM buffer\n");
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
-    if (!z_check(alloc.buf)) {
+    if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...\n");
         return -1;
     }
@@ -86,7 +77,7 @@ int main(int argc, char **argv) {
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
     z_owned_bytes_t shmbs;
-    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+    if (z_bytes_from_shm(&shmbs, z_move(shm)) != Z_OK) {
         printf("Unexpected failure during SHM buffer serialization...\n");
         return -1;
     }
@@ -97,8 +88,8 @@ int main(int argc, char **argv) {
         z_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
-    z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s));
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));

@@ -21,17 +21,19 @@ use zenoh::{
 };
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
-pub use crate::opaque_types::z_owned_shm_client_t;
+pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::z_segment_id_t,
-    transmute::{RustTypeRef, RustTypeRefUninit},
+    transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
-/// A callbacks for ShmClient
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Callback for ShmClient.
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_client_callbacks_t {
+    /// Attach to particular shared memory segment
     attach_fn: unsafe extern "C" fn(
         out_segment: &mut MaybeUninit<z_shm_segment_t>,
         segment_id: z_segment_id_t,
@@ -39,7 +41,9 @@ pub struct zc_shm_client_callbacks_t {
     ) -> bool,
 }
 
-decl_c_type!(owned(z_owned_shm_client_t, Option<Arc<dyn ShmClient>>));
+decl_c_type!(
+    owned(z_owned_shm_client_t, option Arc<dyn ShmClient>),
+);
 
 #[derive(Debug)]
 pub struct DynamicShmClient {
@@ -65,7 +69,8 @@ impl ShmClient for DynamicShmClient {
     }
 }
 
-/// Creates a new SHM Client
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates a new SHM Client.
 #[no_mangle]
 pub extern "C" fn z_shm_client_new(
     this: &mut MaybeUninit<z_owned_shm_client_t>,
@@ -76,20 +81,23 @@ pub extern "C" fn z_shm_client_new(
     this.as_rust_type_mut_uninit().write(Some(client));
 }
 
-/// Constructs SHM client in its gravestone value.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs SHM client in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_shm_client_null(this: &mut MaybeUninit<z_owned_shm_client_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_shm_client_null(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Returns ``true`` if `this` is valid.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @return Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_shm_client_check(this: &z_owned_shm_client_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_shm_client_check(this_: &z_owned_shm_client_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
-/// Deletes SHM Client
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Deletes SHM Client.
 #[no_mangle]
-pub extern "C" fn z_shm_client_drop(this: &mut z_owned_shm_client_t) {
-    *this.as_rust_type_mut() = None;
+pub extern "C" fn z_shm_client_drop(this_: &mut z_moved_shm_client_t) {
+    let _ = this_.take_rust_type();
 }

@@ -21,33 +21,43 @@
         return result;    \
     }
 
+#define ASSERT_ERR(result) \
+    if (result == Z_OK) {  \
+        assert(false);     \
+        return result;     \
+    }
+
 #define ASSERT_TRUE(expr) \
     if (!(expr)) {        \
         assert(false);    \
         return -300;      \
     }
 
-#define ASSERT_CHECK(var) \
-    if (!z_check(var)) {  \
-        assert(false);    \
-        return -100;      \
+#define ASSERT_CHECK(var)         \
+    if (!z_internal_check(var)) { \
+        assert(false);            \
+        return -100;              \
     }
 
-#define ASSERT_CHECK_ERR(var) \
-    if (z_check(var)) {       \
-        assert(false);        \
-        return -200;          \
+#define ASSERT_CHECK_ERR(var)    \
+    if (z_internal_check(var)) { \
+        assert(false);           \
+        return -200;             \
     }
 
-int test_shm_buffer(z_owned_shm_mut_t* buf) {
-    ASSERT_CHECK(*buf);
+int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
+    ASSERT_CHECK(mbuf->_this);
+    z_owned_shm_mut_t buf;
+    z_take(&buf, mbuf);
+    ASSERT_CHECK_ERR(mbuf->_this);
+    ASSERT_CHECK(buf);
 
-    { z_loaned_shm_mut_t* loaned = z_loan_mut(*buf); }
+    { z_loaned_shm_mut_t* loaned = z_loan_mut(buf); }
 
     z_owned_shm_t immut;
-    z_shm_from_mut(&immut, z_move(*buf));
+    z_shm_from_mut(&immut, z_move(buf));
     ASSERT_CHECK(immut);
-    ASSERT_CHECK_ERR(*buf);
+    ASSERT_CHECK_ERR(buf);
 
     { const z_loaned_shm_t* loaned = z_loan(immut); }
 
@@ -67,56 +77,62 @@ int test_shm_buffer(z_owned_shm_mut_t* buf) {
     ASSERT_CHECK(immut2);
 
     z_owned_shm_mut_t mut;
-    z_shm_mut_try_from_immut(&mut, z_move(immut2));
-    ASSERT_CHECK_ERR(immut2);
-    ASSERT_CHECK_ERR(mut);
+    ASSERT_TRUE(Z_EUNAVAILABLE == z_shm_mut_try_from_immut(&mut, z_move(immut2), &immut2));
+    ASSERT_CHECK(immut2);
 
-    z_shm_mut_try_from_immut(&mut, z_move(immut));
+    z_drop(z_move(immut2));
+
+    ASSERT_TRUE(Z_OK == z_shm_mut_try_from_immut(&mut, z_move(immut), &immut));
     ASSERT_CHECK(mut);
+    ASSERT_CHECK_ERR(immut);
 
     z_drop(z_move(mut));
     ASSERT_CHECK_ERR(mut);
     return 0;
 }
 
-bool test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
+int test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
     z_buf_alloc_result_t alloc;
 
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    if (z_alloc_layout_alloc_gc(&alloc, alloc_layout) == Z_OK) {
+    z_alloc_layout_alloc_gc(&alloc, alloc_layout);
+    if (alloc.status == ZC_BUF_ALLOC_STATUS_OK) {
+        ASSERT_CHECK(alloc.buf);
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
-        return true;
+        return Z_OK;
     } else
-        return false;
+        return Z_ENULL;
 }
 
-bool test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_alloc_alignment_t alignment) {
+int test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_alloc_alignment_t alignment) {
     z_buf_layout_alloc_result_t alloc;
 
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    if (z_shm_provider_alloc_gc(&alloc, provider, size, alignment) == Z_OK) {
+    z_shm_provider_alloc_gc(&alloc, provider, size, alignment);
+    if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
+        ASSERT_CHECK(alloc.buf);
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
         ASSERT_CHECK_ERR(alloc.buf);
-        return true;
+        return Z_OK;
     } else
-        return false;
+        return Z_ENULL;
 }
 
 int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignment, size_t buf_ok_size,
                   size_t buf_err_size) {
     // test allocation OK
     for (int i = 0; i < 100; ++i) {
-        ASSERT_TRUE(test_allocation(z_loan(*provider), buf_ok_size, alignment));
+        ASSERT_OK(test_allocation(z_loan(*provider), buf_ok_size, alignment));
     }
 
     // test allocation ERROR
     if (buf_err_size) {
-        ASSERT_TRUE(!test_allocation(z_loan(*provider), buf_err_size, alignment));
+        ASSERT_ERR(test_allocation(z_loan(*provider), buf_err_size, alignment));
     }
 
     // OK layouted allocations
@@ -127,7 +143,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
         ASSERT_CHECK(alloc_layout);
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
-            ASSERT_TRUE(test_layouted_allocation(z_loan(alloc_layout)));
+            ASSERT_OK(test_layouted_allocation(z_loan(alloc_layout)));
         }
         z_drop(z_move(alloc_layout));
         ASSERT_CHECK_ERR(alloc_layout);
@@ -140,7 +156,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
         ASSERT_OK(z_alloc_layout_new(&alloc_layout, z_loan(*provider), buf_err_size, alignment));
         ASSERT_CHECK(alloc_layout);
         // test layouted allocation ERROR
-        ASSERT_TRUE(!test_layouted_allocation(z_loan(alloc_layout)));
+        ASSERT_ERR(test_layouted_allocation(z_loan(alloc_layout)));
         z_drop(z_move(alloc_layout));
         ASSERT_CHECK_ERR(alloc_layout);
     }
@@ -175,7 +191,7 @@ void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned
     // check size and alignment
     size_t size = 0;
     z_alloc_alignment_t alignment;
-    z_memory_layout_get_data(&size, &alignment, layout);
+    z_memory_layout_get_data(layout, &size, &alignment);
     assert(size == 1);
     assert(alignment.pow == 0);
 
@@ -232,15 +248,15 @@ void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
     assert(context);
     assert(layout);
 
-    assert(z_check(*layout));
+    assert(z_internal_check(*layout));
 
     // check size and alignment
     size_t size = 0;
     z_alloc_alignment_t alignment;
-    z_memory_layout_get_data(&size, &alignment, z_loan(*layout));
+    z_memory_layout_get_data(z_loan(*layout), &size, &alignment);
 
     if (size != 1 || alignment.pow != 0) {
-        z_memory_layout_drop(layout);
+        z_memory_layout_drop(z_move(*layout));
     }
 }
 
@@ -252,8 +268,8 @@ int run_c_provider() {
     test_provider_context test_context;
     test_context.available = size;
     test_context.count = size;
-    test_context.busy_flags = malloc(sizeof(bool) * size);
-    test_context.bytes = malloc(sizeof(uint8_t) * size);
+    test_context.busy_flags = (bool*)malloc(sizeof(bool) * size);
+    test_context.bytes = (uint8_t*)malloc(sizeof(uint8_t) * size);
     zc_context_t context = {&test_context, &delete_fn};
 
     // init callbacks
@@ -363,7 +379,7 @@ int run_client_storage() {
     ASSERT_CHECK(client);
 
     // add client to the list
-    ASSERT_OK(zc_shm_client_list_add_client(Z_SHM_POSIX_PROTOCOL_ID, z_move(client), z_loan_mut(list)));
+    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), Z_SHM_POSIX_PROTOCOL_ID, z_move(client)));
     ASSERT_CHECK_ERR(client);
 
     // create client storage from the list
@@ -412,7 +428,7 @@ int run_c_client() {
     ASSERT_CHECK(client);
 
     // add client to the list
-    ASSERT_OK(zc_shm_client_list_add_client(100500, z_move(client), z_loan_mut(list)));
+    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), 100500, z_move(client)));
     ASSERT_CHECK_ERR(client);
 
     // create client storage from the list
@@ -433,6 +449,11 @@ int run_c_client() {
     return Z_OK;
 }
 
+int run_cleanup() {
+    zc_cleanup_orphaned_shm_segments();
+    return Z_OK;
+}
+
 int main() {
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
@@ -440,5 +461,6 @@ int main() {
     ASSERT_OK(run_global_client_storage());
     ASSERT_OK(run_client_storage());
     ASSERT_OK(run_c_client());
+    ASSERT_OK(run_cleanup());
     return Z_OK;
 }

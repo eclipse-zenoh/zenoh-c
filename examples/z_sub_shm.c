@@ -17,34 +17,34 @@
 
 const char *kind_to_str(z_sample_kind_t kind);
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t *sample, void *arg) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
 // if Zenoh is built without SHM support, the only buffer type it can receive is RAW
-#if !defined(SHARED_MEMORY)
+#if !defined(Z_FEATURE_SHARED_MEMORY)
     char *payload_type = "RAW";
 #endif
 
 // if Zenoh is built with SHM support but without SHM API (that is unstable), it can
 // receive buffers of any type, but there is no way to detect the buffer type
-#if defined(SHARED_MEMORY) && !defined(UNSTABLE)
+#if defined(Z_FEATURE_SHARED_MEMORY) && !defined(Z_FEATURE_UNSTABLE_API)
     char *payload_type = "UNKNOWN";
 #endif
 
 // if Zenoh is built with SHM support and with SHM API, we can detect the exact buffer type
-#if defined(SHARED_MEMORY) && defined(UNSTABLE)
+#if defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     char *payload_type = "RAW";
     {
         const z_loaned_shm_t *shm = NULL;
-        if (z_bytes_deserialize_into_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
+        if (z_bytes_as_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
             payload_type = "SHM";
         }
     }
 #endif
 
     z_owned_string_t payload_string;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+    z_bytes_to_string(z_sample_payload(sample), &payload_string);
 
     printf(">> [Subscriber] Received %s ('%.*s': '%.*s') [%s]\n", kind_to_str(z_sample_kind(sample)),
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
@@ -58,27 +58,16 @@ int main(int argc, char **argv) {
         keyexpr = argv[1];
     }
 
+    zc_init_log_from_env_or("error");
+
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
 
     z_owned_config_t config;
     z_config_default(&config);
 
-#ifdef SHARED_MEMORY
-    // A probing procedure for shared memory is performed upon session opening. To enable `z_pub_shm` to operate
-    // over shared memory (and to not fallback on network mode), shared memory needs to be enabled also on the
-    // subscriber side. By doing so, the probing procedure will succeed and shared memory will operate as expected.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
-        printf(
-            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized value\n",
-            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
-        exit(-1);
-    }
-#endif
-
     if (argc > 2) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_LISTEN_KEY, argv[2]) < 0) {
+        if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_LISTEN_KEY, argv[2]) < 0) {
             printf(
                 "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
                 "JSON-serialized list of strings\n",
@@ -89,7 +78,7 @@ int main(int argc, char **argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -98,7 +87,7 @@ int main(int argc, char **argv) {
     z_closure(&callback, data_handler, NULL, NULL);
     printf("Declaring Subscriber on '%s'...\n", keyexpr);
     z_owned_subscriber_t sub;
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), NULL) < 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }
@@ -112,8 +101,8 @@ int main(int argc, char **argv) {
         }
     }
 
-    z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(s));
+    z_drop(z_move(sub));
+    z_drop(z_move(s));
     return 0;
 }
 

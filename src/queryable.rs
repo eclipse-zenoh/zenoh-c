@@ -11,84 +11,89 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::{mem::MaybeUninit, ptr::null_mut};
+use std::mem::MaybeUninit;
 
 use zenoh::{
     bytes::Encoding,
-    prelude::*,
+    handlers::Callback,
     qos::{CongestionControl, Priority},
-    query::{Query, Queryable},
+    query::{Query, Queryable, QueryableBuilder},
+    Wait,
 };
 
 pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 #[cfg(feature = "unstable")]
-use crate::z_owned_source_info_t;
+use crate::transmute::IntoCType;
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_owned_bytes_t,
-    z_owned_closure_query_t, z_owned_encoding_t, z_priority_t, z_timestamp_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
+    z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
     z_view_string_from_substr, z_view_string_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{z_entity_global_id_t, z_moved_source_info_t};
 decl_c_type!(
-    owned(z_owned_queryable_t, Option<Queryable<'static, ()>>),
-    loaned(z_loaned_queryable_t, Queryable<'static, ()>)
+    owned(z_owned_queryable_t, option Queryable<()>),
+    loaned(z_loaned_queryable_t),
 );
 
 /// Constructs a queryable in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_queryable_null(this: &mut MaybeUninit<z_owned_queryable_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_queryable_null(this_: &mut MaybeUninit<z_owned_queryable_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 // Borrows Queryable
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_queryable_loan(this: &z_owned_queryable_t) -> &z_loaned_queryable_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryable_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
 
-pub use crate::opaque_types::{z_loaned_query_t, z_owned_query_t};
+pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
-    owned(z_owned_query_t, Option<Query>),
-    loaned(z_loaned_query_t, Query)
+    owned(z_owned_query_t, option Query),
+    loaned(z_loaned_query_t),
 );
 
 /// Constructs query in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_null(this: &mut MaybeUninit<z_owned_query_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_query_null(this_: &mut MaybeUninit<z_owned_query_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
 #[no_mangle]
-pub extern "C" fn z_query_check(query: &z_owned_query_t) -> bool {
+pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
     query.as_rust_type_ref().is_some()
 }
 /// Borrows the query.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_loan(this: &'static z_owned_query_t) -> &z_loaned_query_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loaned_query_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_query_drop(this: &mut z_owned_query_t) {
-    *this.as_rust_type_mut() = None;
+pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {
+    let _ = this_.take_rust_type();
 }
 /// Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
 #[no_mangle]
-pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this: &z_loaned_query_t) {
+pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &z_loaned_query_t) {
     dst.as_rust_type_mut_uninit()
-        .write(Some(this.as_rust_type_ref().clone()));
+        .write(Some(this_.as_rust_type_ref().clone()));
 }
 
 /// Options passed to the `z_declare_queryable()` function.
@@ -101,8 +106,8 @@ pub struct z_queryable_options_t {
 /// Constructs the default value for `z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) {
-    *this = z_queryable_options_t { complete: false };
+pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
+    this_.write(z_queryable_options_t { complete: false });
 }
 
 /// Represents the set of options that can be applied to a query reply,
@@ -111,7 +116,7 @@ pub extern "C" fn z_queryable_options_default(this: &mut z_queryable_options_t) 
 #[repr(C)]
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
@@ -119,28 +124,30 @@ pub struct z_query_reply_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of the reply.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
     /// The source info for the reply.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this reply.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options_t) {
-    *this = z_query_reply_options_t {
-        encoding: null_mut(),
+pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
+    this_.write(z_query_reply_options_t {
+        encoding: None,
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
+        timestamp: None,
         #[cfg(feature = "unstable")]
-        source_info: null_mut(),
-        attachment: null_mut(),
-    };
+        source_info: None,
+        attachment: None,
+    });
 }
 
 /// Represents the set of options that can be applied to a query reply error,
@@ -149,16 +156,16 @@ pub extern "C" fn z_query_reply_options_default(this: &mut z_query_reply_options
 #[repr(C)]
 pub struct z_query_reply_err_options_t {
     /// The encoding of the error payload.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
 }
 
 /// Constructs the default value for `z_query_reply_err_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_err_options_default(this: &mut z_query_reply_err_options_t) {
-    *this = z_query_reply_err_options_t {
-        encoding: null_mut(),
-    };
+pub extern "C" fn z_query_reply_err_options_default(
+    this: &mut MaybeUninit<z_query_reply_err_options_t>,
+) {
+    this.write(z_query_reply_err_options_t { encoding: None });
 }
 
 /// Represents the set of options that can be applied to a query delete reply,
@@ -173,62 +180,78 @@ pub struct z_query_reply_del_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of the reply.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
     /// The source info for the reply.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this reply.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_query_reply_del_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_del_options_default(this: &mut z_query_reply_del_options_t) {
-    *this = z_query_reply_del_options_t {
+pub extern "C" fn z_query_reply_del_options_default(
+    this: &mut MaybeUninit<z_query_reply_del_options_t>,
+) {
+    this.write(z_query_reply_del_options_t {
         congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
+        timestamp: None,
         #[cfg(feature = "unstable")]
-        source_info: null_mut(),
-        attachment: null_mut(),
-    };
+        source_info: None,
+        attachment: None,
+    });
+}
+
+fn _declare_queryable_inner<'a, 'b>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_query_t,
+    options: Option<&mut z_queryable_options_t>,
+) -> QueryableBuilder<'a, 'b, Callback<Query>> {
+    let session = session.as_rust_type_ref();
+    let keyexpr = key_expr.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let mut builder = session.declare_queryable(keyexpr);
+    if let Some(options) = options {
+        builder = builder.complete(options.complete);
+    }
+    let queryable = builder.callback(move |query| {
+        let mut owned_query = Some(query);
+        z_closure_query_call(z_closure_query_loan(&callback), unsafe {
+            owned_query
+                .as_mut()
+                .unwrap_unchecked()
+                .as_loaned_c_type_mut()
+        })
+    });
+    queryable
 }
 
 /// Constructs a Queryable for the given key expression.
 ///
-/// @param this_: An uninitialized memory location where queryable will be constructed.
-/// @param session: The zenoh session.
+/// @param session: A Zenoh session.
+/// @param queryable: An uninitialized memory location where queryable will be constructed.
 /// @param key_expr: The key expression the Queryable will reply to.
 /// @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
 /// @param options: Options for the queryable.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_declare_queryable(
-    this: &mut MaybeUninit<z_owned_queryable_t>,
     session: &z_loaned_session_t,
+    queryable: &mut MaybeUninit<z_owned_queryable_t>,
     key_expr: &z_loaned_keyexpr_t,
-    callback: &mut z_owned_closure_query_t,
+    callback: &mut z_moved_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
-    let mut closure = z_owned_closure_query_t::empty();
-    std::mem::swap(&mut closure, callback);
-    let session = session.as_rust_type_ref();
-    let keyexpr = key_expr.as_rust_type_ref();
-    let mut builder = session.declare_queryable(keyexpr);
-    if let Some(options) = options {
-        builder = builder.complete(options.complete);
-    }
-    let queryable = builder
-        .callback(move |query| {
-            z_closure_query_call(z_closure_query_loan(&closure), query.as_loaned_c_type_ref())
-        })
-        .wait();
-    match queryable {
+    let this = queryable.as_rust_type_mut_uninit();
+    let queryable = _declare_queryable_inner(session, key_expr, callback, options);
+    match queryable.wait() {
         Ok(q) => {
             this.write(Some(q));
             result::Z_OK
@@ -241,32 +264,52 @@ pub extern "C" fn z_declare_queryable(
     }
 }
 
-/// Undeclares a `z_owned_queryable_t` and drops it.
+/// Declares a background queryable for a given keyexpr. The queryable callback will be be called
+/// to proccess incoming queries until the corresponding session is closed or dropped.
 ///
-/// Returns 0 in case of success, negative error code otherwise.
-#[allow(clippy::missing_safety_doc)]
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression the Queryable will reply to.
+/// @param callback: The callback function that will be called each time a matching query is received. Its ownership is passed to queryable.
+/// @param options: Options for the queryable.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case )
 #[no_mangle]
-pub extern "C" fn z_undeclare_queryable(this: &mut z_owned_queryable_t) -> result::z_result_t {
-    if let Some(qable) = this.as_rust_type_mut().take() {
-        if let Err(e) = qable.undeclare().wait() {
+pub extern "C" fn z_declare_background_queryable(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_query_t,
+    options: Option<&mut z_queryable_options_t>,
+) -> result::z_result_t {
+    let queryable = _declare_queryable_inner(session, key_expr, callback, options);
+    match queryable.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
             tracing::error!("{}", e);
-            return result::Z_EGENERIC;
+            result::Z_EGENERIC
         }
     }
-    result::Z_OK
 }
 
-/// Frees memory and resets it to its gravesztone state. Will also attempt to undeclare queryable.
+/// Undeclares queryable callback and resets it to its gravestone state.
+/// This is equivalent to calling `z_undeclare_queryable()` and discarding its return value.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_queryable_drop(this: &mut z_owned_queryable_t) {
-    z_undeclare_queryable(this);
+pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
+    std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
 #[no_mangle]
-pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the ID of the queryable.
+#[no_mangle]
+pub extern "C" fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_global_id_t {
+    queryable.as_rust_type_ref().id().into_c_type()
 }
 
 /// Sends a reply to a query.
@@ -287,33 +330,26 @@ pub extern "C" fn z_queryable_check(this: &z_owned_queryable_t) -> bool {
 pub extern "C" fn z_query_reply(
     this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
-    payload: &mut z_owned_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_query_reply_options_t>,
 ) -> result::z_result_t {
     let query = this.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = std::mem::take(payload.as_rust_type_mut());
-
+    let payload = payload.take_rust_type();
     let mut reply = query.reply(key_expr, payload);
     if let Some(options) = options {
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
-            reply = reply.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            reply = reply.encoding(encoding.take_rust_type());
         };
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
-            reply = reply.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            reply = reply.source_info(source_info.take_rust_type());
         };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
-            reply = reply.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            reply = reply.attachment(attachment.take_rust_type());
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
-                .unwrap()
-                .as_rust_type_ref();
-            reply = reply.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
         reply = reply.priority(options.priority.into());
         reply = reply.congestion_control(options.congestion_control.into());
@@ -343,19 +379,15 @@ pub extern "C" fn z_query_reply(
 #[no_mangle]
 pub unsafe extern "C" fn z_query_reply_err(
     this: &z_loaned_query_t,
-    payload: &mut z_owned_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_query_reply_err_options_t>,
 ) -> result::z_result_t {
     let query = this.as_rust_type_ref();
-    let payload = std::mem::take(payload.as_rust_type_mut());
-
+    let payload = payload.take_rust_type();
     let reply = query.reply_err(payload).encoding(
         options
-            .and_then(|o| {
-                o.encoding
-                    .as_mut()
-                    .map(|e| std::mem::take(e.as_rust_type_mut()))
-            })
+            .and_then(|o| o.encoding.take())
+            .map(|e| e.take_rust_type())
             .unwrap_or(Encoding::default()),
     );
 
@@ -373,7 +405,7 @@ pub unsafe extern "C" fn z_query_reply_err(
 /// be called multiple times to send multiple replies to a query. The reply
 /// will be considered complete when the Queryable callback returns.
 ///
-/// @param this: The query to reply to.
+/// @param this_: The query to reply to.
 /// @param key_expr: The key of this delete reply.
 /// @param options: The options of this delete reply. All owned fields will be consumed.
 ///
@@ -391,19 +423,14 @@ pub unsafe extern "C" fn z_query_reply_del(
     let mut reply = query.reply_del(key_expr);
     if let Some(options) = options {
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
-            reply = reply.source_info(source_info);
+        if let Some(source_info) = options.source_info.take() {
+            reply = reply.source_info(source_info.take_rust_type());
         };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
-            reply = reply.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            reply = reply.attachment(attachment.take_rust_type());
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_mut() }
-                .unwrap()
-                .as_rust_type_ref();
-            reply = reply.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
         reply = reply.priority(options.priority.into());
         reply = reply.congestion_control(options.congestion_control.into());
@@ -420,8 +447,8 @@ pub unsafe extern "C" fn z_query_reply_del(
 /// Gets query key expression.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_query_keyexpr(this: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
+pub extern "C" fn z_query_keyexpr(this_: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
+    this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
@@ -440,8 +467,9 @@ pub unsafe extern "C" fn z_query_parameters(
 ///
 /// Returns NULL if query does not contain a payload.
 #[no_mangle]
-pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    this.as_rust_type_ref()
+pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+    this_
+        .as_rust_type_ref()
         .payload()
         .map(|v| v.as_loaned_c_type_ref())
 }
@@ -450,8 +478,9 @@ pub extern "C" fn z_query_payload(this: &z_loaned_query_t) -> Option<&z_loaned_b
 ///
 /// Returns NULL if query does not contain an encoding.
 #[no_mangle]
-pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
-    this.as_rust_type_ref()
+pub extern "C" fn z_query_encoding(this_: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
+    this_
+        .as_rust_type_ref()
         .encoding()
         .map(|v| v.as_loaned_c_type_ref())
 }
@@ -460,8 +489,22 @@ pub extern "C" fn z_query_encoding(this: &z_loaned_query_t) -> Option<&z_loaned_
 ///
 /// Returns NULL if query does not contain an attachment.
 #[no_mangle]
-pub extern "C" fn z_query_attachment(this: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
-    this.as_rust_type_ref()
+pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+    this_
+        .as_rust_type_ref()
         .attachment()
         .map(|a| a.as_loaned_c_type_ref())
+}
+
+/// Undeclares a `z_owned_queryable_t`.
+/// Returns 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
+    if let Some(qable) = this_.take_rust_type() {
+        if let Err(e) = qable.undeclare().wait() {
+            tracing::error!("{}", e);
+            return result::Z_EGENERIC;
+        }
+    }
+    result::Z_OK
 }

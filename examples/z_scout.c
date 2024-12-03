@@ -15,7 +15,6 @@
 
 #include "zenoh.h"
 
-#ifdef UNSTABLE
 void fprintpid(FILE *stream, z_id_t pid) {
     int len = 0;
     for (int i = 0; i < 16; i++) {
@@ -33,7 +32,6 @@ void fprintpid(FILE *stream, z_id_t pid) {
         fprintf(stream, ")");
     }
 }
-#endif
 
 void fprintwhatami(FILE *stream, z_whatami_t whatami) {
     z_view_string_t whatami_str;
@@ -57,9 +55,8 @@ void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
 
 void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
-#ifdef UNSTABLE
+
     fprintpid(stream, z_hello_zid(hello));
-#endif
     fprintf(stream, ", whatami: ");
     fprintwhatami(stream, z_hello_whatami(hello));
 
@@ -72,7 +69,7 @@ void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintf(stream, " }");
 }
 
-void callback(const z_loaned_hello_t *hello, void *context) {
+void callback(z_loaned_hello_t *hello, void *context) {
     fprinthello(stdout, hello);
     fprintf(stdout, "\n");
     (*(int *)context)++;
@@ -88,6 +85,8 @@ void drop(void *context) {
 }
 
 int main(int argc, char **argv) {
+    zc_init_log_from_env_or("error");
+
     int *context = z_malloc(sizeof(int));
     *context = 0;
     z_owned_config_t config;

@@ -14,9 +14,12 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh::shm::{
-    AllocLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder, StaticProtocolID,
-    POSIX_PROTOCOL_ID,
+use zenoh::{
+    shm::{
+        AllocLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder, StaticProtocolID,
+        POSIX_PROTOCOL_ID,
+    },
+    Wait,
 };
 
 use crate::{
@@ -32,7 +35,8 @@ pub type PosixShmProvider =
 pub type PosixAllocLayout =
     AllocLayout<'static, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>;
 
-/// Creates a new POSIX SHM Provider
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates a new POSIX SHM Provider.
 #[no_mangle]
 pub extern "C" fn z_posix_shm_provider_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
@@ -40,13 +44,13 @@ pub extern "C" fn z_posix_shm_provider_new(
 ) -> z_result_t {
     match PosixShmProviderBackend::builder()
         .with_layout(layout.as_rust_type_ref())
-        .res()
+        .wait()
     {
         Ok(backend) => {
             let provider = ShmProviderBuilder::builder()
                 .protocol_id::<POSIX_PROTOCOL_ID>()
                 .backend(backend)
-                .res();
+                .wait();
             this.as_rust_type_mut_uninit()
                 .write(Some(CSHMProvider::Posix(provider)));
             Z_OK

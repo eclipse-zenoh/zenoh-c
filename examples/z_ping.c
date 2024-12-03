@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
 #define DEFAULT_PKT_SIZE 8
@@ -20,51 +21,36 @@
 z_owned_condvar_t cond;
 z_owned_mutex_t mutex;
 
-void callback(const z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
+void callback(z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
 void drop(void* context) { z_drop(z_move(cond)); }
 
 struct args_t {
     unsigned int size;             // -s
     unsigned int number_of_pings;  // -n
     unsigned int warmup_ms;        // -w
-    char* config_path;             // -c
-    uint8_t help_requested;        // -h
 };
-struct args_t parse_args(int argc, char** argv);
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
-    struct args_t args = parse_args(argc, argv);
-    if (args.help_requested) {
-        printf(
-            "\
-		-n (optional, int, default=%d): the number of pings to be attempted\n\
-		-s (optional, int, default=%d): the size of the payload embedded in the ping and repeated by the pong\n\
-		-w (optional, int, default=%d): the warmup time in ms during which pings will be emitted but not measured\n\
-		-c (optional, string): the path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
-		",
-            DEFAULT_PING_NB, DEFAULT_PKT_SIZE, DEFAULT_WARMUP_MS);
-        return 1;
-    }
+    zc_init_log_from_env_or("error");
+
+    z_owned_config_t config;
+    struct args_t args = parse_args(argc, argv, &config);
+
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
-    z_owned_config_t config;
-    if (args.config_path) {
-        zc_config_from_file(&config, args.config_path);
-    } else {
-        z_config_default(&config);
-    }
     z_owned_session_t session;
-    z_open(&session, z_move(config));
+    z_open(&session, z_move(config), NULL);
     z_view_keyexpr_t ping;
     z_view_keyexpr_from_str_unchecked(&ping, "test/ping");
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(session), z_loan(ping), NULL);
+    z_declare_publisher(z_loan(session), &pub, z_loan(ping), NULL);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
+    z_declare_subscriber(z_loan(session), &sub, z_loan(pong), z_move(respond), NULL);
     uint8_t* data = z_malloc(args.size);
     for (int i = 0; i < args.size; i++) {
         data[i] = i % 10;
@@ -104,50 +90,59 @@ int main(int argc, char** argv) {
     z_mutex_unlock(z_loan_mut(mutex));
     z_free(results);
     z_free(data);
-    z_undeclare_subscriber(z_move(sub));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(sub));
+    z_drop(z_move(pub));
     z_drop(z_move(mutex));
-    z_close(z_move(session));
+    z_drop(z_move(session));
 }
 
-char* getopt(int argc, char** argv, char option) {
-    for (int i = 0; i < argc; i++) {
-        size_t len = strlen(argv[i]);
-        if (len >= 2 && argv[i][0] == '-' && argv[i][1] == option) {
-            if (len > 2 && argv[i][2] == '=') {
-                return argv[i] + 3;
-            } else if (i + 1 < argc) {
-                return argv[i + 1];
-            }
-        }
-    }
-    return NULL;
+void print_help() {
+    printf(
+        "\
+    Usage: z_ping [OPTIONS]\n\n\
+    Options:\n\
+        -n <SAMPLES> (optional, int, default=%d): The number of pings to be attempted\n\
+        -s <SIZE> (optional, int, default=%d): The size of the payload embedded in the ping and repeated by the pong\n\
+        -w <WARMUP> (optional, int, default=%d): The warmup time in ms during which pings will be emitted but not measured\n",
+        DEFAULT_PKT_SIZE, DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
 }
 
-struct args_t parse_args(int argc, char** argv) {
-    for (int i = 0; i < argc; i++) {
-        if (strcmp(argv[i], "-h") == 0) {
-            return (struct args_t){.help_requested = 1};
-        }
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
     }
-    char* arg = getopt(argc, argv, 's');
+    const char* arg = parse_opt(argc, argv, "s", true);
     unsigned int size = DEFAULT_PKT_SIZE;
     if (arg) {
         size = atoi(arg);
     }
-    arg = getopt(argc, argv, 'n');
+    arg = parse_opt(argc, argv, "n", true);
     unsigned int number_of_pings = DEFAULT_PING_NB;
     if (arg) {
         number_of_pings = atoi(arg);
     }
-    arg = getopt(argc, argv, 'w');
+    arg = parse_opt(argc, argv, "w", true);
     unsigned int warmup_ms = DEFAULT_WARMUP_MS;
     if (arg) {
         warmup_ms = atoi(arg);
     }
-    return (struct args_t){.help_requested = 0,
-                           .size = size,
-                           .number_of_pings = number_of_pings,
-                           .warmup_ms = warmup_ms,
-                           .config_path = getopt(argc, argv, 'c')};
+    parse_zenoh_common_args(argc, argv, config);
+    arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return (struct args_t){.size = size, .number_of_pings = number_of_pings, .warmup_ms = warmup_ms};
 }

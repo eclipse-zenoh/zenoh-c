@@ -40,7 +40,7 @@ Publish
 
       z_put(z_loan(s), z_loan(key_expr), z_move(payload), NULL);
 
-      z_close(z_move(s));
+      z_drop(z_move(s));
       return 0;
   }
 
@@ -56,7 +56,7 @@ Subscribe
       z_view_string_t key_string;
       z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
       z_owned_string_t payload_string;
-      z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+      z_bytes_to_string(z_sample_payload(sample), &payload_string);
       printf(">> Received (%.*s, %.*s)\n", 
           (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)), 
           (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
@@ -81,9 +81,9 @@ Subscribe
       z_view_keyexpr_from_string(&key_expr, "key/expression");
 
       z_owned_subscriber_t sub;
-      if (z_declare_subscriber(&sub, z_loan(s), z_loan(key_expr) z_move(callback), NULL) != 0) {
+      if (z_declare_subscriber(z_loan(s), &sub, z_loan(key_expr) z_move(callback), NULL) != 0) {
           printf("Unable to create Zenoh subscriber.\n");
-          z_close(z_move(s));
+          z_drop(z_move(s));
           exit(-1);
       }
 
@@ -92,8 +92,8 @@ Subscribe
           c = fgetc(stdin);
       }
 
-      z_undeclare_subscriber(z_move(sub));
-      z_close(z_move(s));
+      z_drop(z_move(sub));
+      z_drop(z_move(s));
       return 0;
   }
 
@@ -129,7 +129,7 @@ Query
               z_view_string_t key_string;
               z_keyexpr_to_string(z_sample_keyexpr(sample), &key_string);
               z_owned_string_t payload_string;
-              z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_string);
+              z_bytes_to_string(z_sample_payload(sample), &payload_string);
               printf(">> Received (%.*s, %.*s)\n",
                   (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
                   (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string))
@@ -140,7 +140,7 @@ Query
 
       z_drop(reply);
       z_drop(channel);
-      z_close(z_move(s));
+      z_drop(z_move(s));
       return 0;
   }
 
@@ -160,7 +160,7 @@ Queryable
       const z_loaned_bytes_t* payload =  z_value_payload(z_query_value(query));
       if (z_bytes_len(payload) > 0) {
           z_owned_string_t payload_string;
-          z_bytes_deserialize_into_string(payload, &payload_string);
+          z_bytes_to_string(payload, &payload_string);
 
           printf(">> [Queryable ] Received Query '%.*s' with value '%.*s'\n", 
               (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
@@ -195,7 +195,7 @@ Queryable
       z_closure(&callback, query_handler, NULL, (void*)keyexpr);
       z_owned_queryable_t qable;
 
-      if (z_declare_queryable(&qable, z_loan(s), z_loan(key_expr), z_move(callback), NULL) < 0) {
+      if (z_declare_queryable(z_loan(s), &qable, z_loan(key_expr), z_move(callback), NULL) < 0) {
           printf("Unable to create Zenoh queryable.\n");
           exit(-1);
       }
@@ -205,7 +205,7 @@ Queryable
           c = fgetc(stdin);
       }
 
-      z_undeclare_queryable(z_move(qable));
-      z_close(z_move(s));
+      z_drop(z_move(qable));
+      z_drop(z_move(s));
       return 0;
   }

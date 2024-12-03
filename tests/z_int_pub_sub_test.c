@@ -37,7 +37,7 @@ int run_publisher() {
     z_owned_config_t config;
     z_config_default(&config);
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         return -1;
     }
@@ -50,7 +50,7 @@ int run_publisher() {
     publisher_options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
     z_owned_publisher_t pub;
 
-    if (z_declare_publisher(&pub, z_loan(s), z_loan(ke), &publisher_options) != Z_OK) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), &publisher_options) != Z_OK) {
         perror("Unable to declare Publisher for key expression!");
         return -1;
     }
@@ -67,7 +67,7 @@ int run_publisher() {
 
         z_publisher_put_options_t options;
         z_publisher_put_options_default(&options);
-        // options.source_info = &source_info;
+        // options.source_info = z_move(source_info);
         options.timestamp = &ts;
 
         z_owned_bytes_t payload;
@@ -75,12 +75,12 @@ int run_publisher() {
         z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
-    z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s));
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
     return 0;
 }
 
-void data_handler(const z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t *sample, void *arg) {
     static int val_num = 0;
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);
@@ -90,7 +90,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
     }
 
     z_owned_string_t payload_str;
-    z_bytes_deserialize_into_string(z_sample_payload(sample), &payload_str);
+    z_bytes_to_string(z_sample_payload(sample), &payload_str);
     if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
         perror("Unexpected value received");
         z_drop(z_move(payload_str));
@@ -103,7 +103,7 @@ void data_handler(const z_loaned_sample_t *sample, void *arg) {
         perror("Unexpected QoS values");
         exit(-1);
     }
-#if defined(UNSTABLE)
+#if defined(Z_FEATURE_UNSTABLE_API)
     const z_loaned_source_info_t *source_info = z_sample_source_info(sample);
     if (source_info == NULL) {
         perror("Unexpected null source_info");
@@ -145,7 +145,7 @@ int run_subscriber() {
     z_config_default(&config);
 
     z_owned_session_t s;
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         perror("Unable to open session!");
         return -1;
     }
@@ -156,7 +156,7 @@ int run_subscriber() {
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
     z_owned_subscriber_t sub;
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), NULL) < 0) {
         perror("Unable to declare subscriber!");
         return -1;
     }
@@ -164,8 +164,8 @@ int run_subscriber() {
     SEM_POST(sem);
     sleep(10);
 
-    z_undeclare_subscriber(z_move(sub));
-    z_close(z_move(s));
+    z_drop(z_move(sub));
+    z_drop(z_move(s));
 
     return -1;
 }

@@ -88,10 +88,10 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    cmake --build . --target install
    ```
 
-   By default only dynamic library is installed. Set `ZENOHC_INSTALL_STATIC_LIBRARY` variable to true to install static library also:
+   By default only dynamic library is built and installed. Set `BUILD_SHARED_LIBS` variable to false to build and install static library:
 
    ```bash
-   cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DZENOHC_INSTALL_STATIC_LIBRARY=TRUE
+   cmake ../zenoh-c -DCMAKE_INSTALL_PREFIX=~/.local -DBUILD_SHARED_LIBS=FALSE
    cmake --build . --target install
    ```
 
@@ -100,9 +100,9 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
    - `zenohc::shared` for linking dynamic library
    - `zenohc::static` for linking static library
-   - `zenohc::lib` for linking static or dynamic library depending on boolean variable `ZENOHC_LIB_STATIC`
+   - `zenohc::lib` for linking static or dynamic library depending on boolean variable `BUILD_SHARED_LIBS`
 
-   For `Debug` configuration the library package `zenohc_debug` is installed side-by-side with release `zenohc` library. Suffix `d` is added to names of library files (libzenohc**d**.so).
+   For `Debug` configuration suffix `d` is added to names of library files (libzenohc**d**.so).
 
 5. VScode
 
@@ -130,35 +130,17 @@ cmake ../zenoh-c/examples
 cmake --build .
 ```
 
-In this case, the examples executables will be built in the current directory.
-
-As a root project the `examples` project links `zenoh-c` with CMake's [add_subdirectory] command by default. There are also other ways to link `zenoh-c` - with [find_package] or [FetchContent]:
-
-[add_subdirectory]: https://cmake.org/cmake/help/latest/command/add_subdirectory.html
-[find_package]: https://cmake.org/cmake/help/latest/command/find_package.html
-[FetchContent]: https://cmake.org/cmake/help/latest/module/FetchContent.html
-
 Link with `zenoh-c` installed into default location in the system (with [find_package]):
 
 ```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE
+cmake ../zenoh-c/examples
 ```
 
 Link with `zenoh-c` installed in `~/.local` directory:
 
 ```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=PACKAGE -DCMAKE_INSTALL_PREFIX=~/.local
+cmake ../zenoh-c/examples -DCMAKE_INSTALL_PREFIX=~/.local
 ```
-
-Download specific `zenoh-c` version from git with [FetchContent]:
-
-```bash
-cmake ../zenoh-c/examples -DZENOHC_SOURCE=GIT_URL -DZENOHC_GIT_TAG=0.11.0-rc
-```
-
-See also `configure_include_project` function in [helpers.cmake] for more information
-
-[helpers.cmake]: cmake/helpers.cmake
 
 ## Running the Examples
 
@@ -192,80 +174,67 @@ See also `configure_include_project` function in [helpers.cmake] for more inform
 ./target/release/examples/z_pub_thr
 ```
 
-## API conventions
+## Documentation
+Zenoh-c API documentation is available on [Read the Docs](https://zenoh-c.readthedocs.io/en/latest/index.html).
 
-Most of the types exposed by the `zenoh-c` API are types for which destruction is necessary. To help you spot these types, we name them with the convention that any destructible type must start by `z_owned`.
+It can be built manually by performing the following steps:
 
-For maximum performance, we try to make as few copies as possible. Sometimes, this implies moving data that you `z_owned`. Any function that takes a non-const pointer to a `z_owned` type will perform its destruction. To make this pattern more obvious, we encourage you to use the `z_move` macro instead of a simple `&` to create these pointers. Rest assured that all `z_owned` types are double-free safe, and that you may check whether any `z_owned_X_t` typed value is still valid by using `z_X_check(&val)`, or the `z_check(val)` macro if you're using C11.
-
-We hope this convention will help you streamline your memory-safe usage of zenoh, as following it should make looking for leaks trivial: simply search for paths where a value of a `z_owned` type hasn't been passed to a function using `z_move`.
-
-Functions that simply need to borrow your data will instead take values of the associated `z_X_t` type. You may construct them using `z_X_loan(&val)` (or the `z_loan(val)` generic macro with C11).
-
-Note that some `z_X_t` typed values can be constructed without needing to `z_borrow` their owned variants. This allows you to reduce the amount of copies realized in your program.
-
-The examples have been written with C11 in mind, using the conventions we encourage you to follow.
-
-Finally, we strongly advise that you refrain from using structure field that starts with `_`:
-
-- We try to maintain a common API between `zenoh-c` and [`zenoh-pico`](https://github.com/eclipse-zenoh/zenoh-pico), such that porting code from one to the other is, ideally, trivial. However, some types must have distinct representations in either library, meaning that using these representations explicitly will get you in trouble when porting.
-- We reserve the right to change the memory layout of any type which has `_`-prefixed fields, so trying to use them might cause your code to break on updates.
-
-## Logging
-
-By default, zenoh-c enables Zenoh's logging library upon using the `z_open` or `z_scout` functions. This behavior can be disabled by adding `-DDISABLE_LOGGER_AUTOINIT:bool=true` to the `cmake` configuration command. The logger may then be manually re-enabled with the `zc_init_logger` function.
+```bash
+cd docs
+doxygen
+sphinx-build -b html . _build/html
+```
 
 ## Cross-Compilation
+Cross-compilation can be performed using standard cmake approach as described in [[cmake-toolchains](https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html)].
 
-The following alternative options have been introduced to facilitate cross-compilation.
-> :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
+In addition the following project-specific options might need to be set for cross-compilation:
 
 - `-DZENOHC_CARGO_CHANNEL="+nightly"|"+beta"|"+stable"`: refers to a specific rust toolchain release [[rust-channels](https://rust-lang.github.io/rustup/concepts/channels.html)]
 - `-DZENOHC_CARGO_FLAGS`: several optional flags can be used for compilation. [[cargo flags](https://doc.rust-lang.org/cargo/commands/cargo-build.html)]
-- `-DZENOHC_CUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tire-1, Tire-2 and Tire-3 targets [[targets](https://doc.rust-lang.org/nightly/rustc/platform-support.html)]. But keep in mind that zenoh-c only have support for following targets: `aarch64-unknown-linux-gnu`, `x86_64-unknown-linux-gnu`, `arm-unknown-linux-gnueabi`
+- `-DZENOHC_CUSTOM_TARGET`: specifies a crosscompilation target. Currently rust support several Tier-1, Tier-2 and Tier-3 targets [[targets](https://doc.rust-lang.org/nightly/rustc/platform-support.html)].
 
 Let's put all together in an example:
-Assuming you want to crosscompile for aarch64-unknown-linux-gnu.
+Assuming you want to cross-compile for x86_64-pc-windows-gnu from Ubuntu environment.
 
 1. Install required packages
-   - `sudo apt install gcc-aarch64-linux-gnu`
+   - `sudo apt-get install -y mingw-w64`: cross-compilation toolchain for c/c++.
+   - `rustup toolchain install x86_64-pc-windows-gnu`: cross-compilation toolchain for rust.
 2. *(Only if you're using `nightly`)
    - `rustup component add rust-src --toolchain nightly`
 3. Compile Zenoh-C. Assume that it's in `zenoh-c` directory. Notice that build in this sample is performed outside of source directory
 
    ```bash
-   export RUSTFLAGS="-Clinker=aarch64-linux-gnu-gcc -Car=aarch64-linux-gnu-ar"
+   export RUSTFLAGS="-Clinker=x86_64-w64-mingw32-gcc -Car=x86_64-w64-mingw32-ar"
    mkdir -p build && cd build
-   cmake ../zenoh-c  -DZENOHC_CARGO_CHANNEL="+nightly" -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="aarch64-unknown-linux-gnu" -DCMAKE_INSTALL_PREFIX=../aarch64/stage
+   cmake ../zenoh-c  -DCMAKE_SYSTEM_NAME="Windows" -DCMAKE_C_COMPILER="x86_64-w64-mingw32-gcc" -DCMAKE_CXX_COMPILER="x86_64-w64-mingw32-g++" -DCMAKE_SYSTEM_PROCESSOR="x86_64" -DZENOHC_CARGO_CHANNEL="+nightly" -DZENOHC_CARGO_FLAGS="-Zbuild-std=std,panic_abort" -DZENOHC_CUSTOM_TARGET="x86_64-pc-windows-gnu" -DCMAKE_INSTALL_PREFIX="../x86_64-pc-windows-gnu/stage"
    cmake --build . --target install
    ```
 
-Additionally you can use `RUSTFLAGS` environment variable for lead the compilation.
-
 If all goes right the building files will be located at:
-`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+`/path/to/zenoh-c/target/x86_64-pc-windows-gnu/release`
 and release files will be located at
-`/path/to/zenoh-c/target/aarch64-unknown-linux-gnu/release`
+`/path/to/zenoh-c/target/x86_64-pc-windows-gnu/release`
 
+> :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
 ## Rust Version
 
-The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.72.0`.
+The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.75.0`.
 There might be some memory mapping issue if you use the later version.
 
 You can also specify the Rust version.
 
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.72.0"
+cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0"
 ```
 
 ## Zenoh features support (enabling/disabling protocols, etc)
 
 It's necessary sometimes to build zenoh-c library with set of features different from default. For example: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)
 
-Available features can be found in Zenoh [Cargo.toml](https://github.com/eclipse-zenoh/zenoh/blob/main/zenoh/Cargo.toml)
-
+Available features can be found in [Cargo.toml](./Cargo.toml)
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=zenoh/transport_tcp,zenoh/transport_udp"
+cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=transport_tcp,transport_udp"
 ```
 
 ## Versioning

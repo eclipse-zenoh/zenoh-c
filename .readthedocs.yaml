@@ -16,7 +16,7 @@ build:
   jobs:
     # Run cargo build to build git ignored files that are platform specific (e.g. include/zenoh_opaque.h)
     pre_build:
-      - cargo build --release --manifest-path=./Cargo.toml --features=logger-autoinit --features=unstable --features=shared-memory
+      - cargo build --release --manifest-path=./Cargo.toml --features=unstable --features=shared-memory
 
 
 # Build documentation in the docs/ directory with Sphinx

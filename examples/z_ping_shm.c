@@ -20,7 +20,7 @@
 z_owned_condvar_t cond;
 z_owned_mutex_t mutex;
 
-void callback(const z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
+void callback(z_loaned_sample_t* sample, void* context) { z_condvar_signal(z_loan(cond)); }
 void drop(void* context) { z_drop(z_move(cond)); }
 
 struct args_t {
@@ -47,6 +47,9 @@ int main(int argc, char** argv) {
     }
     z_mutex_init(&mutex);
     z_condvar_init(&cond);
+
+    zc_init_log_from_env_or("error");
+
     z_owned_config_t config;
     if (args.config_path) {
         zc_config_from_file(&config, args.config_path);
@@ -54,28 +57,18 @@ int main(int argc, char** argv) {
         z_config_default(&config);
     }
 
-    // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
-    // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
-        printf(
-            "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
-            "JSON-serialized value\n",
-            Z_CONFIG_SHARED_MEMORY_KEY, Z_CONFIG_SHARED_MEMORY_KEY);
-        exit(-1);
-    }
-
     z_owned_session_t session;
-    z_open(&session, z_move(config));
+    z_open(&session, z_move(config), NULL);
     z_view_keyexpr_t ping;
     z_view_keyexpr_from_str_unchecked(&ping, "test/ping");
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(&pub, z_loan(session), z_loan(ping), NULL);
+    z_declare_publisher(z_loan(session), &pub, z_loan(ping), NULL);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
     z_owned_subscriber_t sub;
-    z_declare_subscriber(&sub, z_loan(session), z_loan(pong), z_move(respond), NULL);
+    z_declare_subscriber(z_loan(session), &sub, z_loan(pong), z_move(respond), NULL);
 
     // Create SHM Provider
     z_alloc_alignment_t alignment = {0};
@@ -87,7 +80,7 @@ int main(int argc, char** argv) {
     // Allocate SHM Buffer
     z_buf_layout_alloc_result_t alloc;
     z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
-    if (!z_check(alloc.buf)) {
+    if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...");
         return -1;
     }
@@ -101,7 +94,7 @@ int main(int argc, char** argv) {
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
     z_owned_bytes_t shmbs;
-    if (z_bytes_serialize_from_shm(&shmbs, z_move(shm)) != Z_OK) {
+    if (z_bytes_from_shm(&shmbs, z_move(shm)) != Z_OK) {
         printf("Unexpected failure during SHM buffer serialization...\n");
         return -1;
     }
@@ -140,11 +133,10 @@ int main(int argc, char** argv) {
     }
     z_mutex_unlock(z_loan_mut(mutex));
     z_free(results);
-    z_free(data);
-    z_undeclare_subscriber(z_move(sub));
-    z_undeclare_publisher(z_move(pub));
+    z_drop(z_move(sub));
+    z_drop(z_move(pub));
     z_drop(z_move(mutex));
-    z_close(z_move(session));
+    z_drop(z_move(session));
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));

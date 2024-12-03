@@ -18,6 +18,7 @@ use std::{cmp::min, slice};
 
 use libc::c_void;
 
+use crate::transmute::{LoanedCTypeRef, TakeRustType};
 #[macro_use]
 mod transmute;
 pub mod opaque_types;
@@ -32,16 +33,18 @@ pub mod encoding;
 pub use crate::encoding::*;
 mod commons;
 pub use crate::commons::*;
-mod payload;
-pub use crate::payload::*;
+mod zbytes;
+pub use crate::zbytes::*;
 mod keyexpr;
 pub use crate::keyexpr::*;
-#[cfg(feature = "unstable")]
 mod info;
-#[cfg(feature = "unstable")]
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;
+#[cfg(feature = "unstable")]
+mod querier;
+#[cfg(feature = "unstable")]
+pub use crate::querier::*;
 mod queryable;
 pub use crate::queryable::*;
 mod put;
@@ -63,6 +66,10 @@ mod liveliness;
 #[cfg(feature = "unstable")]
 pub use liveliness::*;
 #[cfg(feature = "unstable")]
+mod matching;
+#[cfg(feature = "unstable")]
+pub use matching::*;
+#[cfg(feature = "unstable")]
 mod publication_cache;
 #[cfg(feature = "unstable")]
 pub use publication_cache::*;
@@ -76,13 +83,63 @@ pub mod context;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
 
-/// Initialises the zenoh runtime logger.
+mod serialization;
+
+/// Initializes the zenoh runtime logger, using rust environment settings.
+/// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
-/// Note that unless you built zenoh-c with the `logger-autoinit` feature disabled,
-/// this will be performed automatically by `z_open` and `z_scout`.
+/// Note that if the environment variable is not set, then logging will not be enabled.
+/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
 #[no_mangle]
-pub extern "C" fn zc_init_logger() {
+pub extern "C" fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
+}
+
+/// Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
+/// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
+///
+/// Note that if the environment variable is not set, then fallback filter will be used instead.
+/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+///
+/// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_init_log_from_env_or(
+    fallback_filter: *const libc::c_char,
+) -> result::z_result_t {
+    match std::ffi::CStr::from_ptr(fallback_filter).to_str() {
+        Ok(s) => {
+            zenoh::init_log_from_env_or(s);
+            result::Z_OK
+        }
+        Err(_) => result::Z_EINVAL,
+    }
+}
+
+/// Initializes the zenoh runtime logger with custom callback.
+///
+/// @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
+/// Messages with lower severity levels will be ignored.
+/// @param callback: A closure that will be called with each log message severity level and content.
+#[no_mangle]
+pub extern "C" fn zc_init_log_with_callback(
+    min_severity: zc_log_severity_t,
+    callback: &mut zc_moved_closure_log_t,
+) {
+    let callback = callback.take_rust_type();
+    zenoh_util::log::init_log_with_callback(
+        move |meta| min_severity <= (*meta.level()).into(),
+        move |record| {
+            if let Some(s) = record.message.as_ref() {
+                let c = CStringView::new_borrowed_from_slice(s.as_bytes());
+                zc_closure_log_call(
+                    zc_closure_log_loan(&callback),
+                    record.level.into(),
+                    c.as_loaned_c_type_ref(),
+                );
+            }
+        },
+    );
 }
 
 // Test should be runned with `cargo test --no-default-features`
@@ -133,4 +190,13 @@ impl CopyableToCArray for &str {
     fn copy_to_c_array(&self, buf: *mut c_void, len: usize) -> usize {
         self.as_bytes().copy_to_c_array(buf, len)
     }
+}
+
+/// Stops all Zenoh tasks and drops all related static variables.
+/// All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
+/// None of Zenoh functionality can be used after this call.
+/// Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
+#[no_mangle]
+pub extern "C" fn zc_stop_z_runtime() {
+    let _z = zenoh_runtime::ZRuntimePoolGuard;
 }

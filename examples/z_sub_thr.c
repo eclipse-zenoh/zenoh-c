@@ -12,11 +12,13 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 #include <stdio.h>
-#include <zenoh_macros.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
 #define N 1000000
+
+void parse_args(int argc, char **argv, z_owned_config_t *config);
 
 typedef struct {
     volatile unsigned long count;
@@ -34,7 +36,7 @@ z_stats_t *z_stats_make() {
     return stats;
 }
 
-void on_sample(const z_loaned_sample_t *sample, void *context) {
+void on_sample(z_loaned_sample_t *sample, void *context) {
     z_stats_t *stats = (z_stats_t *)context;
     if (stats->count == 0) {
         stats->start = z_clock_now();
@@ -61,13 +63,15 @@ void drop_stats(void *context) {
 }
 
 int main(int argc, char **argv) {
-    z_owned_config_t config;
-    z_config_default(&config);
+    zc_init_log_from_env_or("error");
 
-#ifdef SHARED_MEMORY
+    z_owned_config_t config;
+    parse_args(argc, argv, &config);
+
+#if defined(Z_FEATURE_SHARED_MEMORY)
     // A probing procedure for shared memory is performed upon session opening. To operate over shared memory
     // (and to not fallback on network mode), shared memory needs to be enabled in the configuration.
-    if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
+    if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_SHARED_MEMORY_KEY, "true") < 0) {
         printf(
             "Couldn't insert value `true` in configuration at `%s`. This is likely because `%s` expects a "
             "JSON-serialized value\n",
@@ -76,19 +80,9 @@ int main(int argc, char **argv) {
     }
 #endif
 
-    if (argc > 1) {
-        if (zc_config_insert_json(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
-
     z_owned_session_t s;
 
-    if (z_open(&s, z_move(config)) < 0) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -96,24 +90,53 @@ int main(int argc, char **argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/thr");
     z_owned_keyexpr_t declared_ke;
-    z_declare_keyexpr(&declared_ke, z_loan(s), z_loan(ke));
+    z_declare_keyexpr(z_loan(s), &declared_ke, z_loan(ke));
 
     z_stats_t *context = z_stats_make();
     z_owned_closure_sample_t callback;
     z_closure(&callback, on_sample, drop_stats, context);
-    z_owned_subscriber_t sub;
-    if (z_declare_subscriber(&sub, z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
+    if (z_declare_background_subscriber(z_loan(s), z_loan(declared_ke), z_move(callback), NULL)) {
         printf("Unable to create subscriber.\n");
         exit(-1);
     }
 
-    char c = 0;
-    while (c != 'q') {
-        c = fgetc(stdin);
+    printf("Press CTRL-C to quit...\n");
+    while (1) {
+        z_sleep_s(1);
     }
 
-    z_undeclare_subscriber(z_move(sub));
-    z_undeclare_keyexpr(z_move(declared_ke), z_loan(s));
-    z_close(z_move(s));
+    z_undeclare_keyexpr(z_loan(s), z_move(declared_ke));
+    z_drop(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_sub_thr [OPTIONS]\n\n\
+    Options:\n");
+    printf(COMMON_HELP);
+    printf(
+        "\
+        -h: print help\n");
+}
+
+void parse_args(int argc, char **argv, z_owned_config_t *config) {
+    if (parse_opt(argc, argv, "h", false)) {
+        print_help();
+        exit(1);
+    }
+    parse_zenoh_common_args(argc, argv, config);
+    const char *arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char **pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
 }

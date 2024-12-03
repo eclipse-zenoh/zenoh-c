@@ -16,11 +16,11 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::{
-    prelude::*,
     shm::{
         AllocLayout, AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, PosixShmProviderBackend,
         ProtocolIDSource, ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
     },
+    Wait,
 };
 
 use super::{
@@ -143,8 +143,7 @@ pub fn alloc_async_impl<
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
 ) {
     let result_context: ThreadsafeContext = result_context.into();
-    //todo: this should be ported to tokio with executor argument support
-    async_std::task::spawn(async move {
+    zenoh_runtime::ZRuntime::Application.spawn(async move {
         let result = layout.alloc().with_policy::<Policy>().await;
         out_result.write(result.into());
         unsafe { (result_callback)(result_context.get(), out_result) };

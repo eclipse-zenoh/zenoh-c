@@ -16,52 +16,58 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
-    handlers,
-    handlers::{IntoHandler, RingChannelHandler},
+    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Query,
 };
 
-pub use crate::opaque_types::{z_loaned_fifo_handler_query_t, z_owned_fifo_handler_query_t};
+pub use crate::opaque_types::{
+    z_loaned_fifo_handler_query_t, z_moved_fifo_handler_query_t, z_owned_fifo_handler_query_t,
+};
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_query_t, Option<flume::Receiver<Query>>),
-    loaned(z_loaned_fifo_handler_query_t, flume::Receiver<Query>)
+    owned(z_owned_fifo_handler_query_t, option FifoChannelHandler<Query> ),
+    loaned(z_loaned_fifo_handler_query_t),
 );
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_query_drop(this: &mut z_owned_fifo_handler_query_t) {
-    *this.as_rust_type_mut() = None;
+pub extern "C" fn z_fifo_handler_query_drop(this_: &mut z_moved_fifo_handler_query_t) {
+    let _ = this_.take_rust_type();
 }
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_query_null(this: &mut MaybeUninit<z_owned_fifo_handler_query_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_fifo_handler_query_null(
+    this_: &mut MaybeUninit<z_owned_fifo_handler_query_t>,
+) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_fifo_handler_query_check(this: &z_owned_fifo_handler_query_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_fifo_handler_query_check(
+    this_: &z_owned_fifo_handler_query_t,
+) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
-extern "C" fn __z_handler_query_send(query: &z_loaned_query_t, context: *mut c_void) {
+extern "C" fn __z_handler_query_send(query: &mut z_loaned_query_t, context: *mut c_void) {
     unsafe {
         let f = (context as *mut std::sync::Arc<dyn Fn(Query) + Send + Sync>)
             .as_mut()
             .unwrap_unchecked();
-        (f)(query.as_rust_type_ref().clone());
+        let owned_ref: &mut Option<Query> = std::mem::transmute(query);
+        (f)(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 
 extern "C" fn __z_handler_query_drop(context: *mut c_void) {
     unsafe {
-        let f = (context as *mut Arc<dyn Fn(Query) + Send + Sync>).read();
+        let f = Box::from_raw(context as *mut Arc<dyn Fn(Query) + Send + Sync>);
         std::mem::drop(f);
     }
 }
@@ -79,9 +85,9 @@ pub unsafe extern "C" fn z_fifo_channel_query_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_query_t {
-        call: Some(__z_handler_query_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_query_drop),
+        _call: Some(__z_handler_query_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_query_drop),
     });
 }
 
@@ -127,42 +133,52 @@ pub extern "C" fn z_fifo_handler_query_try_recv(
     query: &mut MaybeUninit<z_owned_query_t>,
 ) -> z_result_t {
     match this.as_rust_type_ref().try_recv() {
-        Ok(q) => {
+        Ok(Some(q)) => {
             query.as_rust_type_mut_uninit().write(Some(q));
             result::Z_OK
         }
-        Err(e) => {
+        Ok(None) => {
             query.as_rust_type_mut_uninit().write(None);
-            match e {
-                flume::TryRecvError::Empty => result::Z_CHANNEL_NODATA,
-                flume::TryRecvError::Disconnected => result::Z_CHANNEL_DISCONNECTED,
-            }
+            result::Z_CHANNEL_NODATA
+        }
+        Err(_) => {
+            query.as_rust_type_mut_uninit().write(None);
+            result::Z_CHANNEL_DISCONNECTED
         }
     }
 }
 
-pub use crate::opaque_types::{z_loaned_ring_handler_query_t, z_owned_ring_handler_query_t};
+pub use crate::opaque_types::{
+    z_loaned_ring_handler_query_t, z_moved_ring_handler_query_t, z_owned_ring_handler_query_t,
+};
 decl_c_type!(
-    owned(z_owned_ring_handler_query_t, Option<RingChannelHandler<Query>>),
-    loaned(z_loaned_ring_handler_query_t, RingChannelHandler<Query>)
+    owned(
+        z_owned_ring_handler_query_t,
+        option RingChannelHandler<Query>,
+    ),
+    loaned(z_loaned_ring_handler_query_t),
 );
 
 /// Drops the handler and resets it to a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_query_drop(this: &mut z_owned_ring_handler_query_t) {
-    *this.as_rust_type_mut() = None;
+pub extern "C" fn z_ring_handler_query_drop(this_: &mut z_moved_ring_handler_query_t) {
+    let _ = this_.take_rust_type();
 }
 
 /// Constructs a handler in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_query_null(this: &mut MaybeUninit<z_owned_ring_handler_query_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_ring_handler_query_null(
+    this_: &mut MaybeUninit<z_owned_ring_handler_query_t>,
+) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_ring_handler_query_check(this: &z_owned_ring_handler_query_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_ring_handler_query_check(
+    this_: &z_owned_ring_handler_query_t,
+) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs send and recieve ends of the ring channel
@@ -178,9 +194,9 @@ pub unsafe extern "C" fn z_ring_channel_query_new(
     let cb_ptr = Box::into_raw(Box::new(cb)) as *mut libc::c_void;
     handler.as_rust_type_mut_uninit().write(Some(h));
     callback.write(z_owned_closure_query_t {
-        call: Some(__z_handler_query_send),
-        context: cb_ptr,
-        drop: Some(__z_handler_query_drop),
+        _call: Some(__z_handler_query_send),
+        _context: cb_ptr,
+        _drop: Some(__z_handler_query_drop),
     });
 }
 

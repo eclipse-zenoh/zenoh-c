@@ -11,16 +11,21 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::ptr::null_mut;
+use std::mem::MaybeUninit;
 
 use zenoh::{
-    prelude::*,
     qos::{CongestionControl, Priority},
+    session::SessionClosedError,
+    Wait,
 };
 
+#[cfg(feature = "unstable")]
+use crate::z_moved_source_info_t;
 use crate::{
-    commons::*, encoding::*, keyexpr::*, result, transmute::RustTypeRef, z_loaned_session_t,
-    z_owned_bytes_t, z_timestamp_t,
+    commons::*,
+    result,
+    transmute::{IntoRustType, RustTypeRef, TakeRustType},
+    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
 };
 
 /// Options passed to the `z_put()` function.
@@ -28,7 +33,7 @@ use crate::{
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
     /// The encoding of the message.
-    pub encoding: *mut z_owned_encoding_t,
+    pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing this message.
     pub congestion_control: z_congestion_control_t,
     /// The priority of this message.
@@ -36,33 +41,44 @@ pub struct z_put_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of this message.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// The put operation reliability.
+    reliability: z_reliability_t,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
     /// The source info for the message.
-    pub source_info: *mut z_owned_source_info_t,
+    pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to this message.
-    pub attachment: *mut z_owned_bytes_t,
+    pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
 /// Constructs the default value for `z_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
-    *this = z_put_options_t {
-        encoding: null_mut(),
+pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
+    this_.write(z_put_options_t {
+        encoding: None,
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
+        timestamp: None,
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
-        source_info: null_mut(),
-        attachment: null_mut(),
-    };
+        source_info: None,
+        attachment: None,
+    });
 }
 
 /// Publishes data on specified key expression.
@@ -78,48 +94,44 @@ pub extern "C" fn z_put_options_default(this: &mut z_put_options_t) {
 pub extern "C" fn z_put(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
-    payload: &mut z_owned_bytes_t,
+    payload: &mut z_moved_bytes_t,
     options: Option<&mut z_put_options_t>,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
-    let payload = std::mem::take(payload.as_rust_type_mut());
-
+    let payload = payload.take_rust_type();
     let mut put = session.put(key_expr, payload);
     if let Some(options) = options {
-        if let Some(encoding) = unsafe { options.encoding.as_mut() } {
-            let encoding = std::mem::take(encoding.as_rust_type_mut());
-            put = put.encoding(encoding);
+        if let Some(encoding) = options.encoding.take() {
+            put = put.encoding(encoding.take_rust_type());
         };
-        #[cfg(feature = "unstable")]
-        if let Some(source_info) = unsafe { options.source_info.as_mut() } {
-            let source_info = std::mem::take(source_info.as_rust_type_mut());
-            put = put.source_info(source_info);
-        };
-        if let Some(attachment) = unsafe { options.attachment.as_mut() } {
-            let attachment = std::mem::take(attachment.as_rust_type_mut());
-            put = put.attachment(attachment);
+        if let Some(attachment) = options.attachment.take() {
+            put = put.attachment(attachment.take_rust_type());
         }
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_ref() }
-                .unwrap()
-                .as_rust_type_ref();
-            put = put.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            put = put.timestamp(Some(timestamp.into_rust_type()));
         }
-        put = put.priority(options.priority.into());
-        put = put.congestion_control(options.congestion_control.into());
-        put = put.express(options.is_express);
+        put = put
+            .priority(options.priority.into())
+            .congestion_control(options.congestion_control.into())
+            .express(options.is_express);
         #[cfg(feature = "unstable")]
         {
-            put = put.allowed_destination(options.allowed_destination.into());
+            put = put
+                .reliability(options.reliability.into())
+                .allowed_destination(options.allowed_destination.into());
+            if let Some(source_info) = options.source_info.take() {
+                put = put.source_info(source_info.take_rust_type());
+            };
         }
     }
-
-    if let Err(e) = put.wait() {
-        tracing::error!("{}", e);
-        result::Z_EGENERIC
-    } else {
-        result::Z_OK
+    match put.wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
+        Err(e) => {
+            tracing::error!("{}", e);
+            result::Z_EGENERIC
+        }
     }
 }
 
@@ -134,8 +146,15 @@ pub struct z_delete_options_t {
     /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
     pub is_express: bool,
     /// The timestamp of this message.
-    pub timestamp: *mut z_timestamp_t,
+    pub timestamp: Option<&'static mut z_timestamp_t>,
     #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// The delete operation reliability.
+    pub reliability: z_reliability_t,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
 }
@@ -143,15 +162,17 @@ pub struct z_delete_options_t {
 /// Constructs the default value for `z_delete_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default(this: *mut z_delete_options_t) {
-    *this = z_delete_options_t {
+pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
+    this_.write(z_delete_options_t {
         congestion_control: CongestionControl::default().into(),
         priority: Priority::default().into(),
         is_express: false,
-        timestamp: null_mut(),
+        timestamp: None,
+        #[cfg(feature = "unstable")]
+        reliability: z_reliability_default(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
-    };
+    });
 }
 
 /// Sends request to delete data on specified key expression (used when working with <a href="https://zenoh.io/docs/manual/abstractions/#storage"> Zenoh storages </a>).
@@ -172,11 +193,8 @@ pub extern "C" fn z_delete(
     let key_expr = key_expr.as_rust_type_ref();
     let mut del = session.delete(key_expr);
     if let Some(options) = options {
-        if !options.timestamp.is_null() {
-            let timestamp = *unsafe { options.timestamp.as_ref() }
-                .unwrap()
-                .as_rust_type_ref();
-            del = del.timestamp(Some(timestamp));
+        if let Some(timestamp) = options.timestamp.as_ref() {
+            del = del.timestamp(Some(timestamp.into_rust_type()));
         }
         del = del
             .congestion_control(options.congestion_control.into())
@@ -185,7 +203,9 @@ pub extern "C" fn z_delete(
 
         #[cfg(feature = "unstable")]
         {
-            del = del.allowed_destination(options.allowed_destination.into());
+            del = del
+                .reliability(options.reliability.into())
+                .allowed_destination(options.allowed_destination.into());
         }
     }
 

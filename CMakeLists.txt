@@ -7,7 +7,7 @@ project(
 	VERSION ${version}
 	DESCRIPTION "The C bindings for Zenoh"
 	HOMEPAGE_URL "https://github.com/eclipse-zenoh/zenoh-c"
-	LANGUAGES C
+	LANGUAGES C CXX
 )
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -18,7 +18,7 @@ enable_testing()
 #
 # Build zenohc library from rust sources
 #
-# target zenohc::lib - for linking zenoh-c as static or dynamic library depending on ZENOHC_STATIC boolean cache var
+# target zenohc::lib - for linking zenoh-c as static or dynamic library depending on BUILD_SHARED_LIBS boolean cache var
 # target zenohc::static - for linking zenoh-c as static library
 # target zenohc::shared - for linking zenoh-c as dynamic library
 #
@@ -27,23 +27,22 @@ enable_testing()
 # Configuration options
 #
 declare_cache_var_true_if_vscode(ZENOHC_BUILD_IN_SOURCE_TREE "Do build inside source tree")
-declare_cache_var(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT TRUE BOOL "Enable logger-autoinit zenoh-c feature")
 declare_cache_var(ZENOHC_BUILD_WITH_SHARED_MEMORY FALSE BOOL "Enable shared-memory zenoh-c feature")
-declare_cache_var(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE BOOL "Enable unstable API feature")
+declare_cache_var(ZENOHC_BUILD_WITH_UNSTABLE_API FALSE BOOL "Enable unstable API feature")
+declare_cache_var(ZENOHC_BUILD_TESTS_WITH_CXX FALSE BOOL "Use C++ compiler for building tests to check API's C++ compatibility")
 declare_cache_var(ZENOHC_CUSTOM_TARGET "" STRING "Rust target for cross compilation, 'aarch64-unknown-linux-gnu' for example")
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
-declare_cache_var(ZENOHC_LIB_STATIC FALSE BOOL "Alias zenohc::lib target to zenohc::static if TRUE, to zenohc::shared if FALSE")
+declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
+declare_cache_var(ZENOHC_TREAT_WARNING_AS_ERROR OFF BOOL "Whether to treat compilation warnings as errors")
+set(CMAKE_COMPILE_WARNING_AS_ERROR ${ZENOHC_TREAT_WARNING_AS_ERROR})
 
-#
-# Setup project version
-#
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
-if(NOT DEFINED PROJECT_VERSION_TWEAK)
+if(PROJECT_VERSION_TWEAK STREQUAL "")
 	set(project_version "${project_version}")
 elseif(PROJECT_VERSION_TWEAK EQUAL 0)
 	set(project_version "${project_version}-dev")
-elseif(PROJECT_VERSION_TWEAK GREATER 1)
+elseif(PROJECT_VERSION_TWEAK GREATER 0)
 	set(project_version "${project_version}-pre.${PROJECT_VERSION_TWEAK}")
 endif()
 status_print(project_version)
@@ -115,6 +114,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
+			${CMAKE_CURRENT_SOURCE_DIR}/version.txt
 			DESTINATION ${cargo_toml_dir})
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
@@ -149,6 +149,16 @@ else()
 endif()
 
 #
+# Copy toolchain configuration to build directory to ensure it is used when cargo is invoked from a directory other
+# than the directory containing the manifest file
+#
+if(NOT EXISTS "${CMAKE_CURRENT_BINARY_DIR}/rust-toolchain.toml")
+	file(COPY
+		${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
+		DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
+#
 # Configure result library names
 #
 macro(set_lib list var value)
@@ -159,16 +169,35 @@ endmacro()
 # dylib[r|d] - dymamic library (.so, .dll, .dylib)
 # staticlib[r|d] - static library (.a, .lib)
 # implib[r|d] - import library for windows dynamic library (DLL) - .lib
-# dylibs[r|d] - list of files required for use dynamic libraty
-# staticlibs[r|d] - list of files required for use static libraty
-set_lib(dylibsr dylibr ${CMAKE_SHARED_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX})
-set_lib(dylibsd dylibd ${CMAKE_SHARED_LIBRARY_PREFIX}zenohcd${CMAKE_SHARED_LIBRARY_SUFFIX})
-set_lib(staticlibsr staticlibr ${CMAKE_STATIC_LIBRARY_PREFIX}zenohc${CMAKE_STATIC_LIBRARY_SUFFIX})
-set_lib(staticlibsd staticlibd ${CMAKE_STATIC_LIBRARY_PREFIX}zenohcd${CMAKE_STATIC_LIBRARY_SUFFIX})
+# dylibs[r|d] - list of files required for use dynamic library
+# staticlibs[r|d] - list of files required for use static library
+# get rust output library names from https://github.com/corrosion-rs/corrosion/blob/1c6974c2473765449e7c4649f9f96f1b751420c3/cmake/Corrosion.cmake#L331
 if(WIN32)
-	set_lib(dylibsr implibr ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohc${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
-	set_lib(dylibsd implibd ${CMAKE_IMPORT_LIBRARY_PREFIX}zenohcd${CMAKE_SHARED_LIBRARY_SUFFIX}${CMAKE_IMPORT_LIBRARY_SUFFIX})
+	set_lib(dylibsr dylibr zenohc.dll)
+	set_lib(dylibsd dylibd zenohcd.dll)
+	if(MSVC)
+		set_lib(staticlibsr staticlibr zenohc.lib)
+		set_lib(staticlibsd staticlibd zenohcd.lib)
+		set_lib(dylibsr implibr zenohc.dll.lib)
+		set_lib(dylibsd implibd zenohcd.dll.lib)
+	else() #gnu/mingw/msys ?
+		set_lib(staticlibsr staticlibr libzenohc.a)
+		set_lib(staticlibsd staticlibd libzenohcd.a)
+		set_lib(dylibsr implibr libzenohc.dll.a)
+		set_lib(dylibsd implibd libzenohcd.dll.a)
+	endif()
+elseif(APPLE)
+	set_lib(dylibsr dylibr libzenohc.dylib)
+	set_lib(dylibsd dylibd libzenohcd.dylib)
+	set_lib(staticlibsr staticlibr libzenohc.a)
+	set_lib(staticlibsd staticlibd libzenohcd.a)
+else() #UNIX
+	set_lib(dylibsr dylibr libzenohc.so)
+	set_lib(dylibsd dylibd libzenohcd.so)
+	set_lib(staticlibsr staticlibr libzenohc.a)
+	set_lib(staticlibsd staticlibd libzenohcd.a)
 endif()
+
 list(APPEND libsr ${dylibsr})
 list(APPEND libsr ${staticlibsr})
 list(APPEND libsd ${dylibsd})
@@ -189,16 +218,18 @@ set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
 
-if(ZENOHC_BUILD_WITH_LOGGER_AUTOINIT)
-	set(cargo_flags ${cargo_flags} --features=logger-autoinit)
-endif()
-
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)
+elseif("${cargo_flags}" MATCHES ^.*shared-memory.*$)
+	set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE)
+	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_SHARED_MEMORY = TRUE")
 endif()
 
 if(ZENOHC_BUILD_WITH_UNSTABLE_API)
 	set(cargo_flags ${cargo_flags} --features=unstable)
+elseif("${cargo_flags}" MATCHES ^.*unstable.*$)
+	set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE)
+	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_UNSTABLE_API = TRUE")
 endif()
 
 
@@ -223,31 +254,6 @@ add_custom_target(cargo ALL DEPENDS "${libs}")
 #
 # Define libraries built by cargo as targets
 #
-add_library(zenohc_static STATIC IMPORTED GLOBAL)
-add_library(zenohc_shared SHARED IMPORTED GLOBAL)
-add_library(zenohc::static ALIAS zenohc_static)
-add_library(zenohc::shared ALIAS zenohc_shared)
-if (ZENOHC_LIB_STATIC)
-	add_library(zenohc::lib ALIAS zenohc_static)
-else()
-	add_library(zenohc::lib ALIAS zenohc_shared)
-endif()
-add_dependencies(zenohc_static cargo)
-add_dependencies(zenohc_shared cargo)
-
-#
-# Setup additional properties for library targets
-# *IMPORTANT* any options in this section should be repeated in install/PackageConfig.cmake.in
-# to achieve correct behavior of find_package(zenohc)
-#
-get_required_static_libs(NATIVE_STATIC_LIBS)
-target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
-target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
-
-# Workaroud for https://github.com/rust-lang/cargo/issues/5045
-# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
-# If it's fixed, do not forget to correct PackageConfig.cmake.in also
-set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
 
 function(set_target_imported_locations target libr libd)
 	set_target_properties(${target}
@@ -271,32 +277,45 @@ function(set_target_imported_implib target libr libd)
 	)
 endfunction()
 
-set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
+#
+# Setup additional properties for library targets
+# *IMPORTANT* any options in this section should be repeated in install/PackageConfig.cmake.in
+# to achieve correct behavior of find_package(zenohc)
+#
+add_library(zenohc_shared SHARED IMPORTED GLOBAL)
+add_library(zenohc::shared ALIAS zenohc_shared)
+add_dependencies(zenohc_shared cargo)
+target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
+# Workaroud for https://github.com/rust-lang/cargo/issues/5045
+# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
+# If it's fixed, do not forget to correct PackageConfig.cmake.in also
+set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
 set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
+add_library(zenohc_static STATIC IMPORTED GLOBAL)
+add_library(zenohc::static ALIAS zenohc_static)
+add_dependencies(zenohc_static cargo)
+get_required_static_libs(NATIVE_STATIC_LIBS)
+target_link_libraries(zenohc_static INTERFACE ${NATIVE_STATIC_LIBS})
+set_target_imported_locations(zenohc_static ${staticlibr} ${staticlibd})
+target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
+set_target_properties(zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 
 if(DEFINED implibr)
 	set_target_imported_implib(zenohc_shared ${implibr} ${implibd})
 endif()
-
-# Define include directories for library targets
-status_print(source_include_dir)
-status_print(cargo_generated_include_dir)
-
-if(NOT(cargo_generated_include_dir STREQUAL ${source_include_dir}))
-	target_include_directories(zenohc_static INTERFACE ${cargo_generated_include_dir})
-	target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+target_include_directories(zenohc_shared INTERFACE ${cargo_generated_include_dir})
+set_target_properties(zenohc_shared PROPERTIES IMPORTED_GLOBAL TRUE)
+if (BUILD_SHARED_LIBS)
+	add_library(zenohc::lib ALIAS zenohc_shared)
 else()
-	target_include_directories(zenohc_static INTERFACE ${source_include_dir})
-	target_include_directories(zenohc_shared INTERFACE ${source_include_dir})
+	add_library(zenohc::lib ALIAS zenohc_static)
 endif()
 
-set_target_properties(zenohc_shared zenohc_static PROPERTIES IMPORTED_GLOBAL TRUE)
 
 #
 # Components included only if project is the root project
 #
 if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
-	include(cmake/cross_build_check.cmake)
 	add_subdirectory(install)
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/tests)
 	add_subdirectory(tests)

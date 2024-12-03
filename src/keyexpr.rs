@@ -18,32 +18,34 @@ use libc::c_char;
 use zenoh::key_expr::SetIntersectionLevel;
 use zenoh::{
     key_expr::{keyexpr, Canonize, KeyExpr},
-    prelude::*,
+    Wait,
 };
 
-pub use crate::opaque_types::{z_loaned_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t};
+pub use crate::opaque_types::{
+    z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
+};
 use crate::{
-    result,
-    result::{z_result_t, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit},
+    result::{self, z_result_t, Z_OK},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
+
 decl_c_type! {
-    owned(z_owned_keyexpr_t, Option<KeyExpr<'static>>),
+    owned(z_owned_keyexpr_t, option KeyExpr<'static>),
+    loaned(z_loaned_keyexpr_t),
     view(z_view_keyexpr_t, Option<KeyExpr<'static>>),
-    loaned(z_loaned_keyexpr_t, KeyExpr<'static>),
 }
 
 /// Constructs an owned key expression in a gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_null(this: &mut MaybeUninit<z_owned_keyexpr_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_internal_keyexpr_null(this_: &mut MaybeUninit<z_owned_keyexpr_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// Constructs a view key expression in a gravestone state.
+/// Constructs a view key expression in empty state
 #[no_mangle]
-pub extern "C" fn z_view_keyexpr_null(this: &mut MaybeUninit<z_view_keyexpr_t>) {
-    this.as_rust_type_mut_uninit().write(None);
+pub extern "C" fn z_view_keyexpr_empty(this_: &mut MaybeUninit<z_view_keyexpr_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 fn keyexpr_create_inner(
@@ -76,7 +78,7 @@ unsafe fn keyexpr_create(
         Ok(name) => match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
             Ok(v) => Ok(v),
             Err(e) => {
-                tracing::error!("Couldn't construct a keyexpr: {}", e);
+                tracing::error!("Couldn't construct keyexpr: {}", e);
                 Err(result::Z_EINVAL)
             }
         },
@@ -124,8 +126,9 @@ pub unsafe extern "C" fn z_keyexpr_from_str_autocanonize(
 /// Borrows `z_owned_keyexpr_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_keyexpr_loan(this: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -134,8 +137,9 @@ pub unsafe extern "C" fn z_keyexpr_loan(this: &z_owned_keyexpr_t) -> &z_loaned_k
 /// Borrows `z_view_keyexpr_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
-    this.as_rust_type_ref()
+pub unsafe extern "C" fn z_view_keyexpr_loan(this_: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -143,20 +147,20 @@ pub unsafe extern "C" fn z_view_keyexpr_loan(this: &z_view_keyexpr_t) -> &z_loan
 
 /// Frees key expression and resets it to its gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_drop(this: &mut z_owned_keyexpr_t) {
-    *this.as_rust_type_mut() = None;
+pub extern "C" fn z_keyexpr_drop(this_: &mut z_moved_keyexpr_t) {
+    let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_keyexpr_check(this: &z_owned_keyexpr_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_internal_keyexpr_check(this_: &z_owned_keyexpr_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_view_keyexpr_check(this: &z_view_keyexpr_t) -> bool {
-    this.as_rust_type_ref().is_some()
+pub extern "C" fn z_view_keyexpr_is_empty(this_: &z_view_keyexpr_t) -> bool {
+    this_.as_rust_type_ref().is_none()
 }
 
 /// Returns 0 if the passed string is a valid (and canon) key expression.
@@ -282,7 +286,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substr(
 /// `expr` must outlive the constucted key expression.
 ///
 /// @param this_: An uninitialized location in memory where key expression will be constructed
-/// @param expr: A buffer of with length >= `len`.
+/// @param start: A buffer of with length >= `len`.
 /// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
@@ -315,7 +319,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
 /// Constructs a `z_keyexpr_t` by copying a substring.
 ///
 /// @param this_: An uninitialized location in memory where key expression will be constructed.
-/// @param expr: A buffer of with length >= `len`.
+/// @param start: A buffer of with length >= `len`.
 /// @param len: Number of characters from `expr` to consider. Will be modified to be equal to canonized key expression length.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
@@ -456,17 +460,17 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
 /// Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
 /// which allows to save the bandwith, when passing key expression between Zenoh entities.
 ///
-/// @param this_: An uninitialized location in memory where key expression will be constructed.
 /// @param session: Session on which to declare key expression.
+/// @param declared_key_expr: An uninitialized location in memory where key expression will be constructed.
 /// @param key_expr: Key expression to declare on network.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_declare_keyexpr(
-    this: &mut MaybeUninit<z_owned_keyexpr_t>,
     session: &z_loaned_session_t,
+    declared_key_expr: &mut MaybeUninit<z_owned_keyexpr_t>,
     key_expr: &z_loaned_keyexpr_t,
 ) -> z_result_t {
-    let this = this.as_rust_type_mut_uninit();
+    let this = declared_key_expr.as_rust_type_mut_uninit();
     let key_expr = key_expr.as_rust_type_ref();
     let session = session.as_rust_type_ref();
     match session.declare_keyexpr(key_expr).wait() {
@@ -487,10 +491,10 @@ pub extern "C" fn z_declare_keyexpr(
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_undeclare_keyexpr(
-    this: &mut z_owned_keyexpr_t,
     session: &z_loaned_session_t,
+    key_expr: &mut z_moved_keyexpr_t,
 ) -> result::z_result_t {
-    let Some(kexpr) = this.as_rust_type_mut().take() else {
+    let Some(kexpr) = key_expr.take_rust_type() else {
         tracing::debug!("Attempted to undeclare dropped keyexpr");
         return result::Z_EINVAL;
     };
@@ -603,7 +607,8 @@ pub extern "C" fn z_keyexpr_join(
     }
 }
 #[cfg(feature = "unstable")]
-/// Intersection level of 2 key expressions.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Intersection level of 2 key expressions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub enum z_keyexpr_intersection_level_t {
@@ -629,9 +634,10 @@ impl From<SetIntersectionLevel> for z_keyexpr_intersection_level_t {
 }
 #[cfg(feature = "unstable")]
 #[no_mangle]
-/// Returns the relation between `left` and `right` from `left`'s point of view.
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the relation between `left` and `right` from `left`'s point of view.
 ///
-/// Note that this is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+/// @note This is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
 pub extern "C" fn z_keyexpr_relation_to(
     left: &z_loaned_keyexpr_t,
     right: &z_loaned_keyexpr_t,
@@ -639,4 +645,11 @@ pub extern "C" fn z_keyexpr_relation_to(
     let l = left.as_rust_type_ref();
     let r = right.as_rust_type_ref();
     l.relation_to(r).into()
+}
+
+/// Constructs a copy of the key expression.
+#[no_mangle]
+extern "C" fn z_keyexpr_clone(dst: &mut MaybeUninit<z_owned_keyexpr_t>, this: &z_loaned_keyexpr_t) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this.as_rust_type_ref().clone()));
 }

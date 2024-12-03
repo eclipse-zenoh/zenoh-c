@@ -18,9 +18,10 @@ use zenoh::shm::{PosixShmClient, ShmClient};
 
 use crate::{transmute::RustTypeRefUninit, z_owned_shm_client_t};
 
-/// Creates a new POSIX SHM Client
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates a new POSIX SHM Client.
 #[no_mangle]
-pub extern "C" fn z_posix_shm_client_new(this: &mut MaybeUninit<z_owned_shm_client_t>) {
+pub extern "C" fn z_posix_shm_client_new(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
     let client = Arc::new(PosixShmClient) as Arc<dyn ShmClient>;
-    this.as_rust_type_mut_uninit().write(Some(client));
+    this_.as_rust_type_mut_uninit().write(Some(client));
 }
