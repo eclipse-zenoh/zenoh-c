@@ -44,7 +44,7 @@ pub extern "C" fn zc_internal_matching_listener_check(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Queriers key expression and target.
+/// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct zc_matching_status_t {

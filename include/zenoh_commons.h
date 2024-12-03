@@ -1166,7 +1166,7 @@ typedef struct zc_moved_closure_log_t {
 } zc_moved_closure_log_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Queriers key expression and target.
+ * @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct zc_matching_status_t {

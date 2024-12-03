@@ -540,6 +540,7 @@ Types
 .. doxygenstruct:: zc_owned_matching_listener_t
 .. doxygenstruct:: zc_owned_closure_matching_status_t
 .. doxygenstruct:: zc_matching_status_t
+    :members:
 
 Functions
 ---------
