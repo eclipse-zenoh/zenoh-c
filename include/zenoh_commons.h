@@ -785,7 +785,7 @@ typedef struct z_liveliness_token_options_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_get_options_t {
   /**
-   * Set query timeout in milliseconds.
+   * The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint32_t timeout_ms;
 } z_liveliness_get_options_t;
