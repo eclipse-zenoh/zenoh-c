@@ -6,6 +6,7 @@ zenoh-c API documentation is available on [Read the Docs](https://zenoh-c.readth
 ## How to build it
 
 ```bash
+cargo check --all-features
 cd docs
 doxygen
 sphinx-build -b html . _build/html

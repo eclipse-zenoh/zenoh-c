@@ -763,6 +763,9 @@ typedef struct z_moved_keyexpr_t {
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_subscriber_options_t {
+  /**
+   * If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
+   */
   bool history;
 } z_liveliness_subscriber_options_t;
 #endif
@@ -781,6 +784,9 @@ typedef struct z_liveliness_token_options_t {
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_get_options_t {
+  /**
+   * The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
+   */
   uint32_t timeout_ms;
 } z_liveliness_get_options_t;
 #endif
@@ -1314,7 +1320,7 @@ void z_alloc_layout_alloc_gc(struct z_buf_alloc_result_t *out_result,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation if needed.
+ * @brief Make allocation performing garbage collection and/or defragmentation if needed.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -1323,7 +1329,7 @@ void z_alloc_layout_alloc_gc_defrag(struct z_buf_alloc_result_t *out_result,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation and\or blocking if needed.
+ * @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -1332,7 +1338,7 @@ void z_alloc_layout_alloc_gc_defrag_blocking(struct z_buf_alloc_result_t *out_re
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation and\or forced deallocation if needed.
+ * @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -1368,7 +1374,7 @@ z_result_t z_alloc_layout_new(z_owned_alloc_layout_t *this_,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation in async manner. Will return Z_EINVAL
+ * @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
  * if used with non-threadsafe SHM Provider.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -4321,7 +4327,7 @@ void z_shm_provider_alloc_gc(struct z_buf_layout_alloc_result_t *out_result,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation if needed.
+ * @brief Make allocation performing garbage collection and/or defragmentation if needed.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -4332,7 +4338,7 @@ void z_shm_provider_alloc_gc_defrag(struct z_buf_layout_alloc_result_t *out_resu
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation in async manner. Will return Z_EINVAL
+ * @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
  * if used with non-threadsafe SHM Provider.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -4347,7 +4353,7 @@ z_result_t z_shm_provider_alloc_gc_defrag_async(struct z_buf_layout_alloc_result
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation and\or blocking if needed.
+ * @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -4358,7 +4364,7 @@ void z_shm_provider_alloc_gc_defrag_blocking(struct z_buf_layout_alloc_result_t 
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and\or defragmentation and\or forced deallocation if needed.
+ * @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
