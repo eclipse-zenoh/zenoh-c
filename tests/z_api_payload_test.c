@@ -158,10 +158,10 @@ void test_slice(void) {
 
     assert(cnt == 0);
     z_drop(z_move(payload));
-    assert(cnt == 1);
 
     assert(!memcmp(data, z_slice_data(z_loan(out)), 10));
     z_slice_drop(z_slice_move(&out));
+    assert(cnt == 1);
 
     z_owned_bytes_t payload2;
     z_owned_slice_t s;
