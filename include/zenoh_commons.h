@@ -293,6 +293,9 @@ typedef struct z_close_options_t {
    */
   struct zc_owned_concurrent_close_handle_t *internal_out_concurrent;
 #endif
+#if !defined(Z_FEATURE_UNSTABLE_API)
+  uint8_t _dummy;
+#endif
 } z_close_options_t;
 /**
  * @brief A hello message-processing closure.

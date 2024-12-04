@@ -158,16 +158,22 @@ pub struct z_close_options_t {
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
     internal_out_concurrent: Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
+
+    #[cfg(not(feature = "unstable"))]
+    _dummy: u8,
 }
 
 /// Constructs the default value for `z_close_options_t`.
 #[no_mangle]
 #[allow(unused)]
 pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
-    #[cfg(feature = "unstable")]
     this_.write(z_close_options_t {
+        #[cfg(feature = "unstable")]
         internal_timeout_ms: 0,
+        #[cfg(feature = "unstable")]
         internal_out_concurrent: None,
+        #[cfg(not(feature = "unstable"))]
+        _dummy: 0,
     });
 }
 
