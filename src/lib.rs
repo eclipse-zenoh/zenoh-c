@@ -29,6 +29,10 @@ pub mod result;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;
+#[cfg(feature = "unstable")]
+mod close;
+#[cfg(feature = "unstable")]
+pub use crate::close::*;
 pub mod encoding;
 pub use crate::encoding::*;
 mod commons;

@@ -35,3 +35,4 @@ zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zen
 zenoh-protocol = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main"  }
 const_format = "0.2.32"
 flume = "*"
+tokio = "*"

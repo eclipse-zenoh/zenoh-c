@@ -71,12 +71,13 @@ libc = "0.2.139"
 tracing = "0.1"
 rand = "0.8.5"
 spin = "0.9.5"
+tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], branch = "main" }
-zenoh-runtime = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-zenoh-util = { version = "1.0.0-dev", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main"  }
+zenoh = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "close_builder", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", features=["internal"], branch = "close_builder" }
+zenoh-runtime = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "close_builder" }
+zenoh-util = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "close_builder"  }
 flume = "*"
 
 [build-dependencies]
