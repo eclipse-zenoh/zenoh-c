@@ -18,11 +18,13 @@ use zenoh::{Session, Wait};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;
+#[cfg(feature = "unstable")]
+use crate::zc_owned_internal_concurrent_close_handle_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_moved_config_t, z_moved_session_t, zc_owned_concurrent_close_handle_t,
+    z_moved_config_t, z_moved_session_t,
 };
 decl_c_type!(
     owned(z_owned_session_t, option Session),
@@ -145,21 +147,27 @@ pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
 /// Options passed to the `z_close()` function.
 #[repr(C)]
 pub struct z_close_options_t {
+    #[cfg(feature = "unstable")]
+    #[doc(hidden)]
     /// The timeout for close operation in milliseconds. 0 means default close timeout which is 10 seconds.
-    timeout_ms: u32,
+    internal_timeout_ms: u32,
 
+    #[cfg(feature = "unstable")]
+    #[doc(hidden)]
     /// An optional uninitialized concurrent close handle. If set, the close operation will be executed
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
-    out_concurrent: Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
+    internal_out_concurrent: Option<&'static mut MaybeUninit<zc_owned_internal_concurrent_close_handle_t>>,
 }
 
 /// Constructs the default value for `z_close_options_t`.
 #[no_mangle]
+#[allow(unused)]
 pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
+    #[cfg(feature = "unstable")]
     this_.write(z_close_options_t {
-        timeout_ms: 0,
-        out_concurrent: None,
+        internal_timeout_ms: 0,
+        internal_out_concurrent: None,
     });
 }
 
@@ -169,18 +177,21 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
 #[no_mangle]
 pub extern "C" fn z_close(
     session: &mut z_loaned_session_t,
+    #[allow(unused)]
     options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
+    #[allow(unused_mut)]
     let mut close_builder = session.as_rust_type_mut().close();
 
+    #[cfg(feature = "unstable")]
     if let Some(options) = options {
-        if options.timeout_ms != 0 {
+        if options.internal_timeout_ms != 0 {
             close_builder =
-                close_builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64))
+                close_builder.timeout(core::time::Duration::from_millis(options.internal_timeout_ms as u64))
         }
 
-        if let Some(close_handle) = &mut options.out_concurrent {
-            let handle = close_builder.concurrently();
+        if let Some(close_handle) = &mut options.internal_out_concurrent {
+            let handle = close_builder.in_background().wait();
             close_handle.as_rust_type_mut_uninit().write(Some(handle));
             return result::Z_OK;
         }

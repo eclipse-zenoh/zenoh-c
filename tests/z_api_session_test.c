@@ -53,6 +53,7 @@ void close_sync() {
 }
 
 void close_concurrent() {
+#if defined(Z_FEATURE_UNSTABLE_API)
     z_owned_config_t config;
     z_config_default(&config);
 
@@ -62,11 +63,11 @@ void close_concurrent() {
         exit(-1);
     }
 
-    zc_owned_concurrent_close_handle_t close_handle;
+    zc_owned_internal_concurrent_close_handle_t close_handle;
 
     z_close_options_t options;
     z_close_options_default(&options);
-    options.out_concurrent = &close_handle;
+    options.internal_out_concurrent = &close_handle;
 
     if (z_close(z_loan_mut(s), &options) < 0) {
         perror("Error starting concurrent session close!");
@@ -79,6 +80,7 @@ void close_concurrent() {
     }
 
     z_drop(z_move(s));
+#endif
 }
 
 int main(int argc, char **argv) {

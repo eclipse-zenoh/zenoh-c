@@ -16,21 +16,25 @@ use std::mem::MaybeUninit;
 
 use zenoh_runtime::ZRuntime;
 
+#[cfg(feature = "unstable")]
+use crate::opaque_types::zc_owned_internal_concurrent_close_handle_t;
+
 use crate::{
-    opaque_types::zc_owned_concurrent_close_handle_t,
     result::{z_result_t, Z_EIO, Z_OK},
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
-    zc_moved_concurrent_close_handle_t,
+    zc_moved_internal_concurrent_close_handle_t,
 };
+
+#[cfg(feature = "unstable")]
 decl_c_type!(
-    owned(zc_owned_concurrent_close_handle_t, option tokio::task::JoinHandle<zenoh::Result<()>>),
+    owned(zc_owned_internal_concurrent_close_handle_t, option tokio::task::JoinHandle<zenoh::Result<()>>),
 );
 
 /// @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_concurrent_close_handle_wait(
-    handle: &mut zc_moved_concurrent_close_handle_t,
+    handle: &mut zc_moved_internal_concurrent_close_handle_t,
 ) -> z_result_t {
     match ZRuntime::Application.block_on(handle.take_rust_type().unwrap_unchecked()) {
         Ok(_) => Z_OK,
@@ -43,14 +47,14 @@ pub unsafe extern "C" fn zc_concurrent_close_handle_wait(
 
 /// @brief Drops the close handle. The concurrent close task will not be interrupted.
 #[no_mangle]
-pub extern "C" fn zc_concurrent_close_handle_drop(this_: &mut zc_moved_concurrent_close_handle_t) {
+pub extern "C" fn zc_concurrent_close_handle_drop(this_: &mut zc_moved_internal_concurrent_close_handle_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @brief Returns ``true`` if concurrent close handle is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_internal_concurrent_close_handle_check(
-    this_: &zc_owned_concurrent_close_handle_t,
+    this_: &zc_owned_internal_concurrent_close_handle_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
 }
@@ -58,7 +62,7 @@ pub extern "C" fn zc_internal_concurrent_close_handle_check(
 /// @brief Constructs concurrent close handle in its gravestone state.
 #[no_mangle]
 pub extern "C" fn zc_internal_concurrent_close_handle_null(
-    this_: &mut MaybeUninit<zc_owned_concurrent_close_handle_t>,
+    this_: &mut MaybeUninit<zc_owned_internal_concurrent_close_handle_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
