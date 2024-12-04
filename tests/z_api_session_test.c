@@ -63,7 +63,7 @@ void close_concurrent() {
         exit(-1);
     }
 
-    zc_owned_internal_concurrent_close_handle_t close_handle;
+    zc_owned_concurrent_close_handle_t close_handle;
 
     z_close_options_t options;
     z_close_options_default(&options);

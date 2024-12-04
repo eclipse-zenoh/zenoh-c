@@ -291,7 +291,7 @@ typedef struct z_close_options_t {
    * concurrently in separate task, and this handle will be initialized to be used for controlling
    * it's execution.
    */
-  struct zc_owned_internal_concurrent_close_handle_t *internal_out_concurrent;
+  struct zc_owned_concurrent_close_handle_t *internal_out_concurrent;
 #endif
 } z_close_options_t;
 /**
@@ -990,9 +990,9 @@ typedef struct zc_moved_closure_matching_status_t {
   struct zc_owned_closure_matching_status_t _this;
 } zc_moved_closure_matching_status_t;
 #endif
-typedef struct zc_moved_internal_concurrent_close_handle_t {
-  struct zc_owned_internal_concurrent_close_handle_t _this;
-} zc_moved_internal_concurrent_close_handle_t;
+typedef struct zc_moved_concurrent_close_handle_t {
+  struct zc_owned_concurrent_close_handle_t _this;
+} zc_moved_concurrent_close_handle_t;
 typedef struct zc_moved_matching_listener_t {
   struct zc_owned_matching_listener_t _this;
 } zc_moved_matching_listener_t;
@@ -4859,15 +4859,14 @@ const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loa
  * @brief Drops the close handle. The concurrent close task will not be interrupted.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_concurrent_close_handle_drop(struct zc_moved_internal_concurrent_close_handle_t *this_);
+ZENOHC_API void zc_concurrent_close_handle_drop(struct zc_moved_concurrent_close_handle_t *this_);
 #endif
 /**
  * @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_concurrent_close_handle_wait(struct zc_moved_internal_concurrent_close_handle_t *handle);
+z_result_t zc_concurrent_close_handle_wait(struct zc_moved_concurrent_close_handle_t *handle);
 #endif
 /**
  * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
@@ -4984,14 +4983,14 @@ void zc_internal_closure_matching_status_null(struct zc_owned_closure_matching_s
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool zc_internal_concurrent_close_handle_check(const struct zc_owned_internal_concurrent_close_handle_t *this_);
+bool zc_internal_concurrent_close_handle_check(const struct zc_owned_concurrent_close_handle_t *this_);
 #endif
 /**
  * @brief Constructs concurrent close handle in its gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void zc_internal_concurrent_close_handle_null(struct zc_owned_internal_concurrent_close_handle_t *this_);
+void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_handle_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

@@ -19,7 +19,7 @@ use zenoh::{Session, Wait};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::z_loaned_shm_client_storage_t;
 #[cfg(feature = "unstable")]
-use crate::zc_owned_internal_concurrent_close_handle_t;
+use crate::zc_owned_concurrent_close_handle_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
@@ -158,7 +158,7 @@ pub struct z_close_options_t {
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
     internal_out_concurrent:
-        Option<&'static mut MaybeUninit<zc_owned_internal_concurrent_close_handle_t>>,
+        Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
 }
 
 /// Constructs the default value for `z_close_options_t`.
