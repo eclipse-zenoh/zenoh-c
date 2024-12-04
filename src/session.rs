@@ -157,7 +157,8 @@ pub struct z_close_options_t {
     /// An optional uninitialized concurrent close handle. If set, the close operation will be executed
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
-    internal_out_concurrent: Option<&'static mut MaybeUninit<zc_owned_internal_concurrent_close_handle_t>>,
+    internal_out_concurrent:
+        Option<&'static mut MaybeUninit<zc_owned_internal_concurrent_close_handle_t>>,
 }
 
 /// Constructs the default value for `z_close_options_t`.
@@ -177,8 +178,7 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
 #[no_mangle]
 pub extern "C" fn z_close(
     session: &mut z_loaned_session_t,
-    #[allow(unused)]
-    options: Option<&mut z_close_options_t>,
+    #[allow(unused)] options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
     #[allow(unused_mut)]
     let mut close_builder = session.as_rust_type_mut().close();
@@ -186,8 +186,9 @@ pub extern "C" fn z_close(
     #[cfg(feature = "unstable")]
     if let Some(options) = options {
         if options.internal_timeout_ms != 0 {
-            close_builder =
-                close_builder.timeout(core::time::Duration::from_millis(options.internal_timeout_ms as u64))
+            close_builder = close_builder.timeout(core::time::Duration::from_millis(
+                options.internal_timeout_ms as u64,
+            ))
         }
 
         if let Some(close_handle) = &mut options.internal_out_concurrent {
