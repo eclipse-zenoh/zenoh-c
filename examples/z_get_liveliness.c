@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
     z_liveliness_get_options_t opts;
     z_liveliness_get_options_default(&opts);
     opts.timeout_ms = args.timeout_ms;
-    z_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), NULL);
+    z_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), &opts);
     z_owned_reply_t reply;
     for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {

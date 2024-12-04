@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
     }
 
     z_view_keyexpr_t keyexpr;
-    if (z_view_keyexpr_from_str(&keyexpr, ke) < 0) {
-        printf("%s is not a valid key expression", ke);
+    if (z_view_keyexpr_from_substr(&keyexpr, ke, ke_len) < 0) {
+        printf("%.*s is not a valid key expression", (int)ke_len, ke);
         exit(-1);
     }
 

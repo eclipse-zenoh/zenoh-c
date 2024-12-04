@@ -167,7 +167,9 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_PARSE_ARG(args.value, "p", (char*), (char*)DEFAULT_VALUE);
     _Z_PARSE_ARG(args.timeout_ms, "o", atoi, DEFAULT_TIMEOUT_MS);
     _Z_PARSE_ARG(args.target, "t", parse_query_target, z_query_target_default());
+#if defined(Z_FEATURE_UNSTABLE_API)
     _Z_CHECK_FLAG(args.add_matching_listener, "add-matching-listener");
+#endif
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

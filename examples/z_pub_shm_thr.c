@@ -28,7 +28,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
     char* keyexpr = "test/thr";
-    size_t len = atoi(argv[1]);
 
     zc_init_log_from_env_or("error");
 
@@ -62,12 +61,12 @@ int main(int argc, char** argv) {
 
     printf("Allocating single SHM buffer\n");
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
+    z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
     if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...\n");
         return -1;
     }
-    memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, len);
+    memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, args.size);
     z_owned_shm_t shm;
     z_shm_from_mut(&shm, z_move(alloc.buf));
 

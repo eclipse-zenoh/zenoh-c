@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
     z_publisher_options_t opts;
     z_publisher_options_default(&opts);
     opts.is_express = !args.no_express;
-    z_declare_publisher(z_loan(session), &pub, z_loan(pong), NULL);
+    z_declare_publisher(z_loan(session), &pub, z_loan(pong), &opts);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)&pub);
     z_declare_background_subscriber(z_loan(session), z_loan(ping), z_move(respond), NULL);
