@@ -46,9 +46,7 @@ pub unsafe extern "C" fn zc_concurrent_close_handle_wait(
 
 /// @brief Drops the close handle. The concurrent close task will not be interrupted.
 #[no_mangle]
-pub extern "C" fn zc_concurrent_close_handle_drop(
-    this_: &mut zc_moved_concurrent_close_handle_t,
-) {
+pub extern "C" fn zc_concurrent_close_handle_drop(this_: &mut zc_moved_concurrent_close_handle_t) {
     let _ = this_.take_rust_type();
 }
 

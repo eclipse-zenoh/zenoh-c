@@ -157,8 +157,7 @@ pub struct z_close_options_t {
     /// An optional uninitialized concurrent close handle. If set, the close operation will be executed
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
-    internal_out_concurrent:
-        Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
+    internal_out_concurrent: Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
 }
 
 /// Constructs the default value for `z_close_options_t`.
