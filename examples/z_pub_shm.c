@@ -31,9 +31,9 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 #if defined(Z_FEATURE_UNSTABLE_API)
 void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
-        printf("Subscriber matched\n");
+        printf("Publisher has matching subscribers.\n");
     } else {
-        printf("No Subscribers matched\n");
+        printf("Publisher has NO MORE matching subscribers.\n");
     }
 }
 #endif

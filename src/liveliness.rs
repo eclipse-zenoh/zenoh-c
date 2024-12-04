@@ -138,6 +138,7 @@ pub extern "C" fn z_liveliness_undeclare_token(
 /// @brief The options for `z_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct z_liveliness_subscriber_options_t {
+    /// If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
     history: bool,
 }
 
@@ -237,6 +238,7 @@ pub extern "C" fn zc_liveliness_declare_background_subscriber(
 /// @brief The options for `z_liveliness_get()`
 #[repr(C)]
 pub struct z_liveliness_get_options_t {
+    /// The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
     timeout_ms: u32,
 }
 

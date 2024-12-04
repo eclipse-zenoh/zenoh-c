@@ -24,6 +24,7 @@ z_view_keyexpr_t ke;
 struct args_t {
     char *keyexpr;  // -k
     char *value;    // -v
+    bool complete;  // --complete
 };
 
 char *value;
@@ -58,6 +59,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
 
     z_view_keyexpr_t reply_keyexpr;
     z_view_keyexpr_from_str(&reply_keyexpr, (const char *)context);
+    printf(">> [Queryable ] Responding ('%s': '%s')\n", (const char *)context, value);
 
     z_query_reply(query, z_loan(reply_keyexpr), z_move(reply_payload), &options);
 }
@@ -86,7 +88,11 @@ int main(int argc, char **argv) {
     z_closure(&callback, query_handler, NULL, (void *)args.keyexpr);
     z_owned_queryable_t qable;
 
-    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), NULL) < 0) {
+    z_queryable_options_t opts;
+    z_queryable_options_default(&opts);
+    opts.complete = args.complete;
+
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(callback), &opts) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
     }
@@ -107,7 +113,8 @@ void print_help() {
     Usage: z_queryable [OPTIONS]\n\n\
     Options:\n\
         -k <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to reply to queries with\n",
+        -v <VALUE> (optional, string, default='%s'): The value to reply to queries with\n\
+        --complete (optional, flag to indicate whether queryable is complete or not)",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
     printf(
@@ -128,6 +135,11 @@ struct args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
     if (!value) {
         value = DEFAULT_VALUE;
     }
+    const char *complete_arg = parse_opt(argc, argv, "complete", false);
+    bool complete = false;
+    if (complete_arg) {
+        complete = true;
+    }
     parse_zenoh_common_args(argc, argv, config);
     const char *arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -141,5 +153,5 @@ struct args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char *)keyexpr, .value = (char *)value};
+    return (struct args_t){.keyexpr = (char *)keyexpr, .value = (char *)value, .complete = complete};
 }

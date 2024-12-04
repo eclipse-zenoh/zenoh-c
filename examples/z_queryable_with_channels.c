@@ -23,6 +23,7 @@
 struct args_t {
     char* keyexpr;  // -k
     char* value;    // -v
+    bool complete;  // --complete
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -52,7 +53,11 @@ int main(int argc, char** argv) {
     z_fifo_channel_query_new(&closure, &handler, 16);
     z_owned_queryable_t qable;
 
-    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(closure), NULL) < 0) {
+    z_queryable_options_t opts;
+    z_queryable_options_default(&opts);
+    opts.complete = args.complete;
+
+    if (z_declare_queryable(z_loan(s), &qable, z_loan(ke), z_move(closure), &opts) < 0) {
         printf("Unable to create queryable.\n");
         exit(-1);
     }
@@ -102,7 +107,8 @@ void print_help() {
     Usage: z_queryable_with_channels [OPTIONS]\n\n\
     Options:\n\
         -k <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to reply to queries with\n",
+        -v <VALUE> (optional, string, default='%s'): The value to reply to queries with\n\
+        --complete (optional, flag to indicate whether queryable is complete or not)",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
     printf(
@@ -123,6 +129,12 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     if (!value) {
         value = DEFAULT_VALUE;
     }
+    const char* complete_arg = parse_opt(argc, argv, "complete", false);
+    bool complete = false;
+    if (complete_arg) {
+        complete = true;
+    }
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -136,5 +148,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value};
+    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value, .complete = complete};
 }
