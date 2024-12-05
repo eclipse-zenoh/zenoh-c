@@ -74,10 +74,10 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "close_builder", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", features=["internal"], branch = "close_builder" }
-zenoh-runtime = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "close_builder" }
-zenoh-util = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "close_builder"  }
+zenoh = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", features=["internal"], branch = "main" }
+zenoh-runtime = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "main" }
+zenoh-util = { version = "1.0.0-dev", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "main"  }
 flume = "*"
 
 [build-dependencies]
