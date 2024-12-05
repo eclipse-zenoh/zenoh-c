@@ -25,8 +25,8 @@ void drop(void* context) { z_drop(z_move(cond)); }
 
 struct args_t {
     unsigned int size;             // positional_0
-    unsigned int number_of_pings;  // -n
-    unsigned int warmup_ms;        // -w
+    unsigned int number_of_pings;  // -n, --samples
+    unsigned int warmup_ms;        // -w, --warmup
     bool no_express;               // --no-express
 };
 
@@ -136,25 +136,19 @@ void print_help() {
     Arguments:\n\
         <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
     Options:\n\
-        -n <SAMPLES> (optional, int, default=%d): The number of pings to be attempted\n\
-        -w <WARMUP> (optional, int, default=%d): The warmup time in ms during which pings will be emitted but not measured\n\
+        -n, --samples <SAMPLES> (optional, int, default=%d): The number of pings to be attempted\n\
+        -w, --warmup <WARMUP> (optional, int, default=%d): The warmup time in ms during which pings will be emitted but not measured\n\
         --no-express (optional): Disable message batching.\n",
         DEFAULT_PING_NB, DEFAULT_WARMUP_MS);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.number_of_pings, "n", atoi, DEFAULT_PING_NB);
-    _Z_PARSE_ARG(args.warmup_ms, "w", atoi, DEFAULT_WARMUP_MS);
-    _Z_CHECK_FLAG(args.no_express, "no-express");
+    _Z_PARSE_ARG(args.number_of_pings, "n", "samples", atoi, DEFAULT_PING_NB);
+    _Z_PARSE_ARG(args.warmup_ms, "w", "warmup", atoi, DEFAULT_WARMUP_MS);
+    args.no_express = _Z_CHECK_FLAG("no-express");
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

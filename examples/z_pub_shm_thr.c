@@ -21,7 +21,7 @@
 
 struct args_t {
     unsigned int size;                         // positional_1
-    unsigned long long shared_memory_size_mb;  // -s
+    unsigned long long shared_memory_size_mb;  // -s, --shared-memory
 };
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -97,21 +97,15 @@ void print_help() {
     Arguments:\n\
         <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
     Options:\n\
-        -s <SHARED_MEMORY_SIZE> (optional, number, default='%d'): shared memory size in MBytes.\n",
+        -s, --shared-memory <SHARED_MEMORY_SIZE> (optional, number, default='%d'): shared memory size in MBytes.\n",
         DEFAULT_SHARED_MEMORY_SIZE);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.shared_memory_size_mb, "s", atoi, DEFAULT_SHARED_MEMORY_SIZE);
+    _Z_PARSE_ARG(args.shared_memory_size_mb, "s", "shared-memory", atoi, DEFAULT_SHARED_MEMORY_SIZE);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

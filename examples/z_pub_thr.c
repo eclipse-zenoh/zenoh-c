@@ -20,7 +20,7 @@
 #define DEFAULT_PRIORITY Z_PRIORITY_DATA
 struct args_t {
     unsigned int size;      // positional_1
-    z_priority_t priority;  // -p
+    z_priority_t priority;  // -p, --priority
     bool express;           // --express
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -82,19 +82,13 @@ void print_help() {
         --express (optional): Batch messages.\n",
         Z_PRIORITY_INTERACTIVE_HIGH, Z_PRIORITY_BACKGROUND, DEFAULT_PRIORITY);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.priority, "p", parse_priority, DEFAULT_PRIORITY);
-    _Z_CHECK_FLAG(args.express, "express");
+    _Z_PARSE_ARG(args.priority, "p", "priority", parse_priority, DEFAULT_PRIORITY);
+    args.express = _Z_CHECK_FLAG("express");
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

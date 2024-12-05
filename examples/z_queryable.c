@@ -22,8 +22,8 @@
 z_view_keyexpr_t ke;
 
 struct args_t {
-    char *keyexpr;  // -k
-    char *value;    // -p
+    char *keyexpr;  // -k, --key
+    char *value;    // -p, --payload
     bool complete;  // --complete
 };
 
@@ -112,25 +112,19 @@ void print_help() {
         "\
     Usage: z_queryable [OPTIONS]\n\n\
     Options:\n\
-        -k <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
-        -p <PAYLOAD> (optional, string, default='%s'): The value to reply to queries with\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
+        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to reply to queries with\n\
         --complete (optional, flag to indicate whether queryable is complete or not)",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", (char *), (char *)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.value, "p", (char *), (char *)DEFAULT_VALUE);
-    _Z_CHECK_FLAG(args.complete, "complete");
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char *), (char *)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char *), (char *)DEFAULT_VALUE);
+    args.complete = _Z_CHECK_FLAG("complete");
 
     parse_zenoh_common_args(argc, argv, config);
     const char *arg = check_unknown_opts(argc, argv);

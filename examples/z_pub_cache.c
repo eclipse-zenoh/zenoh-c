@@ -22,9 +22,11 @@
 #define DEFAULT_HISTORY 1
 
 struct args_t {
-    char* keyexpr;         // -k
-    char* value;           // -v
-    unsigned int history;  // -i
+    char* keyexpr;         // -k, --key
+    char* value;           // -v, --value
+    unsigned int history;  // -i, --history
+    bool complete;         // -o, --complete
+    char* prefix;          // -x, --prefix
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -48,8 +50,13 @@ int main(int argc, char** argv) {
 
     ze_publication_cache_options_t pub_cache_opts;
     ze_publication_cache_options_default(&pub_cache_opts);
-    pub_cache_opts.history = 42;
-    pub_cache_opts.queryable_complete = false;
+    pub_cache_opts.history = args.history;
+    pub_cache_opts.queryable_complete = args.complete;
+    z_view_keyexpr_t prefix;
+    if (args.prefix != NULL) {
+        z_view_keyexpr_from_str(&prefix, args.prefix);
+        pub_cache_opts.queryable_prefix = z_loan(prefix);
+    }
 
     printf("Declaring publication cache on '%s'...\n", args.keyexpr);
     ze_owned_publication_cache_t pub_cache;
@@ -84,25 +91,23 @@ void print_help() {
         "\
     Usage: z_pub_cache [OPTIONS]\n\n\
     Options:\n\
-        -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to write\n\
-        -i <HISTORY> (optional, int, default='%d'): The number of publications to keep in cache\n",
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -v, --value <VALUE> (optional, string, default='%s'): The value to write\n\
+        -i, --history <HISTORY> (optional, int, default='%d'): The number of publications to keep in cache\n\
+        -o, --complete (optional): Set `complete` option to true. This means that this queryable is ultimate data source, no need to scan other queryables.\n\
+        -x, --prefix <PREFIX> (optional, string, default=NULL):  An optional queryable prefix\n.",
         DEFAULT_KEYEXPR, DEFAULT_VALUE, DEFAULT_HISTORY);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.value, "v", (char*), (char*)DEFAULT_VALUE);
-    _Z_PARSE_ARG(args.history, "i", atoi, DEFAULT_HISTORY);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "v", "value", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.history, "i", "history", atoi, DEFAULT_HISTORY);
+    args.complete = _Z_CHECK_FLAG("o") || _Z_CHECK_FLAG("complete");
+    _Z_PARSE_ARG(args.prefix, "x", "prefix", (char*), NULL);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

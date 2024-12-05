@@ -19,7 +19,7 @@
 #define DEFAULT_KEYEXPR "group1/**"
 
 struct args_t {
-    char* keyexpr;  // -k
+    char* keyexpr;  // -k, --key
     bool history;   // --history
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -84,23 +84,17 @@ void print_help() {
         "\
     Usage: z_sub_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n\
+        -k, --key <KEY> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n\
         --history (optional): Get historical liveliness tokens.\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_CHECK_FLAG(args.history, "history");
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    args.history = _Z_CHECK_FLAG("history");
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

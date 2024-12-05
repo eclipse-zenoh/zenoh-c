@@ -59,18 +59,12 @@ void print_help() {
     Options:\n\
         --no-express (optional): Disable message batching.\n");
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_CHECK_FLAG(args.no_express, "no-express");
+    args.no_express = _Z_CHECK_FLAG("no-express");
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {

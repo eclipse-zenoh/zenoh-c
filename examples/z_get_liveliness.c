@@ -21,8 +21,8 @@
 #define DEFAULT_TIMEOUT_MS 10000
 
 struct args_t {
-    char* keyexpr;        // -k
-    uint64_t timeout_ms;  // -o
+    char* keyexpr;        // -k, --key
+    uint64_t timeout_ms;  // -o, --timeout
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -76,23 +76,17 @@ void print_help() {
         "\
     Usage: z_get_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression to query\n\
-        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        -k, --key <KEY> (optional, string, default='%s'): The key expression to query\n\
+        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
         DEFAULT_KEYEXPR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.timeout_ms, "o", atoi, DEFAULT_TIMEOUT_MS);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

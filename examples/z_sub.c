@@ -20,7 +20,7 @@
 #define DEFAULT_KEYEXPR "demo/example/**"
 
 struct args_t {
-    char* keyexpr;  // -k
+    char* keyexpr;  // -k, --key
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 const char* kind_to_str(z_sample_kind_t kind);
@@ -98,21 +98,15 @@ void print_help() {
         "\
     Usage: z_sub [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
+        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

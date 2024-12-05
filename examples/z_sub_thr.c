@@ -20,8 +20,8 @@
 #define DEFAULT_MESSAGES 1000000
 
 typedef struct {
-    unsigned long samples;       // -s
-    unsigned long num_messages;  // -n
+    unsigned long samples;       // -s, --samples
+    unsigned long num_messages;  // -n, --number
 } args_t;
 
 args_t parse_args(int argc, char **argv, z_owned_config_t *config);
@@ -128,23 +128,17 @@ void print_help() {
         "\
     Usage: z_sub [OPTIONS]\n\n\
     Options:\n\
-        -s <MESUREMENTS> (optional, number, default='%d'): Number of throughput measurements.\n\
-        -n <NUM_MESSAGES> (optional, number, default='%d'): Number of messages in each throughput measurements.\n",
+        -s, --samples <MESUREMENTS> (optional, number, default='%d'): Number of throughput measurements.\n\
+        -n, --number <NUM_MESSAGES> (optional, number, default='%d'): Number of messages in each throughput measurements.\n",
         DEFAULT_MEASUREMENTS, DEFAULT_MESSAGES);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     args_t args;
-    _Z_PARSE_ARG(args.samples, "s", atoi, DEFAULT_MEASUREMENTS);
-    _Z_PARSE_ARG(args.num_messages, "n", atoi, DEFAULT_MESSAGES);
+    _Z_PARSE_ARG(args.samples, "s", "samples", atoi, DEFAULT_MEASUREMENTS);
+    _Z_PARSE_ARG(args.num_messages, "n", "number", atoi, DEFAULT_MESSAGES);
 
     parse_zenoh_common_args(argc, argv, config);
     const char *arg = check_unknown_opts(argc, argv);

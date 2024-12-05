@@ -22,11 +22,11 @@
 #define DEFAULT_TIMEOUT_MS 10000
 
 struct args_t {
-    char* selector;              // -s
-    char* value;                 // -v
+    char* selector;              // -s, --selector
+    char* value;                 // -p, --payload
     bool add_matching_listener;  // --add-matching-listener
-    z_query_target_t target;     // -t
-    uint64_t timeout_ms;         // -o
+    z_query_target_t target;     // -t, --target
+    uint64_t timeout_ms;         // -o, --timeout
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -142,33 +142,27 @@ void print_help() {
         "\
     Usage: z_querier [OPTIONS]\n\n\
     Options:\n\
-        -s <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
-        -p <PAYLOAD> (optional, string): An optional value to put in the query\n\
-        -t <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
-        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n"
+        -s, --selector <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
+        -p, --payload <PAYLOAD> (optional, string): An optional value to put in the query\n\
+        -t, --target <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
+        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n"
 #if defined(Z_FEATURE_UNSTABLE_API)
         "       --add-matching-listener (optional): Add matching listener\n"
 #endif
         ,
         DEFAULT_SELECTOR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.selector, "s", (char*), (char*)DEFAULT_SELECTOR);
-    _Z_PARSE_ARG(args.value, "p", (char*), (char*)DEFAULT_VALUE);
-    _Z_PARSE_ARG(args.timeout_ms, "o", atoi, DEFAULT_TIMEOUT_MS);
-    _Z_PARSE_ARG(args.target, "t", parse_query_target, z_query_target_default());
+    _Z_PARSE_ARG(args.selector, "s", "selector", (char*), (char*)DEFAULT_SELECTOR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
+    _Z_PARSE_ARG(args.target, "t", "target", parse_query_target, z_query_target_default());
 #if defined(Z_FEATURE_UNSTABLE_API)
-    _Z_CHECK_FLAG(args.add_matching_listener, "add-matching-listener");
+    args.add_matching_listener = _Z_CHECK_FLAG("add-matching-listener");
 #endif
 
     parse_zenoh_common_args(argc, argv, config);

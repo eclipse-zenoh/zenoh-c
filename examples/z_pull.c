@@ -21,9 +21,9 @@
 #define DEFAULT_PULL_INTERVAL 5
 
 struct args_t {
-    char* keyexpr;           // -k
-    unsigned long size;      // -s
-    unsigned long interval;  // -i
+    char* keyexpr;           // -k, --key
+    unsigned long size;      // -s, --size
+    unsigned long interval;  // -i, --interval
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -105,25 +105,19 @@ void print_help() {
         "\
     Usage: z_pull [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression to subscribe to\n\
-        -s <SIZE> (optional, number, default='%d'): The size of the ring buffer\n\
-        -i <INTERVAL> (optional, number, default='%d'): The interval for pulling the ringbuffer.\n",
+        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n\
+        -s, --size <SIZE> (optional, number, default='%d'): The size of the ring buffer\n\
+        -i, --interval <INTERVAL> (optional, number, default='%d'): The interval for pulling the ringbuffer.\n",
         DEFAULT_KEYEXPR, DEFAULT_RING_BUFFER_SIZE, DEFAULT_PULL_INTERVAL);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.size, "s", atoi, DEFAULT_RING_BUFFER_SIZE);
-    _Z_PARSE_ARG(args.interval, "i", atoi, DEFAULT_PULL_INTERVAL);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.size, "s", "size", atoi, DEFAULT_RING_BUFFER_SIZE);
+    _Z_PARSE_ARG(args.interval, "i", "interval", atoi, DEFAULT_PULL_INTERVAL);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
