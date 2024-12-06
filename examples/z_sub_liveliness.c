@@ -19,7 +19,8 @@
 #define DEFAULT_KEYEXPR "group1/**"
 
 struct args_t {
-    char* keyexpr;  // -k
+    char* keyexpr;  // -k, --key
+    bool history;   // --history
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -59,8 +60,11 @@ int main(int argc, char** argv) {
     printf("Declaring liveliness subscriber on '%s'...\n", args.keyexpr);
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
+    z_liveliness_subscriber_options_t opts;
+    z_liveliness_subscriber_options_default(&opts);
+    opts.history = args.history;
     z_owned_subscriber_t sub;
-    if (z_liveliness_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), NULL) < 0) {
+    if (z_liveliness_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), &opts) < 0) {
         printf("Unable to declare liveliness subscriber.\n");
         exit(-1);
     }
@@ -80,23 +84,18 @@ void print_help() {
         "\
     Usage: z_sub_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n",
+        -k, --key <KEY> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n\
+        --history (optional): Get historical liveliness tokens.\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    args.history = _Z_CHECK_FLAG("history");
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -110,5 +109,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr};
+    return args;
 }

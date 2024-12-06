@@ -4,7 +4,10 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-void parse_args(int argc, char** argv, z_owned_config_t* config);
+struct args_t {
+    bool no_express;  // --no-express
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 void callback(z_loaned_sample_t* sample, void* context) {
     const z_loaned_publisher_t* pub = z_loan(*(z_owned_publisher_t*)context);
@@ -25,7 +28,7 @@ int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
     z_owned_config_t config;
-    parse_args(argc, argv, &config);
+    struct args_t args = parse_args(argc, argv, &config);
 
     z_owned_session_t session;
     z_open(&session, z_move(config), NULL);
@@ -34,7 +37,10 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
     z_owned_publisher_t pub;
-    z_declare_publisher(z_loan(session), &pub, z_loan(pong), NULL);
+    z_publisher_options_t opts;
+    z_publisher_options_default(&opts);
+    opts.is_express = !args.no_express;
+    z_declare_publisher(z_loan(session), &pub, z_loan(pong), &opts);
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)&pub);
     z_declare_background_subscriber(z_loan(session), z_loan(ping), z_move(respond), NULL);
@@ -50,18 +56,15 @@ void print_help() {
     printf(
         "\
     Usage: z_pong [OPTIONS]\n\n\
-    Options:\n");
+    Options:\n\
+        --no-express (optional): Disable message batching.\n");
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
-void parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    struct args_t args;
+    args.no_express = _Z_CHECK_FLAG("no-express");
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -75,4 +78,5 @@ void parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
+    return args;
 }

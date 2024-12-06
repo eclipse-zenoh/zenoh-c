@@ -63,16 +63,10 @@ void print_help() {
     Usage: z_info [OPTIONS]\n\n\
     Options:\n");
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 void parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {

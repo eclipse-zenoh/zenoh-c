@@ -18,9 +18,11 @@
 #include "zenoh.h"
 
 #define DEFAULT_KEYEXPR "group1/**"
+#define DEFAULT_TIMEOUT_MS 10000
 
 struct args_t {
-    char* keyexpr;  // -k
+    char* keyexpr;        // -k, --key
+    uint64_t timeout_ms;  // -o, --timeout
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -47,7 +49,10 @@ int main(int argc, char** argv) {
     z_owned_fifo_handler_reply_t handler;
     z_owned_closure_reply_t closure;
     z_fifo_channel_reply_new(&closure, &handler, 16);
-    z_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), NULL);
+    z_liveliness_get_options_t opts;
+    z_liveliness_get_options_default(&opts);
+    opts.timeout_ms = args.timeout_ms;
+    z_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), &opts);
     z_owned_reply_t reply;
     for (z_result_t res = z_recv(z_loan(handler), &reply); res == Z_OK; res = z_recv(z_loan(handler), &reply)) {
         if (z_reply_is_ok(z_loan(reply))) {
@@ -71,23 +76,18 @@ void print_help() {
         "\
     Usage: z_get_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression to query\n",
-        DEFAULT_KEYEXPR);
+        -k, --key <KEY> (optional, string, default='%s'): The key expression to query\n\
+        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        DEFAULT_KEYEXPR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -101,5 +101,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr};
+    return args;
 }

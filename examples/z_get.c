@@ -22,10 +22,10 @@
 #define DEFAULT_TIMEOUT_MS 10000
 
 struct args_t {
-    char* selector;           // -s
-    char* value;              // -v
-    z_query_target_t target;  // -t
-    uint64_t timeout_ms;      // -o
+    char* selector;           // -s, --selector
+    char* value;              // -p, --payload
+    z_query_target_t target;  // -t, --target
+    uint64_t timeout_ms;      // -o, --timeout
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -45,8 +45,8 @@ int main(int argc, char** argv) {
 
     z_view_keyexpr_t keyexpr;
 
-    if (z_view_keyexpr_from_str(&keyexpr, ke) < 0) {
-        printf("%s is not a valid key expression", ke);
+    if (z_view_keyexpr_from_substr(&keyexpr, ke, ke_len) < 0) {
+        printf("%.*s is not a valid key expression", (int)ke_len, ke);
         exit(-1);
     }
 
@@ -105,40 +105,22 @@ void print_help() {
         "\
     Usage: z_get [OPTIONS]\n\n\
     Options:\n\
-        -s <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
-        -p <PAYLOAD> (optional, string): An optional value to put in the query\n\
-        -t <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
-        -o <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        -s, --selector <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
+        -p, --payload <PAYLOAD> (optional, string): An optional value to put in the query\n\
+        -t, --target <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
+        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
         DEFAULT_SELECTOR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
-    const char* selector = parse_opt(argc, argv, "s", true);
-    if (!selector) {
-        selector = DEFAULT_SELECTOR;
-    }
-    const char* value = parse_opt(argc, argv, "p", true);
-    if (!value) {
-        value = DEFAULT_VALUE;
-    }
-    const char* timeout_arg = parse_opt(argc, argv, "o", true);
-    uint64_t timeout_ms = DEFAULT_TIMEOUT_MS;
-    if (timeout_arg) {
-        timeout_ms = atoi(timeout_arg);
-    }
-    const char* target_arg = parse_opt(argc, argv, "t", true);
-    z_query_target_t target = z_query_target_default();
-    if (target_arg) {
-        target = parse_query_target(target_arg);
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.selector, "s", "selector", (char*), (char*)DEFAULT_SELECTOR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
+    _Z_PARSE_ARG(args.target, "t", "target", parse_query_target, z_query_target_default());
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -152,6 +134,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){
-        .selector = (char*)selector, .value = (char*)value, .timeout_ms = timeout_ms, .target = target};
+    return args;
 }

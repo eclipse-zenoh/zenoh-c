@@ -17,13 +17,12 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
-#define N 10
 #define DEFAULT_KEYEXPR "demo/example/zenoh-c-pub-shm"
 #define DEFAULT_VALUE "Pub from C!"
 
 struct args_t {
-    char* keyexpr;               // -k
-    char* value;                 // -v
+    char* keyexpr;               // -k, --key
+    char* value;                 // -p, --payload
     bool add_matching_listener;  // --add-matching-listener
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -60,16 +59,10 @@ int main(int argc, char** argv) {
         exit(-1);
     }
 #if defined(Z_FEATURE_UNSTABLE_API)
-    zc_owned_matching_listener_t listener;
     if (args.add_matching_listener) {
         zc_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zc_publisher_declare_matching_listener(z_loan(pub), &listener, z_move(callback));
-    }
-#else
-    if (add_matching_listener) {
-        printf("To enable matching listener you must compile Zenoh-c with unstable feature support!\n");
-        exit(-1);
+        zc_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback));
     }
 #endif
 
@@ -109,15 +102,8 @@ int main(int argc, char** argv) {
         }
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
-    if (args.add_matching_listener) {
-        z_drop(z_move(listener));
-    }
-#endif
-
     z_drop(z_move(pub));
     z_drop(z_move(s));
-
     z_drop(z_move(provider));
     z_drop(z_move(layout));
 
@@ -129,35 +115,26 @@ void print_help() {
         "\
     Usage: z_pub_shm [OPTIONS]\n\n\
     Options:\n\
-        -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to write\n",
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n"
+#if defined(Z_FEATURE_UNSTABLE_API)
+        "       --add-matching-listener (optional): Add matching listener\n"
+#endif
+        ,
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
-    const char* value = parse_opt(argc, argv, "v", true);
-    if (!value) {
-        value = DEFAULT_VALUE;
-    }
-    const char* arg = parse_opt(argc, argv, "add-matching-listener", false);
-    bool add_matching_listener = false;
-    if (arg) {
-        add_matching_listener = true;
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
+#if defined(Z_FEATURE_UNSTABLE_API)
+    args.add_matching_listener = _Z_CHECK_FLAG("add-matching-listener");
+#endif
     parse_zenoh_common_args(argc, argv, config);
-    arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
@@ -169,6 +146,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){
-        .keyexpr = (char*)keyexpr, .value = (char*)value, .add_matching_listener = add_matching_listener};
+    return args;
 }

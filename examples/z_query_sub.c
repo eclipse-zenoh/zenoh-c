@@ -19,7 +19,8 @@
 #define DEFAULT_KEYEXPR "demo/example/**"
 
 struct args_t {
-    char* keyexpr;  // -k
+    char* keyexpr;  // -k, --key
+    char* query;    // -q, --query
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -55,6 +56,11 @@ int main(int argc, char** argv) {
 
     ze_querying_subscriber_options_t sub_opts;
     ze_querying_subscriber_options_default(&sub_opts);
+    z_view_keyexpr_t query;
+    if (args.query != NULL) {
+        z_view_keyexpr_from_str(&query, args.query);
+        sub_opts.query_selector = z_loan(query);
+    }
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
     printf("Declaring querying subscriber on '%s'...\n", args.keyexpr);
@@ -91,23 +97,17 @@ void print_help() {
         "\
     Usage: z_query_sub [OPTIONS]\n\n\
     Options:\n\
-        -k <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
+        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n\
+        -q, --query <QUERY> (optional, string, default=NULL): The selector to use for queries (by default it's same as 'KEY' option)\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -121,5 +121,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr};
+    return args;
 }
