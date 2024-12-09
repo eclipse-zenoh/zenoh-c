@@ -17,7 +17,8 @@ use std::mem::MaybeUninit;
 #[cfg(feature = "unstable")]
 use zenoh::{handlers::Callback, matching::MatchingStatus};
 use zenoh::{
-    pubsub::Publisher,
+    internal::traits::{EncodingBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+    pubsub::{Publisher, PublisherBuilder},
     qos::{CongestionControl, Priority},
     session::SessionClosedError,
     Wait,
@@ -39,7 +40,6 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{z_moved_source_info_t, zc_matching_status_t, zc_owned_matching_listener_t};
-
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
@@ -63,19 +63,25 @@ pub struct z_publisher_options_t {
     pub allowed_destination: zc_locality_t,
 }
 
+impl Default for z_publisher_options_t {
+    fn default() -> Self {
+        Self {
+            encoding: None,
+            congestion_control: CongestionControl::default().into(),
+            priority: Priority::default().into(),
+            is_express: false,
+            #[cfg(feature = "unstable")]
+            reliability: z_reliability_default(),
+            #[cfg(feature = "unstable")]
+            allowed_destination: zc_locality_default(),
+        }
+    }
+}
+
 /// Constructs the default value for `z_publisher_options_t`.
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default(this_: &mut MaybeUninit<z_publisher_options_t>) {
-    this_.write(z_publisher_options_t {
-        encoding: None,
-        congestion_control: CongestionControl::default().into(),
-        priority: Priority::default().into(),
-        is_express: false,
-        #[cfg(feature = "unstable")]
-        reliability: z_reliability_default(),
-        #[cfg(feature = "unstable")]
-        allowed_destination: zc_locality_default(),
-    });
+    this_.write(z_publisher_options_t::default());
 }
 
 pub use crate::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
@@ -84,26 +90,11 @@ decl_c_type!(
     loaned(z_loaned_publisher_t),
 );
 
-/// Constructs and declares a publisher for the given key expression.
-///
-/// Data can be put and deleted with this publisher with the help of the
-/// `z_publisher_put()` and `z_publisher_delete()` functions.
-///
-/// @param session: The Zenoh session.
-/// @param publisher: An uninitialized location in memory where publisher will be constructed.
-/// @param key_expr: The key expression to publish.
-/// @param options: Additional options for the publisher.
-///
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_declare_publisher(
-    session: &z_loaned_session_t,
-    publisher: &mut MaybeUninit<z_owned_publisher_t>,
-    key_expr: &z_loaned_keyexpr_t,
+pub(crate) fn _declare_publisher_inner(
+    session: &'static z_loaned_session_t,
+    key_expr: &'static z_loaned_keyexpr_t,
     options: Option<&mut z_publisher_options_t>,
-) -> result::z_result_t {
-    let this = publisher.as_rust_type_mut_uninit();
+) -> PublisherBuilder<'static, 'static> {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);
@@ -122,6 +113,29 @@ pub extern "C" fn z_declare_publisher(
             p = p.encoding(encoding.take_rust_type());
         }
     }
+    p
+}
+
+/// Constructs and declares a publisher for the given key expression.
+///
+/// Data can be put and deleted with this publisher with the help of the
+/// `z_publisher_put()` and `z_publisher_delete()` functions.
+///
+/// @param session: The Zenoh session.
+/// @param publisher: An uninitialized location in memory where publisher will be constructed.
+/// @param key_expr: The key expression to publish.
+/// @param options: Additional options for the publisher.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_declare_publisher(
+    session: &'static z_loaned_session_t,
+    publisher: &'static mut MaybeUninit<z_owned_publisher_t>,
+    key_expr: &'static z_loaned_keyexpr_t,
+    options: Option<&'static mut z_publisher_options_t>,
+) -> result::z_result_t {
+    let this = publisher.as_rust_type_mut_uninit();
+    let p = _declare_publisher_inner(session, key_expr, options);
     match p.wait() {
         Err(e) => {
             tracing::error!("{}", e);
@@ -137,13 +151,11 @@ pub extern "C" fn z_declare_publisher(
 
 /// Constructs a publisher in a gravestone state.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_internal_publisher_null(this_: &mut MaybeUninit<z_owned_publisher_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publisher is valid, ``false`` otherwise.
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_internal_publisher_check(this_: &z_owned_publisher_t) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -188,6 +200,18 @@ pub struct z_publisher_put_options_t {
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
+impl Default for z_publisher_put_options_t {
+    fn default() -> Self {
+        z_publisher_put_options_t {
+            encoding: None,
+            timestamp: None,
+            #[cfg(feature = "unstable")]
+            source_info: None,
+            attachment: None,
+        }
+    }
+}
+
 /// Constructs the default value for `z_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -201,6 +225,29 @@ pub extern "C" fn z_publisher_put_options_default(
         source_info: None,
         attachment: None,
     });
+}
+
+pub(crate) fn _apply_pubisher_put_options<
+    T: SampleBuilderTrait + TimestampBuilderTrait + EncodingBuilderTrait,
+>(
+    builder: T,
+    options: &mut z_publisher_put_options_t,
+) -> T {
+    let mut builder = builder;
+    if let Some(encoding) = options.encoding.take() {
+        builder = builder.encoding(encoding.take_rust_type());
+    };
+    #[cfg(feature = "unstable")]
+    if let Some(source_info) = options.source_info.take() {
+        builder = builder.source_info(source_info.take_rust_type());
+    };
+    if let Some(attachment) = options.attachment.take() {
+        builder = builder.attachment(attachment.take_rust_type());
+    }
+    if let Some(timestamp) = options.timestamp {
+        builder = builder.timestamp(Some(*timestamp.as_rust_type_ref()));
+    }
+    builder
 }
 
 /// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
@@ -224,19 +271,7 @@ pub unsafe extern "C" fn z_publisher_put(
     let payload = payload.take_rust_type();
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        if let Some(encoding) = options.encoding.take() {
-            put = put.encoding(encoding.take_rust_type());
-        };
-        #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            put = put.source_info(source_info.take_rust_type());
-        };
-        if let Some(attachment) = options.attachment.take() {
-            put = put.attachment(attachment.take_rust_type());
-        }
-        if let Some(timestamp) = options.timestamp {
-            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
-        }
+        put = _apply_pubisher_put_options(put, options);
     }
 
     match put.wait() {
@@ -257,14 +292,32 @@ pub struct z_publisher_delete_options_t {
     pub timestamp: Option<&'static z_timestamp_t>,
 }
 
+impl Default for z_publisher_delete_options_t {
+    fn default() -> Self {
+        z_publisher_delete_options_t { timestamp: None }
+    }
+}
+
 /// Constructs the default values for the delete operation via a publisher entity.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete_options_default(
     this: &mut MaybeUninit<z_publisher_delete_options_t>,
 ) {
-    this.write(z_publisher_delete_options_t { timestamp: None });
+    this.write(z_publisher_delete_options_t::default());
 }
+
+pub(crate) fn _apply_pubisher_delete_options<T: TimestampBuilderTrait>(
+    builder: T,
+    options: &mut z_publisher_delete_options_t,
+) -> T {
+    let mut builder = builder;
+    if let Some(timestamp) = options.timestamp {
+        builder = builder.timestamp(Some(*timestamp.as_rust_type_ref()));
+    }
+    builder
+}
+
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
 /// @return 0 in case of success, negative error code in case of failure.
@@ -272,14 +325,12 @@ pub extern "C" fn z_publisher_delete_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
-    options: Option<&z_publisher_delete_options_t>,
+    options: Option<&mut z_publisher_delete_options_t>,
 ) -> result::z_result_t {
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
-        if let Some(timestamp) = options.timestamp {
-            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
-        }
+        del = _apply_pubisher_delete_options(del, options);
     }
     if let Err(e) = del.wait() {
         tracing::error!("{}", e);

@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2022 ZettaScale Technology
+// Copyright (c) 2024 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -20,7 +20,6 @@
 
 struct args_t {
     char* keyexpr;  // -k, --key
-    char* query;    // -q, --query
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -36,6 +35,15 @@ void data_handler(z_loaned_sample_t* sample, void* arg) {
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
            (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)));
     z_drop(z_move(payload_string));
+}
+
+void miss_handler(const ze_miss_t* miss, void* arg) {
+    z_id_t id = z_entity_global_id_zid(&miss->source);
+    z_owned_string_t id_string;
+    z_id_to_string(&id, &id_string);
+    printf(">> [Subscriber] Missed %d samples from '%.*s' !!!", miss->nb, (int)z_string_len(z_loan(id_string)),
+           z_string_data(z_loan(id_string)));
+    z_drop(z_move(id_string));
 }
 
 int main(int argc, char** argv) {
@@ -54,21 +62,32 @@ int main(int argc, char** argv) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, args.keyexpr);
 
-    ze_querying_subscriber_options_t sub_opts;
-    ze_querying_subscriber_options_default(&sub_opts);
-    z_view_keyexpr_t query;
-    if (args.query != NULL) {
-        z_view_keyexpr_from_str(&query, args.query);
-        sub_opts.query_selector = z_loan(query);
-    }
+    ze_advanced_subscriber_options_t sub_opts;
+    ze_advanced_subscriber_options_default(&sub_opts);
+
+    ze_advanced_subscriber_history_settings_t sub_history_settings;
+    ze_advanced_subscriber_history_settings_default(&sub_history_settings);
+    sub_history_settings.detect_late_publishers = true;
+
+    ze_advanced_subscriber_recovery_settings_t sub_recovery_settings;
+    ze_advanced_subscriber_recovery_settings_default(&sub_recovery_settings);
+    sub_recovery_settings.periodic_queries_period_ms = 1000;
+    sub_opts.history = &sub_history_settings;
+    sub_opts.recovery = &sub_recovery_settings;
+    sub_opts.subscriber_detection = true;
+
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
-    printf("Declaring querying subscriber on '%s'...\n", args.keyexpr);
-    ze_owned_querying_subscriber_t sub;
-    if (ze_declare_querying_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), &sub_opts) < 0) {
-        printf("Unable to declare querying subscriber.\n");
+    printf("Declaring AdvancedSubscriber on '%s'...\n", args.keyexpr);
+    ze_owned_advanced_subscriber_t sub;
+    if (ze_declare_advanced_subscriber(z_loan(s), &sub, z_loan(ke), z_move(callback), &sub_opts) < 0) {
+        printf("Unable to declare advanced subscriber.\n");
         exit(-1);
     }
+
+    ze_owned_closure_miss_t miss_callback;
+    z_closure(&miss_callback, miss_handler, NULL, NULL);
+    ze_advanced_subscriber_declare_background_sample_miss_listener(z_loan(sub), z_move(miss_callback));
 
     printf("Press CTRL-C to quit...\n");
     while (1) {
@@ -95,10 +114,9 @@ const char* kind_to_str(z_sample_kind_t kind) {
 void print_help() {
     printf(
         "\
-    Usage: z_query_sub [OPTIONS]\n\n\
+    Usage: z_advanced_sub [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n\
-        -q, --query <QUERY> (optional, string, default=NULL): The selector to use for queries (by default it's same as 'KEY' option)\n",
+        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
 }
@@ -107,7 +125,6 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
     _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.keyexpr, "q", "query", (char*), NULL);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
