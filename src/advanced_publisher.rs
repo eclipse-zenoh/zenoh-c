@@ -67,14 +67,14 @@ pub extern "C" fn ze_advanced_publisher_cache_settings_default(
     this.write(ze_advanced_publisher_cache_settings_t::default());
 }
 
-impl Into<CacheConfig> for &ze_advanced_publisher_cache_settings_t {
-    fn into(self) -> CacheConfig {
+impl From<&ze_advanced_publisher_cache_settings_t> for CacheConfig {
+    fn from(val: &ze_advanced_publisher_cache_settings_t) -> CacheConfig {
         let mut c = CacheConfig::default();
-        c = c.max_samples(self.max_samples);
+        c = c.max_samples(val.max_samples);
         let qos = zenoh_ext::RepliesConfig::default()
-            .congestion_control(self.congestion_control.into())
-            .express(self.is_express)
-            .priority(self.priority.into());
+            .congestion_control(val.congestion_control.into())
+            .express(val.is_express)
+            .priority(val.priority.into());
         c = c.replies_config(qos);
         c
     }

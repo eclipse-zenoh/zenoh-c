@@ -186,6 +186,7 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
 
 /// Options passed to the `z_publisher_put()` function.
 #[repr(C)]
+#[derive(Default)]
 pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
     pub encoding: Option<&'static mut z_moved_encoding_t>,
@@ -198,18 +199,6 @@ pub struct z_publisher_put_options_t {
     pub source_info: Option<&'static mut z_moved_source_info_t>,
     /// The attachment to attach to the publication.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
-}
-
-impl Default for z_publisher_put_options_t {
-    fn default() -> Self {
-        z_publisher_put_options_t {
-            encoding: None,
-            timestamp: None,
-            #[cfg(feature = "unstable")]
-            source_info: None,
-            attachment: None,
-        }
-    }
 }
 
 /// Constructs the default value for `z_publisher_put_options_t`.
@@ -287,15 +276,10 @@ pub unsafe extern "C" fn z_publisher_put(
 /// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
 /// whenever issued via `z_publisher_delete()`.
 #[repr(C)]
+#[derive(Default)]
 pub struct z_publisher_delete_options_t {
     /// The timestamp of this message.
     pub timestamp: Option<&'static z_timestamp_t>,
-}
-
-impl Default for z_publisher_delete_options_t {
-    fn default() -> Self {
-        z_publisher_delete_options_t { timestamp: None }
-    }
 }
 
 /// Constructs the default values for the delete operation via a publisher entity.

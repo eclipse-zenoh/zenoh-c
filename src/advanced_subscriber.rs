@@ -31,6 +31,7 @@ use crate::{
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Setting for retrievieng historical data for Advanced Subscriber.
 #[repr(C)]
+#[derive(Default)]
 pub struct ze_advanced_subscriber_history_settings_t {
     /// Enable detection of late joiner publishers and query for their historical data.
     /// Late joiner detection can only be achieved for Publishers that enable publisher_detection.
@@ -42,16 +43,6 @@ pub struct ze_advanced_subscriber_history_settings_t {
     pub max_age_ms: u64,
 }
 
-impl Default for ze_advanced_subscriber_history_settings_t {
-    fn default() -> Self {
-        Self {
-            detect_late_publishers: false,
-            max_samples: 0,
-            max_age_ms: 0,
-        }
-    }
-}
-
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_subscriber_history_settings_t`.
 #[no_mangle]
@@ -61,17 +52,17 @@ pub extern "C" fn ze_advanced_subscriber_history_settings_default(
     this.write(ze_advanced_subscriber_history_settings_t::default());
 }
 
-impl Into<HistoryConfig> for &ze_advanced_subscriber_history_settings_t {
-    fn into(self) -> HistoryConfig {
+impl From<&ze_advanced_subscriber_history_settings_t> for HistoryConfig {
+    fn from(val: &ze_advanced_subscriber_history_settings_t) -> Self {
         let mut h = HistoryConfig::default();
-        if self.detect_late_publishers {
+        if val.detect_late_publishers {
             h = h.detect_late_publishers();
         }
-        if self.max_samples > 0 {
-            h = h.max_samples(self.max_samples)
+        if val.max_samples > 0 {
+            h = h.max_samples(val.max_samples)
         }
-        if self.max_age_ms > 0 {
-            h = h.max_age(self.max_age_ms as f64 * 1000.0f64)
+        if val.max_age_ms > 0 {
+            h = h.max_age(val.max_age_ms as f64 * 1000.0f64)
         }
         h
     }
@@ -80,6 +71,7 @@ impl Into<HistoryConfig> for &ze_advanced_subscriber_history_settings_t {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Setting for recovering lost messages for Advanced Subscriber.
 #[repr(C)]
+#[derive(Default)]
 pub struct ze_advanced_subscriber_recovery_settings_t {
     /// Period for queries for not yet received Samplesd.
     ///
@@ -90,19 +82,11 @@ pub struct ze_advanced_subscriber_recovery_settings_t {
     pub periodic_queries_period_ms: u64,
 }
 
-impl Default for ze_advanced_subscriber_recovery_settings_t {
-    fn default() -> Self {
-        Self {
-            periodic_queries_period_ms: 0,
-        }
-    }
-}
-
-impl Into<RecoveryConfig> for &ze_advanced_subscriber_recovery_settings_t {
-    fn into(self) -> RecoveryConfig {
+impl From<&ze_advanced_subscriber_recovery_settings_t> for RecoveryConfig {
+    fn from(val: &ze_advanced_subscriber_recovery_settings_t) -> RecoveryConfig {
         let mut r = RecoveryConfig::default();
-        if self.periodic_queries_period_ms > 0 {
-            r = r.periodic_queries(Some(Duration::from_millis(self.periodic_queries_period_ms)));
+        if val.periodic_queries_period_ms > 0 {
+            r = r.periodic_queries(Some(Duration::from_millis(val.periodic_queries_period_ms)));
         }
         r
     }
