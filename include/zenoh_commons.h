@@ -1218,7 +1218,7 @@ typedef struct ze_loaned_closure_miss_t {
 } ze_loaned_closure_miss_t;
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Options passed to the `ze_declare_publication_cache()` function.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -1248,7 +1248,7 @@ typedef struct ze_publication_cache_options_t {
 } ze_publication_cache_options_t;
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief A set of options that can be applied to a querying subscriber,
  * upon its declaration via `ze_declare_querying_subscriber()`.
  *
@@ -5743,7 +5743,7 @@ z_result_t ze_declare_advanced_subscriber(const struct z_loaned_session_t *sessi
                                           struct ze_advanced_subscriber_options_t *options);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
  *
  * @param session: A Zenoh session.
@@ -5759,7 +5759,7 @@ z_result_t ze_declare_background_publication_cache(const struct z_loaned_session
                                                    struct ze_publication_cache_options_t *options);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Declares a background querying subscriber for a given key expression. Subscriber callback will be called to process the messages,
  * until the corresponding session is closed or dropped.
  *
@@ -5778,7 +5778,7 @@ z_result_t ze_declare_background_querying_subscriber(const struct z_loaned_sessi
                                                      struct ze_querying_subscriber_options_t *options);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Constructs and declares a publication cache.
  *
  * @param session: A Zenoh session.
@@ -5796,7 +5796,7 @@ z_result_t ze_declare_publication_cache(const struct z_loaned_session_t *session
                                         struct ze_publication_cache_options_t *options);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Constructs and declares a querying subscriber for a given key expression.
  *
  * @param session: A Zenoh session.
@@ -6031,7 +6031,7 @@ ZENOHC_API
 void ze_internal_closure_miss_null(struct ze_owned_closure_miss_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6039,15 +6039,14 @@ ZENOHC_API
 bool ze_internal_publication_cache_check(const struct ze_owned_publication_cache_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Constructs a publication cache in a gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_internal_publication_cache_null(struct ze_owned_publication_cache_t *this_);
+ZENOHC_API void ze_internal_publication_cache_null(struct ze_owned_publication_cache_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6085,16 +6084,15 @@ ZENOHC_API bool ze_internal_serializer_check(const struct ze_owned_serializer_t 
  */
 ZENOHC_API void ze_internal_serializer_null(struct ze_owned_serializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Drops publication cache and resets it to its gravestone state.
  * This is equivalent to calling `ze_undeclare_publication_cache()` and discarding its return value.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_publication_cache_drop(struct ze_moved_publication_cache_t *this_);
+ZENOHC_API void ze_publication_cache_drop(struct ze_moved_publication_cache_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Returns the key expression of the publication cache.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6102,7 +6100,7 @@ ZENOHC_API
 const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const struct ze_loaned_publication_cache_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Borrows publication cache.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6110,12 +6108,11 @@ ZENOHC_API
 const struct ze_loaned_publication_cache_t *ze_publication_cache_loan(const struct ze_owned_publication_cache_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Constructs the default value for `ze_publication_cache_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
+ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -6140,7 +6137,7 @@ ZENOHC_API
 void ze_publisher_delete_options_default(struct ze_advanced_publisher_delete_options_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Undeclares querying subscriber callback and resets it to its gravestone state.
  * This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
  */
@@ -6149,7 +6146,7 @@ ZENOHC_API
 void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Make querying subscriber perform an additional query on a specified selector.
  * The queried samples will be merged with the received publications and made available in the subscriber callback.
  * @return 0 in case of success, negative error code otherwise.
@@ -6161,7 +6158,7 @@ z_result_t ze_querying_subscriber_get(const struct ze_loaned_querying_subscriber
                                       struct z_get_options_t *options);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Borrows querying subscriber.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6169,7 +6166,7 @@ ZENOHC_API
 const struct ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Constructs the default value for `ze_querying_subscriber_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6431,16 +6428,15 @@ ZENOHC_API
 z_result_t ze_undeclare_advanced_subscriber(struct ze_moved_advanced_subscriber_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Undeclares publication cache.
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t *this_);
+ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t *this_);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @warning This API is deprecated. Please use ze_advanced_subscriber.
  * @brief Undeclares the given querying subscriber.
  *
  * @return 0 in case of success, negative error code otherwise.
