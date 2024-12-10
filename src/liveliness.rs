@@ -34,7 +34,6 @@ decl_c_type!(
     loaned(z_loaned_liveliness_token_t),
 );
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs liveliness token in its gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_liveliness_token_null(
@@ -43,28 +42,24 @@ pub extern "C" fn z_internal_liveliness_token_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn z_internal_liveliness_token_check(this_: &z_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_liveliness_token_drop(this_: &mut z_moved_liveliness_token_t) {
     let _ = this_.take_rust_type();
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief The options for `z_liveliness_declare_token()`.
 #[repr(C)]
 pub struct z_liveliness_token_options_t {
     _dummy: u8,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs default value for `z_liveliness_token_options_t`.
 #[no_mangle]
 pub extern "C" fn z_liveliness_token_options_default(
@@ -73,7 +68,6 @@ pub extern "C" fn z_liveliness_token_options_default(
     this.write(z_liveliness_token_options_t { _dummy: 0 });
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows token.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -86,7 +80,6 @@ pub unsafe extern "C" fn z_liveliness_token_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs and declares a liveliness token on the network.
 ///
 /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
@@ -119,7 +112,6 @@ pub extern "C" fn z_liveliness_declare_token(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
 pub extern "C" fn z_liveliness_undeclare_token(
@@ -134,7 +126,6 @@ pub extern "C" fn z_liveliness_undeclare_token(
     result::Z_OK
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief The options for `z_liveliness_declare_subscriber()`
 #[repr(C)]
 pub struct z_liveliness_subscriber_options_t {
@@ -142,7 +133,6 @@ pub struct z_liveliness_subscriber_options_t {
     history: bool,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constucts default value for `z_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_liveliness_subscriber_options_default(
@@ -175,7 +165,6 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
         });
     sub
 }
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
 ///
 /// @param session: A Zenoh session.
@@ -208,7 +197,6 @@ pub extern "C" fn z_liveliness_declare_subscriber(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
 /// until the corresponding session is closed or dropped.
 /// @param session: The Zenoh session.
@@ -234,7 +222,6 @@ pub extern "C" fn zc_liveliness_declare_background_subscriber(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief The options for `z_liveliness_get()`
 #[repr(C)]
 pub struct z_liveliness_get_options_t {
@@ -242,7 +229,6 @@ pub struct z_liveliness_get_options_t {
     timeout_ms: u32,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs default value `z_liveliness_get_options_t`.
 #[no_mangle]
 pub extern "C" fn z_liveliness_get_options_default(
@@ -251,7 +237,6 @@ pub extern "C" fn z_liveliness_get_options_default(
     this.write(z_liveliness_get_options_t { timeout_ms: 10000 });
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
 ///
 /// @param session: The Zenoh session.
