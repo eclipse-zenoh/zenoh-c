@@ -34,7 +34,7 @@ use crate::{
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Setting for advanced publisher's cache.
+/// @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
 #[repr(C)]
 pub struct ze_advanced_publisher_cache_settings_t {
     /// Number of samples to keep for each resource
@@ -80,12 +80,13 @@ impl From<&ze_advanced_publisher_cache_settings_t> for CacheConfig {
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_declare_advanced_publisher()` function.
 #[repr(C)]
 pub struct ze_advanced_publisher_options_t {
     /// Base publisher options.
     pub publisher_options: z_publisher_options_t,
-    /// Optional settings publisher history cache.
+    /// Optional settings for publisher cache.
     pub cache: Option<&'static mut ze_advanced_publisher_cache_settings_t>,
     /// Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
     ///
@@ -120,6 +121,7 @@ decl_c_type!(
     loaned(ze_loaned_advanced_publisher_t),
 );
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs and declares an advanced publisher for the given key expression.
 ///
 /// Data can be put and deleted with this publisher with the help of the
@@ -170,6 +172,7 @@ pub extern "C" fn ze_declare_advanced_publisher(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs an advanced publisher in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -179,6 +182,7 @@ pub extern "C" fn ze_internal_advanced_publisher_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns ``true`` if advanced publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -188,6 +192,7 @@ pub extern "C" fn ze_internal_advanced_publisher_check(
     this_.as_rust_type_ref().is_some()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Borrows advanced publisher.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -201,6 +206,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_loan(
         .as_loaned_c_type_ref()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Mutably advanced borrows publisher.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -213,6 +219,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_loan_mut(
         .as_loaned_c_type_mut()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_advanced_publisher_put()` function.
 #[repr(C)]
 pub struct ze_advanced_publisher_put_options_t {
@@ -220,6 +227,7 @@ pub struct ze_advanced_publisher_put_options_t {
     put_options: z_publisher_put_options_t,
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs the default value for `ze_advanced_publisher_put_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -231,8 +239,8 @@ pub extern "C" fn ze_advanced_publisher_put_options_default(
     });
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Sends a `PUT` message onto the advanced publisher's key expression, transfering the payload ownership.
-///
 ///
 /// The payload and all owned options fields are consumed upon function return.
 ///
@@ -264,6 +272,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_put(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Represents the set of options that can be applied to the delete operation by a previously declared advanced publisher,
 /// whenever issued via `ze_advanced_publisher_delete()`.
 #[repr(C)]
@@ -272,6 +281,7 @@ pub struct ze_advanced_publisher_delete_options_t {
     pub delete_options: z_publisher_delete_options_t,
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs the default values for the delete operation via an advanced publisher entity.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -283,6 +293,7 @@ pub extern "C" fn ze_publisher_delete_options_default(
     });
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Sends a `DELETE` message onto the advanced publisher's key expression.
 ///
 /// @return 0 in case of success, negative error code in case of failure.
@@ -314,6 +325,7 @@ pub extern "C" fn ze_advanced_publisher_id(
     publisher.as_rust_type_ref().id().into_c_type()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns the key expression of the publisher.
 #[no_mangle]
 pub extern "C" fn ze_advanced_publisher_keyexpr(
@@ -422,6 +434,7 @@ pub extern "C" fn ze_advanced_publisher_get_matching_status(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Frees memory and resets advanced_publisher to its gravestone state.
 /// This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
 #[no_mangle]
@@ -431,6 +444,7 @@ pub extern "C" fn ze_advanced_publisher_drop(this: &mut ze_moved_advanced_publis
 }
 
 #[no_mangle]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given advanced publisher.
 ///
 /// @return 0 in case of success, negative error code otherwise.

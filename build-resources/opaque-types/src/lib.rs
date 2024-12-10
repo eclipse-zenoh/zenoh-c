@@ -176,7 +176,7 @@ get_opaque_type_data!(
 );
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An owned Zenoh sample miss listener.
+/// @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
 ///
 /// A listener that sends notification when the advanced subscriber misses a sample .
 /// Dropping the corresponding subscriber, also drops the listener.

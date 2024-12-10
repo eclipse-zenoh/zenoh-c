@@ -1013,7 +1013,7 @@ typedef struct zc_moved_shm_client_list_t {
 } zc_moved_shm_client_list_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Setting for advanced publisher's cache.
+ * @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_publisher_cache_settings_t {
@@ -1036,6 +1036,7 @@ typedef struct ze_advanced_publisher_cache_settings_t {
 } ze_advanced_publisher_cache_settings_t;
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Represents the set of options that can be applied to the delete operation by a previously declared advanced publisher,
  * whenever issued via `ze_advanced_publisher_delete()`.
  */
@@ -1051,6 +1052,7 @@ typedef struct ze_moved_advanced_publisher_t {
   struct ze_owned_advanced_publisher_t _this;
 } ze_moved_advanced_publisher_t;
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Options passed to the `ze_declare_advanced_publisher()` function.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -1060,7 +1062,7 @@ typedef struct ze_advanced_publisher_options_t {
    */
   struct z_publisher_options_t publisher_options;
   /**
-   * Optional settings publisher history cache.
+   * Optional settings for publisher cache.
    */
   struct ze_advanced_publisher_cache_settings_t *cache;
   /**
@@ -1081,6 +1083,7 @@ typedef struct ze_advanced_publisher_options_t {
 } ze_advanced_publisher_options_t;
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Options passed to the `ze_advanced_publisher_put()` function.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -1091,9 +1094,19 @@ typedef struct ze_advanced_publisher_put_options_t {
   struct z_publisher_put_options_t put_options;
 } ze_advanced_publisher_put_options_t;
 #endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A struct that represent missed samples.
+ */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_miss_t {
+  /**
+   * The source of missed samples.
+   */
   struct z_entity_global_id_t source;
+  /**
+   * The number of missed samples.
+   */
   uint32_t nb;
 } ze_miss_t;
 #endif
@@ -1121,7 +1134,7 @@ typedef struct ze_moved_closure_miss_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief An owned Zenoh sample miss listener.
+ * @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
  *
  * A listener that sends notification when the advanced subscriber misses a sample .
  * Dropping the corresponding subscriber, also drops the listener.
@@ -1134,7 +1147,7 @@ typedef struct ze_moved_advanced_subscriber_t {
 } ze_moved_advanced_subscriber_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Setting for retrievieng historical data for Advanced Subscriber.
+ * @brief Settings for retrievieng historical data for Advanced Subscriber.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_subscriber_history_settings_t {
@@ -1156,12 +1169,12 @@ typedef struct ze_advanced_subscriber_history_settings_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Setting for recovering lost messages for Advanced Subscriber.
+ * @brief Settings for recovering lost messages for Advanced Subscriber.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_subscriber_recovery_settings_t {
   /**
-   * Period for queries for not yet received Samplesd.
+   * Period for queries for not yet received Samples.
    *
    * These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
    * So it is useful for sporadic publications but useless for periodic publications
@@ -5464,6 +5477,7 @@ z_result_t ze_advanced_publisher_declare_matching_listener(const struct ze_loane
                                                            struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Sends a `DELETE` message onto the advanced publisher's key expression.
  *
  * @return 0 in case of success, negative error code in case of failure.
@@ -5474,11 +5488,13 @@ z_result_t ze_advanced_publisher_delete(const struct ze_loaned_advanced_publishe
                                         struct ze_advanced_publisher_delete_options_t *options);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Frees memory and resets advanced_publisher to its gravestone state.
  * This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_advanced_publisher_drop(struct ze_moved_advanced_publisher_t *this_);
+ZENOHC_API
+void ze_advanced_publisher_drop(struct ze_moved_advanced_publisher_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5500,6 +5516,7 @@ ZENOHC_API
 struct z_entity_global_id_t ze_advanced_publisher_id(const struct ze_loaned_advanced_publisher_t *publisher);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Returns the key expression of the publisher.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5507,6 +5524,7 @@ ZENOHC_API
 const struct z_loaned_keyexpr_t *ze_advanced_publisher_keyexpr(const struct ze_loaned_advanced_publisher_t *publisher);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Borrows advanced publisher.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5514,6 +5532,7 @@ ZENOHC_API
 const struct ze_loaned_advanced_publisher_t *ze_advanced_publisher_loan(const struct ze_owned_advanced_publisher_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Mutably advanced borrows publisher.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5528,8 +5547,8 @@ ZENOHC_API
 void ze_advanced_publisher_options_default(struct ze_advanced_publisher_options_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Sends a `PUT` message onto the advanced publisher's key expression, transfering the payload ownership.
- *
  *
  * The payload and all owned options fields are consumed upon function return.
  *
@@ -5546,6 +5565,7 @@ z_result_t ze_advanced_publisher_put(const struct ze_loaned_advanced_publisher_t
                                      struct ze_advanced_publisher_put_options_t *options);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs the default value for `ze_advanced_publisher_put_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5585,7 +5605,7 @@ z_result_t ze_advanced_subscriber_declare_sample_miss_listener(const struct ze_l
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a subscriber on liveliness tokens of matching publishers.
+ * @brief Declares a subscriber on liveliness tokens for matching publishers detection. Only advanced publishers. enabling publisher detection can be detected.
  *
  * @param subscriber: The advanced subscriber instance.
  * @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
@@ -5604,7 +5624,7 @@ z_result_t ze_advanced_subscriber_detect_publishers(const struct ze_loaned_advan
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Declares a background subscriber on liveliness tokens of matching publishers. Subscriber callback will be called to process the messages,
- * until the corresponding session is closed or dropped.
+ * until the corresponding session is closed or dropped. Only advanced publishers. enabling publisher detection can be detected.
  * @param subscriber: The advanced subscriber instance.
  * @param callback: The callback function that will be called each time a liveliness token status is changed.
  * @param options: The options to be passed to the liveliness subscriber declaration.
@@ -5704,6 +5724,7 @@ ZENOHC_API
 const struct ze_loaned_closure_miss_t *ze_closure_miss_loan(const struct ze_owned_closure_miss_t *closure);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs and declares an advanced publisher for the given key expression.
  *
  * Data can be put and deleted with this publisher with the help of the
@@ -5989,6 +6010,7 @@ struct ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_
  */
 ZENOHC_API bool ze_deserializer_is_done(const struct ze_deserializer_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Returns ``true`` if advanced publisher is valid, ``false`` otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5996,10 +6018,12 @@ ZENOHC_API
 bool ze_internal_advanced_publisher_check(const struct ze_owned_advanced_publisher_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs an advanced publisher in a gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_internal_advanced_publisher_null(struct ze_owned_advanced_publisher_t *this_);
+ZENOHC_API
+void ze_internal_advanced_publisher_null(struct ze_owned_advanced_publisher_t *this_);
 #endif
 /**
  * Returns ``true`` if advanced subscriber is valid, ``false`` otherwise.
@@ -6130,6 +6154,7 @@ z_result_t ze_publisher_declare_background_matching_listener(const struct ze_loa
                                                              struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs the default values for the delete operation via an advanced publisher entity.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6410,12 +6435,14 @@ ZENOHC_API
 z_result_t ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_,
                                          uint8_t val);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares the given advanced publisher.
  *
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API z_result_t ze_undeclare_advanced_publisher(struct ze_moved_advanced_publisher_t *this_);
+ZENOHC_API
+z_result_t ze_undeclare_advanced_publisher(struct ze_moved_advanced_publisher_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

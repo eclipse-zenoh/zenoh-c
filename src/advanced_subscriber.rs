@@ -29,7 +29,7 @@ use crate::{
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Setting for retrievieng historical data for Advanced Subscriber.
+/// @brief Settings for retrievieng historical data for Advanced Subscriber.
 #[repr(C)]
 #[derive(Default)]
 pub struct ze_advanced_subscriber_history_settings_t {
@@ -69,11 +69,11 @@ impl From<&ze_advanced_subscriber_history_settings_t> for HistoryConfig {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Setting for recovering lost messages for Advanced Subscriber.
+/// @brief Settings for recovering lost messages for Advanced Subscriber.
 #[repr(C)]
 #[derive(Default)]
 pub struct ze_advanced_subscriber_recovery_settings_t {
-    /// Period for queries for not yet received Samplesd.
+    /// Period for queries for not yet received Samples.
     ///
     /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
     /// So it is useful for sporadic publications but useless for periodic publications
@@ -288,9 +288,13 @@ pub extern "C" fn ze_undeclare_advanced_subscriber(
     result::Z_OK
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A struct that represent missed samples.
 #[repr(C)]
 pub struct ze_miss_t {
+    /// The source of missed samples.
     pub source: z_entity_global_id_t,
+    /// The number of missed samples.
     pub nb: u32,
 }
 
@@ -432,7 +436,7 @@ fn _advanced_subscriber_detect_publishers_inner(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Declares a subscriber on liveliness tokens of matching publishers.
+/// @brief Declares a subscriber on liveliness tokens for matching publishers detection. Only advanced publishers. enabling publisher detection can be detected.
 ///
 /// @param subscriber: The advanced subscriber instance.
 /// @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
@@ -464,7 +468,7 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a background subscriber on liveliness tokens of matching publishers. Subscriber callback will be called to process the messages,
-/// until the corresponding session is closed or dropped.
+/// until the corresponding session is closed or dropped. Only advanced publishers. enabling publisher detection can be detected.
 /// @param subscriber: The advanced subscriber instance.
 /// @param callback: The callback function that will be called each time a liveliness token status is changed.
 /// @param options: The options to be passed to the liveliness subscriber declaration.
