@@ -81,6 +81,14 @@ pub use publication_cache::*;
 mod querying_subscriber;
 #[cfg(feature = "unstable")]
 pub use querying_subscriber::*;
+#[cfg(feature = "unstable")]
+mod advanced_subscriber;
+#[cfg(feature = "unstable")]
+pub use advanced_subscriber::*;
+#[cfg(feature = "unstable")]
+mod advanced_publisher;
+#[cfg(feature = "unstable")]
+pub use advanced_publisher::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
 

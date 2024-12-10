@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+#![allow(deprecated)]
 
 use std::{mem::MaybeUninit, ptr::null};
 
@@ -25,7 +26,7 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{zc_locality_default, zc_locality_t};
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
@@ -42,7 +43,7 @@ pub struct ze_publication_cache_options_t {
     pub resources_limit: usize,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Constructs the default value for `ze_publication_cache_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_options_default(
@@ -95,7 +96,7 @@ fn _declare_publication_cache_inner<'a, 'b, 'c>(
     p
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Constructs and declares a publication cache.
 ///
 /// @param session: A Zenoh session.
@@ -126,7 +127,7 @@ pub extern "C" fn ze_declare_publication_cache(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
 ///
 /// @param session: A Zenoh session.
@@ -150,7 +151,7 @@ pub extern "C" fn ze_declare_background_publication_cache(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Constructs a publication cache in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -160,7 +161,7 @@ pub extern "C" fn ze_internal_publication_cache_null(
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -170,7 +171,7 @@ pub extern "C" fn ze_internal_publication_cache_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Drops publication cache and resets it to its gravestone state.
 /// This is equivalent to calling `ze_undeclare_publication_cache()` and discarding its return value.
 #[no_mangle]
@@ -179,7 +180,7 @@ pub extern "C" fn ze_publication_cache_drop(this: &mut ze_moved_publication_cach
     std::mem::drop(this.take_rust_type())
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Returns the key expression of the publication cache.
 #[no_mangle]
 pub extern "C" fn ze_publication_cache_keyexpr(
@@ -188,7 +189,7 @@ pub extern "C" fn ze_publication_cache_keyexpr(
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Borrows publication cache.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -202,7 +203,7 @@ pub unsafe extern "C" fn ze_publication_cache_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Undeclares publication cache.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]

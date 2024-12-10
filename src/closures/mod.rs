@@ -42,3 +42,8 @@ mod log_closure;
 pub use matching_status_closure::*;
 #[cfg(feature = "unstable")]
 mod matching_status_closure;
+
+#[cfg(feature = "unstable")]
+pub use miss_closure::*;
+#[cfg(feature = "unstable")]
+mod miss_closure;

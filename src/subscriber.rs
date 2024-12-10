@@ -28,6 +28,9 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{zc_locality_default, zc_locality_t};
+
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<()>),
     loaned(z_loaned_subscriber_t),
@@ -54,26 +57,43 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
+    #[cfg(not(feature = "unstable"))]
     /// Dummy field to avoid having fieldless struct
     pub _0: u8,
+    #[cfg(feature = "unstable")]
+    /// Restricts the matching publications that will be received by this Subscribers to the ones
+    /// that have the compatible allowed_destination.
+    pub allowed_origin: zc_locality_t,
+}
+
+impl Default for z_subscriber_options_t {
+    fn default() -> Self {
+        Self {
+            #[cfg(not(feature = "unstable"))]
+            _0: Default::default(),
+            #[cfg(feature = "unstable")]
+            allowed_origin: zc_locality_default(),
+        }
+    }
 }
 
 /// Constructs the default value for `z_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
-    this_.write(z_subscriber_options_t { _0: 0 });
+    this_.write(z_subscriber_options_t::default());
 }
 
-fn _declare_subscriber_inner<'a, 'b>(
+#[allow(unused_variables, unused_mut)]
+pub(crate) fn _declare_subscriber_inner<'a, 'b>(
     session: &'a z_loaned_session_t,
     key_expr: &'b z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
-    _options: Option<&mut z_subscriber_options_t>,
+    options: Option<&mut z_subscriber_options_t>,
 ) -> SubscriberBuilder<'a, 'b, Callback<Sample>> {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    let subscriber = session
+    let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
@@ -84,6 +104,10 @@ fn _declare_subscriber_inner<'a, 'b>(
                     .as_loaned_c_type_mut()
             })
         });
+    #[cfg(feature = "unstable")]
+    if let Some(options) = options {
+        subscriber = subscriber.allowed_origin(options.allowed_origin.into());
+    }
     subscriber
 }
 
@@ -93,7 +117,7 @@ fn _declare_subscriber_inner<'a, 'b>(
 /// @param subscriber: An uninitialized location in memory, where subscriber will be constructed.
 /// @param key_expr: The key expression to subscribe.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
-/// @param _options: The options to be passed to the subscriber declaration.
+/// @param options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
 #[no_mangle]
@@ -102,10 +126,10 @@ pub extern "C" fn z_declare_subscriber(
     subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
-    _options: Option<&mut z_subscriber_options_t>,
+    options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = subscriber.as_rust_type_mut_uninit();
-    let s = _declare_subscriber_inner(session, key_expr, callback, _options);
+    let s = _declare_subscriber_inner(session, key_expr, callback, options);
     match s.wait() {
         Ok(sub) => {
             this.write(Some(sub));
@@ -125,7 +149,7 @@ pub extern "C" fn z_declare_subscriber(
 /// @param session: The zenoh session.
 /// @param key_expr: The key expression to subscribe.
 /// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
-/// @param _options: The options to be passed to the subscriber declaration.
+/// @param options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
@@ -133,9 +157,9 @@ pub extern "C" fn z_declare_background_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
-    _options: Option<&mut z_subscriber_options_t>,
+    options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
-    let subscriber = _declare_subscriber_inner(session, key_expr, callback, _options);
+    let subscriber = _declare_subscriber_inner(session, key_expr, callback, options);
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
