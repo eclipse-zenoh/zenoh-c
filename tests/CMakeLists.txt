@@ -17,7 +17,7 @@ foreach(file ${files})
 
     # Exclude Liveliness and zenoh-ext tests if unstable api feature is disabled
     if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
-	    if((${target} MATCHES "^.*_liveliness.*$") OR (${target} MATCHES "^.*_query_sub_test.*$"))
+	    if(${target} MATCHES "^.*_liveliness.*$")
             continue()
         endif()
     endif()
