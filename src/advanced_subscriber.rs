@@ -14,16 +14,17 @@
 
 use std::{mem::MaybeUninit, time::Duration};
 
-use zenoh::{handlers::Callback, sample::Sample, Wait};
+use zenoh::{handlers::Callback, liveliness::LivelinessSubscriberBuilder, sample::Sample, Wait};
 use zenoh_ext::{AdvancedSubscriberBuilderExt, HistoryConfig, RecoveryConfig, SampleMissListener};
 
 use crate::{
     _declare_subscriber_inner, result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_sample_t,
-    z_subscriber_options_t, ze_closure_miss_call, ze_closure_miss_loan,
-    ze_loaned_advanced_subscriber_t, ze_moved_advanced_subscriber_t, ze_moved_closure_miss_t,
-    ze_moved_sample_miss_listener_t, ze_owned_advanced_subscriber_t,
+    z_closure_sample_call, z_closure_sample_loan, z_entity_global_id_t,
+    z_liveliness_subscriber_options_t, z_loaned_keyexpr_t, z_loaned_session_t,
+    z_moved_closure_sample_t, z_owned_subscriber_t, z_subscriber_options_t, ze_closure_miss_call,
+    ze_closure_miss_loan, ze_loaned_advanced_subscriber_t, ze_moved_advanced_subscriber_t,
+    ze_moved_closure_miss_t, ze_moved_sample_miss_listener_t, ze_owned_advanced_subscriber_t,
     ze_owned_sample_miss_listener_t,
 };
 
@@ -295,7 +296,7 @@ pub extern "C" fn ze_undeclare_advanced_subscriber(
     this_: &mut ze_moved_advanced_subscriber_t,
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
-        if let Err(e) = s.close().wait() {
+        if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }
@@ -419,6 +420,83 @@ pub extern "C" fn ze_advanced_subscriber_declare_background_sample_miss_listener
         Ok(_) => result::Z_OK,
         Err(e) => {
             tracing::error!("{}", e);
+            result::Z_EGENERIC
+        }
+    }
+}
+
+fn _advanced_subscriber_detect_publishers_inner(
+    subscriber: &'static ze_loaned_advanced_subscriber_t,
+    callback: &'static mut z_moved_closure_sample_t,
+    options: Option<&'static mut z_liveliness_subscriber_options_t>,
+) -> LivelinessSubscriberBuilder<'static, 'static, Callback<Sample>> {
+    let subscriber = subscriber.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let sub = subscriber
+        .detect_publishers()
+        .history(options.is_some_and(|o| o.history))
+        .callback(move |sample| {
+            let mut owned_sample = Some(sample);
+            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+                owned_sample
+                    .as_mut()
+                    .unwrap_unchecked()
+                    .as_loaned_c_type_mut()
+            })
+        });
+    sub
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a subscriber on liveliness tokens of matching publishers.
+///
+/// @param subscriber: The advanced subscriber instance.
+/// @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
+/// @param callback: The callback function that will be called each time a liveliness token status is changed.
+/// @param options: The options to be passed to the liveliness subscriber declaration.
+///
+/// @return 0 in case of success, negative error values otherwise.
+#[no_mangle]
+pub extern "C" fn ze_advanced_subscriber_detect_publishers(
+    subscriber: &'static ze_loaned_advanced_subscriber_t,
+    liveliness_subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
+    callback: &'static mut z_moved_closure_sample_t,
+    options: Option<&'static mut z_liveliness_subscriber_options_t>,
+) -> result::z_result_t {
+    let liveliness_subscriber = liveliness_subscriber.as_rust_type_mut_uninit();
+    let builder = _advanced_subscriber_detect_publishers_inner(subscriber, callback, options);
+    match builder.wait() {
+        Ok(s) => {
+            liveliness_subscriber.write(Some(s));
+            result::Z_OK
+        }
+        Err(e) => {
+            tracing::error!("Failed to subscribe to liveliness: {e}");
+            liveliness_subscriber.write(None);
+            result::Z_EGENERIC
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a background subscriber on liveliness tokens of matching publishers. Subscriber callback will be called to process the messages,
+/// until the corresponding session is closed or dropped.
+/// @param subscriber: The advanced subscriber instance.
+/// @param callback: The callback function that will be called each time a liveliness token status is changed.
+/// @param options: The options to be passed to the liveliness subscriber declaration.
+///
+/// @return 0 in case of success, negative error values otherwise.
+#[no_mangle]
+pub extern "C" fn ze_advanced_subscriber_detect_publishers_background(
+    subscriber: &'static ze_loaned_advanced_subscriber_t,
+    callback: &'static mut z_moved_closure_sample_t,
+    options: Option<&'static mut z_liveliness_subscriber_options_t>,
+) -> result::z_result_t {
+    let builder = _advanced_subscriber_detect_publishers_inner(subscriber, callback, options);
+    match builder.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            tracing::error!("Failed to subscribe to liveliness: {e}");
             result::Z_EGENERIC
         }
     }

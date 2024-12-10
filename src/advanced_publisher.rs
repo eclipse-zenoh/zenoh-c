@@ -71,11 +71,11 @@ impl Into<CacheConfig> for &ze_advanced_publisher_cache_settings_t {
     fn into(self) -> CacheConfig {
         let mut c = CacheConfig::default();
         c = c.max_samples(self.max_samples);
-        let qos = zenoh_ext::QoS::default()
+        let qos = zenoh_ext::RepliesConfig::default()
             .congestion_control(self.congestion_control.into())
             .express(self.is_express)
             .priority(self.priority.into());
-        c = c.replies_qos(qos);
+        c = c.replies_config(qos);
         c
     }
 }

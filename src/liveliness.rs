@@ -139,7 +139,7 @@ pub extern "C" fn z_liveliness_undeclare_token(
 #[repr(C)]
 pub struct z_liveliness_subscriber_options_t {
     /// If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
-    history: bool,
+    pub history: bool,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

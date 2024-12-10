@@ -968,7 +968,9 @@ Functions
 
 .. doxygenfunction:: ze_declare_advanced_subscriber
 .. doxygenfunction:: ze_undeclare_advanced_subscriber
-.. doxygenfunction:: ze_declare_background_advanced_subscriber
+
+.. doxygenfunction:: ze_advanced_subscriber_detect_publishers
+.. doxygenfunction:: ze_advanced_subscriber_detect_publishers_background
 
 .. doxygenfunction:: ze_advanced_subscriber_drop
 

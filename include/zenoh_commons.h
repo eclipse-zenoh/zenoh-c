@@ -5584,6 +5584,40 @@ z_result_t ze_advanced_subscriber_declare_sample_miss_listener(const struct ze_l
                                                                struct ze_moved_closure_miss_t *callback);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a subscriber on liveliness tokens of matching publishers.
+ *
+ * @param subscriber: The advanced subscriber instance.
+ * @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
+ * @param callback: The callback function that will be called each time a liveliness token status is changed.
+ * @param options: The options to be passed to the liveliness subscriber declaration.
+ *
+ * @return 0 in case of success, negative error values otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_advanced_subscriber_detect_publishers(const struct ze_loaned_advanced_subscriber_t *subscriber,
+                                                    struct z_owned_subscriber_t *liveliness_subscriber,
+                                                    struct z_moved_closure_sample_t *callback,
+                                                    struct z_liveliness_subscriber_options_t *options);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a background subscriber on liveliness tokens of matching publishers. Subscriber callback will be called to process the messages,
+ * until the corresponding session is closed or dropped.
+ * @param subscriber: The advanced subscriber instance.
+ * @param callback: The callback function that will be called each time a liveliness token status is changed.
+ * @param options: The options to be passed to the liveliness subscriber declaration.
+ *
+ * @return 0 in case of success, negative error values otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_advanced_subscriber_detect_publishers_background(const struct ze_loaned_advanced_subscriber_t *subscriber,
+                                                               struct z_moved_closure_sample_t *callback,
+                                                               struct z_liveliness_subscriber_options_t *options);
+#endif
+/**
  * Undeclares advanced subscriber callback and resets it to its gravestone state.
  * This is equivalent to calling `ze_undeclare_advanced_subscriber()` and discarding its return value.
  */
