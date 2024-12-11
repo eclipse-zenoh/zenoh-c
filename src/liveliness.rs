@@ -197,6 +197,7 @@ pub extern "C" fn z_liveliness_declare_subscriber(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
 /// until the corresponding session is closed or dropped.
 /// @param session: The Zenoh session.
@@ -206,6 +207,7 @@ pub extern "C" fn z_liveliness_declare_subscriber(
 ///
 /// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn zc_liveliness_declare_background_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,

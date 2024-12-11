@@ -452,7 +452,7 @@ typedef struct z_close_options_t {
    * concurrently in separate task, and this handle will be initialized to be used for controlling
    * it's execution.
    */
-  zc_owned_concurrent_close_handle_t *internal_out_concurrent;
+  struct zc_owned_concurrent_close_handle_t *internal_out_concurrent;
 #endif
 #if !defined(Z_FEATURE_UNSTABLE_API)
   uint8_t _dummy;
@@ -702,6 +702,9 @@ typedef struct z_moved_fifo_handler_reply_t {
 typedef struct z_moved_fifo_handler_sample_t {
   struct z_owned_fifo_handler_sample_t _this;
 } z_moved_fifo_handler_sample_t;
+typedef struct z_moved_source_info_t {
+  struct z_owned_source_info_t _this;
+} z_moved_source_info_t;
 /**
  * Options passed to the `z_get()` function.
  */
@@ -756,7 +759,7 @@ typedef struct z_get_options_t {
    *
    * The source info for the query.
    */
-  z_moved_source_info_t *source_info;
+  struct z_moved_source_info_t *source_info;
 #endif
   /**
    * An optional attachment to attach to the query.
@@ -840,7 +843,7 @@ typedef struct z_publisher_put_options_t {
    *
    * The source info for the publication.
    */
-  z_moved_source_info_t *source_info;
+  struct z_moved_source_info_t *source_info;
 #endif
   /**
    * The attachment to attach to the publication.
@@ -893,13 +896,16 @@ typedef struct z_put_options_t {
    *
    * The source info for the message.
    */
-  z_moved_source_info_t *source_info;
+  struct z_moved_source_info_t *source_info;
 #endif
   /**
    * The attachment to this message.
    */
   struct z_moved_bytes_t *attachment;
 } z_put_options_t;
+typedef struct z_moved_querier_t {
+  struct z_owned_querier_t _this;
+} z_moved_querier_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Options passed to the `z_querier_get()` function.
@@ -920,7 +926,7 @@ typedef struct z_querier_get_options_t {
    *
    * The source info for the query.
    */
-  z_moved_source_info_t *source_info;
+  struct z_moved_source_info_t *source_info;
 #endif
   /**
    * An optional attachment to attach to the query.
@@ -962,7 +968,7 @@ typedef struct z_query_reply_options_t {
    *
    * The source info for the reply.
    */
-  z_moved_source_info_t *source_info;
+  struct z_moved_source_info_t *source_info;
 #endif
   /**
    * The attachment to this reply.
@@ -996,7 +1002,7 @@ typedef struct z_query_reply_del_options_t {
    *
    * The source info for the reply.
    */
-  z_moved_source_info_t *source_info;
+  struct z_moved_source_info_t *source_info;
 #endif
   /**
    * The attachment to this reply.
@@ -1207,15 +1213,6 @@ typedef struct zc_owned_closure_matching_status_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Loaned closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct zc_loaned_closure_matching_status_t {
-  size_t _0[3];
-} zc_loaned_closure_matching_status_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Moved closure.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -1223,6 +1220,12 @@ typedef struct zc_moved_closure_matching_status_t {
   struct zc_owned_closure_matching_status_t _this;
 } zc_moved_closure_matching_status_t;
 #endif
+typedef struct zc_moved_concurrent_close_handle_t {
+  struct zc_owned_concurrent_close_handle_t _this;
+} zc_moved_concurrent_close_handle_t;
+typedef struct zc_moved_matching_listener_t {
+  struct zc_owned_matching_listener_t _this;
+} zc_moved_matching_listener_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Options passed to the `ze_declare_publication_cache()` function.
@@ -1291,6 +1294,19 @@ typedef struct ze_querying_subscriber_options_t {
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
 #endif
+typedef struct ze_moved_publication_cache_t {
+  struct ze_owned_publication_cache_t _this;
+} ze_moved_publication_cache_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A loaned Zenoh publication cache.
+ */
+typedef struct ALIGN(8) ze_loaned_publication_cache_t {
+  uint8_t _0[96];
+} ze_loaned_publication_cache_t;
+typedef struct ze_moved_querying_subscriber_t {
+  struct ze_owned_querying_subscriber_t _this;
+} ze_moved_querying_subscriber_t;
 typedef struct ze_moved_serializer_t {
   struct ze_owned_serializer_t _this;
 } ze_moved_serializer_t;
@@ -2070,7 +2086,7 @@ z_result_t z_declare_publisher(const struct z_loaned_session_t *session,
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_declare_querier(const struct z_loaned_session_t *session,
-                             z_owned_querier_t *querier,
+                             struct z_owned_querier_t *querier,
                              const struct z_loaned_keyexpr_t *key_expr,
                              struct z_querier_options_t *options);
 #endif
@@ -2528,7 +2544,7 @@ const struct z_loaned_encoding_t *z_encoding_zenoh_string(void);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-uint32_t z_entity_global_id_eid(const z_entity_global_id_t *this_);
+uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -2536,7 +2552,7 @@ uint32_t z_entity_global_id_eid(const z_entity_global_id_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-struct z_id_t z_entity_global_id_zid(const z_entity_global_id_t *this_);
+struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);
 #endif
 /**
  * Constructs send and recieve ends of the fifo channel
@@ -2921,7 +2937,7 @@ ZENOHC_API void z_internal_publisher_null(struct z_owned_publisher_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool z_internal_querier_check(const z_owned_querier_t *this_);
+bool z_internal_querier_check(const struct z_owned_querier_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -2929,7 +2945,7 @@ bool z_internal_querier_check(const z_owned_querier_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_internal_querier_null(z_owned_querier_t *this_);
+void z_internal_querier_null(struct z_owned_querier_t *this_);
 #endif
 /**
  * Returns `false` if `this` is in a gravestone state, `true` otherwise.
@@ -3100,7 +3116,7 @@ ZENOHC_API void z_internal_slice_null(struct z_owned_slice_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool z_internal_source_info_check(const z_owned_source_info_t *this_);
+bool z_internal_source_info_check(const struct z_owned_source_info_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3108,7 +3124,7 @@ bool z_internal_source_info_check(const z_owned_source_info_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_internal_source_info_null(z_owned_source_info_t *this_);
+void z_internal_source_info_null(struct z_owned_source_info_t *this_);
 #endif
 /**
  * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
@@ -3485,7 +3501,7 @@ ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_entity_global_id_t z_publisher_id(const struct z_loaned_publisher_t *publisher);
+struct z_entity_global_id_t z_publisher_id(const struct z_loaned_publisher_t *publisher);
 #endif
 /**
  * Returns the key expression of the publisher.
@@ -3551,7 +3567,7 @@ ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_querier_drop(z_moved_querier_t *this_);
+void z_querier_drop(struct z_moved_querier_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3567,7 +3583,7 @@ void z_querier_drop(z_moved_querier_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t z_querier_get(const z_loaned_querier_t *querier,
+z_result_t z_querier_get(const struct z_loaned_querier_t *querier,
                          const char *parameters,
                          struct z_moved_closure_reply_t *callback,
                          struct z_querier_get_options_t *options);
@@ -3586,7 +3602,7 @@ void z_querier_get_options_default(struct z_querier_get_options_t *this_);
  */
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_entity_global_id_t z_querier_id(const z_loaned_querier_t *querier);
+struct z_entity_global_id_t z_querier_id(const struct z_loaned_querier_t *querier);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3594,7 +3610,7 @@ z_entity_global_id_t z_querier_id(const z_loaned_querier_t *querier);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const struct z_loaned_keyexpr_t *z_querier_keyexpr(const z_loaned_querier_t *querier);
+const struct z_loaned_keyexpr_t *z_querier_keyexpr(const struct z_loaned_querier_t *querier);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3602,7 +3618,7 @@ const struct z_loaned_keyexpr_t *z_querier_keyexpr(const z_loaned_querier_t *que
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const z_loaned_querier_t *z_querier_loan(const z_owned_querier_t *this_);
+const struct z_loaned_querier_t *z_querier_loan(const struct z_owned_querier_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3610,7 +3626,7 @@ const z_loaned_querier_t *z_querier_loan(const z_owned_querier_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_loaned_querier_t *z_querier_loan_mut(z_owned_querier_t *this_);
+struct z_loaned_querier_t *z_querier_loan_mut(struct z_owned_querier_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3782,7 +3798,7 @@ ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_entity_global_id_t z_queryable_id(const struct z_loaned_queryable_t *queryable);
+struct z_entity_global_id_t z_queryable_id(const struct z_loaned_queryable_t *queryable);
 #endif
 ZENOHC_API
 const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
@@ -4051,7 +4067,7 @@ enum z_reliability_t z_sample_reliability(const struct z_loaned_sample_t *this_)
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
+const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
 #endif
 /**
  * Returns the sample timestamp.
@@ -4505,7 +4521,7 @@ ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slic
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_source_info_drop(z_moved_source_info_t *this_);
+void z_source_info_drop(struct z_moved_source_info_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4513,7 +4529,7 @@ void z_source_info_drop(z_moved_source_info_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_entity_global_id_t z_source_info_id(const z_loaned_source_info_t *this_);
+struct z_entity_global_id_t z_source_info_id(const struct z_loaned_source_info_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4521,7 +4537,7 @@ z_entity_global_id_t z_source_info_id(const z_loaned_source_info_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *this_);
+const struct z_loaned_source_info_t *z_source_info_loan(const struct z_owned_source_info_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4529,8 +4545,8 @@ const z_loaned_source_info_t *z_source_info_loan(const z_owned_source_info_t *th
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t z_source_info_new(z_owned_source_info_t *this_,
-                             const z_entity_global_id_t *source_id,
+z_result_t z_source_info_new(struct z_owned_source_info_t *this_,
+                             const struct z_entity_global_id_t *source_id,
                              uint32_t source_sn);
 #endif
 /**
@@ -4539,7 +4555,7 @@ z_result_t z_source_info_new(z_owned_source_info_t *this_,
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-uint32_t z_source_info_sn(const z_loaned_source_info_t *this_);
+uint32_t z_source_info_sn(const struct z_loaned_source_info_t *this_);
 #endif
 /**
  * Constructs an owned copy of a string array.
@@ -4762,7 +4778,7 @@ ZENOHC_API z_result_t z_undeclare_publisher(struct z_moved_publisher_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t z_undeclare_querier(z_moved_querier_t *this_);
+z_result_t z_undeclare_querier(struct z_moved_querier_t *this_);
 #endif
 /**
  * Undeclares a `z_owned_queryable_t`.
@@ -5031,13 +5047,14 @@ const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loa
  * @brief Drops the close handle. The concurrent close task will not be interrupted.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void zc_concurrent_close_handle_drop(zc_moved_concurrent_close_handle_t *this_);
+ZENOHC_API void zc_concurrent_close_handle_drop(struct zc_moved_concurrent_close_handle_t *this_);
 #endif
 /**
  * @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API z_result_t zc_concurrent_close_handle_wait(zc_moved_concurrent_close_handle_t *handle);
+ZENOHC_API
+z_result_t zc_concurrent_close_handle_wait(struct zc_moved_concurrent_close_handle_t *handle);
 #endif
 /**
  * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
@@ -5154,13 +5171,14 @@ void zc_internal_closure_matching_status_null(struct zc_owned_closure_matching_s
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool zc_internal_concurrent_close_handle_check(const zc_owned_concurrent_close_handle_t *this_);
+bool zc_internal_concurrent_close_handle_check(const struct zc_owned_concurrent_close_handle_t *this_);
 #endif
 /**
  * @brief Constructs concurrent close handle in its gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void zc_internal_concurrent_close_handle_null(zc_owned_concurrent_close_handle_t *this_);
+ZENOHC_API
+void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_handle_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5168,7 +5186,7 @@ ZENOHC_API void zc_internal_concurrent_close_handle_null(zc_owned_concurrent_clo
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool zc_internal_matching_listener_check(const zc_owned_matching_listener_t *this_);
+bool zc_internal_matching_listener_check(const struct zc_owned_matching_listener_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5176,7 +5194,7 @@ bool zc_internal_matching_listener_check(const zc_owned_matching_listener_t *thi
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void zc_internal_matching_listener_null(zc_owned_matching_listener_t *this_);
+void zc_internal_matching_listener_null(struct zc_owned_matching_listener_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5195,6 +5213,7 @@ ZENOHC_API
 void zc_internal_shm_client_list_null(zc_owned_shm_client_list_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
  * until the corresponding session is closed or dropped.
  * @param session: The Zenoh session.
@@ -5204,11 +5223,13 @@ void zc_internal_shm_client_list_null(zc_owned_shm_client_list_t *this_);
  *
  * @return 0 in case of success, negative error values otherwise.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t zc_liveliness_declare_background_subscriber(const struct z_loaned_session_t *session,
                                                        const struct z_loaned_keyexpr_t *key_expr,
                                                        struct z_moved_closure_sample_t *callback,
                                                        struct z_liveliness_subscriber_options_t *options);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns default value of `zc_locality_t`
@@ -5223,7 +5244,7 @@ enum zc_locality_t zc_locality_default(void);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void zc_matching_listener_drop(zc_moved_matching_listener_t *this_);
+void zc_matching_listener_drop(struct zc_moved_matching_listener_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5253,7 +5274,7 @@ z_result_t zc_publisher_declare_background_matching_listener(const struct z_loan
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t zc_publisher_declare_matching_listener(const struct z_loaned_publisher_t *publisher,
-                                                  zc_owned_matching_listener_t *matching_listener,
+                                                  struct zc_owned_matching_listener_t *matching_listener,
                                                   struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
@@ -5279,7 +5300,7 @@ z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *t
  */
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_querier_declare_background_matching_listener(const z_loaned_querier_t *querier,
+z_result_t zc_querier_declare_background_matching_listener(const struct z_loaned_querier_t *querier,
                                                            struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
@@ -5294,8 +5315,8 @@ z_result_t zc_querier_declare_background_matching_listener(const z_loaned_querie
  */
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_querier_declare_matching_listener(const z_loaned_querier_t *querier,
-                                                zc_owned_matching_listener_t *matching_listener,
+z_result_t zc_querier_declare_matching_listener(const struct z_loaned_querier_t *querier,
+                                                struct zc_owned_matching_listener_t *matching_listener,
                                                 struct zc_moved_closure_matching_status_t *callback);
 #endif
 /**
@@ -5306,7 +5327,7 @@ z_result_t zc_querier_declare_matching_listener(const z_loaned_querier_t *querie
  */
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_querier_get_matching_status(const z_loaned_querier_t *this_,
+z_result_t zc_querier_get_matching_status(const struct z_loaned_querier_t *this_,
                                           struct zc_matching_status_t *matching_status);
 #endif
 /**
@@ -5383,7 +5404,7 @@ void zc_try_init_log_from_env(void);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_undeclare_matching_listener(zc_moved_matching_listener_t *this_);
+z_result_t zc_undeclare_matching_listener(struct zc_moved_matching_listener_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5434,7 +5455,7 @@ z_result_t ze_declare_background_querying_subscriber(const struct z_loaned_sessi
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t ze_declare_publication_cache(const struct z_loaned_session_t *session,
-                                        ze_owned_publication_cache_t *pub_cache,
+                                        struct ze_owned_publication_cache_t *pub_cache,
                                         const struct z_loaned_keyexpr_t *key_expr,
                                         struct ze_publication_cache_options_t *options);
 #endif
@@ -5453,7 +5474,7 @@ z_result_t ze_declare_publication_cache(const struct z_loaned_session_t *session
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t ze_declare_querying_subscriber(const struct z_loaned_session_t *session,
-                                          ze_owned_querying_subscriber_t *querying_subscriber,
+                                          struct ze_owned_querying_subscriber_t *querying_subscriber,
                                           const struct z_loaned_keyexpr_t *key_expr,
                                           struct z_moved_closure_sample_t *callback,
                                           struct ze_querying_subscriber_options_t *options);
@@ -5637,7 +5658,7 @@ ZENOHC_API bool ze_deserializer_is_done(const struct ze_deserializer_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool ze_internal_publication_cache_check(const ze_owned_publication_cache_t *this_);
+bool ze_internal_publication_cache_check(const struct ze_owned_publication_cache_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5645,7 +5666,7 @@ bool ze_internal_publication_cache_check(const ze_owned_publication_cache_t *thi
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_internal_publication_cache_null(ze_owned_publication_cache_t *this_);
+void ze_internal_publication_cache_null(struct ze_owned_publication_cache_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5653,13 +5674,13 @@ void ze_internal_publication_cache_null(ze_owned_publication_cache_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-bool ze_internal_querying_subscriber_check(const ze_owned_querying_subscriber_t *this_);
+bool ze_internal_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *this_);
 #endif
 /**
  * Constructs a querying subscriber in a gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_internal_querying_subscriber_null(ze_owned_querying_subscriber_t *this_);
+ZENOHC_API void ze_internal_querying_subscriber_null(struct ze_owned_querying_subscriber_t *this_);
 #endif
 /**
  * @brief Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
@@ -5676,7 +5697,7 @@ ZENOHC_API void ze_internal_serializer_null(struct ze_owned_serializer_t *this_)
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
+void ze_publication_cache_drop(struct ze_moved_publication_cache_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5684,7 +5705,7 @@ void ze_publication_cache_drop(ze_moved_publication_cache_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const ze_loaned_publication_cache_t *this_);
+const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const struct ze_loaned_publication_cache_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5692,7 +5713,7 @@ const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const ze_loaned_pu
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const ze_loaned_publication_cache_t *ze_publication_cache_loan(const ze_owned_publication_cache_t *this_);
+const struct ze_loaned_publication_cache_t *ze_publication_cache_loan(const struct ze_owned_publication_cache_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5709,7 +5730,7 @@ void ze_publication_cache_options_default(struct ze_publication_cache_options_t 
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_querying_subscriber_drop(ze_moved_querying_subscriber_t *this_);
+void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5719,7 +5740,7 @@ void ze_querying_subscriber_drop(ze_moved_querying_subscriber_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_querying_subscriber_get(const ze_loaned_querying_subscriber_t *this_,
+z_result_t ze_querying_subscriber_get(const struct ze_loaned_querying_subscriber_t *this_,
                                       const struct z_loaned_keyexpr_t *selector,
                                       struct z_get_options_t *options);
 #endif
@@ -5729,7 +5750,7 @@ z_result_t ze_querying_subscriber_get(const ze_loaned_querying_subscriber_t *thi
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const ze_owned_querying_subscriber_t *this_);
+const struct ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5974,7 +5995,7 @@ z_result_t ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_,
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_undeclare_publication_cache(ze_moved_publication_cache_t *this_);
+z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5984,5 +6005,5 @@ z_result_t ze_undeclare_publication_cache(ze_moved_publication_cache_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t ze_undeclare_querying_subscriber(ze_moved_querying_subscriber_t *this_);
+z_result_t ze_undeclare_querying_subscriber(struct ze_moved_querying_subscriber_t *this_);
 #endif
