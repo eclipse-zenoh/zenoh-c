@@ -60,8 +60,8 @@ zenoh_opaque.h:
   - zc_owned_matching_listener_t!#unstable
   - z_owned_subscriber_t!
   - z_loaned_subscriber_t!
-  - z_owned_liveliness_token_t!#unstable
-  - z_loaned_liveliness_token_t!#unstable
+  - z_owned_liveliness_token_t!
+  - z_loaned_liveliness_token_t!
   - ze_owned_publication_cache_t!#unstable
   - z_owned_mutex_t!
   - z_loaned_mutex_t!

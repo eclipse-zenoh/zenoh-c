@@ -625,38 +625,29 @@ typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t _this;
 } z_moved_keyexpr_t;
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief The options for `z_liveliness_declare_subscriber()`
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_subscriber_options_t {
   /**
    * If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
    */
   bool history;
 } z_liveliness_subscriber_options_t;
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief The options for `z_liveliness_declare_token()`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_token_options_t {
   uint8_t _dummy;
 } z_liveliness_token_options_t;
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief The options for `z_liveliness_get()`
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_liveliness_get_options_t {
   /**
    * The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint32_t timeout_ms;
 } z_liveliness_get_options_t;
-#endif
 typedef struct z_moved_liveliness_token_t {
   struct z_owned_liveliness_token_t _this;
 } z_moved_liveliness_token_t;
@@ -2899,21 +2890,13 @@ ZENOHC_API bool z_internal_keyexpr_check(const struct z_owned_keyexpr_t *this_);
  */
 ZENOHC_API void z_internal_keyexpr_null(struct z_owned_keyexpr_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool z_internal_liveliness_token_check(const struct z_owned_liveliness_token_t *this_);
-#endif
+ZENOHC_API bool z_internal_liveliness_token_check(const struct z_owned_liveliness_token_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs liveliness token in its gravestone state.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_internal_liveliness_token_null(struct z_owned_liveliness_token_t *this_);
-#endif
+ZENOHC_API void z_internal_liveliness_token_null(struct z_owned_liveliness_token_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if `this` is valid.
@@ -3311,7 +3294,6 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
                                                           const struct z_loaned_keyexpr_t *right);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
  *
  * @param session: A Zenoh session.
@@ -3322,16 +3304,13 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
  *
  * @return 0 in case of success, negative error values otherwise.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_liveliness_declare_subscriber(const struct z_loaned_session_t *session,
                                            struct z_owned_subscriber_t *subscriber,
                                            const struct z_loaned_keyexpr_t *key_expr,
                                            struct z_moved_closure_sample_t *callback,
                                            struct z_liveliness_subscriber_options_t *options);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs and declares a liveliness token on the network.
  *
  * Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
@@ -3342,15 +3321,12 @@ z_result_t z_liveliness_declare_subscriber(const struct z_loaned_session_t *sess
  * @param key_expr: A keyexpr to declare a liveliess token for.
  * @param _options: Liveliness token declaration properties.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_liveliness_declare_token(const struct z_loaned_session_t *session,
                                       struct z_owned_liveliness_token_t *token,
                                       const struct z_loaned_keyexpr_t *key_expr,
                                       const struct z_liveliness_token_options_t *_options);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
  *
  * @param session: The Zenoh session.
@@ -3358,61 +3334,37 @@ z_result_t z_liveliness_declare_token(const struct z_loaned_session_t *session,
  * @param callback: The callback function that will be called for each received reply.
  * @param options: Additional options for the liveliness get operation.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_liveliness_get(const struct z_loaned_session_t *session,
                             const struct z_loaned_keyexpr_t *key_expr,
                             struct z_moved_closure_reply_t *callback,
                             struct z_liveliness_get_options_t *options);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs default value `z_liveliness_get_options_t`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_liveliness_get_options_default(struct z_liveliness_get_options_t *this_);
-#endif
+ZENOHC_API void z_liveliness_get_options_default(struct z_liveliness_get_options_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constucts default value for `z_liveliness_declare_subscriber_options_t`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_liveliness_subscriber_options_default(struct z_liveliness_subscriber_options_t *this_);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_liveliness_token_drop(struct z_moved_liveliness_token_t *this_);
-#endif
+ZENOHC_API void z_liveliness_token_drop(struct z_moved_liveliness_token_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Borrows token.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 const struct z_loaned_liveliness_token_t *z_liveliness_token_loan(const struct z_owned_liveliness_token_t *this_);
-#endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs default value for `z_liveliness_token_options_t`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_liveliness_token_options_default(struct z_liveliness_token_options_t *this_);
-#endif
+ZENOHC_API void z_liveliness_token_options_default(struct z_liveliness_token_options_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Destroys a liveliness token, notifying subscribers of its destruction.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_token_t *this_);
-#endif
+ZENOHC_API z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_token_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes Memory Layout.

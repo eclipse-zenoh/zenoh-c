@@ -24,8 +24,7 @@ foreach(file ${files})
     # Exclude Liveliness and zenoh-ext examples if unstable api feature is disabled
     if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
         if(
-            (${target} MATCHES "^.*_liveliness.*$") 
-            OR (${target} MATCHES "^.*_advanced_sub.*$")
+            (${target} MATCHES "^.*_advanced_sub.*$")
             OR (${target} MATCHES "^.*_advanced_pub.*$") 
             OR (${target} MATCHES "^.*_querier.*$")
         )
