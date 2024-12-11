@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+#![allow(deprecated)] 
 
 use std::mem::MaybeUninit;
 
