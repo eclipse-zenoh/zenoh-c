@@ -244,7 +244,6 @@ pub extern "C" fn ze_declare_advanced_subscriber(
     }
 }
 
-/*
 /// Constructs and declares a background advanced subscriber. Subscriber callback will be called to process the messages,
 /// until the corresponding session is closed or dropped.
 ///
@@ -269,7 +268,7 @@ pub extern "C" fn ze_declare_background_advanced_subscriber(
             result::Z_EGENERIC
         }
     }
-} */
+}
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Undeclares the advanced subscriber.

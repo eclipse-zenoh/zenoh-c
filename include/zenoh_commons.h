@@ -5764,6 +5764,24 @@ z_result_t ze_declare_advanced_subscriber(const struct z_loaned_session_t *sessi
                                           struct ze_advanced_subscriber_options_t *options);
 #endif
 /**
+ * Constructs and declares a background advanced subscriber. Subscriber callback will be called to process the messages,
+ * until the corresponding session is closed or dropped.
+ *
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression to subscribe.
+ * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+ * @param options: The options to be passed to the subscriber declaration.
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t ze_declare_background_advanced_subscriber(const struct z_loaned_session_t *session,
+                                                     const struct z_loaned_keyexpr_t *key_expr,
+                                                     struct z_moved_closure_sample_t *callback,
+                                                     struct ze_advanced_subscriber_options_t *options);
+#endif
+/**
  * @warning This API is deprecated. Please use ze_advanced_publisher.
  * @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
  *
