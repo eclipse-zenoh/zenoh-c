@@ -1,5 +1,6 @@
 #![allow(unused_doc_comments)]
 #![allow(dead_code)]
+#![allow(deprecated)]
 use core::ffi::c_void;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use std::sync::Arc;
