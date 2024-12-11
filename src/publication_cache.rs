@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-#![allow(deprecated)] 
+#![allow(deprecated)]
 
 use std::{mem::MaybeUninit, ptr::null};
 
