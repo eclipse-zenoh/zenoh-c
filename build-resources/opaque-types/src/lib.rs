@@ -22,9 +22,10 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    liveliness::LivelinessToken, matching::MatchingListener, query::Querier, sample::SourceInfo,
+    matching::MatchingListener, query::Querier, sample::SourceInfo,
     session::EntityGlobalId,
 };
+use zenoh::liveliness::LivelinessToken;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
     shm::zshm, shm::zshmmut, shm::AllocLayout, shm::ChunkAllocResult, shm::ChunkDescriptor,
@@ -233,17 +234,14 @@ get_opaque_type_data!(Option<Subscriber<()>>, z_owned_subscriber_t);
 /// A loaned Zenoh subscriber.
 get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
 get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
+
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh publication cache.

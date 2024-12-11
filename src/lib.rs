@@ -65,9 +65,7 @@ mod closures;
 pub use closures::*;
 pub mod platform;
 pub use platform::*;
-#[cfg(feature = "unstable")]
 mod liveliness;
-#[cfg(feature = "unstable")]
 pub use liveliness::*;
 #[cfg(feature = "unstable")]
 mod matching;
