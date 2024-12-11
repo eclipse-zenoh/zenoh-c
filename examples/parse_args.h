@@ -95,7 +95,7 @@ const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value
                 } else if (i + 1 < argc && argv[i + 1]) {
                     value = argv[i + 1];
                     argv[i + 1] = NULL;
-                    break;
+                    return value;
                 } else {
                     printf("Option -%s given without a value\n", opt);
                     exit(-1);
@@ -110,11 +110,12 @@ const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value
                 } else if (pos != NULL) {
                     value = pos + 1;
                     argv[i] = NULL;
+                    return value;
                 } else if (i + 1 < argc && argv[i + 1]) {
                     argv[i] = NULL;
                     value = argv[i + 1];
                     argv[i + 1] = NULL;
-                    break;
+                    return value;
                 } else {
                     printf("Option --%s given without a value\n", opt);
                     exit(-1);
@@ -122,16 +123,7 @@ const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value
             }
         }
     }
-    if (value != NULL) {
-        int len = strlen(value);
-        while (len > 1 && ((*value == '"' && value[len - 1] == '"') || (*value == '\'' && value[len - 1] == '\''))) {
-            value[len - 1] = 0;
-            value++;
-            len -= 2;
-        }
-    }
-
-    return value;
+    return NULL;
 }
 
 /**
