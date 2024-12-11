@@ -190,7 +190,7 @@ get_opaque_type_data!(
 /// @brief An owned Zenoh advanced publisher.
 ///
 /// In addition to publishing the data,
-/// it also maintains the storage, allowing matchign subscribers to retrive missed samples.
+/// it also maintains the storage, allowing matching subscribers to retrive missed samples.
 get_opaque_type_data!(
     Option<zenoh_ext::AdvancedPublisher<'static>>,
     ze_owned_advanced_publisher_t

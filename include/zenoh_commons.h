@@ -5414,6 +5414,21 @@ void ze_advanced_publisher_cache_settings_default(struct ze_advanced_publisher_c
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given advanced publisher.
+ * The callback will be run in the background until the corresponding publisher is dropped.
+ *
+ * @param publisher: An advanced publisher to associate with matching listener.
+ * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t ze_advanced_publisher_declare_background_matching_listener(const struct ze_loaned_advanced_publisher_t *publisher,
+                                                                      struct zc_moved_closure_matching_status_t *callback);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given advanced publisher.
  *
  * @param publisher: An advanced publisher to associate with matching listener.
@@ -5438,6 +5453,14 @@ z_result_t ze_advanced_publisher_declare_matching_listener(const struct ze_loane
 ZENOHC_API
 z_result_t ze_advanced_publisher_delete(const struct ze_loaned_advanced_publisher_t *publisher,
                                         struct ze_advanced_publisher_delete_options_t *options);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * Constructs the default values for the delete operation via an advanced publisher entity.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void ze_advanced_publisher_delete_options_default(struct ze_advanced_publisher_delete_options_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -6107,29 +6130,6 @@ const struct ze_loaned_publication_cache_t *ze_publication_cache_loan(const stru
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given advanced publisher.
- * The callback will be run in the background until the corresponding publisher is dropped.
- *
- * @param publisher: A publisher to associate with matching listener.
- * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t ze_publisher_declare_background_matching_listener(const struct ze_loaned_advanced_publisher_t *publisher,
-                                                             struct zc_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs the default values for the delete operation via an advanced publisher entity.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_publisher_delete_options_default(struct ze_advanced_publisher_delete_options_t *this_);
 #endif
 /**
  * @warning This API is deprecated. Please use ze_advanced_subscriber.

@@ -285,7 +285,7 @@ pub struct ze_advanced_publisher_delete_options_t {
 /// Constructs the default values for the delete operation via an advanced publisher entity.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publisher_delete_options_default(
+pub extern "C" fn ze_advanced_publisher_delete_options_default(
     this: &mut MaybeUninit<ze_advanced_publisher_delete_options_t>,
 ) {
     this.write(ze_advanced_publisher_delete_options_t {
@@ -390,12 +390,12 @@ pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
 /// @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given advanced publisher.
 /// The callback will be run in the background until the corresponding publisher is dropped.
 ///
-/// @param publisher: A publisher to associate with matching listener.
+/// @param publisher: An advanced publisher to associate with matching listener.
 /// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn ze_publisher_declare_background_matching_listener(
+pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
     publisher: &'static ze_loaned_advanced_publisher_t,
     callback: &mut zc_moved_closure_matching_status_t,
 ) -> result::z_result_t {
