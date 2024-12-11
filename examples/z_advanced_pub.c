@@ -24,7 +24,7 @@
 struct args_t {
     char* keyexpr;   // -k, --key
     char* value;     // -p, --payload
-    size_t history;  // -o, --history
+    size_t history;  // -i, --history
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -33,6 +33,11 @@ int main(int argc, char** argv) {
 
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
+
+    if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_ADD_TIMESTAMP_KEY, "true") < 0) {
+        printf("Unable to configure timestamps!\n");
+        exit(-1);
+    }
 
     printf("Opening session...\n");
     z_owned_session_t s;
@@ -55,7 +60,7 @@ int main(int argc, char** argv) {
     pub_opts.publisher_detection = true;
     pub_opts.sample_miss_detection = true;
 
-    if (ze_declare_advanced_publisher(z_loan(s), &pub, z_loan(ke), NULL) < 0) {
+    if (ze_declare_advanced_publisher(z_loan(s), &pub, z_loan(ke), &pub_opts) < 0) {
         printf("Unable to declare AdvancedPublisher for key expression!\n");
         exit(-1);
     }
