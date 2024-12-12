@@ -24,12 +24,13 @@
     "\
         -c, --config <CONFIG> (optional, string): The path to a configuration file for the session. If this option isn't passed, the default configuration will be used.\n\
         -m, --mode <MODE> (optional, string, default='peer'): The zenoh session mode. [possible values: peer, client, router]\n\
-        -e, --connect <CONNECT> (optional, string): endpoint to connect to. Repeat option to pass multiple endpoints. If none are given, endpoints will be discovered through multicast-scouting if it is enabled.\n\
+        -e, --connect <CONNECT> (optional, string): Endpoint to connect to. Repeat option to pass multiple endpoints. If none are given, endpoints will be discovered through multicast-scouting if it is enabled.\n\
             e.g.: '-e tcp/192.168.1.1:7447'\n\
-        -l, --listen <LISTEN> (optional, string): locator to listen on. Repeat option to pass multiple locators. If none are given, the default configuration will be used.\n\
+        -l, --listen <LISTEN> (optional, string): Locator to listen on. Repeat option to pass multiple locators. If none are given, the default configuration will be used.\n\
             e.g.: '-l tcp/192.168.1.1:7447'\n\
         --no-multicast-scouting (optional): By default zenohd replies to multicast scouting messages for being discovered by peers and clients. This option disables this feature.\n\
-        -h, --help: print help\n\
+        --cfg (optional, string): Allows arbitrary configuration changes as column-separated KEY:VALUE pairs. Where KEY must be a valid config path and VALUE must be a valid JSON5 string that can be deserialized to the expected type for the KEY field. Example: --cfg='transport/unicast/max_links:2'.\n\
+        -h, --help: Print help\n\
 "
 #define _Z_PARSE_ARG(VALUE, ID_SHORT, ID_LONG, FUNC, DEFAULT_VALUE)  \
     do {                                                             \
@@ -42,6 +43,16 @@
         } else {                                                     \
             VALUE = FUNC(arg_val);                                   \
         }                                                            \
+    } while (0)
+
+#define _Z_PARSE_ARG_SINGLE_OPT(VALUE, ID, FUNC, DEFAULT_VALUE) \
+    do {                                                        \
+        const char* arg_val = parse_opt(argc, argv, ID, true);  \
+        if (!arg_val) {                                         \
+            VALUE = DEFAULT_VALUE;                              \
+        } else {                                                \
+            VALUE = FUNC(arg_val);                              \
+        }                                                       \
     } while (0)
 
 #define _Z_CHECK_HELP                                                                    \
@@ -67,6 +78,7 @@
  */
 const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value) {
     size_t optlen = strlen(opt);
+    char* value = NULL;
     for (int i = 1; i < argc; i++) {
         if (argv[i] == NULL) {
             continue;
@@ -76,12 +88,12 @@ const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value
             continue;
         }
         if (optlen == 1) {
-            if (argv[i][0] == '-' && argv[i][1] == opt[0]) {
+            if (argv[i][0] == '-' && argv[i][1] == opt[0] && argv[i][2] == 0) {
                 argv[i] = NULL;
                 if (!opt_has_value) {
                     return (char*)opt;
                 } else if (i + 1 < argc && argv[i + 1]) {
-                    char* value = argv[i + 1];
+                    value = argv[i + 1];
                     argv[i + 1] = NULL;
                     return value;
                 } else {
@@ -90,13 +102,18 @@ const char* parse_opt(int argc, char** argv, const char* opt, bool opt_has_value
                 }
             }
         } else if (optlen > 1 && len > 3 && argv[i][0] == '-' && argv[i][1] == '-') {
-            // Note: support for '--arg=<value>' syntax can be added here
-            if (strcmp(argv[i] + 2, opt) == 0) {
-                argv[i] = NULL;
+            if (strncmp(argv[i] + 2, opt, optlen) == 0) {
+                char* pos = strchr(argv[i], '=');
                 if (!opt_has_value) {
+                    argv[i] = NULL;
                     return (char*)opt;
+                } else if (pos != NULL) {
+                    value = pos + 1;
+                    argv[i] = NULL;
+                    return value;
                 } else if (i + 1 < argc && argv[i + 1]) {
-                    char* value = argv[i + 1];
+                    argv[i] = NULL;
+                    value = argv[i + 1];
                     argv[i + 1] = NULL;
                     return value;
                 } else {
@@ -195,6 +212,27 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt_short, 
     free(buf);
 }
 
+void parse_zenoh_json_list_cfg(int argc, char** argv, const char* opt_long, z_owned_config_t* config) {
+    char* buf = (char*)calloc(1, sizeof(char));
+    const char* value;
+    _Z_PARSE_ARG_SINGLE_OPT(value, opt_long, (char*), NULL);
+    while (value) {
+        char* pos = strchr(value, ':');
+        if (pos == NULL) {
+            printf("--cfg` argument: expected KEY:VALUE pair, got %s ", value);
+            exit(-1);
+        }
+        *pos = 0;
+        const char* key = value;
+        const char* val = pos + 1;
+        if (zc_config_insert_json5(z_loan_mut(*config), key, val) < 0) {
+            printf("Couldn't insert value `%s` in configuration at `%s`\n", key, val);
+            exit(-1);
+        }
+        _Z_PARSE_ARG_SINGLE_OPT(value, opt_long, (char*), NULL);
+    }
+}
+
 /**
  * Parse zenoh options that are common to all examples (-c, -m, -e, -l, --no-multicast-scouting) and add them to
  * `config`
@@ -232,6 +270,8 @@ void parse_zenoh_common_args(const int argc, char** argv, z_owned_config_t* conf
     parse_zenoh_json_list_config(argc, argv, "e", "connect", Z_CONFIG_CONNECT_KEY, config);
     // -l: Endpoint to listen on. Can be repeated
     parse_zenoh_json_list_config(argc, argv, "l", "listen", Z_CONFIG_LISTEN_KEY, config);
+    // -cfg: Config entires. Can be repeated
+    parse_zenoh_json_list_cfg(argc, argv, "cfg", config);
     // --no-multicast-scrouting: Disable the multicast-based scouting mechanism.
     bool no_multicast_scouting = _Z_CHECK_FLAG("no-multicast-scouting");
     if (no_multicast_scouting &&
