@@ -73,11 +73,12 @@ int run_publisher() {
     SEM_POST(sem_pub);
     printf("wait: sem_sub\n");
     SEM_WAIT(sem_sub);
+    z_sleep_s(1);
 
     // values for subscribe
-    for (int i = 0; i < values_count / 2; ++i) {
+    for (int i = values_count / 2; i < values_count; ++i) {
         z_owned_bytes_t payload;
-        z_bytes_from_static_str(&payload, values[values_count / 2 + i]);
+        z_bytes_from_static_str(&payload, values[i]);
         ze_advanced_publisher_put(z_loan(pub), z_move(payload), NULL);
     }
 
