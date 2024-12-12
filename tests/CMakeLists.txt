@@ -15,6 +15,13 @@ foreach(file ${files})
         endif()
     endif()
     
+        # Exclude zenoh-ext tests if unstable api feature is disabled
+    if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
+	    if(${target} MATCHES "^.*_advanced_pub_sub.*$")
+            continue()
+        endif()
+    endif()
+
     if (BUILD_SHARED_LIBS AND (${target} MATCHES "^.*_build_static.*$"))
         continue()
     endif()

@@ -152,6 +152,9 @@ pub extern "C" fn ze_declare_advanced_publisher(
         if options.publisher_detection {
             p = p.publisher_detection();
         }
+        if options.sample_miss_detection {
+            p = p.sample_miss_detection();
+        }
         if let Some(pub_detection_metadata) = &options.publisher_detection_metadata {
             p = p.publisher_detection_metadata(pub_detection_metadata.as_rust_type_ref());
         }

@@ -62,7 +62,7 @@ impl From<&ze_advanced_subscriber_history_options_t> for HistoryConfig {
             h = h.max_samples(val.max_samples)
         }
         if val.max_age_ms > 0 {
-            h = h.max_age(val.max_age_ms as f64 * 1000.0f64)
+            h = h.max_age(val.max_age_ms as f64 / 1000.0f64)
         }
         h
     }
@@ -154,7 +154,9 @@ fn _declare_advanced_subscriber_inner(
     );
     let mut sub = sub.advanced();
     if let Some(options) = options {
-        sub = sub.query_timeout(Duration::from_millis(options.query_timeout_ms));
+        if options.query_timeout_ms > 0 {
+            sub = sub.query_timeout(Duration::from_millis(options.query_timeout_ms));
+        }
         if options.subscriber_detection {
             sub = sub.subscriber_detection()
         }

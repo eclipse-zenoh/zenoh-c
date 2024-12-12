@@ -163,3 +163,12 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
             exit(-1);                                                                                             \
         }                                                                                                         \
     } while (0)
+
+#define ASSERT_STR_STRING_EQUAL(str, string)                                                                          \
+    do {                                                                                                              \
+        if (strlen(str) != z_string_len(string) ||                                                                    \
+            strncmp(str, (const char *)z_string_data(string), (int)z_string_len(string))) {                           \
+            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)z_string_len(string), z_string_data(string)); \
+            exit(-1);                                                                                                 \
+        }                                                                                                             \
+    } while (0)

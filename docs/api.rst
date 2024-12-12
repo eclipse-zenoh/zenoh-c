@@ -270,6 +270,50 @@ Functions
 .. doxygenfunction:: z_timestamp_id
 .. doxygenfunction:: z_timestamp_ntp64_time
 
+
+Payload
+-------
+Types
+^^^^^
+.. doxygenstruct:: z_owned_bytes_t
+.. doxygenstruct:: z_loaned_bytes_t
+.. doxygenstruct:: z_bytes_reader_t
+.. doxygenstruct:: z_owned_bytes_writer_t
+.. doxygenstruct:: z_loaned_bytes_writer_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_bytes_len
+.. doxygenfunction:: z_bytes_copy_from_slice
+.. doxygenfunction:: z_bytes_from_slice
+.. doxygenfunction:: z_bytes_copy_from_buf
+.. doxygenfunction:: z_bytes_from_buf
+.. doxygenfunction:: z_bytes_from_static_buf
+.. doxygenfunction:: z_bytes_copy_from_string
+.. doxygenfunction:: z_bytes_from_string
+.. doxygenfunction:: z_bytes_copy_from_str
+.. doxygenfunction:: z_bytes_from_str
+.. doxygenfunction:: z_bytes_from_static_str
+.. doxygenfunction:: z_bytes_to_slice
+.. doxygenfunction:: z_bytes_to_string
+
+.. doxygenfunction:: z_bytes_empty
+.. doxygenfunction:: z_bytes_clone
+.. doxygenfunction:: z_bytes_loan
+.. doxygenfunction:: z_bytes_loan_mut
+.. doxygenfunction:: z_bytes_drop
+
+.. doxygenfunction:: z_bytes_get_reader
+.. doxygenfunction:: z_bytes_reader_read
+.. doxygenfunction:: z_bytes_reader_seek
+.. doxygenfunction:: z_bytes_reader_tell
+.. doxygenfunction:: z_bytes_reader_remaining
+
+.. doxygenfunction:: z_bytes_writer_empty
+.. doxygenfunction:: z_bytes_writer_finish
+.. doxygenfunction:: z_bytes_writer_write_all
+.. doxygenfunction:: z_bytes_writer_append
+
 System
 ======
 
@@ -799,31 +843,12 @@ Serialization / Deserialization
 -------------------------------
 Types
 ^^^^^
-.. doxygenstruct:: z_owned_bytes_t
-.. doxygenstruct:: z_loaned_bytes_t
-.. doxygenstruct:: z_bytes_reader_t
-.. doxygenstruct:: z_owned_bytes_writer_t
-.. doxygenstruct:: z_loaned_bytes_writer_t
 .. doxygenstruct:: ze_owned_serializer_t
 .. doxygenstruct:: ze_loaned_serializer_t
 .. doxygenstruct:: ze_deserializer_t
 
 Functions
 ^^^^^^^^^
-.. doxygenfunction:: z_bytes_len
-.. doxygenfunction:: z_bytes_copy_from_slice
-.. doxygenfunction:: z_bytes_from_slice
-.. doxygenfunction:: z_bytes_copy_from_buf
-.. doxygenfunction:: z_bytes_from_buf
-.. doxygenfunction:: z_bytes_from_static_buf
-.. doxygenfunction:: z_bytes_copy_from_string
-.. doxygenfunction:: z_bytes_from_string
-.. doxygenfunction:: z_bytes_copy_from_str
-.. doxygenfunction:: z_bytes_from_str
-.. doxygenfunction:: z_bytes_from_static_str
-.. doxygenfunction:: z_bytes_to_slice
-.. doxygenfunction:: z_bytes_to_string
-
 .. doxygenfunction:: ze_serialize_slice
 .. doxygenfunction:: ze_serialize_buf
 .. doxygenfunction:: ze_serialize_string
@@ -854,23 +879,6 @@ Functions
 .. doxygenfunction:: ze_deserialize_float
 .. doxygenfunction:: ze_deserialize_double
 .. doxygenfunction:: ze_deserialize_bool
-
-.. doxygenfunction:: z_bytes_empty
-.. doxygenfunction:: z_bytes_clone
-.. doxygenfunction:: z_bytes_loan
-.. doxygenfunction:: z_bytes_loan_mut
-.. doxygenfunction:: z_bytes_drop
-
-.. doxygenfunction:: z_bytes_get_reader
-.. doxygenfunction:: z_bytes_reader_read
-.. doxygenfunction:: z_bytes_reader_seek
-.. doxygenfunction:: z_bytes_reader_tell
-.. doxygenfunction:: z_bytes_reader_remaining
-
-.. doxygenfunction:: z_bytes_writer_empty
-.. doxygenfunction:: z_bytes_writer_finish
-.. doxygenfunction:: z_bytes_writer_write_all
-.. doxygenfunction:: z_bytes_writer_append
 
 .. doxygenfunction:: ze_serializer_empty
 .. doxygenfunction:: ze_serializer_finish

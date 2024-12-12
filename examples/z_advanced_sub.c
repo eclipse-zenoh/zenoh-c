@@ -84,7 +84,6 @@ int main(int argc, char** argv) {
         printf("Unable to declare advanced subscriber.\n");
         exit(-1);
     }
-
     ze_owned_closure_miss_t miss_callback;
     z_closure(&miss_callback, miss_handler, NULL, NULL);
     ze_advanced_subscriber_declare_background_sample_miss_listener(z_loan(sub), z_move(miss_callback));
