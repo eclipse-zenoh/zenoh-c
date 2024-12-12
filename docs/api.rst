@@ -918,7 +918,7 @@ Types
 .. doxygenstruct:: ze_owned_advanced_publisher_t
 .. doxygenstruct:: ze_loaned_advanced_publisher_t
 
-.. doxygenstruct:: ze_advanced_publisher_cache_settings_t
+.. doxygenstruct:: ze_advanced_publisher_cache_options_t
     :members:
 .. doxygenstruct:: ze_advanced_publisher_options_t
     :members:
@@ -940,7 +940,7 @@ Functions
 .. doxygenfunction:: ze_advanced_publisher_drop
 
 .. doxygenfunction:: ze_advanced_publisher_options_default
-.. doxygenfunction:: ze_advanced_publisher_cache_settings_default
+.. doxygenfunction:: ze_advanced_publisher_cache_options_default
 .. doxygenfunction:: ze_advanced_publisher_put_options_default
 .. doxygenfunction:: ze_advanced_publisher_delete_options_default
 
@@ -956,9 +956,9 @@ Types
 .. doxygenstruct:: ze_owned_advanced_subscriber_t
 .. doxygenstruct:: ze_loaned_advanced_subscriber_t
 
-.. doxygenstruct:: ze_advanced_subscriber_history_settings_t
+.. doxygenstruct:: ze_advanced_subscriber_history_options_t
     :members:
-.. doxygenstruct:: ze_advanced_subscriber_recovery_settings_t
+.. doxygenstruct:: ze_advanced_subscriber_recovery_options_t
     :members:
 .. doxygenstruct:: ze_advanced_subscriber_options_t
     :members:
@@ -975,8 +975,8 @@ Functions
 
 .. doxygenfunction:: ze_advanced_subscriber_drop
 
-.. doxygenfunction:: ze_advanced_subscriber_history_settings_default
-.. doxygenfunction:: ze_advanced_subscriber_recovery_settings_default
+.. doxygenfunction:: ze_advanced_subscriber_history_options_default
+.. doxygenfunction:: ze_advanced_subscriber_recovery_options_default
 .. doxygenfunction:: ze_advanced_subscriber_options_default
 
 Publication Cache (deprecated)

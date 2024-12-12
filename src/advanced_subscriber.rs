@@ -32,7 +32,7 @@ use crate::{
 /// @brief Settings for retrievieng historical data for Advanced Subscriber.
 #[repr(C)]
 #[derive(Default)]
-pub struct ze_advanced_subscriber_history_settings_t {
+pub struct ze_advanced_subscriber_history_options_t {
     /// Enable detection of late joiner publishers and query for their historical data.
     /// Late joiner detection can only be achieved for Publishers that enable publisher_detection.
     /// History can only be retransmitted by Publishers that enable caching.
@@ -44,16 +44,16 @@ pub struct ze_advanced_subscriber_history_settings_t {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs the default value for `ze_advanced_subscriber_history_settings_t`.
+/// @brief Constructs the default value for `ze_advanced_subscriber_history_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_history_settings_default(
-    this: &mut MaybeUninit<ze_advanced_subscriber_history_settings_t>,
+pub extern "C" fn ze_advanced_subscriber_history_options_default(
+    this: &mut MaybeUninit<ze_advanced_subscriber_history_options_t>,
 ) {
-    this.write(ze_advanced_subscriber_history_settings_t::default());
+    this.write(ze_advanced_subscriber_history_options_t::default());
 }
 
-impl From<&ze_advanced_subscriber_history_settings_t> for HistoryConfig {
-    fn from(val: &ze_advanced_subscriber_history_settings_t) -> Self {
+impl From<&ze_advanced_subscriber_history_options_t> for HistoryConfig {
+    fn from(val: &ze_advanced_subscriber_history_options_t) -> Self {
         let mut h = HistoryConfig::default();
         if val.detect_late_publishers {
             h = h.detect_late_publishers();
@@ -72,7 +72,7 @@ impl From<&ze_advanced_subscriber_history_settings_t> for HistoryConfig {
 /// @brief Settings for recovering lost messages for Advanced Subscriber.
 #[repr(C)]
 #[derive(Default)]
-pub struct ze_advanced_subscriber_recovery_settings_t {
+pub struct ze_advanced_subscriber_recovery_options_t {
     /// Period for queries for not yet received Samples.
     ///
     /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
@@ -82,8 +82,8 @@ pub struct ze_advanced_subscriber_recovery_settings_t {
     pub periodic_queries_period_ms: u64,
 }
 
-impl From<&ze_advanced_subscriber_recovery_settings_t> for RecoveryConfig {
-    fn from(val: &ze_advanced_subscriber_recovery_settings_t) -> RecoveryConfig {
+impl From<&ze_advanced_subscriber_recovery_options_t> for RecoveryConfig {
+    fn from(val: &ze_advanced_subscriber_recovery_options_t) -> RecoveryConfig {
         let mut r = RecoveryConfig::default();
         if val.periodic_queries_period_ms > 0 {
             r = r.periodic_queries(Some(Duration::from_millis(val.periodic_queries_period_ms)));
@@ -93,12 +93,12 @@ impl From<&ze_advanced_subscriber_recovery_settings_t> for RecoveryConfig {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs the default value for `ze_advanced_subscriber_recovery_settings_t`.
+/// @brief Constructs the default value for `ze_advanced_subscriber_recovery_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_recovery_settings_default(
-    this: &mut MaybeUninit<ze_advanced_subscriber_recovery_settings_t>,
+pub extern "C" fn ze_advanced_subscriber_recovery_options_default(
+    this: &mut MaybeUninit<ze_advanced_subscriber_recovery_options_t>,
 ) {
-    this.write(ze_advanced_subscriber_recovery_settings_t::default());
+    this.write(ze_advanced_subscriber_recovery_options_t::default());
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -109,11 +109,11 @@ pub struct ze_advanced_subscriber_options_t {
     pub subscriber_options: z_subscriber_options_t,
     /// Optional settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
     /// Querying historical data is disabled if the value is ``NULL``.
-    pub history: Option<&'static mut ze_advanced_subscriber_history_settings_t>,
+    pub history: Option<&'static mut ze_advanced_subscriber_history_options_t>,
     /// Optional settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
     /// caching and sample_miss_detection.
     /// Retransmission is disabled if the value is ``NULL``.
-    pub recovery: Option<&'static mut ze_advanced_subscriber_recovery_settings_t>,
+    pub recovery: Option<&'static mut ze_advanced_subscriber_recovery_options_t>,
     /// Timeout to be used for history and recovery queries.
     /// Default value will be used if set to ``0``.
     pub query_timeout_ms: u64,

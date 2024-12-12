@@ -36,7 +36,7 @@ use crate::{
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
 #[repr(C)]
-pub struct ze_advanced_publisher_cache_settings_t {
+pub struct ze_advanced_publisher_cache_options_t {
     /// Number of samples to keep for each resource
     pub max_samples: usize,
     /// The congestion control to apply to replies.
@@ -47,7 +47,7 @@ pub struct ze_advanced_publisher_cache_settings_t {
     pub is_express: bool,
 }
 
-impl Default for ze_advanced_publisher_cache_settings_t {
+impl Default for ze_advanced_publisher_cache_options_t {
     fn default() -> Self {
         Self {
             max_samples: 1,
@@ -59,16 +59,16 @@ impl Default for ze_advanced_publisher_cache_settings_t {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs the default value for `ze_advanced_publisher_cache_settings_t`.
+/// @brief Constructs the default value for `ze_advanced_publisher_cache_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_advanced_publisher_cache_settings_default(
-    this: &mut MaybeUninit<ze_advanced_publisher_cache_settings_t>,
+pub extern "C" fn ze_advanced_publisher_cache_options_default(
+    this: &mut MaybeUninit<ze_advanced_publisher_cache_options_t>,
 ) {
-    this.write(ze_advanced_publisher_cache_settings_t::default());
+    this.write(ze_advanced_publisher_cache_options_t::default());
 }
 
-impl From<&ze_advanced_publisher_cache_settings_t> for CacheConfig {
-    fn from(val: &ze_advanced_publisher_cache_settings_t) -> CacheConfig {
+impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
+    fn from(val: &ze_advanced_publisher_cache_options_t) -> CacheConfig {
         let mut c = CacheConfig::default();
         c = c.max_samples(val.max_samples);
         let qos = zenoh_ext::RepliesConfig::default()
@@ -87,7 +87,7 @@ pub struct ze_advanced_publisher_options_t {
     /// Base publisher options.
     pub publisher_options: z_publisher_options_t,
     /// Optional settings for publisher cache.
-    pub cache: Option<&'static mut ze_advanced_publisher_cache_settings_t>,
+    pub cache: Option<&'static mut ze_advanced_publisher_cache_options_t>,
     /// Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
     ///
     /// Retransmission can only be done if history is enabled on subscriber side.

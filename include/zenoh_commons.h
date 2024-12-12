@@ -1007,7 +1007,7 @@ typedef struct zc_moved_shm_client_list_t {
  * @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_publisher_cache_settings_t {
+typedef struct ze_advanced_publisher_cache_options_t {
   /**
    * Number of samples to keep for each resource
    */
@@ -1024,7 +1024,7 @@ typedef struct ze_advanced_publisher_cache_settings_t {
    * If true, Zenoh will not wait to batch the cache replies with other messages to reduce the bandwith.
    */
   bool is_express;
-} ze_advanced_publisher_cache_settings_t;
+} ze_advanced_publisher_cache_options_t;
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1055,7 +1055,7 @@ typedef struct ze_advanced_publisher_options_t {
   /**
    * Optional settings for publisher cache.
    */
-  struct ze_advanced_publisher_cache_settings_t *cache;
+  struct ze_advanced_publisher_cache_options_t *cache;
   /**
    * Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
    *
@@ -1141,7 +1141,7 @@ typedef struct ze_moved_advanced_subscriber_t {
  * @brief Settings for retrievieng historical data for Advanced Subscriber.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_subscriber_history_settings_t {
+typedef struct ze_advanced_subscriber_history_options_t {
   /**
    * Enable detection of late joiner publishers and query for their historical data.
    * Late joiner detection can only be achieved for Publishers that enable publisher_detection.
@@ -1156,14 +1156,14 @@ typedef struct ze_advanced_subscriber_history_settings_t {
    * Maximum age of samples to query. ``0`` corresponds to no limit on samples' age.
    */
   uint64_t max_age_ms;
-} ze_advanced_subscriber_history_settings_t;
+} ze_advanced_subscriber_history_options_t;
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Settings for recovering lost messages for Advanced Subscriber.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_subscriber_recovery_settings_t {
+typedef struct ze_advanced_subscriber_recovery_options_t {
   /**
    * Period for queries for not yet received Samples.
    *
@@ -1173,7 +1173,7 @@ typedef struct ze_advanced_subscriber_recovery_settings_t {
    * Retransmission can only be achieved by Publishers that also activate retransmission.
    */
   uint64_t periodic_queries_period_ms;
-} ze_advanced_subscriber_recovery_settings_t;
+} ze_advanced_subscriber_recovery_options_t;
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1189,13 +1189,13 @@ typedef struct ze_advanced_subscriber_options_t {
    * Optional settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
    * Querying historical data is disabled if the value is ``NULL``.
    */
-  struct ze_advanced_subscriber_history_settings_t *history;
+  struct ze_advanced_subscriber_history_options_t *history;
   /**
    * Optional settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
    * caching and sample_miss_detection.
    * Retransmission is disabled if the value is ``NULL``.
    */
-  struct ze_advanced_subscriber_recovery_settings_t *recovery;
+  struct ze_advanced_subscriber_recovery_options_t *recovery;
   /**
    * Timeout to be used for history and recovery queries.
    * Default value will be used if set to ``0``.
@@ -5406,11 +5406,11 @@ z_result_t zc_undeclare_matching_listener(struct zc_moved_matching_listener_t *t
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_publisher_cache_settings_t`.
+ * @brief Constructs the default value for `ze_advanced_publisher_cache_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_advanced_publisher_cache_settings_default(struct ze_advanced_publisher_cache_settings_t *this_);
+void ze_advanced_publisher_cache_options_default(struct ze_advanced_publisher_cache_options_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5622,11 +5622,11 @@ void ze_advanced_subscriber_drop(struct ze_moved_advanced_subscriber_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_subscriber_history_settings_t`.
+ * @brief Constructs the default value for `ze_advanced_subscriber_history_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_advanced_subscriber_history_settings_default(struct ze_advanced_subscriber_history_settings_t *this_);
+void ze_advanced_subscriber_history_options_default(struct ze_advanced_subscriber_history_options_t *this_);
 #endif
 /**
  * Borrows subscriber.
@@ -5645,11 +5645,11 @@ void ze_advanced_subscriber_options_default(struct ze_advanced_subscriber_option
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_subscriber_recovery_settings_t`.
+ * @brief Constructs the default value for `ze_advanced_subscriber_recovery_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void ze_advanced_subscriber_recovery_settings_default(struct ze_advanced_subscriber_recovery_settings_t *this_);
+void ze_advanced_subscriber_recovery_options_default(struct ze_advanced_subscriber_recovery_options_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
