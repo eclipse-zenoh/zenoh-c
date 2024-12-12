@@ -43,7 +43,7 @@ pub struct ze_advanced_publisher_cache_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of replies.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch the cache replies with other messages to reduce the bandwith.
+    /// If set to ``true``, this cache replies will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
 }
 
@@ -207,7 +207,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Mutably advanced borrows publisher.
+/// Mutably borrows advanced publisher.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_advanced_publisher_loan_mut(

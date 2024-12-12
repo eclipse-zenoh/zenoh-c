@@ -458,7 +458,7 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
 }
 
 /// Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
-/// which allows to save the bandwith, when passing key expression between Zenoh entities.
+/// which allows to save the bandwitdth, when passing key expression between Zenoh entities.
 ///
 /// @param session: Session on which to declare key expression.
 /// @param declared_key_expr: An uninitialized location in memory where key expression will be constructed.

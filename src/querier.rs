@@ -50,7 +50,7 @@ pub struct z_querier_options_t {
     pub consolidation: z_query_consolidation_t,
     /// The congestion control to apply when routing the querier queries.
     pub congestion_control: z_congestion_control_t,
-    /// If true, Zenoh will not wait to batch the querier queries with others to reduce the bandwith.
+    /// If set to ``true``, the querier queries will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

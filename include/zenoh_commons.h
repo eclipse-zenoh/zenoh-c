@@ -430,7 +430,7 @@ typedef struct z_publisher_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+   * If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -475,7 +475,7 @@ typedef struct z_querier_options_t {
    */
   enum z_congestion_control_t congestion_control;
   /**
-   * If true, Zenoh will not wait to batch the querier queries with others to reduce the bandwith.
+   * If set to ``true``, the querier queries will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -517,7 +517,7 @@ typedef struct z_delete_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   * If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
   /**
@@ -578,7 +578,7 @@ typedef struct z_get_options_t {
    */
   enum z_congestion_control_t congestion_control;
   /**
-   * If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+   * If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -718,7 +718,7 @@ typedef struct z_put_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   * If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
   /**
@@ -806,7 +806,7 @@ typedef struct z_query_reply_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   * If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
   /**
@@ -840,7 +840,7 @@ typedef struct z_query_reply_del_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+   * If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
   /**
@@ -1021,7 +1021,7 @@ typedef struct ze_advanced_publisher_cache_options_t {
    */
   enum z_priority_t priority;
   /**
-   * If true, Zenoh will not wait to batch the cache replies with other messages to reduce the bandwith.
+   * If set to ``true``, this cache replies will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
 } ze_advanced_publisher_cache_options_t;
@@ -2039,7 +2039,7 @@ z_result_t z_declare_background_subscriber(const struct z_loaned_session_t *sess
                                            struct z_subscriber_options_t *options);
 /**
  * Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
- * which allows to save the bandwith, when passing key expression between Zenoh entities.
+ * which allows to save the bandwitdth, when passing key expression between Zenoh entities.
  *
  * @param session: Session on which to declare key expression.
  * @param declared_key_expr: An uninitialized location in memory where key expression will be constructed.
@@ -5508,7 +5508,7 @@ const struct ze_loaned_advanced_publisher_t *ze_advanced_publisher_loan(const st
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Mutably advanced borrows publisher.
+ * Mutably borrows advanced publisher.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
