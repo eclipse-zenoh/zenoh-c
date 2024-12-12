@@ -296,7 +296,7 @@ z_query_target_t parse_query_target(const char* arg) {
 
 z_priority_t parse_priority(const char* arg) {
     int p = atoi(arg);
-    if (p < Z_PRIORITY_INTERACTIVE_HIGH || p > Z_PRIORITY_BACKGROUND) {
+    if (p < Z_PRIORITY_REAL_TIME || p > Z_PRIORITY_BACKGROUND) {
         printf("Unsupported priority value [%s]\n", arg);
         exit(-1);
     }
