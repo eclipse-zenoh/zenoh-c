@@ -957,7 +957,7 @@ Functions
 .. doxygenfunction:: ze_advanced_publisher_declare_background_matching_listener
 
 Advanced Subscriber
-===================
+-------------------
 
 Types
 ^^^^^
