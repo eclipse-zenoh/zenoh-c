@@ -121,7 +121,7 @@ pub struct z_query_reply_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
@@ -177,7 +177,7 @@ pub struct z_query_reply_del_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,

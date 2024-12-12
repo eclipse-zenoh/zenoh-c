@@ -84,7 +84,7 @@ void print_help() {
         "\
     Usage: z_sub_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression matching liveliness tokens to subscribe to\n\
         --history (optional): Get historical liveliness tokens.\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);

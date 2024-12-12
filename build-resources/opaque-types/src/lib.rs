@@ -14,6 +14,7 @@ use zenoh::{
     config::Config,
     handlers::{FifoChannelHandler, RingChannelHandler},
     key_expr::KeyExpr,
+    liveliness::LivelinessToken,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
     sample::Sample,
@@ -23,10 +24,8 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    matching::MatchingListener, query::Querier, sample::SourceInfo,
-    session::EntityGlobalId,
+    matching::MatchingListener, query::Querier, sample::SourceInfo, session::EntityGlobalId,
 };
-use zenoh::liveliness::LivelinessToken;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
     shm::zshm, shm::zshmmut, shm::AllocLayout, shm::ChunkAllocResult, shm::ChunkDescriptor,
@@ -159,6 +158,51 @@ get_opaque_type_data!(
     ze_loaned_querying_subscriber_t
 );
 
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned Zenoh advanced subscriber.
+///
+/// In addition to receiving the data it is subscribed to,
+/// it is also able to receive notifications regarding missed samples and/or automatically recover them.
+get_opaque_type_data!(
+    Option<zenoh_ext::AdvancedSubscriber<()>>,
+    ze_owned_advanced_subscriber_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned Zenoh advanced subscriber.
+get_opaque_type_data!(
+    zenoh_ext::AdvancedSubscriber<()>,
+    ze_loaned_advanced_subscriber_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
+///
+/// A listener that sends notification when the advanced subscriber misses a sample .
+/// Dropping the corresponding subscriber, also drops the listener.
+get_opaque_type_data!(
+    Option<zenoh_ext::SampleMissListener<()>>,
+    ze_owned_sample_miss_listener_t
+);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned Zenoh advanced publisher.
+///
+/// In addition to publishing the data,
+/// it also maintains the storage, allowing matching subscribers to retrive missed samples.
+get_opaque_type_data!(
+    Option<zenoh_ext::AdvancedPublisher<'static>>,
+    ze_owned_advanced_publisher_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned Zenoh advanced publisher.
+get_opaque_type_data!(
+    zenoh_ext::AdvancedPublisher<'static>,
+    ze_loaned_advanced_publisher_t
+);
 /// A Zenoh-allocated <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
 /// Key expressions can identify a single key or a set of keys.
@@ -197,7 +241,10 @@ get_opaque_type_data!(Session, z_loaned_session_t);
 
 #[cfg(feature = "unstable")]
 /// An owned Close handle
-get_opaque_type_data!(Option<tokio::task::JoinHandle<zenoh::Result<()>>>, zc_owned_concurrent_close_handle_t);
+get_opaque_type_data!(
+    Option<tokio::task::JoinHandle<zenoh::Result<()>>>,
+    zc_owned_concurrent_close_handle_t
+);
 
 /// An owned Zenoh configuration.
 get_opaque_type_data!(Option<Config>, z_owned_config_t);

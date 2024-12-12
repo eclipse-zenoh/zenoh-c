@@ -54,7 +54,7 @@ void print_help() {
         "\
     Usage: z_delete [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression to write to\n",
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
 }

@@ -14,10 +14,10 @@ foreach(file ${files})
             continue()
         endif()
     endif()
-
-    # Exclude zenoh-ext tests if unstable api feature is disabled
+    
+        # Exclude zenoh-ext tests if unstable api feature is disabled
     if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
-	    if(${target} MATCHES "^.*_query_sub_test.*$")
+	    if((${target} MATCHES "^.*_advanced_pub_sub.*$") OR (${target} MATCHES "^.*_pub_cache_query_sub.*$"))
             continue()
         endif()
     endif()

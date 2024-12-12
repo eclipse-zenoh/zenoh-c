@@ -159,7 +159,7 @@ pub struct z_get_options_t {
     pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing the query.
     pub congestion_control: z_congestion_control_t,
-    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+    /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
