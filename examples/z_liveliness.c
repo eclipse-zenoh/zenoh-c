@@ -69,7 +69,7 @@ void print_help() {
         "\
     Usage: z_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression the liveliness token\n",
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression the liveliness token\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
 }

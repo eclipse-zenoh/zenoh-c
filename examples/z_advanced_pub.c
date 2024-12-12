@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 void print_help() {
     printf(
         "\
-    Usage: z_pub [OPTIONS]\n\n\
+    Usage: z_advanced_pub [OPTIONS]\n\n\
     Options:\n\
         -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
         -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n\

@@ -76,7 +76,7 @@ void print_help() {
         "\
     Usage: z_get_liveliness [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression to query\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to query\n\
         -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
         DEFAULT_KEYEXPR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);

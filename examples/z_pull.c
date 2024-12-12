@@ -105,7 +105,7 @@ void print_help() {
         "\
     Usage: z_pull [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to subscribe to\n\
         -s, --size <SIZE> (optional, number, default='%d'): The size of the ring buffer\n\
         -i, --interval <INTERVAL> (optional, number, default='%d'): The interval for pulling the ringbuffer.\n",
         DEFAULT_KEYEXPR, DEFAULT_RING_BUFFER_SIZE, DEFAULT_PULL_INTERVAL);

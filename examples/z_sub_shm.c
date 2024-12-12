@@ -126,7 +126,7 @@ void print_help() {
         "\
     Usage: z_sub_shm [OPTIONS]\n\n\
     Options:\n\
-        -k, --key <KEY> (optional, string, default='%s'): The key expression to subscribe to\n",
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to subscribe to\n",
         DEFAULT_KEYEXPR);
     printf(COMMON_HELP);
 }
