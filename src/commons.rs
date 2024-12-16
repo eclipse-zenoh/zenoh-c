@@ -118,6 +118,14 @@ pub extern "C" fn z_sample_encoding(this_: &z_loaned_sample_t) -> &z_loaned_enco
 pub extern "C" fn z_sample_payload(this_: &z_loaned_sample_t) -> &z_loaned_bytes_t {
     this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
+/// Returns the sample payload data.
+#[no_mangle]
+pub extern "C" fn z_sample_payload_mut(this_: &mut z_loaned_sample_t) -> &mut z_loaned_bytes_t {
+    this_
+        .as_rust_type_mut()
+        .payload_mut()
+        .as_loaned_c_type_mut()
+}
 
 /// Returns the sample kind.
 #[no_mangle]

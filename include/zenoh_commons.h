@@ -1422,6 +1422,18 @@ z_result_t z_bytes_as_loaned_shm(const struct z_loaned_bytes_t *this_,
                                  const struct z_loaned_shm_t **dst);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Converts data into a mutably loaned SHM buffer.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct an SHM buffer.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_bytes_as_mut_loaned_shm(struct z_loaned_bytes_t *this_,
+                                     struct z_loaned_shm_t **dst);
+#endif
+/**
  * Constructs an owned shallow copy of data in provided uninitialized memory location.
  */
 ZENOHC_API void z_bytes_clone(struct z_owned_bytes_t *dst, const struct z_loaned_bytes_t *this_);
@@ -1612,18 +1624,6 @@ ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
 ZENOHC_API
 bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
                                  struct z_view_slice_t *slice);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts data into a mutably loaned SHM buffer.
- *
- * @param this_: Data to convert.
- * @param dst: An uninitialized memory location where to construct an SHM buffer.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_to_mut_loaned_shm(struct z_loaned_bytes_t *this_,
-                                     struct z_loaned_shm_t **dst);
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Converts data into an owned SHM buffer by copying it's shared reference.
@@ -4047,6 +4047,10 @@ ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sa
  * Returns the sample payload data.
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the sample payload data.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_sample_payload_mut(struct z_loaned_sample_t *this_);
 /**
  * Returns sample qos priority value.
  */
