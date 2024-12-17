@@ -479,6 +479,29 @@ pub extern "C" fn z_bytes_slice_iterator_next(
     }
 }
 
+/// Attempts to get a contiguous view to the underlying bytes.
+/// This is only possible if data is not fragmented, otherwise the function will fail.
+/// In case of fragmented data, consider using `z_bytes_get_slice_iterator()`.
+///
+/// @param this_: An instance of Zenoh data.
+/// @param view: An uninitialized memory location where a contiguous view on data will be constructed.
+/// @return  ​0​ upon success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_get_contiguous_view(
+    this: &'static z_loaned_bytes_t,
+    view: &mut MaybeUninit<z_view_slice_t>,
+) -> result::z_result_t {
+    let payload = this.as_rust_type_ref();
+    match payload.to_bytes() {
+        std::borrow::Cow::Borrowed(s) => {
+            view.as_rust_type_mut_uninit()
+                .write(CSliceView::from_slice(s));
+            result::Z_OK
+        }
+        std::borrow::Cow::Owned(_) => result::Z_EINVAL,
+    }
+}
+
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Converts from an immutable SHM buffer consuming it.

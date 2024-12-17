@@ -280,6 +280,7 @@ Types
 .. doxygenstruct:: z_bytes_reader_t
 .. doxygenstruct:: z_owned_bytes_writer_t
 .. doxygenstruct:: z_loaned_bytes_writer_t
+.. doxygenstruct:: z_bytes_slice_iterator_t
 
 Functions
 ^^^^^^^^^
@@ -302,6 +303,10 @@ Functions
 .. doxygenfunction:: z_bytes_loan
 .. doxygenfunction:: z_bytes_loan_mut
 .. doxygenfunction:: z_bytes_drop
+
+.. doxygenfunction:: z_bytes_get_slice_iterator
+.. doxygenfunction:: z_bytes_slice_iterator_next
+.. doxygenfunction:: z_bytes_get_contiguous_view
 
 .. doxygenfunction:: z_bytes_get_reader
 .. doxygenfunction:: z_bytes_reader_read
