@@ -37,7 +37,9 @@ use crate::{
 /// @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
 #[repr(C)]
 pub struct ze_advanced_publisher_cache_options_t {
-    /// Number of samples to keep for each resource
+    /// Must be set to ``true``, to enable the cache.
+    pub is_enabled: bool,
+    /// Number of samples to keep for each resource.
     pub max_samples: usize,
     /// The congestion control to apply to replies.
     pub congestion_control: z_congestion_control_t,
@@ -50,6 +52,7 @@ pub struct ze_advanced_publisher_cache_options_t {
 impl Default for ze_advanced_publisher_cache_options_t {
     fn default() -> Self {
         Self {
+            is_enabled: true,
             max_samples: 1,
             congestion_control: CongestionControl::default().into(),
             priority: Priority::default().into(),
@@ -86,8 +89,8 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
 pub struct ze_advanced_publisher_options_t {
     /// Base publisher options.
     pub publisher_options: z_publisher_options_t,
-    /// Optional settings for publisher cache.
-    pub cache: Option<&'static mut ze_advanced_publisher_cache_options_t>,
+    /// Publisher cache settings.
+    pub cache: ze_advanced_publisher_cache_options_t,
     /// Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
     ///
     /// Retransmission can only be done if history is enabled on subscriber side.
@@ -96,7 +99,7 @@ pub struct ze_advanced_publisher_options_t {
     pub publisher_detection: bool,
     /// An optional key expression to be added to the liveliness token key expression.
     /// It can be used to convey meta data.
-    pub publisher_detection_metadata: Option<&'static mut z_loaned_keyexpr_t>,
+    pub publisher_detection_metadata: Option<&'static z_loaned_keyexpr_t>,
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
@@ -104,9 +107,13 @@ pub struct ze_advanced_publisher_options_t {
 pub extern "C" fn ze_advanced_publisher_options_default(
     this_: &mut MaybeUninit<ze_advanced_publisher_options_t>,
 ) {
+    let cache = ze_advanced_publisher_cache_options_t {
+        is_enabled: false,
+        ..Default::default()
+    };
     this_.write(ze_advanced_publisher_options_t {
         publisher_options: z_publisher_options_t::default(),
-        cache: None,
+        cache,
         sample_miss_detection: false,
         publisher_detection: false,
         publisher_detection_metadata: None,
@@ -158,8 +165,8 @@ pub extern "C" fn ze_declare_advanced_publisher(
         if let Some(pub_detection_metadata) = &options.publisher_detection_metadata {
             p = p.publisher_detection_metadata(pub_detection_metadata.as_rust_type_ref());
         }
-        if let Some(cache) = &options.cache {
-            p = p.cache((&**cache).into());
+        if options.cache.is_enabled {
+            p = p.cache((&options.cache).into());
         }
     }
     match p.wait() {

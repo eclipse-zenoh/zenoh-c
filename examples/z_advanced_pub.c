@@ -53,10 +53,8 @@ int main(int argc, char** argv) {
 
     ze_advanced_publisher_options_t pub_opts;
     ze_advanced_publisher_options_default(&pub_opts);
-    ze_advanced_publisher_cache_options_t cache_options;
-    ze_advanced_publisher_cache_options_default(&cache_options);
-    cache_options.max_samples = args.history;
-    pub_opts.cache = &cache_options;
+    ze_advanced_publisher_cache_options_default(&pub_opts.cache);  // or pub_opts.cache.is_enabled = true;
+    pub_opts.cache.max_samples = args.history;
     pub_opts.publisher_detection = true;
     pub_opts.sample_miss_detection = true;
 

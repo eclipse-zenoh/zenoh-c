@@ -64,16 +64,10 @@ int main(int argc, char** argv) {
 
     ze_advanced_subscriber_options_t sub_opts;
     ze_advanced_subscriber_options_default(&sub_opts);
-
-    ze_advanced_subscriber_history_options_t sub_history_options;
-    ze_advanced_subscriber_history_options_default(&sub_history_options);
-    sub_history_options.detect_late_publishers = true;
-
-    ze_advanced_subscriber_recovery_options_t sub_recovery_options;
-    ze_advanced_subscriber_recovery_options_default(&sub_recovery_options);
-    sub_recovery_options.periodic_queries_period_ms = 1000;
-    sub_opts.history = &sub_history_options;
-    sub_opts.recovery = &sub_recovery_options;
+    ze_advanced_subscriber_history_options_default(&sub_opts.history);  // or sub_opts.history.is_enabled = true;
+    sub_opts.history.detect_late_publishers = true;
+    ze_advanced_subscriber_recovery_options_default(&sub_opts.recovery);  // or sub_opts.recovery.is_enabled = true;
+    sub_opts.recovery.periodic_queries_period_ms = 1000;
     sub_opts.subscriber_detection = true;
 
     z_owned_closure_sample_t callback;
