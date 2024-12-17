@@ -3701,6 +3701,10 @@ ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loane
  */
 ZENOHC_API const struct z_loaned_query_t *z_query_loan(const struct z_owned_query_t *this_);
 /**
+ * Mutably borrows the query.
+ */
+ZENOHC_API struct z_loaned_query_t *z_query_loan_mut(struct z_owned_query_t *this_);
+/**
  * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
  */
 ZENOHC_API
@@ -3713,6 +3717,13 @@ void z_query_parameters(const struct z_loaned_query_t *this_,
  */
 ZENOHC_API
 const struct z_loaned_bytes_t *z_query_payload(const struct z_loaned_query_t *this_);
+/**
+ * Gets mutable query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
+ *
+ * Returns NULL if query does not contain a payload.
+ */
+ZENOHC_API
+struct z_loaned_bytes_t *z_query_payload_mut(struct z_loaned_query_t *this_);
 /**
  * Sends a reply to a query.
  *
@@ -3875,10 +3886,18 @@ const struct z_loaned_encoding_t *z_reply_err_encoding(const struct z_loaned_rep
 ZENOHC_API
 const struct z_loaned_reply_err_t *z_reply_err_loan(const struct z_owned_reply_err_t *this_);
 /**
+ * Mutably borrows reply error.
+ */
+ZENOHC_API struct z_loaned_reply_err_t *z_reply_err_loan_mut(struct z_owned_reply_err_t *this_);
+/**
  * Returns reply error payload.
  */
 ZENOHC_API
 const struct z_loaned_bytes_t *z_reply_err_payload(const struct z_loaned_reply_err_t *this_);
+/**
+ * Returns mutable reply error payload.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_reply_err_payload_mut(struct z_loaned_reply_err_t *this_);
 /**
  * Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
  */
@@ -4044,11 +4063,15 @@ ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_loaned_sample_t *th
  */
 ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sample_t *this_);
 /**
+ * Mutably borrows sample.
+ */
+ZENOHC_API struct z_loaned_sample_t *z_sample_loan_mut(struct z_owned_sample_t *this_);
+/**
  * Returns the sample payload data.
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *this_);
 /**
- * Returns the sample payload data.
+ * Returns the mutable sample payload data.
  */
 ZENOHC_API struct z_loaned_bytes_t *z_sample_payload_mut(struct z_loaned_sample_t *this_);
 /**
@@ -4447,6 +4470,7 @@ struct z_loaned_shm_mut_t *z_shm_try_mut(struct z_owned_shm_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
+ * @return borrowed ZShmMut slice in case of success, NULL otherwise
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API

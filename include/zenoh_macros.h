@@ -128,6 +128,9 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_mutex_t : z_mutex_loan_mut, \
         z_owned_publisher_t : z_publisher_loan_mut, \
         z_owned_querier_t : z_querier_loan_mut, \
+        z_owned_query_t : z_query_loan_mut, \
+        z_owned_reply_err_t : z_reply_err_loan_mut, \
+        z_owned_sample_t : z_sample_loan_mut, \
         z_owned_session_t : z_session_loan_mut, \
         z_owned_shm_t : z_shm_loan_mut, \
         z_owned_shm_mut_t : z_shm_mut_loan_mut, \
@@ -677,6 +680,9 @@ inline z_loaned_encoding_t* z_loan_mut(z_owned_encoding_t& this_) { return z_enc
 inline z_loaned_mutex_t* z_loan_mut(z_owned_mutex_t& this_) { return z_mutex_loan_mut(&this_); };
 inline z_loaned_publisher_t* z_loan_mut(z_owned_publisher_t& this_) { return z_publisher_loan_mut(&this_); };
 inline z_loaned_querier_t* z_loan_mut(z_owned_querier_t& this_) { return z_querier_loan_mut(&this_); };
+inline z_loaned_query_t* z_loan_mut(z_owned_query_t& this_) { return z_query_loan_mut(&this_); };
+inline z_loaned_reply_err_t* z_loan_mut(z_owned_reply_err_t& this_) { return z_reply_err_loan_mut(&this_); };
+inline z_loaned_sample_t* z_loan_mut(z_owned_sample_t& this_) { return z_sample_loan_mut(&this_); };
 inline z_loaned_session_t* z_loan_mut(z_owned_session_t& this_) { return z_session_loan_mut(&this_); };
 inline z_loaned_shm_t* z_loan_mut(z_owned_shm_t& this_) { return z_shm_loan_mut(&this_); };
 inline z_loaned_shm_mut_t* z_loan_mut(z_owned_shm_mut_t& this_) { return z_shm_mut_loan_mut(&this_); };
