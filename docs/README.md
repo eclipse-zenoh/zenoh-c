@@ -3,6 +3,7 @@
 zenoh-c API documentation is available on [Read the Docs](https://zenoh-c.readthedocs.io/en/latest/index.html).
 
 -------------------------------
+
 ## How to build it
 
 ```bash
