@@ -3641,6 +3641,12 @@ void z_querier_options_default(struct z_querier_options_t *this_);
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *this_);
 /**
+ * Gets mutable query attachment.
+ *
+ * Returns NULL if query does not contain an attachment.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_query_attachment_mut(struct z_loaned_query_t *this_);
+/**
  * Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
  *
  * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
@@ -3890,6 +3896,12 @@ const struct z_loaned_reply_err_t *z_reply_err_loan(const struct z_owned_reply_e
  */
 ZENOHC_API struct z_loaned_reply_err_t *z_reply_err_loan_mut(struct z_owned_reply_err_t *this_);
 /**
+ * Yields the contents of the reply by asserting it indicates a failure.
+ *
+ * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+ */
+ZENOHC_API struct z_loaned_reply_err_t *z_reply_err_mut(struct z_loaned_reply_t *this_);
+/**
  * Returns reply error payload.
  */
 ZENOHC_API
@@ -3908,11 +3920,21 @@ bool z_reply_is_ok(const struct z_loaned_reply_t *this_);
  */
 ZENOHC_API const struct z_loaned_reply_t *z_reply_loan(const struct z_owned_reply_t *this_);
 /**
+ * Mutably borrows reply.
+ */
+ZENOHC_API struct z_loaned_reply_t *z_reply_loan_mut(struct z_owned_reply_t *this_);
+/**
  * Yields the contents of the reply by asserting it indicates a success.
  *
  * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
  */
 ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
+/**
+ * Yields the contents of the reply by asserting it indicates a success.
+ *
+ * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
+ */
+ZENOHC_API struct z_loaned_sample_t *z_reply_ok_mut(struct z_loaned_reply_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets the id of the zenoh instance that answered this Reply.

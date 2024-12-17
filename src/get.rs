@@ -12,7 +12,11 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{ffi::CStr, mem::MaybeUninit, ptr::null};
+use std::{
+    ffi::CStr,
+    mem::MaybeUninit,
+    ptr::{null, null_mut},
+};
 
 use libc::c_char;
 use zenoh::{
@@ -122,6 +126,18 @@ pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned
     }
 }
 
+/// Yields the contents of the reply by asserting it indicates a success.
+///
+/// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_ok_mut(this_: &mut z_loaned_reply_t) -> *mut z_loaned_sample_t {
+    match this_.as_rust_type_mut().result_mut() {
+        Ok(sample) => sample.as_loaned_c_type_mut() as _,
+        Err(_) => null_mut(),
+    }
+}
+
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
@@ -131,6 +147,20 @@ pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loane
     match this_.as_rust_type_ref().result() {
         Ok(_) => null(),
         Err(v) => v.as_loaned_c_type_ref(),
+    }
+}
+
+/// Yields the contents of the reply by asserting it indicates a failure.
+///
+/// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_err_mut(
+    this_: &mut z_loaned_reply_t,
+) -> *mut z_loaned_reply_err_t {
+    match this_.as_rust_type_mut().result_mut() {
+        Ok(_) => null_mut(),
+        Err(v) => v.as_loaned_c_type_mut(),
     }
 }
 
@@ -328,6 +358,17 @@ pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_repl
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows reply.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.

@@ -521,6 +521,19 @@ pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loan
         .map(|a| a.as_loaned_c_type_ref())
 }
 
+/// Gets mutable query attachment.
+///
+/// Returns NULL if query does not contain an attachment.
+#[no_mangle]
+pub extern "C" fn z_query_attachment_mut(
+    this_: &mut z_loaned_query_t,
+) -> Option<&mut z_loaned_bytes_t> {
+    this_
+        .as_rust_type_mut()
+        .attachment_mut()
+        .map(|a| a.as_loaned_c_type_mut())
+}
+
 /// Undeclares a `z_owned_queryable_t`.
 /// Returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
