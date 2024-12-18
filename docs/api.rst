@@ -475,7 +475,7 @@ Functions
 ---------
 
 .. doxygenfunction:: zc_matching_listener_drop
-.. doxygenfunction:: zc_matching_listener_undeclare
+.. doxygenfunction:: zc_undeclare_matching_listener
 .. doxygenfunction:: zc_closure_matching_status_drop
 .. doxygenfunction:: zc_closure_matching_status_loan
 .. doxygenfunction:: zc_closure_matching_status_call
@@ -708,7 +708,6 @@ Functions
 .. doxygenfunction:: z_undeclare_querier
 .. doxygenfunction:: z_querier_loan
 .. doxygenfunction:: z_querier_drop
-.. doxygenfunction:: z_declare_background_querier
 .. doxygenfunction:: z_querier_id
 .. doxygenfunction:: z_querier_keyexpr
 .. doxygenfunction:: z_querier_get

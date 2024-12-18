@@ -1009,7 +1009,11 @@ typedef struct zc_moved_shm_client_list_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_publisher_cache_options_t {
   /**
-   * Number of samples to keep for each resource
+   * Must be set to ``true``, to enable the cache.
+   */
+  bool is_enabled;
+  /**
+   * Number of samples to keep for each resource.
    */
   size_t max_samples;
   /**
@@ -1053,9 +1057,9 @@ typedef struct ze_advanced_publisher_options_t {
    */
   struct z_publisher_options_t publisher_options;
   /**
-   * Optional settings for publisher cache.
+   * Publisher cache settings.
    */
-  struct ze_advanced_publisher_cache_options_t *cache;
+  struct ze_advanced_publisher_cache_options_t cache;
   /**
    * Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
    *
@@ -1070,7 +1074,7 @@ typedef struct ze_advanced_publisher_options_t {
    * An optional key expression to be added to the liveliness token key expression.
    * It can be used to convey meta data.
    */
-  struct z_loaned_keyexpr_t *publisher_detection_metadata;
+  const struct z_loaned_keyexpr_t *publisher_detection_metadata;
 } ze_advanced_publisher_options_t;
 #endif
 /**
@@ -1143,6 +1147,10 @@ typedef struct ze_moved_advanced_subscriber_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_subscriber_history_options_t {
   /**
+   * Must be set to ``true``, to enable the history data recovery.
+   */
+  bool is_enabled;
+  /**
    * Enable detection of late joiner publishers and query for their historical data.
    * Late joiner detection can only be achieved for Publishers that enable publisher_detection.
    * History can only be retransmitted by Publishers that enable caching.
@@ -1165,6 +1173,10 @@ typedef struct ze_advanced_subscriber_history_options_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_subscriber_recovery_options_t {
   /**
+   * Must be set to ``true``, to enable the lost sample recovery.
+   */
+  bool is_enabled;
+  /**
    * Period for queries for not yet received Samples.
    *
    * These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
@@ -1186,16 +1198,14 @@ typedef struct ze_advanced_subscriber_options_t {
    */
   struct z_subscriber_options_t subscriber_options;
   /**
-   * Optional settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
-   * Querying historical data is disabled if the value is ``NULL``.
+   * Settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
    */
-  struct ze_advanced_subscriber_history_options_t *history;
+  struct ze_advanced_subscriber_history_options_t history;
   /**
-   * Optional settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
+   * Settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
    * caching and sample_miss_detection.
-   * Retransmission is disabled if the value is ``NULL``.
    */
-  struct ze_advanced_subscriber_recovery_options_t *recovery;
+  struct ze_advanced_subscriber_recovery_options_t recovery;
   /**
    * Timeout to be used for history and recovery queries.
    * Default value will be used if set to ``0``.
@@ -1209,7 +1219,7 @@ typedef struct ze_advanced_subscriber_options_t {
    * An optional key expression to be added to the liveliness token key expression.
    * It can be used to convey meta data.
    */
-  struct z_loaned_keyexpr_t *subscriber_detection_metadata;
+  const struct z_loaned_keyexpr_t *subscriber_detection_metadata;
 } ze_advanced_subscriber_options_t;
 #endif
 /**

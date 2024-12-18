@@ -31,8 +31,9 @@ use crate::{
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for retrievieng historical data for Advanced Subscriber.
 #[repr(C)]
-#[derive(Default)]
 pub struct ze_advanced_subscriber_history_options_t {
+    /// Must be set to ``true``, to enable the history data recovery.
+    pub is_enabled: bool,
     /// Enable detection of late joiner publishers and query for their historical data.
     /// Late joiner detection can only be achieved for Publishers that enable publisher_detection.
     /// History can only be retransmitted by Publishers that enable caching.
@@ -41,6 +42,17 @@ pub struct ze_advanced_subscriber_history_options_t {
     pub max_samples: usize,
     /// Maximum age of samples to query. ``0`` corresponds to no limit on samples' age.
     pub max_age_ms: u64,
+}
+
+impl Default for ze_advanced_subscriber_history_options_t {
+    fn default() -> Self {
+        Self {
+            is_enabled: true,
+            detect_late_publishers: false,
+            max_samples: 0,
+            max_age_ms: 0,
+        }
+    }
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -71,8 +83,9 @@ impl From<&ze_advanced_subscriber_history_options_t> for HistoryConfig {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for recovering lost messages for Advanced Subscriber.
 #[repr(C)]
-#[derive(Default)]
 pub struct ze_advanced_subscriber_recovery_options_t {
+    /// Must be set to ``true``, to enable the lost sample recovery.
+    pub is_enabled: bool,
     /// Period for queries for not yet received Samples.
     ///
     /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
@@ -80,6 +93,15 @@ pub struct ze_advanced_subscriber_recovery_options_t {
     /// with a period smaller or equal to this period.
     /// Retransmission can only be achieved by Publishers that also activate retransmission.
     pub periodic_queries_period_ms: u64,
+}
+
+impl Default for ze_advanced_subscriber_recovery_options_t {
+    fn default() -> Self {
+        Self {
+            is_enabled: true,
+            periodic_queries_period_ms: 0,
+        }
+    }
 }
 
 impl From<&ze_advanced_subscriber_recovery_options_t> for RecoveryConfig {
@@ -107,13 +129,11 @@ pub extern "C" fn ze_advanced_subscriber_recovery_options_default(
 pub struct ze_advanced_subscriber_options_t {
     /// Base subscriber options.
     pub subscriber_options: z_subscriber_options_t,
-    /// Optional settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
-    /// Querying historical data is disabled if the value is ``NULL``.
-    pub history: Option<&'static mut ze_advanced_subscriber_history_options_t>,
-    /// Optional settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
+    /// Settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
+    pub history: ze_advanced_subscriber_history_options_t,
+    /// Settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
     /// caching and sample_miss_detection.
-    /// Retransmission is disabled if the value is ``NULL``.
-    pub recovery: Option<&'static mut ze_advanced_subscriber_recovery_options_t>,
+    pub recovery: ze_advanced_subscriber_recovery_options_t,
     /// Timeout to be used for history and recovery queries.
     /// Default value will be used if set to ``0``.
     pub query_timeout_ms: u64,
@@ -121,7 +141,7 @@ pub struct ze_advanced_subscriber_options_t {
     pub subscriber_detection: bool,
     /// An optional key expression to be added to the liveliness token key expression.
     /// It can be used to convey meta data.
-    pub subscriber_detection_metadata: Option<&'static mut z_loaned_keyexpr_t>,
+    pub subscriber_detection_metadata: Option<&'static z_loaned_keyexpr_t>,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -130,10 +150,18 @@ pub struct ze_advanced_subscriber_options_t {
 pub extern "C" fn ze_advanced_subscriber_options_default(
     this: &mut MaybeUninit<ze_advanced_subscriber_options_t>,
 ) {
+    let history = ze_advanced_subscriber_history_options_t {
+        is_enabled: false,
+        ..Default::default()
+    };
+    let recovery = ze_advanced_subscriber_recovery_options_t {
+        is_enabled: false,
+        ..Default::default()
+    };
     this.write(ze_advanced_subscriber_options_t {
         subscriber_options: z_subscriber_options_t::default(),
-        history: None,
-        recovery: None,
+        history,
+        recovery,
         query_timeout_ms: 0,
         subscriber_detection: false,
         subscriber_detection_metadata: None,
@@ -163,11 +191,11 @@ fn _declare_advanced_subscriber_inner(
         if let Some(sub_detection_metadata) = &options.subscriber_detection_metadata {
             sub = sub.subscriber_detection_metadata(sub_detection_metadata.as_rust_type_ref());
         }
-        if let Some(history) = &options.history {
-            sub = sub.history((&**history).into());
+        if options.history.is_enabled {
+            sub = sub.history((&options.history).into());
         }
-        if let Some(recovery) = &options.recovery {
-            sub = sub.recovery((&**recovery).into());
+        if options.recovery.is_enabled {
+            sub = sub.recovery((&options.recovery).into());
         }
     }
     sub

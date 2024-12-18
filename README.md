@@ -175,6 +175,7 @@ cmake ../zenoh-c/examples -DCMAKE_INSTALL_PREFIX=~/.local
 ```
 
 ## Documentation
+
 Zenoh-c API documentation is available on [Read the Docs](https://zenoh-c.readthedocs.io/en/latest/index.html).
 
 It can be built manually by performing the following steps:
@@ -186,6 +187,7 @@ sphinx-build -b html . _build/html
 ```
 
 ## Cross-Compilation
+
 Cross-compilation can be performed using standard cmake approach as described in [[cmake-toolchains](https://cmake.org/cmake/help/latest/manual/cmake-toolchains.7.html)].
 
 In addition the following project-specific options might need to be set for cross-compilation:
@@ -217,6 +219,7 @@ and release files will be located at
 `/path/to/zenoh-c/target/x86_64-pc-windows-gnu/release`
 
 > :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
+
 ## Rust Version
 
 The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.75.0`.
@@ -233,6 +236,7 @@ cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0"
 It's necessary sometimes to build zenoh-c library with set of features different from default. For example: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)
 
 Available features can be found in [Cargo.toml](./Cargo.toml)
+
 ```bash
 cmake ../zenoh-c -DZENOHC_CARGO_FLAGS="--no-default-features;--features=transport_tcp,transport_udp"
 ```
