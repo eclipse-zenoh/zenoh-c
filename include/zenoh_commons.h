@@ -1541,6 +1541,7 @@ z_result_t z_bytes_from_str(struct z_owned_bytes_t *this_,
  */
 ZENOHC_API void z_bytes_from_string(struct z_owned_bytes_t *this_, struct z_moved_string_t *s);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Attempts to get a contiguous view to the underlying bytes.
  * This is only possible if data is not fragmented, otherwise the function will fail.
  * In case of fragmented data, consider using `z_bytes_get_slice_iterator()`.
@@ -1549,9 +1550,11 @@ ZENOHC_API void z_bytes_from_string(struct z_owned_bytes_t *this_, struct z_move
  * @param view: An uninitialized memory location where a contiguous view on data will be constructed.
  * @return  ​0​ upon success, negative error code otherwise.
  */
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_bytes_get_contiguous_view(const struct z_loaned_bytes_t *this_,
                                        struct z_view_slice_t *view);
+#endif
 /**
  * Returns a reader for the data.
  *

@@ -479,6 +479,8 @@ pub extern "C" fn z_bytes_slice_iterator_next(
     }
 }
 
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Attempts to get a contiguous view to the underlying bytes.
 /// This is only possible if data is not fragmented, otherwise the function will fail.
 /// In case of fragmented data, consider using `z_bytes_get_slice_iterator()`.

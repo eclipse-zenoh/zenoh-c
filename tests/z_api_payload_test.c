@@ -234,10 +234,12 @@ void test_slices(void) {
     z_bytes_copy_from_buf(&payload, data, 10);
     assert(check_slice(z_loan(payload), data, 10));
 
+#if defined(Z_FEATURE_UNSTABLE_API)
     z_view_slice_t view;
     assert(z_bytes_get_contiguous_view(z_loan(payload), &view) == Z_OK);
     assert(z_slice_len(z_loan(view)) == 10);
     assert(memcmp(data, z_slice_data(z_loan(view)), 10) == 0);
+#endif
 
     z_drop(z_move(payload));
 
@@ -252,7 +254,9 @@ void test_slices(void) {
     }
     z_bytes_writer_finish(z_move(writer), &payload);
     assert(check_slice(z_loan(payload), data, 10));
+#if defined(Z_FEATURE_UNSTABLE_API)
     assert(z_bytes_get_contiguous_view(z_loan(payload), &view) != Z_OK);
+#endif
     z_drop(z_move(payload));
 }
 
