@@ -199,7 +199,7 @@ pub unsafe extern "C" fn z_bytes_as_loaned_shm(
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_mut_loaned_shm(
+pub unsafe extern "C" fn z_bytes_as_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_result_t {

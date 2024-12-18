@@ -44,9 +44,17 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
 #if defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
     char *payload_type = "RAW";
     {
-        const z_loaned_shm_t *shm = NULL;
-        if (z_bytes_as_loaned_shm(z_sample_payload(sample), &shm) == Z_OK) {
-            payload_type = "SHM";
+        // try to convert sample payload into SHM buffer. The conversion will succeed
+        // only if payload is carrying underlying SHM buffer
+        z_loaned_shm_t *shm = NULL;
+        if (z_bytes_as_mut_loaned_shm(z_sample_payload_mut(sample), &shm) == Z_OK) {
+            // try to get mutable access to SHM buffer
+            z_loaned_shm_mut_t *shm_mut = z_shm_try_reloan_mut(shm);
+            if (shm_mut) {
+                payload_type = "SHM (MUT)";
+            } else {
+                payload_type = "SHM (IMMUT)";
+            }
         }
     }
 #endif

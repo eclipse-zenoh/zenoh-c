@@ -227,9 +227,11 @@ Types
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_reply_err_payload
+.. doxygenfunction:: z_reply_err_payload_mut
 .. doxygenfunction:: z_reply_err_encoding
 
 .. doxygenfunction:: z_reply_err_loan
+.. doxygenfunction:: z_reply_err_loan_mut
 .. doxygenfunction:: z_reply_err_clone
 .. doxygenfunction:: z_reply_err_drop
 
@@ -244,6 +246,7 @@ Types
 Functions
 ^^^^^^^^^
 .. doxygenfunction:: z_sample_loan
+.. doxygenfunction:: z_sample_loan_mut
 .. doxygenfunction:: z_sample_drop
 .. doxygenfunction:: z_sample_clone
 
@@ -251,6 +254,7 @@ Functions
 .. doxygenfunction:: z_sample_attachment
 .. doxygenfunction:: z_sample_encoding
 .. doxygenfunction:: z_sample_payload
+.. doxygenfunction:: z_sample_payload_mut
 .. doxygenfunction:: z_sample_priority
 .. doxygenfunction:: z_sample_congestion_control
 .. doxygenfunction:: z_sample_express
@@ -318,6 +322,8 @@ Functions
 .. doxygenfunction:: z_bytes_writer_finish
 .. doxygenfunction:: z_bytes_writer_write_all
 .. doxygenfunction:: z_bytes_writer_append
+
+.. doxygenfunction:: z_bytes_as_mut_loaned_shm
 
 System
 ======
@@ -632,14 +638,17 @@ Functions
 .. doxygenfunction:: z_queryable_drop
 
 .. doxygenfunction:: z_query_loan
+.. doxygenfunction:: z_query_loan_mut
 .. doxygenfunction:: z_query_drop
 .. doxygenfunction:: z_query_clone
 
 .. doxygenfunction:: z_query_keyexpr
 .. doxygenfunction:: z_query_parameters
 .. doxygenfunction:: z_query_payload
+.. doxygenfunction:: z_query_payload_mut
 .. doxygenfunction:: z_query_encoding
 .. doxygenfunction:: z_query_attachment
+.. doxygenfunction:: z_query_attachment_mut
 .. doxygenfunction:: z_query_reply
 .. doxygenfunction:: z_query_reply_err
 .. doxygenfunction:: z_query_reply_del
@@ -726,9 +735,12 @@ Functions
 .. doxygenfunction:: z_reply_drop
 .. doxygenfunction:: z_reply_clone
 .. doxygenfunction:: z_reply_loan
+.. doxygenfunction:: z_reply_loan_mut
 .. doxygenfunction:: z_reply_is_ok
 .. doxygenfunction:: z_reply_ok
+.. doxygenfunction:: z_reply_ok_mut
 .. doxygenfunction:: z_reply_err
+.. doxygenfunction:: z_reply_err_mut
 
 .. doxygenfunction:: z_closure_reply_call
 .. doxygenfunction:: z_closure_reply_loan

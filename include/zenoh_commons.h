@@ -1432,6 +1432,18 @@ z_result_t z_bytes_as_loaned_shm(const struct z_loaned_bytes_t *this_,
                                  const struct z_loaned_shm_t **dst);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Converts data into a mutably loaned SHM buffer.
+ *
+ * @param this_: Data to convert.
+ * @param dst: An uninitialized memory location where to construct an SHM buffer.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_bytes_as_mut_loaned_shm(struct z_loaned_bytes_t *this_,
+                                     struct z_loaned_shm_t **dst);
+#endif
+/**
  * Constructs an owned shallow copy of data in provided uninitialized memory location.
  */
 ZENOHC_API void z_bytes_clone(struct z_owned_bytes_t *dst, const struct z_loaned_bytes_t *this_);
@@ -1637,18 +1649,6 @@ ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
 ZENOHC_API
 bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
                                  struct z_view_slice_t *slice);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts data into a mutably loaned SHM buffer.
- *
- * @param this_: Data to convert.
- * @param dst: An uninitialized memory location where to construct an SHM buffer.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_to_mut_loaned_shm(struct z_loaned_bytes_t *this_,
-                                     struct z_loaned_shm_t **dst);
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Converts data into an owned SHM buffer by copying it's shared reference.
@@ -3666,6 +3666,12 @@ void z_querier_options_default(struct z_querier_options_t *this_);
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_query_attachment(const struct z_loaned_query_t *this_);
 /**
+ * Gets mutable query attachment.
+ *
+ * Returns NULL if query does not contain an attachment.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_query_attachment_mut(struct z_loaned_query_t *this_);
+/**
  * Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
  *
  * This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
@@ -3726,6 +3732,10 @@ ZENOHC_API const struct z_loaned_keyexpr_t *z_query_keyexpr(const struct z_loane
  */
 ZENOHC_API const struct z_loaned_query_t *z_query_loan(const struct z_owned_query_t *this_);
 /**
+ * Mutably borrows the query.
+ */
+ZENOHC_API struct z_loaned_query_t *z_query_loan_mut(struct z_owned_query_t *this_);
+/**
  * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
  */
 ZENOHC_API
@@ -3738,6 +3748,13 @@ void z_query_parameters(const struct z_loaned_query_t *this_,
  */
 ZENOHC_API
 const struct z_loaned_bytes_t *z_query_payload(const struct z_loaned_query_t *this_);
+/**
+ * Gets mutable query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
+ *
+ * Returns NULL if query does not contain a payload.
+ */
+ZENOHC_API
+struct z_loaned_bytes_t *z_query_payload_mut(struct z_loaned_query_t *this_);
 /**
  * Sends a reply to a query.
  *
@@ -3900,10 +3917,24 @@ const struct z_loaned_encoding_t *z_reply_err_encoding(const struct z_loaned_rep
 ZENOHC_API
 const struct z_loaned_reply_err_t *z_reply_err_loan(const struct z_owned_reply_err_t *this_);
 /**
+ * Mutably borrows reply error.
+ */
+ZENOHC_API struct z_loaned_reply_err_t *z_reply_err_loan_mut(struct z_owned_reply_err_t *this_);
+/**
+ * Yields the contents of the reply by asserting it indicates a failure.
+ *
+ * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+ */
+ZENOHC_API struct z_loaned_reply_err_t *z_reply_err_mut(struct z_loaned_reply_t *this_);
+/**
  * Returns reply error payload.
  */
 ZENOHC_API
 const struct z_loaned_bytes_t *z_reply_err_payload(const struct z_loaned_reply_err_t *this_);
+/**
+ * Returns mutable reply error payload.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_reply_err_payload_mut(struct z_loaned_reply_err_t *this_);
 /**
  * Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
  */
@@ -3914,11 +3945,21 @@ bool z_reply_is_ok(const struct z_loaned_reply_t *this_);
  */
 ZENOHC_API const struct z_loaned_reply_t *z_reply_loan(const struct z_owned_reply_t *this_);
 /**
+ * Mutably borrows reply.
+ */
+ZENOHC_API struct z_loaned_reply_t *z_reply_loan_mut(struct z_owned_reply_t *this_);
+/**
  * Yields the contents of the reply by asserting it indicates a success.
  *
  * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
  */
 ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_reply_t *this_);
+/**
+ * Yields the contents of the reply by asserting it indicates a success.
+ *
+ * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
+ */
+ZENOHC_API struct z_loaned_sample_t *z_reply_ok_mut(struct z_loaned_reply_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets the id of the zenoh instance that answered this Reply.
@@ -4069,9 +4110,17 @@ ZENOHC_API enum z_sample_kind_t z_sample_kind(const struct z_loaned_sample_t *th
  */
 ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sample_t *this_);
 /**
+ * Mutably borrows sample.
+ */
+ZENOHC_API struct z_loaned_sample_t *z_sample_loan_mut(struct z_owned_sample_t *this_);
+/**
  * Returns the sample payload data.
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *this_);
+/**
+ * Returns the mutable sample payload data.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_sample_payload_mut(struct z_loaned_sample_t *this_);
 /**
  * Returns sample qos priority value.
  */
@@ -4468,6 +4517,7 @@ struct z_loaned_shm_mut_t *z_shm_try_mut(struct z_owned_shm_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
+ * @return borrowed ZShmMut slice in case of success, NULL otherwise.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API

@@ -118,6 +118,14 @@ pub extern "C" fn z_sample_encoding(this_: &z_loaned_sample_t) -> &z_loaned_enco
 pub extern "C" fn z_sample_payload(this_: &z_loaned_sample_t) -> &z_loaned_bytes_t {
     this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
+/// Returns the mutable sample payload data.
+#[no_mangle]
+pub extern "C" fn z_sample_payload_mut(this_: &mut z_loaned_sample_t) -> &mut z_loaned_bytes_t {
+    this_
+        .as_rust_type_mut()
+        .payload_mut()
+        .as_loaned_c_type_mut()
+}
 
 /// Returns the sample kind.
 #[no_mangle]
@@ -208,6 +216,17 @@ pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sa
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows sample.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.

@@ -82,6 +82,18 @@ pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loa
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
+/// Mutably borrows the query.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_query_loan_mut(
+    this_: &'static mut z_owned_query_t,
+) -> &mut z_loaned_query_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {
@@ -474,6 +486,19 @@ pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_
         .map(|v| v.as_loaned_c_type_ref())
 }
 
+/// Gets mutable query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
+///
+/// Returns NULL if query does not contain a payload.
+#[no_mangle]
+pub extern "C" fn z_query_payload_mut(
+    this_: &mut z_loaned_query_t,
+) -> Option<&mut z_loaned_bytes_t> {
+    this_
+        .as_rust_type_mut()
+        .payload_mut()
+        .map(|v| v.as_loaned_c_type_mut())
+}
+
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
 ///
 /// Returns NULL if query does not contain an encoding.
@@ -494,6 +519,19 @@ pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loan
         .as_rust_type_ref()
         .attachment()
         .map(|a| a.as_loaned_c_type_ref())
+}
+
+/// Gets mutable query attachment.
+///
+/// Returns NULL if query does not contain an attachment.
+#[no_mangle]
+pub extern "C" fn z_query_attachment_mut(
+    this_: &mut z_loaned_query_t,
+) -> Option<&mut z_loaned_bytes_t> {
+    this_
+        .as_rust_type_mut()
+        .attachment_mut()
+        .map(|a| a.as_loaned_c_type_mut())
 }
 
 /// Undeclares a `z_owned_queryable_t`.
