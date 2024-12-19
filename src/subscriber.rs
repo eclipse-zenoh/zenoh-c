@@ -29,7 +29,7 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{zc_locality_default, zc_locality_t};
+use crate::{transmute::IntoCType, z_entity_global_id_t, zc_locality_default, zc_locality_t};
 
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<()>),
@@ -204,4 +204,12 @@ pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> re
         }
     }
     result::Z_OK
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the ID of the subscriber.
+#[no_mangle]
+pub extern "C" fn z_subscriber_id(subscriber: &z_loaned_subscriber_t) -> z_entity_global_id_t {
+    subscriber.as_rust_type_ref().id().into_c_type()
 }
