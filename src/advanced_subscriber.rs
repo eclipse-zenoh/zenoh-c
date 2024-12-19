@@ -318,7 +318,7 @@ pub extern "C" fn ze_undeclare_advanced_subscriber(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A struct that represent missed samples.
+/// @brief A struct that represents missed samples.
 #[repr(C)]
 pub struct ze_miss_t {
     /// The source of missed samples.
@@ -465,7 +465,7 @@ fn _advanced_subscriber_detect_publishers_inner(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Declares a subscriber on liveliness tokens for matching publishers detection. Only advanced publishers. enabling publisher detection can be detected.
+/// @brief Declares a liveliness token listener for matching publishers detection. Only advanced publishers, enabling publisher detection can be detected.
 ///
 /// @param subscriber: The advanced subscriber instance.
 /// @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
@@ -517,4 +517,26 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers_background(
             result::Z_EGENERIC
         }
     }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// Returns the key expression of the advanced subscriber.
+#[no_mangle]
+pub extern "C" fn ze_advanced_subscriber_keyexpr(
+    subscriber: &ze_loaned_advanced_subscriber_t,
+) -> &z_loaned_keyexpr_t {
+    subscriber
+        .as_rust_type_ref()
+        .key_expr()
+        .as_loaned_c_type_ref()
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the ID of the advanced subscriber.
+#[no_mangle]
+pub extern "C" fn ze_advanced_subscriber_id(
+    subscriber: &ze_loaned_advanced_subscriber_t,
+) -> z_entity_global_id_t {
+    subscriber.as_rust_type_ref().id().into_c_type()
 }

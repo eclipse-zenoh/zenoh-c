@@ -570,6 +570,7 @@ Functions
 .. doxygenfunction:: z_undeclare_subscriber
 .. doxygenfunction:: z_declare_background_subscriber
 .. doxygenfunction:: z_subscriber_keyexpr
+.. doxygenfunction:: z_subscriber_id
 
 .. doxygenfunction:: z_subscriber_drop
 
@@ -993,6 +994,8 @@ Functions
 .. doxygenfunction:: ze_declare_advanced_subscriber
 .. doxygenfunction:: ze_declare_background_advanced_subscriber
 .. doxygenfunction:: ze_undeclare_advanced_subscriber
+.. doxygenfunction:: ze_advanced_subscriber_keyexpr
+.. doxygenfunction:: ze_advanced_subscriber_id
 
 .. doxygenfunction:: ze_advanced_subscriber_detect_publishers
 .. doxygenfunction:: ze_advanced_subscriber_detect_publishers_background
