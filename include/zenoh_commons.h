@@ -1091,7 +1091,7 @@ typedef struct ze_advanced_publisher_put_options_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A struct that represent missed samples.
+ * @brief A struct that represents missed samples.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_miss_t {
@@ -4751,6 +4751,14 @@ ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_st
  */
 ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns the ID of the subscriber.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_entity_global_id_t z_subscriber_id(const struct z_loaned_subscriber_t *subscriber);
+#endif
+/**
  * Returns the key expression of the subscriber.
  */
 ZENOHC_API
@@ -5655,7 +5663,7 @@ z_result_t ze_advanced_subscriber_declare_sample_miss_listener(const struct ze_l
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a subscriber on liveliness tokens for matching publishers detection. Only advanced publishers. enabling publisher detection can be detected.
+ * @brief Declares a liveliness token listener for matching publishers detection. Only advanced publishers, enabling publisher detection can be detected.
  *
  * @param subscriber: The advanced subscriber instance.
  * @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
@@ -5702,6 +5710,22 @@ void ze_advanced_subscriber_drop(struct ze_moved_advanced_subscriber_t *this_);
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void ze_advanced_subscriber_history_options_default(struct ze_advanced_subscriber_history_options_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns the ID of the advanced subscriber.
+ */
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+struct z_entity_global_id_t ze_advanced_subscriber_id(const struct ze_loaned_advanced_subscriber_t *subscriber);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * Returns the key expression of the advanced subscriber.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_keyexpr_t *ze_advanced_subscriber_keyexpr(const struct ze_loaned_advanced_subscriber_t *subscriber);
 #endif
 /**
  * Borrows subscriber.
