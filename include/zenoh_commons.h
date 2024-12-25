@@ -320,7 +320,7 @@ typedef struct z_moved_closure_hello_t {
  */
 typedef struct z_owned_closure_query_t {
   void *_context;
-  void (*_call)(struct z_loaned_query_t *reply, void *context);
+  void (*_call)(struct z_loaned_query_t *query, void *context);
   void (*_drop)(void *context);
 } z_owned_closure_query_t;
 /**
