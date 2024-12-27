@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
         z_bytes_from_static_str(&payload, args.value);
         opts.payload = z_move(payload);
     }
-    z_get(z_loan(s), z_loan(keyexpr), ke, z_move(closure),
+    z_get(z_loan(s), z_loan(keyexpr), params, z_move(closure),
           &opts);  // here, the send is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
 
