@@ -646,7 +646,7 @@ typedef struct z_liveliness_get_options_t {
   /**
    * The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
-  uint32_t timeout_ms;
+  uint64_t timeout_ms;
 } z_liveliness_get_options_t;
 typedef struct z_moved_liveliness_token_t {
   struct z_owned_liveliness_token_t _this;
