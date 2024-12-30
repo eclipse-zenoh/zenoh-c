@@ -228,7 +228,7 @@ pub extern "C" fn zc_liveliness_declare_background_subscriber(
 #[repr(C)]
 pub struct z_liveliness_get_options_t {
     /// The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
-    timeout_ms: u32,
+    timeout_ms: u64,
 }
 
 /// @brief Constructs default value `z_liveliness_get_options_t`.
@@ -266,7 +266,7 @@ pub extern "C" fn z_liveliness_get(
         })
     });
     if let Some(options) = options {
-        builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64));
+        builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms));
     }
     match builder.wait() {
         Ok(()) => result::Z_OK,
