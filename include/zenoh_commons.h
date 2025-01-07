@@ -5379,7 +5379,7 @@ z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *t
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t zc_querier_declare_background_matching_listener(const struct z_loaned_querier_t *querier,
                                                            struct zc_moved_closure_matching_status_t *callback);
@@ -5394,7 +5394,7 @@ z_result_t zc_querier_declare_background_matching_listener(const struct z_loaned
  *
  * @return 0 in case of success, negative error code otherwise.
  */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t zc_querier_declare_matching_listener(const struct z_loaned_querier_t *querier,
                                                 struct zc_owned_matching_listener_t *matching_listener,
@@ -5406,7 +5406,7 @@ z_result_t zc_querier_declare_matching_listener(const struct z_loaned_querier_t 
  *
  * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
  */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t zc_querier_get_matching_status(const struct z_loaned_querier_t *this_,
                                           struct zc_matching_status_t *matching_status);
