@@ -996,6 +996,11 @@ typedef struct zc_moved_closure_matching_status_t {
 typedef struct zc_moved_concurrent_close_handle_t {
   struct zc_owned_concurrent_close_handle_t _this;
 } zc_moved_concurrent_close_handle_t;
+typedef struct zc_internal_encoding_data_t {
+  uint16_t id;
+  const uint8_t *schema_ptr;
+  size_t schema_len;
+} zc_internal_encoding_data_t;
 typedef struct zc_moved_matching_listener_t {
   struct zc_owned_matching_listener_t _this;
 } zc_moved_matching_listener_t;
@@ -5262,6 +5267,11 @@ bool zc_internal_concurrent_close_handle_check(const struct zc_owned_concurrent_
 ZENOHC_API
 void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_handle_t *this_);
 #endif
+ZENOHC_API
+void zc_internal_encoding_from_data(struct z_owned_encoding_t *this_,
+                                    struct zc_internal_encoding_data_t data);
+ZENOHC_API
+struct zc_internal_encoding_data_t zc_internal_encoding_get_data(const struct z_loaned_encoding_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Checks the matching listener is for the gravestone state
