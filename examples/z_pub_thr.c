@@ -78,7 +78,7 @@ void print_help() {
     Arguments:\n\
         <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
     Options:\n\
-        -p <PRIORITY> (optional, number [%d - %d], default='%d'): Priority for sending data\n\
+        -p, --priority <PRIORITY> (optional, number [%d - %d], default='%d'): Priority for sending data\n\
         --express (optional): Batch messages.\n",
         Z_PRIORITY_REAL_TIME, Z_PRIORITY_BACKGROUND, DEFAULT_PRIORITY);
     printf(COMMON_HELP);

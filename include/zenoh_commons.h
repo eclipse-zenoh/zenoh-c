@@ -1769,7 +1769,8 @@ ZENOHC_API uint64_t z_clock_elapsed_us(const struct z_clock_t *time);
  */
 ZENOHC_API struct z_clock_t z_clock_now(void);
 /**
- * Closes zenoh session. This also drops all the closure callbacks remaining from dropped, but not undeclared subscribers.
+ * Closes Zenoh session. This also drops all the closure callbacks remaining from not yet dropped or undeclared Zenoh entites (subscribers, queriers, etc).
+ * After this operation, all calls for network operations for entites declared on this session will return a error.
  *
  * @return `0` in case of success, a negative value if an error occured while closing the session.
  */
@@ -3296,7 +3297,7 @@ bool z_keyexpr_intersects(const struct z_loaned_keyexpr_t *left,
  */
 ZENOHC_API z_result_t z_keyexpr_is_canon(const char *start, size_t len);
 /**
- * Constructs key expression by performing path-joining (automatically inserting) of `left` with `right`.
+ * Constructs key expression by performing path-joining (automatically inserting '/' in-between) of `left` with `right`.
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API

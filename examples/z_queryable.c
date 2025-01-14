@@ -114,7 +114,7 @@ void print_help() {
     Options:\n\
         -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression matching queries to reply to\n\
         -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to reply to queries with\n\
-        --complete (optional, flag to indicate whether queryable is complete or not)",
+        --complete (optional): Indicates whether queryable is complete or not",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
 }

@@ -144,35 +144,7 @@ cmake ../zenoh-c/examples -DCMAKE_INSTALL_PREFIX=~/.local
 
 ## Running the Examples
 
-### Basic Pub/Sub Example
-
-```bash
-./target/release/examples/z_sub
-```
-
-```bash
-./target/release/examples/z_pub
-```
-
-### Queryable and Query Example
-
-```bash
-./target/release/examples/z_queryable
-```
-
-```bash
-./target/release/examples/z_get
-```
-
-### Running the Throughput Examples
-
-```bash
-./target/release/examples/z_sub_thr
-```
-
-```bash
-./target/release/examples/z_pub_thr
-```
+See information about running examples [here](./examples/README.md).
 
 ## Documentation
 
