@@ -16,21 +16,10 @@
 #include "zenoh.h"
 
 void fprintpid(FILE *stream, z_id_t pid) {
-    int len = 0;
-    for (int i = 0; i < 16; i++) {
-        if (pid.id[i]) {
-            len = i + 1;
-        }
-    }
-    if (!len) {
-        fprintf(stream, "None");
-    } else {
-        fprintf(stream, "Some(");
-        for (unsigned int i = 0; i < len; i++) {
-            fprintf(stream, "%02X", (int)pid.id[i]);
-        }
-        fprintf(stream, ")");
-    }
+    z_owned_string_t str;
+    z_id_to_string(&pid, &str);
+    fprintf(stream, "%.*s", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 }
 
 void fprintwhatami(FILE *stream, z_whatami_t whatami) {
@@ -42,10 +31,8 @@ void fprintwhatami(FILE *stream, z_whatami_t whatami) {
 void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
     fprintf(stream, "[");
     for (unsigned int i = 0; i < z_string_array_len(locs); i++) {
-        fprintf(stream, "\"");
         const z_loaned_string_t *loc = z_string_array_get(locs, i);
         fprintf(stream, "%.*s", (int)z_string_len(loc), z_string_data(loc));
-        fprintf(stream, "\"");
         if (i < z_string_array_len(locs) - 1) {
             fprintf(stream, ", ");
         }

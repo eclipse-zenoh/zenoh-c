@@ -177,7 +177,8 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
     });
 }
 
-/// Closes zenoh session. This also drops all the closure callbacks remaining from dropped, but not undeclared subscribers.
+/// Closes Zenoh session. This also drops all the closure callbacks remaining from not yet dropped or undeclared Zenoh entites (subscribers, queriers, etc).
+/// After this operation, all calls for network operations for entites declared on this session will return a error.
 ///
 /// @return `0` in case of success, a negative value if an error occured while closing the session.
 #[no_mangle]

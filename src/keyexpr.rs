@@ -583,7 +583,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     }
 }
 
-/// Constructs key expression by performing path-joining (automatically inserting) of `left` with `right`.
+/// Constructs key expression by performing path-joining (automatically inserting '/' in-between) of `left` with `right`.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_keyexpr_join(
