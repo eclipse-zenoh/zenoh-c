@@ -91,6 +91,7 @@ pub struct ze_advanced_publisher_sample_miss_detection_options_t {
     pub is_enabled: bool,
     /// If different from zero, the publisher will send heartbeats with the specified period, which
     /// can be used by Advanced Subscribers for missed sample detection (if recovery with zero query period is enabled).
+    /// Otherwise, missed samples will be retransmitted based on Advanced Subscribers periodic queries.
     pub heartbeat_period_ms: u64,
 }
 

@@ -1059,6 +1059,7 @@ typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
   /**
    * If different from zero, the publisher will send heartbeats with the specified period, which
    * can be used by Advanced Subscribers for missed sample detection (if recovery with zero query period is enabled).
+   * Otherwise, missed samples will be retransmitted based on Advanced Subscribers periodic queries.
    */
   uint64_t heartbeat_period_ms;
 } ze_advanced_publisher_sample_miss_detection_options_t;
@@ -1200,7 +1201,6 @@ typedef struct ze_advanced_subscriber_recovery_options_t {
    * So it is useful for sporadic publications but useless for periodic publications
    * with a period smaller or equal to this period. If set to 0, the missed samples will be retrieved
    * based on publisher's heartbeat.
-   * Retransmission can only be achieved by Publishers that also activate retransmission (and heartbeat if periodic_queries_period_ms is 0).
    */
   uint64_t periodic_queries_period_ms;
 } ze_advanced_subscriber_recovery_options_t;

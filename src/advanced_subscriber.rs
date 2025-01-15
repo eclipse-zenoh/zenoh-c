@@ -92,7 +92,6 @@ pub struct ze_advanced_subscriber_recovery_options_t {
     /// So it is useful for sporadic publications but useless for periodic publications
     /// with a period smaller or equal to this period. If set to 0, the missed samples will be retrieved
     /// based on publisher's heartbeat.
-    /// Retransmission can only be achieved by Publishers that also activate retransmission (and heartbeat if periodic_queries_period_ms is 0).
     pub periodic_queries_period_ms: u64,
 }
 
