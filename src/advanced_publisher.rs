@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, time::Duration};
 
 use zenoh::{
     handlers::Callback,
@@ -21,7 +21,7 @@ use zenoh::{
     session::SessionClosedError,
     Wait,
 };
-use zenoh_ext::{AdvancedPublisherBuilderExt, CacheConfig};
+use zenoh_ext::{AdvancedPublisherBuilderExt, CacheConfig, MissDetectionConfig};
 
 use crate::{
     _apply_pubisher_delete_options, _apply_pubisher_put_options, _declare_publisher_inner,
@@ -84,6 +84,45 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Settings for sample miss detection on Advanced Publisher.
+#[repr(C)]
+pub struct ze_advanced_publisher_sample_miss_detection_options_t {
+    /// Must be set to ``true``, to enable sample miss_detection.
+    pub is_enabled: bool,
+    /// If different from zero, the publisher will send heartbeats with the specified period, which
+    /// can be used by Advanced Subscribers for missed sample detection (if recovery with zero query period is enabled).
+    pub heartbeat_period_ms: u64,
+}
+
+impl Default for ze_advanced_publisher_sample_miss_detection_options_t {
+    fn default() -> Self {
+        Self {
+            is_enabled: true,
+            heartbeat_period_ms: 0,
+        }
+    }
+}
+
+impl From<&ze_advanced_publisher_sample_miss_detection_options_t> for MissDetectionConfig {
+    fn from(val: &ze_advanced_publisher_sample_miss_detection_options_t) -> Self {
+        let mut m = MissDetectionConfig::default();
+        if val.heartbeat_period_ms > 0 {
+            m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
+        }
+        m
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs the default value for `ze_advanced_publisher_sample_miss_detection_options_t`.
+#[no_mangle]
+pub extern "C" fn ze_advanced_publisher_sample_miss_detection_options_default(
+    this: &mut MaybeUninit<ze_advanced_publisher_sample_miss_detection_options_t>,
+) {
+    this.write(ze_advanced_publisher_sample_miss_detection_options_t::default());
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_declare_advanced_publisher()` function.
 #[repr(C)]
 pub struct ze_advanced_publisher_options_t {
@@ -91,10 +130,10 @@ pub struct ze_advanced_publisher_options_t {
     pub publisher_options: z_publisher_options_t,
     /// Publisher cache settings.
     pub cache: ze_advanced_publisher_cache_options_t,
-    /// Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
+    /// Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
     ///
-    /// Retransmission can only be done if history is enabled on subscriber side.
-    pub sample_miss_detection: bool,
+    /// Retransmission can only be done if cache is enabled.
+    pub sample_miss_detection: ze_advanced_publisher_sample_miss_detection_options_t,
     /// Allow this publisher to be detected through liveliness.
     pub publisher_detection: bool,
     /// An optional key expression to be added to the liveliness token key expression.
@@ -111,10 +150,14 @@ pub extern "C" fn ze_advanced_publisher_options_default(
         is_enabled: false,
         ..Default::default()
     };
+    let sample_miss_detection = ze_advanced_publisher_sample_miss_detection_options_t {
+        is_enabled: false,
+        ..Default::default()
+    };
     this_.write(ze_advanced_publisher_options_t {
         publisher_options: z_publisher_options_t::default(),
         cache,
-        sample_miss_detection: false,
+        sample_miss_detection,
         publisher_detection: false,
         publisher_detection_metadata: None,
     });
@@ -159,8 +202,8 @@ pub extern "C" fn ze_declare_advanced_publisher(
         if options.publisher_detection {
             p = p.publisher_detection();
         }
-        if options.sample_miss_detection {
-            p = p.sample_miss_detection();
+        if options.sample_miss_detection.is_enabled {
+            p = p.sample_miss_detection((&options.sample_miss_detection).into());
         }
         if let Some(pub_detection_metadata) = &options.publisher_detection_metadata {
             p = p.publisher_detection_metadata(pub_detection_metadata.as_rust_type_ref());

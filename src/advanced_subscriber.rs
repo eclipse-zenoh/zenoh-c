@@ -90,8 +90,9 @@ pub struct ze_advanced_subscriber_recovery_options_t {
     ///
     /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
     /// So it is useful for sporadic publications but useless for periodic publications
-    /// with a period smaller or equal to this period.
-    /// Retransmission can only be achieved by Publishers that also activate retransmission.
+    /// with a period smaller or equal to this period. If set to 0, the missed samples will be retrieved
+    /// based on publisher's heartbeat.
+    /// Retransmission can only be achieved by Publishers that also activate retransmission (and heartbeat if periodic_queries_period_ms is 0).
     pub periodic_queries_period_ms: u64,
 }
 
@@ -101,16 +102,6 @@ impl Default for ze_advanced_subscriber_recovery_options_t {
             is_enabled: true,
             periodic_queries_period_ms: 0,
         }
-    }
-}
-
-impl From<&ze_advanced_subscriber_recovery_options_t> for RecoveryConfig {
-    fn from(val: &ze_advanced_subscriber_recovery_options_t) -> RecoveryConfig {
-        let mut r = RecoveryConfig::default();
-        if val.periodic_queries_period_ms > 0 {
-            r = r.periodic_queries(Some(Duration::from_millis(val.periodic_queries_period_ms)));
-        }
-        r
     }
 }
 
@@ -195,7 +186,12 @@ fn _declare_advanced_subscriber_inner(
             sub = sub.history((&options.history).into());
         }
         if options.recovery.is_enabled {
-            sub = sub.recovery((&options.recovery).into());
+            sub = match options.recovery.periodic_queries_period_ms {
+                0 => sub.recovery(RecoveryConfig::default().heartbeat()),
+                _ => sub.recovery(RecoveryConfig::default().periodic_queries(
+                    Duration::from_millis(options.recovery.periodic_queries_period_ms),
+                )),
+            };
         }
     }
     sub
