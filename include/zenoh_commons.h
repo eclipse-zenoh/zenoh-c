@@ -1053,6 +1053,24 @@ typedef struct ze_moved_advanced_publisher_t {
 } ze_moved_advanced_publisher_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Settings for sample miss detection on Advanced Publisher.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
+  /**
+   * Must be set to ``true``, to enable sample miss_detection.
+   */
+  bool is_enabled;
+  /**
+   * If different from zero, the publisher will send heartbeats with the specified period, which
+   * can be used by Advanced Subscribers for missed sample detection (if recovery with zero query period is enabled).
+   * Otherwise, missed samples will be retransmitted based on Advanced Subscribers periodic queries.
+   */
+  uint64_t heartbeat_period_ms;
+} ze_advanced_publisher_sample_miss_detection_options_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Options passed to the `ze_declare_advanced_publisher()` function.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -1066,11 +1084,11 @@ typedef struct ze_advanced_publisher_options_t {
    */
   struct ze_advanced_publisher_cache_options_t cache;
   /**
-   * Allow matching Subscribers to detect lost samples and optionally ask for retransimission.
+   * Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
    *
-   * Retransmission can only be done if history is enabled on subscriber side.
+   * Retransmission can only be done if cache is enabled.
    */
-  bool sample_miss_detection;
+  struct ze_advanced_publisher_sample_miss_detection_options_t sample_miss_detection;
   /**
    * Allow this publisher to be detected through liveliness.
    */
@@ -1186,8 +1204,8 @@ typedef struct ze_advanced_subscriber_recovery_options_t {
    *
    * These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
    * So it is useful for sporadic publications but useless for periodic publications
-   * with a period smaller or equal to this period.
-   * Retransmission can only be achieved by Publishers that also activate retransmission.
+   * with a period smaller or equal to this period. If set to 0, the missed samples will be retrieved
+   * based on publisher's heartbeat.
    */
   uint64_t periodic_queries_period_ms;
 } ze_advanced_subscriber_recovery_options_t;
@@ -5640,6 +5658,14 @@ z_result_t ze_advanced_publisher_put(const struct ze_loaned_advanced_publisher_t
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void ze_advanced_publisher_put_options_default(struct ze_advanced_publisher_put_options_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs the default value for `ze_advanced_publisher_sample_miss_detection_options_t`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void ze_advanced_publisher_sample_miss_detection_options_default(struct ze_advanced_publisher_sample_miss_detection_options_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

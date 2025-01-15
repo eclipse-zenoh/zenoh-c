@@ -945,6 +945,8 @@ Types
 
 .. doxygenstruct:: ze_advanced_publisher_cache_options_t
     :members:
+.. doxygenstruct:: ze_advanced_publisher_sample_miss_detection_options_t
+    :members:
 .. doxygenstruct:: ze_advanced_publisher_options_t
     :members:
 .. doxygenstruct:: ze_advanced_publisher_put_options_t
@@ -966,6 +968,7 @@ Functions
 
 .. doxygenfunction:: ze_advanced_publisher_options_default
 .. doxygenfunction:: ze_advanced_publisher_cache_options_default
+.. doxygenfunction:: ze_advanced_publisher_sample_miss_detection_options_default
 .. doxygenfunction:: ze_advanced_publisher_put_options_default
 .. doxygenfunction:: ze_advanced_publisher_delete_options_default
 

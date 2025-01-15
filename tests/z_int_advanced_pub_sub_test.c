@@ -54,7 +54,7 @@ int run_publisher() {
     ze_advanced_publisher_cache_options_default(&pub_opts.cache);
     pub_opts.cache.max_samples = values_count;
     pub_opts.publisher_detection = true;
-    pub_opts.sample_miss_detection = true;
+    pub_opts.sample_miss_detection.is_enabled = true;  // periodic queries are expected by default
 
     if (ze_declare_advanced_publisher(z_loan(s), &pub, z_loan(ke), &pub_opts) < 0) {
         printf("Unable to declare AdvancedPublisher for key expression!\n");
