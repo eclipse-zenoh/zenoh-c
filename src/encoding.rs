@@ -15,6 +15,7 @@
 use std::{
     borrow::Cow,
     mem::MaybeUninit,
+    ptr::null,
     slice::from_raw_parts,
     str::{from_utf8, FromStr},
 };
@@ -568,4 +569,46 @@ pub extern "C" fn z_encoding_video_vp8() -> &'static z_loaned_encoding_t {
 #[no_mangle]
 pub extern "C" fn z_encoding_video_vp9() -> &'static z_loaned_encoding_t {
     Encoding::VIDEO_VP9.as_loaned_c_type_ref()
+}
+
+#[repr(C)]
+pub struct zc_internal_encoding_data_t {
+    id: u16,
+    schema_ptr: *const u8,
+    schema_len: usize,
+}
+
+#[no_mangle]
+pub extern "C" fn zc_internal_encoding_get_data(
+    this: &'static z_loaned_encoding_t,
+) -> zc_internal_encoding_data_t {
+    let encoding = this.as_rust_type_ref();
+    let schema = encoding.schema();
+    match schema {
+        Some(s) => zc_internal_encoding_data_t {
+            id: encoding.id(),
+            schema_ptr: s.as_ptr(),
+            schema_len: s.len(),
+        },
+        None => zc_internal_encoding_data_t {
+            id: encoding.id(),
+            schema_ptr: null(),
+            schema_len: 0,
+        },
+    }
+}
+
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_internal_encoding_from_data(
+    this: &mut MaybeUninit<z_owned_encoding_t>,
+    data: zc_internal_encoding_data_t,
+) {
+    let schema = (!data.schema_ptr.is_null() && data.schema_len > 0).then_some(
+        from_raw_parts(data.schema_ptr, data.schema_len)
+            .to_vec()
+            .into(),
+    );
+    this.as_rust_type_mut_uninit()
+        .write(Encoding::new(data.id, schema));
 }
