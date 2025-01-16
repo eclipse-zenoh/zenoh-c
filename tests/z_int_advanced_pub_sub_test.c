@@ -54,7 +54,7 @@ int run_publisher() {
     ze_advanced_publisher_cache_options_default(&pub_opts.cache);
     pub_opts.cache.max_samples = values_count;
     pub_opts.publisher_detection = true;
-    pub_opts.sample_miss_detection.is_enabled = true;  // periodic queries are expected by default
+    pub_opts.sample_miss_detection.is_enabled = true;  // heartbeats are disabled by default
 
     if (ze_declare_advanced_publisher(z_loan(s), &pub, z_loan(ke), &pub_opts) < 0) {
         printf("Unable to declare AdvancedPublisher for key expression!\n");
@@ -143,7 +143,8 @@ int run_subscriber() {
     sub_opts.history.detect_late_publishers = true;
 
     ze_advanced_subscriber_recovery_options_default(&sub_opts.recovery);
-    sub_opts.recovery.periodic_queries_period_ms = 1000;
+    ze_advanced_subscriber_last_sample_miss_detection_options_default(&sub_opts.recovery.last_sample_miss_detection);
+    sub_opts.recovery.last_sample_miss_detection.periodic_queries_period_ms = 1000;
     sub_opts.subscriber_detection = true;
 
     z_owned_closure_sample_t callback;

@@ -87,11 +87,11 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
 /// @brief Settings for sample miss detection on Advanced Publisher.
 #[repr(C)]
 pub struct ze_advanced_publisher_sample_miss_detection_options_t {
-    /// Must be set to ``true``, to enable sample miss_detection.
+    /// Must be set to ``true``, to enable sample miss detection.
     pub is_enabled: bool,
     /// If different from zero, the publisher will send heartbeats with the specified period, which
-    /// can be used by Advanced Subscribers for missed sample detection (if recovery with zero query period is enabled).
-    /// Otherwise, missed samples will be retransmitted based on Advanced Subscribers periodic queries.
+    /// can be used by Advanced Subscribers for last sample(s) miss detection (if last sample miss detection with zero query period is enabled).
+    /// Otherwise, missed samples will be retransmitted based on Advanced Subscriber queries.
     pub heartbeat_period_ms: u64,
 }
 
@@ -131,7 +131,7 @@ pub struct ze_advanced_publisher_options_t {
     pub publisher_options: z_publisher_options_t,
     /// Publisher cache settings.
     pub cache: ze_advanced_publisher_cache_options_t,
-    /// Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
+    /// Settings to allow matching Subscribers to detect lost samples and optionally ask for retransimission.
     ///
     /// Retransmission can only be done if cache is enabled.
     pub sample_miss_detection: ze_advanced_publisher_sample_miss_detection_options_t,

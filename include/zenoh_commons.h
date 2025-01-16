@@ -1058,13 +1058,13 @@ typedef struct ze_moved_advanced_publisher_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
   /**
-   * Must be set to ``true``, to enable sample miss_detection.
+   * Must be set to ``true``, to enable sample miss detection.
    */
   bool is_enabled;
   /**
    * If different from zero, the publisher will send heartbeats with the specified period, which
-   * can be used by Advanced Subscribers for missed sample detection (if recovery with zero query period is enabled).
-   * Otherwise, missed samples will be retransmitted based on Advanced Subscribers periodic queries.
+   * can be used by Advanced Subscribers for last sample(s) miss detection (if last sample miss detection with zero query period is enabled).
+   * Otherwise, missed samples will be retransmitted based on Advanced Subscriber queries.
    */
   uint64_t heartbeat_period_ms;
 } ze_advanced_publisher_sample_miss_detection_options_t;
@@ -1084,7 +1084,7 @@ typedef struct ze_advanced_publisher_options_t {
    */
   struct ze_advanced_publisher_cache_options_t cache;
   /**
-   * Settings allowing matching Subscribers to detect lost samples and optionally ask for retransimission.
+   * Settings to allow matching Subscribers to detect lost samples and optionally ask for retransimission.
    *
    * Retransmission can only be done if cache is enabled.
    */
@@ -1191,6 +1191,27 @@ typedef struct ze_advanced_subscriber_history_options_t {
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Settings for detection of the last sample(s) miss by Advanced Subscriber.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct ze_advanced_subscriber_last_sample_miss_detection_options_t {
+  /**
+   * Must be set to ``true``, to enable the last sample(s) miss detection.
+   */
+  bool is_enabled;
+  /**
+   * Period for queries for not yet received Samples.
+   *
+   * These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
+   * So it is useful for sporadic publications but useless for periodic publications
+   * with a period smaller or equal to this period. If set to 0, the last sample(s) miss detection will be performed
+   * based on publisher's heartbeat if the latter is enabled.
+   */
+  uint64_t periodic_queries_period_ms;
+} ze_advanced_subscriber_last_sample_miss_detection_options_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Settings for recovering lost messages for Advanced Subscriber.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -1200,14 +1221,11 @@ typedef struct ze_advanced_subscriber_recovery_options_t {
    */
   bool is_enabled;
   /**
-   * Period for queries for not yet received Samples.
-   *
-   * These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
-   * So it is useful for sporadic publications but useless for periodic publications
-   * with a period smaller or equal to this period. If set to 0, the missed samples will be retrieved
-   * based on publisher's heartbeat.
+   * Setting for detecting last sample(s) miss.
+   * Note that it does not affect intermediate sample miss detection/retrieval (which is performed automatically as long as recovery is enabled).
+   * If this option is disabled, subscriber will be unable to detect/request retransmission of missed sample until it receives a more recent one from the same publisher.
    */
-  uint64_t periodic_queries_period_ms;
+  struct ze_advanced_subscriber_last_sample_miss_detection_options_t last_sample_miss_detection;
 } ze_advanced_subscriber_recovery_options_t;
 #endif
 /**
@@ -5763,6 +5781,14 @@ struct z_entity_global_id_t ze_advanced_subscriber_id(const struct ze_loaned_adv
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 const struct z_loaned_keyexpr_t *ze_advanced_subscriber_keyexpr(const struct ze_loaned_advanced_subscriber_t *subscriber);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs the default value for `ze_advanced_subscriber_last_sample_miss_detection_options_t`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void ze_advanced_subscriber_last_sample_miss_detection_options_default(struct ze_advanced_subscriber_last_sample_miss_detection_options_t *this_);
 #endif
 /**
  * Borrows subscriber.

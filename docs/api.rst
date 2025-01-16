@@ -988,6 +988,8 @@ Types
     :members:
 .. doxygenstruct:: ze_advanced_subscriber_recovery_options_t
     :members:
+.. doxygenstruct:: ze_advanced_subscriber_last_sample_miss_detection_options_t
+    :members: 
 .. doxygenstruct:: ze_advanced_subscriber_options_t
     :members:
 
@@ -1007,6 +1009,7 @@ Functions
 
 .. doxygenfunction:: ze_advanced_subscriber_history_options_default
 .. doxygenfunction:: ze_advanced_subscriber_recovery_options_default
+.. doxygenfunction:: ze_advanced_subscriber_last_sample_miss_detection_options_default
 .. doxygenfunction:: ze_advanced_subscriber_options_default
 
 Publication Cache (deprecated)
