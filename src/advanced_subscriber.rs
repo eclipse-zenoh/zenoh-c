@@ -80,26 +80,60 @@ impl From<&ze_advanced_subscriber_history_options_t> for HistoryConfig {
     }
 }
 
+#[repr(C)]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Settings for detection of the last sample(s) miss by Advanced Subscriber.
+pub struct ze_advanced_subscriber_last_sample_miss_detection_options_t {
+    /// Must be set to ``true``, to enable the last sample(s) miss detection.
+    pub is_enabled: bool,
+    /// Period for queries for not yet received Samples.
+    ///
+    /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
+    /// So it is useful for sporadic publications but useless for periodic publications
+    /// with a period smaller or equal to this period. If set to 0, the last sample(s) miss detection will be performed
+    /// based on publisher's heartbeat if the latter is enabled.
+    pub periodic_queries_period_ms: u64,
+}
+
+impl Default for ze_advanced_subscriber_last_sample_miss_detection_options_t {
+    fn default() -> Self {
+        Self {
+            is_enabled: true,
+            periodic_queries_period_ms: 0,
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs the default value for `ze_advanced_subscriber_last_sample_miss_detection_options_t`.
+#[no_mangle]
+pub extern "C" fn ze_advanced_subscriber_last_sample_miss_detection_options_default(
+    this: &mut MaybeUninit<ze_advanced_subscriber_last_sample_miss_detection_options_t>,
+) {
+    this.write(ze_advanced_subscriber_last_sample_miss_detection_options_t::default());
+}
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for recovering lost messages for Advanced Subscriber.
 #[repr(C)]
 pub struct ze_advanced_subscriber_recovery_options_t {
     /// Must be set to ``true``, to enable the lost sample recovery.
     pub is_enabled: bool,
-    /// Period for queries for not yet received Samples.
-    ///
-    /// These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
-    /// So it is useful for sporadic publications but useless for periodic publications
-    /// with a period smaller or equal to this period. If set to 0, the missed samples will be retrieved
-    /// based on publisher's heartbeat.
-    pub periodic_queries_period_ms: u64,
+    /// Setting for detecting last sample(s) miss.
+    /// Note that it does not affect intermediate sample miss detection/retrieval (which is performed automatically as long as recovery is enabled).
+    /// If this option is disabled, subscriber will be unable to detect/request retransmission of missed sample until it receives a more recent one from the same publisher.
+    pub last_sample_miss_detection: ze_advanced_subscriber_last_sample_miss_detection_options_t,
 }
 
 impl Default for ze_advanced_subscriber_recovery_options_t {
     fn default() -> Self {
         Self {
             is_enabled: true,
-            periodic_queries_period_ms: 0,
+            last_sample_miss_detection:
+                ze_advanced_subscriber_last_sample_miss_detection_options_t {
+                    is_enabled: false,
+                    ..Default::default()
+                },
         }
     }
 }
@@ -185,12 +219,20 @@ fn _declare_advanced_subscriber_inner(
             sub = sub.history((&options.history).into());
         }
         if options.recovery.is_enabled {
-            sub = match options.recovery.periodic_queries_period_ms {
-                0 => sub.recovery(RecoveryConfig::default().heartbeat()),
-                _ => sub.recovery(RecoveryConfig::default().periodic_queries(
-                    Duration::from_millis(options.recovery.periodic_queries_period_ms),
-                )),
-            };
+            if options.recovery.last_sample_miss_detection.is_enabled {
+                sub = match options
+                    .recovery
+                    .last_sample_miss_detection
+                    .periodic_queries_period_ms
+                {
+                    0 => sub.recovery(RecoveryConfig::default().heartbeat()),
+                    p => sub.recovery(
+                        RecoveryConfig::default().periodic_queries(Duration::from_millis(p)),
+                    ),
+                };
+            } else {
+                sub = sub.recovery(RecoveryConfig::default())
+            }
         }
     }
     sub
