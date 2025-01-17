@@ -3361,6 +3361,21 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
                                                           const struct z_loaned_keyexpr_t *right);
 #endif
 /**
+ * @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
+ * until the corresponding session is closed or dropped.
+ * @param session: The Zenoh session.
+ * @param key_expr: The key expression to subscribe to.
+ * @param callback: The callback function that will be called each time a liveliness token status is changed.
+ * @param options: The options to be passed to the liveliness subscriber declaration.
+ *
+ * @return 0 in case of success, negative error values otherwise.
+ */
+ZENOHC_API
+z_result_t z_liveliness_declare_background_subscriber(const struct z_loaned_session_t *session,
+                                                      const struct z_loaned_keyexpr_t *key_expr,
+                                                      struct z_moved_closure_sample_t *callback,
+                                                      struct z_liveliness_subscriber_options_t *options);
+/**
  * @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
  *
  * @param session: A Zenoh session.
@@ -5339,24 +5354,6 @@ bool zc_internal_shm_client_list_check(const struct zc_owned_shm_client_list_t *
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
- * until the corresponding session is closed or dropped.
- * @param session: The Zenoh session.
- * @param key_expr: The key expression to subscribe to.
- * @param callback: The callback function that will be called each time a liveliness token status is changed.
- * @param options: The options to be passed to the liveliness subscriber declaration.
- *
- * @return 0 in case of success, negative error values otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t zc_liveliness_declare_background_subscriber(const struct z_loaned_session_t *session,
-                                                       const struct z_loaned_keyexpr_t *key_expr,
-                                                       struct z_moved_closure_sample_t *callback,
-                                                       struct z_liveliness_subscriber_options_t *options);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

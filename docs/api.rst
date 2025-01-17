@@ -810,7 +810,7 @@ Types
 Functions
 ---------
 .. doxygenfunction:: z_liveliness_declare_subscriber
-.. doxygenfunction:: zc_liveliness_declare_background_subscriber
+.. doxygenfunction:: z_liveliness_declare_background_subscriber
 .. doxygenfunction:: z_liveliness_get
 
 .. doxygenfunction:: z_liveliness_declare_token
