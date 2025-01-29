@@ -30,7 +30,7 @@ struct args_t {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
 #if defined(Z_FEATURE_UNSTABLE_API)
-void matching_status_handler(const zc_matching_status_t* matching_status, void* arg) {
+void matching_status_handler(const z_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Publisher has matching subscribers.\n");
     } else {
@@ -63,9 +63,9 @@ int main(int argc, char** argv) {
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     if (args.add_matching_listener) {
-        zc_owned_closure_matching_status_t callback;
+        z_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        zc_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback));
+        z_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback));
     }
 #endif
 

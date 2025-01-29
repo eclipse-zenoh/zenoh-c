@@ -314,6 +314,40 @@ typedef struct z_moved_closure_hello_t {
   struct z_owned_closure_hello_t _this;
 } z_moved_closure_hello_t;
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_matching_status_t {
+  /**
+   * True if there exist matching Zenoh entities, false otherwise.
+   */
+  bool matching;
+} z_matching_status_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A matching status-processing closure.
+ *
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_owned_closure_matching_status_t {
+  void *_context;
+  void (*_call)(const struct z_matching_status_t *matching_status, void *context);
+  void (*_drop)(void *context);
+} z_owned_closure_matching_status_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Moved closure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_moved_closure_matching_status_t {
+  struct z_owned_closure_matching_status_t _this;
+} z_moved_closure_matching_status_t;
+#endif
+/**
  * @brief A query-processing closure.
  *
  * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
@@ -651,6 +685,9 @@ typedef struct z_liveliness_get_options_t {
 typedef struct z_moved_liveliness_token_t {
   struct z_owned_liveliness_token_t _this;
 } z_moved_liveliness_token_t;
+typedef struct z_moved_matching_listener_t {
+  struct z_owned_matching_listener_t _this;
+} z_moved_matching_listener_t;
 typedef struct z_moved_memory_layout_t {
   struct z_owned_memory_layout_t _this;
 } z_moved_memory_layout_t;
@@ -959,40 +996,6 @@ typedef struct zc_owned_closure_log_t {
 typedef struct zc_moved_closure_log_t {
   struct zc_owned_closure_log_t _this;
 } zc_moved_closure_log_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct zc_matching_status_t {
-  /**
-   * True if there exist matching Zenoh entities, false otherwise.
-   */
-  bool matching;
-} zc_matching_status_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A matching status-processing closure.
- *
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct zc_owned_closure_matching_status_t {
-  void *_context;
-  void (*_call)(const struct zc_matching_status_t *matching_status, void *context);
-  void (*_drop)(void *context);
-} zc_owned_closure_matching_status_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Moved closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct zc_moved_closure_matching_status_t {
-  struct zc_owned_closure_matching_status_t _this;
-} zc_moved_closure_matching_status_t;
-#endif
 typedef struct zc_moved_concurrent_close_handle_t {
   struct zc_owned_concurrent_close_handle_t _this;
 } zc_moved_concurrent_close_handle_t;
@@ -1001,9 +1004,6 @@ typedef struct zc_internal_encoding_data_t {
   const uint8_t *schema_ptr;
   size_t schema_len;
 } zc_internal_encoding_data_t;
-typedef struct zc_moved_matching_listener_t {
-  struct zc_owned_matching_listener_t _this;
-} zc_moved_matching_listener_t;
 typedef struct zc_moved_shm_client_list_t {
   struct zc_owned_shm_client_list_t _this;
 } zc_moved_shm_client_list_t;
@@ -1863,6 +1863,54 @@ const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned
  */
 ZENOHC_API
 struct z_loaned_closure_hello_t *z_closure_hello_loan_mut(struct z_owned_closure_hello_t *closure);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ * @brief Constructs closure.
+ * @param this_: uninitialized memory location where new closure will be constructed.
+ * @param call: a closure body.
+ * @param drop: an optional function to be called once on closure drop.
+ * @param context: closure context.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_closure_matching_status(struct z_owned_closure_matching_status_t *this_,
+                               void (*call)(const struct z_matching_status_t *matching_status,
+                                            void *context),
+                               void (*drop)(void *context),
+                               void *context);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_closure_matching_status_call(const struct z_loaned_closure_matching_status_t *closure,
+                                    const struct z_matching_status_t *mathing_status);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_closure_matching_status_drop(struct z_moved_closure_matching_status_t *closure_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows closure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_closure_matching_status_t *z_closure_matching_status_loan(const struct z_owned_closure_matching_status_t *closure);
+#endif
 /**
  * @brief Constructs closure.
  *
@@ -2858,6 +2906,22 @@ ZENOHC_API bool z_internal_closure_hello_check(const struct z_owned_closure_hell
  */
 ZENOHC_API void z_internal_closure_hello_null(struct z_owned_closure_hello_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_closure_matching_status_check(const struct z_owned_closure_matching_status_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a null value of 'z_owned_closure_matching_status_t' type
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_closure_matching_status_null(struct z_owned_closure_matching_status_t *this_);
+#endif
+/**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
 ZENOHC_API bool z_internal_closure_query_check(const struct z_owned_closure_query_t *this_);
@@ -2964,6 +3028,22 @@ ZENOHC_API bool z_internal_liveliness_token_check(const struct z_owned_livelines
  * @brief Constructs liveliness token in its gravestone state.
  */
 ZENOHC_API void z_internal_liveliness_token_null(struct z_owned_liveliness_token_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Checks the matching listener is for the gravestone state
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_matching_listener_check(const struct z_owned_matching_listener_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs an empty matching listener.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_matching_listener_null(struct z_owned_matching_listener_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if `this` is valid.
@@ -3449,6 +3529,14 @@ ZENOHC_API void z_liveliness_token_options_default(struct z_liveliness_token_opt
 ZENOHC_API z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_token_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Undeclares the given matching listener, droping and invalidating it.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_matching_listener_drop(struct z_moved_matching_listener_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes Memory Layout.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -3559,6 +3647,37 @@ z_result_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
  */
 ZENOHC_API enum z_priority_t z_priority_default(void);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given publisher.
+ * The callback will be run in the background until the corresponding publisher is dropped.
+ *
+ * @param publisher: A publisher to associate with matching listener.
+ * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_publisher_declare_background_matching_listener(const struct z_loaned_publisher_t *publisher,
+                                                            struct z_moved_closure_matching_status_t *callback);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
+ *
+ * @param publisher: A publisher to associate with matching listener.
+ * @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the publisher is dropped.
+ * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_publisher_declare_matching_listener(const struct z_loaned_publisher_t *publisher,
+                                                 struct z_owned_matching_listener_t *matching_listener,
+                                                 struct z_moved_closure_matching_status_t *callback);
+#endif
+/**
  * Sends a `DELETE` message onto the publisher's key expression.
  *
  * @return 0 in case of success, negative error code in case of failure.
@@ -3575,6 +3694,17 @@ ZENOHC_API void z_publisher_delete_options_default(struct z_publisher_delete_opt
  * This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
  */
 ZENOHC_API void z_publisher_drop(struct z_moved_publisher_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_publisher_get_matching_status(const struct z_loaned_publisher_t *this_,
+                                           struct z_matching_status_t *matching_status);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the ID of the publisher.
@@ -3642,6 +3772,37 @@ z_result_t z_put(const struct z_loaned_session_t *session,
 ZENOHC_API void z_put_options_default(struct z_put_options_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a matching listener, registering a callback for notifying queryables matching the given querier key expression and target.
+ * The callback will be run in the background until the corresponding querier is dropped.
+ *
+ * @param querier: A querier to associate with matching listener.
+ * @param callback: A closure that will be called every time the matching status of the querier changes (If last queryable disconnects or when the first queryable connects).
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_querier_declare_background_matching_listener(const struct z_loaned_querier_t *querier,
+                                                          struct z_moved_closure_matching_status_t *callback);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs matching listener, registering a callback for notifying queryables matching with a given querier's key expression and target.
+ *
+ * @param querier: A querier to associate with matching listener.
+ * @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the querier is dropped.
+ * @param callback: A closure that will be called every time the matching status of the querier changes (If last queryable disconnects or when the first queryable connects).
+ *
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_querier_declare_matching_listener(const struct z_loaned_querier_t *querier,
+                                               struct z_owned_matching_listener_t *matching_listener,
+                                               struct z_moved_closure_matching_status_t *callback);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Frees memory and resets querier to its gravestone state.
  * This is equivalent to calling `z_undeclare_querier()` and discarding its return value.
  */
@@ -3667,6 +3828,17 @@ z_result_t z_querier_get(const struct z_loaned_querier_t *querier,
                          const char *parameters,
                          struct z_moved_closure_reply_t *callback,
                          struct z_querier_get_options_t *options);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Gets querier matching status - i.e. if there are any queryables matching its key expression and target.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
+ */
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_querier_get_matching_status(const struct z_loaned_querier_t *this_,
+                                         struct z_matching_status_t *matching_status);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4903,6 +5075,15 @@ ZENOHC_API
 z_result_t z_undeclare_keyexpr(const struct z_loaned_session_t *session,
                                struct z_moved_keyexpr_t *key_expr);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Undeclares the given matching listener, droping and invalidating it.
+ * @return 0 in case of success, negative error code otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_undeclare_matching_listener(struct z_moved_matching_listener_t *this_);
+#endif
+/**
  * @brief Undeclares the given publisher.
  *
  * @return 0 in case of success, negative error code otherwise.
@@ -5134,54 +5315,6 @@ ZENOHC_API void zc_closure_log_drop(struct zc_moved_closure_log_t *closure_);
 ZENOHC_API
 const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_closure_log_t *closure);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- * @brief Constructs closure.
- * @param this_: uninitialized memory location where new closure will be constructed.
- * @param call: a closure body.
- * @param drop: an optional function to be called once on closure drop.
- * @param context: closure context.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_closure_matching_status(struct zc_owned_closure_matching_status_t *this_,
-                                void (*call)(const struct zc_matching_status_t *matching_status,
-                                             void *context),
-                                void (*drop)(void *context),
-                                void *context);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Calls the closure. Calling an uninitialized closure is a no-op.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_closure_matching_status_call(const struct zc_loaned_closure_matching_status_t *closure,
-                                     const struct zc_matching_status_t *mathing_status);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_closure_matching_status_drop(struct zc_moved_closure_matching_status_t *closure_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct zc_loaned_closure_matching_status_t *zc_closure_matching_status_loan(const struct zc_owned_closure_matching_status_t *closure);
-#endif
-/**
  * @brief Drops the close handle. The concurrent close task will not be interrupted.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5289,22 +5422,6 @@ ZENOHC_API bool zc_internal_closure_log_check(const struct zc_owned_closure_log_
  */
 ZENOHC_API void zc_internal_closure_log_null(struct zc_owned_closure_log_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool zc_internal_closure_matching_status_check(const struct zc_owned_closure_matching_status_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a null value of 'zc_owned_closure_matching_status_t' type
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_internal_closure_matching_status_null(struct zc_owned_closure_matching_status_t *this_);
-#endif
-/**
  * @brief Returns ``true`` if concurrent close handle is valid, ``false`` if it is in gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5323,22 +5440,6 @@ void zc_internal_encoding_from_data(struct z_owned_encoding_t *this_,
                                     struct zc_internal_encoding_data_t data);
 ZENOHC_API
 struct zc_internal_encoding_data_t zc_internal_encoding_get_data(const struct z_loaned_encoding_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Checks the matching listener is for the gravestone state
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool zc_internal_matching_listener_check(const struct zc_owned_matching_listener_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs an empty matching listener.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_internal_matching_listener_null(struct zc_owned_matching_listener_t *this_);
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns ``true`` if `this` is valid.
@@ -5362,98 +5463,6 @@ void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 enum zc_locality_t zc_locality_default(void);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given matching listener, droping and invalidating it.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_matching_listener_drop(struct zc_moved_matching_listener_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given publisher.
- * The callback will be run in the background until the corresponding publisher is dropped.
- *
- * @param publisher: A publisher to associate with matching listener.
- * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t zc_publisher_declare_background_matching_listener(const struct z_loaned_publisher_t *publisher,
-                                                             struct zc_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
- *
- * @param publisher: A publisher to associate with matching listener.
- * @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the publisher is dropped.
- * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t zc_publisher_declare_matching_listener(const struct z_loaned_publisher_t *publisher,
-                                                  struct zc_owned_matching_listener_t *matching_listener,
-                                                  struct zc_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
- *
- * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t zc_publisher_get_matching_status(const struct z_loaned_publisher_t *this_,
-                                            struct zc_matching_status_t *matching_status);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a matching listener, registering a callback for notifying queryables matching the given querier key expression and target.
- * The callback will be run in the background until the corresponding querier is dropped.
- *
- * @param querier: A querier to associate with matching listener.
- * @param callback: A closure that will be called every time the matching status of the querier changes (If last queryable disconnects or when the first queryable connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t zc_querier_declare_background_matching_listener(const struct z_loaned_querier_t *querier,
-                                                           struct zc_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs matching listener, registering a callback for notifying queryables matching with a given querier's key expression and target.
- *
- * @param querier: A querier to associate with matching listener.
- * @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the querier is dropped.
- * @param callback: A closure that will be called every time the matching status of the querier changes (If last queryable disconnects or when the first queryable connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t zc_querier_declare_matching_listener(const struct z_loaned_querier_t *querier,
-                                                struct zc_owned_matching_listener_t *matching_listener,
-                                                struct zc_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets querier matching status - i.e. if there are any queryables matching its key expression and target.
- *
- * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t zc_querier_get_matching_status(const struct z_loaned_querier_t *this_,
-                                          struct zc_matching_status_t *matching_status);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5524,15 +5533,6 @@ ZENOHC_API
 void zc_try_init_log_from_env(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given matching listener, droping and invalidating it.
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t zc_undeclare_matching_listener(struct zc_moved_matching_listener_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Constructs the default value for `ze_advanced_publisher_cache_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -5552,7 +5552,7 @@ void ze_advanced_publisher_cache_options_default(struct ze_advanced_publisher_ca
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t ze_advanced_publisher_declare_background_matching_listener(const struct ze_loaned_advanced_publisher_t *publisher,
-                                                                      struct zc_moved_closure_matching_status_t *callback);
+                                                                      struct z_moved_closure_matching_status_t *callback);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5567,8 +5567,8 @@ z_result_t ze_advanced_publisher_declare_background_matching_listener(const stru
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t ze_advanced_publisher_declare_matching_listener(const struct ze_loaned_advanced_publisher_t *publisher,
-                                                           struct zc_owned_matching_listener_t *matching_listener,
-                                                           struct zc_moved_closure_matching_status_t *callback);
+                                                           struct z_owned_matching_listener_t *matching_listener,
+                                                           struct z_moved_closure_matching_status_t *callback);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5607,7 +5607,7 @@ void ze_advanced_publisher_drop(struct ze_moved_advanced_publisher_t *this_);
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t ze_advanced_publisher_get_matching_status(const struct ze_loaned_advanced_publisher_t *this_,
-                                                     struct zc_matching_status_t *matching_status);
+                                                     struct z_matching_status_t *matching_status);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

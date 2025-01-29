@@ -27,10 +27,10 @@ use crate::{
     _apply_pubisher_delete_options, _apply_pubisher_put_options, _declare_publisher_inner,
     result::{self},
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_congestion_control_t, z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t,
-    z_moved_bytes_t, z_priority_t, z_publisher_delete_options_t, z_publisher_options_t,
-    z_publisher_put_options_t, zc_closure_matching_status_call, zc_closure_matching_status_loan,
-    zc_matching_status_t, zc_moved_closure_matching_status_t, zc_owned_matching_listener_t,
+    z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
+    z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t, z_matching_status_t,
+    z_moved_bytes_t, z_moved_closure_matching_status_t, z_owned_matching_listener_t, z_priority_t,
+    z_publisher_delete_options_t, z_publisher_options_t, z_publisher_put_options_t,
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -394,17 +394,17 @@ pub extern "C" fn ze_advanced_publisher_keyexpr(
 #[cfg(feature = "unstable")]
 fn _advanced_publisher_matching_listener_declare_inner<'a>(
     publisher: &'a ze_loaned_advanced_publisher_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
     let publisher = publisher.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
-            let status = zc_matching_status_t {
+            let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &status);
+            z_closure_matching_status_call(z_closure_matching_status_loan(&callback), &status);
         });
     listener
 }
@@ -421,8 +421,8 @@ fn _advanced_publisher_matching_listener_declare_inner<'a>(
 #[no_mangle]
 pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
     publisher: &'static ze_loaned_advanced_publisher_t,
-    matching_listener: &mut MaybeUninit<zc_owned_matching_listener_t>,
-    callback: &mut zc_moved_closure_matching_status_t,
+    matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let this = matching_listener.as_rust_type_mut_uninit();
     let listener = _advanced_publisher_matching_listener_declare_inner(publisher, callback);
@@ -451,7 +451,7 @@ pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
 #[no_mangle]
 pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
     publisher: &'static ze_loaned_advanced_publisher_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let listener = _advanced_publisher_matching_listener_declare_inner(publisher, callback);
     match listener.background().wait() {
@@ -472,11 +472,11 @@ pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_advanced_publisher_get_matching_status(
     this: &'static ze_loaned_advanced_publisher_t,
-    matching_status: &mut MaybeUninit<zc_matching_status_t>,
+    matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
     match this.as_rust_type_ref().matching_status().wait() {
         Ok(s) => {
-            matching_status.write(zc_matching_status_t {
+            matching_status.write(z_matching_status_t {
                 matching: s.matching(),
             });
             result::Z_OK
