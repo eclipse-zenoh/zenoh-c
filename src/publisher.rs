@@ -25,7 +25,7 @@ use zenoh::{
 };
 
 #[cfg(feature = "unstable")]
-use crate::zc_moved_closure_matching_status_t;
+use crate::z_moved_closure_matching_status_t;
 use crate::{
     result::{self},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -34,12 +34,12 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
-    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
+    transmute::IntoCType, z_closure_matching_status_call, z_closure_matching_status_loan,
+    z_entity_global_id_t, z_reliability_default, z_reliability_t, zc_locality_default,
     zc_locality_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{z_moved_source_info_t, zc_matching_status_t, zc_owned_matching_listener_t};
+use crate::{z_matching_status_t, z_moved_source_info_t, z_owned_matching_listener_t};
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
@@ -343,17 +343,17 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 #[cfg(feature = "unstable")]
 fn _publisher_matching_listener_declare_inner<'a>(
     publisher: &'a z_loaned_publisher_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
     let publisher = publisher.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
-            let status = zc_matching_status_t {
+            let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &status);
+            z_closure_matching_status_call(z_closure_matching_status_loan(&callback), &status);
         });
     listener
 }
@@ -368,10 +368,10 @@ fn _publisher_matching_listener_declare_inner<'a>(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_publisher_declare_matching_listener(
+pub extern "C" fn z_publisher_declare_matching_listener(
     publisher: &'static z_loaned_publisher_t,
-    matching_listener: &mut MaybeUninit<zc_owned_matching_listener_t>,
-    callback: &mut zc_moved_closure_matching_status_t,
+    matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let this = matching_listener.as_rust_type_mut_uninit();
     let listener = _publisher_matching_listener_declare_inner(publisher, callback);
@@ -398,9 +398,9 @@ pub extern "C" fn zc_publisher_declare_matching_listener(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_publisher_declare_background_matching_listener(
+pub extern "C" fn z_publisher_declare_background_matching_listener(
     publisher: &'static z_loaned_publisher_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let listener = _publisher_matching_listener_declare_inner(publisher, callback);
     match listener.background().wait() {
@@ -419,13 +419,13 @@ pub extern "C" fn zc_publisher_declare_background_matching_listener(
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_get_matching_status(
+pub extern "C" fn z_publisher_get_matching_status(
     this: &'static z_loaned_publisher_t,
-    matching_status: &mut MaybeUninit<zc_matching_status_t>,
+    matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
     match this.as_rust_type_ref().matching_status().wait() {
         Ok(s) => {
-            matching_status.write(zc_matching_status_t {
+            matching_status.write(z_matching_status_t {
                 matching: s.matching(),
             });
             result::Z_OK

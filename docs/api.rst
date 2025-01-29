@@ -477,20 +477,20 @@ Matching
 
 Types
 -----
-.. doxygenstruct:: zc_owned_matching_listener_t
-.. doxygenstruct:: zc_owned_closure_matching_status_t
-.. doxygenstruct:: zc_matching_status_t
+.. doxygenstruct:: z_owned_matching_listener_t
+.. doxygenstruct:: z_owned_closure_matching_status_t
+.. doxygenstruct:: z_matching_status_t
     :members:
 
 Functions
 ---------
 
-.. doxygenfunction:: zc_matching_listener_drop
-.. doxygenfunction:: zc_undeclare_matching_listener
-.. doxygenfunction:: zc_closure_matching_status_drop
-.. doxygenfunction:: zc_closure_matching_status_loan
-.. doxygenfunction:: zc_closure_matching_status_call
-.. doxygenfunction:: zc_closure_matching_status
+.. doxygenfunction:: z_matching_listener_drop
+.. doxygenfunction:: z_undeclare_matching_listener
+.. doxygenfunction:: z_closure_matching_status_drop
+.. doxygenfunction:: z_closure_matching_status_loan
+.. doxygenfunction:: z_closure_matching_status_call
+.. doxygenfunction:: z_closure_matching_status
 
 
 Publication
@@ -540,9 +540,9 @@ Functions
 
 .. doxygenfunction:: z_reliability_default
 
-.. doxygenfunction:: zc_publisher_get_matching_status
-.. doxygenfunction:: zc_publisher_declare_matching_listener
-.. doxygenfunction:: zc_publisher_declare_background_matching_listener
+.. doxygenfunction:: z_publisher_get_matching_status
+.. doxygenfunction:: z_publisher_declare_matching_listener
+.. doxygenfunction:: z_publisher_declare_background_matching_listener
 
 Subscription
 ============
@@ -726,9 +726,9 @@ Functions
 .. doxygenfunction:: z_querier_id
 .. doxygenfunction:: z_querier_keyexpr
 .. doxygenfunction:: z_querier_get
-.. doxygenfunction:: zc_querier_get_matching_status
-.. doxygenfunction:: zc_querier_declare_matching_listener
-.. doxygenfunction:: zc_querier_declare_background_matching_listener
+.. doxygenfunction:: z_querier_get_matching_status
+.. doxygenfunction:: z_querier_declare_matching_listener
+.. doxygenfunction:: z_querier_declare_background_matching_listener
 
 .. doxygenfunction:: z_querier_options_default
 .. doxygenfunction:: z_querier_get_options_default

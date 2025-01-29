@@ -57,7 +57,7 @@ zenoh_opaque.h:
   - z_timestamp_t!
   - z_owned_publisher_t!
   - z_loaned_publisher_t!
-  - zc_owned_matching_listener_t!#unstable
+  - z_owned_matching_listener_t!#unstable
   - z_owned_subscriber_t!
   - z_loaned_subscriber_t!
   - z_owned_liveliness_token_t!
@@ -76,7 +76,7 @@ zenoh_opaque.h:
   - z_loaned_closure_sample_t!
   - z_loaned_closure_zid_t!
   - zc_loaned_closure_log_t!
-  - zc_loaned_closure_matching_status_t!#unstable
+  - z_loaned_closure_matching_status_t!#unstable
   - z_owned_shm_client_t!#shared-memory#unstable
   - zc_owned_shm_client_list_t!#shared-memory#unstable
   - zc_loaned_shm_client_list_t!#shared-memory#unstable

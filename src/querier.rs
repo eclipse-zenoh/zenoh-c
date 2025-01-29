@@ -34,10 +34,10 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t,
-    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
-    zc_locality_t, zc_matching_status_t, zc_moved_closure_matching_status_t,
-    zc_owned_matching_listener_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    transmute::IntoCType, z_closure_matching_status_call, z_closure_matching_status_loan,
+    z_entity_global_id_t, z_matching_status_t, z_moved_closure_matching_status_t,
+    z_moved_source_info_t, z_owned_matching_listener_t, zc_locality_default, zc_locality_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -295,17 +295,17 @@ pub extern "C" fn z_querier_keyexpr(querier: &z_loaned_querier_t) -> &z_loaned_k
 #[cfg(feature = "unstable")]
 fn _querier_matching_listener_declare_inner<'a>(
     querier: &'a z_loaned_querier_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
     let querier = querier.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let listener = querier
         .matching_listener()
         .callback_mut(move |matching_status| {
-            let status = zc_matching_status_t {
+            let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &status);
+            z_closure_matching_status_call(z_closure_matching_status_loan(&callback), &status);
         });
     listener
 }
@@ -320,10 +320,10 @@ fn _querier_matching_listener_declare_inner<'a>(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_querier_declare_matching_listener(
+pub extern "C" fn z_querier_declare_matching_listener(
     querier: &'static z_loaned_querier_t,
-    matching_listener: &mut MaybeUninit<zc_owned_matching_listener_t>,
-    callback: &mut zc_moved_closure_matching_status_t,
+    matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let this = matching_listener.as_rust_type_mut_uninit();
     let listener = _querier_matching_listener_declare_inner(querier, callback);
@@ -350,9 +350,9 @@ pub extern "C" fn zc_querier_declare_matching_listener(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_querier_declare_background_matching_listener(
+pub extern "C" fn z_querier_declare_background_matching_listener(
     querier: &'static z_loaned_querier_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let listener = _querier_matching_listener_declare_inner(querier, callback);
     match listener.background().wait() {
@@ -371,13 +371,13 @@ pub extern "C" fn zc_querier_declare_background_matching_listener(
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_querier_get_matching_status(
+pub extern "C" fn z_querier_get_matching_status(
     this: &'static z_loaned_querier_t,
-    matching_status: &mut MaybeUninit<zc_matching_status_t>,
+    matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
     match this.as_rust_type_ref().matching_status().wait() {
         Ok(s) => {
-            matching_status.write(zc_matching_status_t {
+            matching_status.write(z_matching_status_t {
                 matching: s.matching(),
             });
             result::Z_OK
