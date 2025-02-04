@@ -40,6 +40,11 @@ function(install_zenohc_lib configurations property_postfix package_name)
     get_target_property(NATIVE_STATIC_LIBS zenohc::static INTERFACE_LINK_LIBRARIES)
     get_filename_component(STATICLIB ${staticlib_path} NAME)
     install(FILES ${staticlib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations} COMPONENT dev)
+    
+    if (ZENOHC_BUILD_ZENOHD)
+        get_target_property(zenohd_path zenohd_bin IMPORTED_LOCATION_${property_postfix})
+        install(PROGRAMS ${zenohd_path} DESTINATION ${CMAKE_INSTALL_BINDIR} CONFIGURATIONS ${configurations} COMPONENT lib)
+    endif()
 
     set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}")
 
@@ -69,10 +74,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
         CONFIGURATIONS ${configurations}
         RENAME ${package_name}ConfigVersion.cmake
         COMPONENT dev)
-
-
 endfunction()
-
 
 #
 # Install headers
