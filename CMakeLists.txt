@@ -35,6 +35,7 @@ declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Shoul
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
 declare_cache_var(ZENOHC_TREAT_WARNING_AS_ERROR OFF BOOL "Whether to treat compilation warnings as errors")
+declare_cache_var(ZENOHC_BUILD_ZENOHD OFF BOOL "Build zenohd")
 set(CMAKE_COMPILE_WARNING_AS_ERROR ${ZENOHC_TREAT_WARNING_AS_ERROR})
 
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
@@ -217,9 +218,11 @@ set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
+set(zenohd_cargo_flags ${ZENOHC_CARGO_FLAGS})
 
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)
+	set(zenohd_cargo_flags ${zenohd_cargo_flags} --features=zenoh/shared-memory)
 elseif("${cargo_flags}" MATCHES ^.*shared-memory.*$)
 	set(ZENOHC_BUILD_WITH_SHARED_MEMORY TRUE)
 	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_SHARED_MEMORY = TRUE")
@@ -227,6 +230,7 @@ endif()
 
 if(ZENOHC_BUILD_WITH_UNSTABLE_API)
 	set(cargo_flags ${cargo_flags} --features=unstable)
+	set(zenohd_cargo_flags ${zenohd_cargo_flags} --features=zenoh/unstable)
 elseif("${cargo_flags}" MATCHES ^.*unstable.*$)
 	set(ZENOHC_BUILD_WITH_UNSTABLE_API TRUE)
 	message(STATUS "Due to ZENOHC_CARGO_FLAGS setting ZENOHC_BUILD_WITH_UNSTABLE_API = TRUE")
@@ -235,6 +239,7 @@ endif()
 
 if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 	set(cargo_flags ${cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
+	set(zenohd_cargo_flags ${zenohd_cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
 endif()
 
 status_print(cargo_flags)
@@ -309,6 +314,49 @@ if (BUILD_SHARED_LIBS)
 	add_library(zenohc::lib ALIAS zenohc_shared)
 else()
 	add_library(zenohc::lib ALIAS zenohc_static)
+endif()
+
+if (ZENOHC_BUILD_ZENOHD)
+	file(READ ${cargo_toml_dir}/Cargo.toml cargo_toml)
+	string(REGEX MATCH "zenoh *= *{([^}]*)" zenoh_info ${cargo_toml})
+	set(zenoh_info ${CMAKE_MATCH_1})
+	if (${zenoh_info} MATCHES "version *= *[\"']([^,}\"']*)")
+		set(zenohd_cargo_flags ${zenohd_cargo_flags} "--version=${CMAKE_MATCH_1}")
+	endif()
+	if (${zenoh_info} MATCHES "git *= *[\"']([^,}\"']*)")
+	set(zenohd_cargo_flags ${zenohd_cargo_flags} "--git=${CMAKE_MATCH_1}")
+	endif()
+	if (${zenoh_info} MATCHES "branch *= *[\"']([^,}\"']*)")
+		set(zenohd_cargo_flags ${zenohd_cargo_flags} "--branch=${CMAKE_MATCH_1}")
+	endif()
+	if (${zenoh_info} MATCHES "rev *= *[\"']([^,}\"']*)")
+		set(zenohd_cargo_flags ${zenohd_cargo_flags} "--rev=${CMAKE_MATCH_1}")
+	endif()
+
+	add_custom_target(
+		zenohd ALL
+		DEPENDS zenohd_build
+	)
+	add_executable(zenohd_bin IMPORTED)
+	add_dependencies(zenohd_bin zenohd)
+	set_target_properties(zenohd_bin
+		PROPERTIES
+		IMPORTED_GLOBAL TRUE
+		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/zenohd/bin/zenohd
+		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/zenohd/bin/zenohd
+		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/zenohd/bin/zenohd
+		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/zenohd/bin/zenohd
+	)
+	set_genexpr_condition(zenohd_dir DEBUG $<CONFIG:Debug> ${cargo_binary_dir_debug}/zenohd ${cargo_binary_dir_release}/zenohd)
+	add_custom_command(
+		OUTPUT zenohd_build
+		COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
+		COMMAND ${CMAKE_COMMAND} -E echo \"cargo ${ZENOHC_CARGO_CHANNEL} install zenohd --root ${zenohd_dir} ${zenohd_cargo_flags}\"
+		COMMAND cargo ${ZENOHC_CARGO_CHANNEL} install zenohd --root ${zenohd_dir} ${zenohd_cargo_flags}
+		VERBATIM
+		COMMAND_EXPAND_LISTS
+		DEPENDS "${rust_sources}"
+	)
 endif()
 
 
