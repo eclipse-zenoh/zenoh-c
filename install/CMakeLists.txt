@@ -52,7 +52,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
     configure_package_config_file(
         "PackageConfig.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}Config.cmake"
-        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR ZENOHC_INSTALL_DYLIBDIR
+        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR ZENOHC_INSTALL_DYLIBDIR CMAKE_INSTALL_BINDIR
         INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
     # Generate <Package>Version.cmake
