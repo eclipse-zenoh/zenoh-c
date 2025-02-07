@@ -138,22 +138,25 @@ jobs:
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-armv7-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-armv7-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for x86_64-unknown-linux-gnu
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for x86_64-pc-windows-gnu
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON  ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
   cross-compile-ubuntu:
     name: Cross compile on ubuntu-latest
@@ -193,43 +196,49 @@ jobs:
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabi.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabi.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for arm-unknown-linux-gnueabihf
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for aarch64-unknown-linux-gnu
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for aarch64-unknown-linux-musl
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for x86_64-unknown-linux-musl
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
       - name: Cross compile for x86_64-pc-windows-gnu
         run: |
           rm -rf ./build
           mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
+          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_ZENOHD=ON ..
           cmake --build . --target examples
+          cmake --build . --target zenohd
 
   markdown_lint:
     runs-on: ubuntu-latest
