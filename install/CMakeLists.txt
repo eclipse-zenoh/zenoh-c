@@ -42,7 +42,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
     install(FILES ${staticlib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations} COMPONENT dev)
     
     if (ZENOHC_BUILD_ZENOHD)
-        get_target_property(zenohd_path zenohd_bin IMPORTED_LOCATION_${property_postfix})
+        get_target_property(zenohd_path zenohc::zenohd IMPORTED_LOCATION_${property_postfix})
         install(PROGRAMS ${zenohd_path} DESTINATION ${CMAKE_INSTALL_BINDIR} CONFIGURATIONS ${configurations} COMPONENT lib)
     endif()
 

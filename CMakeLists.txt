@@ -337,9 +337,9 @@ if (ZENOHC_BUILD_ZENOHD)
 		zenohd ALL
 		DEPENDS zenohd_build
 	)
-	add_executable(zenohd_bin IMPORTED)
-	add_dependencies(zenohd_bin zenohd)
-	set_target_properties(zenohd_bin
+	add_executable(zenohc::zenohd IMPORTED)
+	add_dependencies(zenohc::zenohd zenohd)
+	set_target_properties(zenohc::zenohd
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
 		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/zenohd/bin/zenohd
