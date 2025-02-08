@@ -125,6 +125,7 @@ int main(int argc, char **argv) {
     z_drop(z_move(queryable_session));
     z_drop(z_move(queryable_keyexpr));
 
+    z_sleep_s(3);  // wait a bit till complete destruction of zenoh entities, to ensure that nobody uses zruntime
     zc_stop_z_runtime();
 
     return 0;
