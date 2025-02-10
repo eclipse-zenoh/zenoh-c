@@ -74,10 +74,10 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "tokio-thread-stack-size", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], branch = "tokio-thread-stack-size" }
-zenoh-runtime = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "tokio-thread-stack-size" }
-zenoh-util = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "tokio-thread-stack-size" }
+zenoh = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "optimize-resource-size", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], branch = "optimize-resource-size" }
+zenoh-runtime = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "optimize-resource-size" }
+zenoh-util = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "optimize-resource-size" }
 flume = "*"
 
 [build-dependencies]
