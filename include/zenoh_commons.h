@@ -3168,6 +3168,21 @@ ZENOHC_API bool z_internal_config_check(const struct z_owned_config_t *this_);
  */
 ZENOHC_API void z_internal_config_null(struct z_owned_config_t *this_);
 /**
+ * Returns the default congestion control value of zenoh push network messages, typically used for put operations.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_internal_congestion_control_default_push(void);
+/**
+ * Returns the default congestion control value of zenoh request network messages, typically used for get operations.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_internal_congestion_control_default_request(void);
+/**
+ * Returns the default congestion control value of zenoh response network messages, typically used for reply operations.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_internal_congestion_control_default_response(void);
+/**
  * Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
  */
 ZENOHC_API bool z_internal_encoding_check(const struct z_owned_encoding_t *this_);
