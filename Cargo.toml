@@ -14,7 +14,7 @@
 [package]
 name = "zenoh-c"
 version = "1.2.0"
-repository = "https://github.com/eclipse-zenoh/zenoh-c"
+repository = "https://github.com/ZettaScaleLabs/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
     "kydos <angelo@icorsaro.net>",
@@ -74,10 +74,10 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "optimize-resource-size", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], branch = "optimize-resource-size" }
-zenoh-runtime = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "optimize-resource-size" }
-zenoh-util = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "optimize-resource-size" }
+zenoh = { version = "1.2.0", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "feat/batch_allocation", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.2.0", git = "https://github.com/ZettaScaleLabs/zenoh.git", features=["internal"], branch = "feat/batch_allocation" }
+zenoh-runtime = { version = "1.2.0", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "feat/batch_allocation" }
+zenoh-util = { version = "1.2.0", git = "https://github.com/ZettaScaleLabs/zenoh.git", branch = "feat/batch_allocation" }
 flume = "*"
 
 [build-dependencies]
