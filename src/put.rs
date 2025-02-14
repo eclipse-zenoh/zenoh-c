@@ -67,7 +67,7 @@ pub struct z_put_options_t {
 pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
     this_.write(z_put_options_t {
         encoding: None,
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_PUSH.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -164,7 +164,7 @@ pub struct z_delete_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
     this_.write(z_delete_options_t {
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_PUSH.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,

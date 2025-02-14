@@ -152,7 +152,7 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
     this_.write(z_query_reply_options_t {
         encoding: None,
-        congestion_control: CongestionControl::Block.into(),
+        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -209,7 +209,7 @@ pub extern "C" fn z_query_reply_del_options_default(
     this: &mut MaybeUninit<z_query_reply_del_options_t>,
 ) {
     this.write(z_query_reply_del_options_t {
-        congestion_control: CongestionControl::Block.into(),
+        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
