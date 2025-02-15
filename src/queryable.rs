@@ -141,7 +141,7 @@ pub struct z_query_reply_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
@@ -160,7 +160,7 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
     this_.write(z_query_reply_options_t {
         encoding: None,
-        congestion_control: CongestionControl::Block.into(),
+        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -197,7 +197,7 @@ pub struct z_query_reply_del_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The timestamp of the reply.
     pub timestamp: Option<&'static mut z_timestamp_t>,
@@ -217,7 +217,7 @@ pub extern "C" fn z_query_reply_del_options_default(
     this: &mut MaybeUninit<z_query_reply_del_options_t>,
 ) {
     this.write(z_query_reply_del_options_t {
-        congestion_control: CongestionControl::Block.into(),
+        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -492,6 +492,19 @@ pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_
         .map(|v| v.as_loaned_c_type_ref())
 }
 
+/// Gets mutable query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
+///
+/// Returns NULL if query does not contain a payload.
+#[no_mangle]
+pub extern "C" fn z_query_payload_mut(
+    this_: &mut z_loaned_query_t,
+) -> Option<&mut z_loaned_bytes_t> {
+    this_
+        .as_rust_type_mut()
+        .payload_mut()
+        .map(|v| v.as_loaned_c_type_mut())
+}
+
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
 ///
 /// Returns NULL if query does not contain an encoding.
@@ -512,6 +525,19 @@ pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loan
         .as_rust_type_ref()
         .attachment()
         .map(|a| a.as_loaned_c_type_ref())
+}
+
+/// Gets mutable query attachment.
+///
+/// Returns NULL if query does not contain an attachment.
+#[no_mangle]
+pub extern "C" fn z_query_attachment_mut(
+    this_: &mut z_loaned_query_t,
+) -> Option<&mut z_loaned_bytes_t> {
+    this_
+        .as_rust_type_mut()
+        .attachment_mut()
+        .map(|a| a.as_loaned_c_type_mut())
 }
 
 /// Undeclares a `z_owned_queryable_t`.

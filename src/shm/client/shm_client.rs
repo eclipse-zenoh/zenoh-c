@@ -33,6 +33,7 @@ use crate::{
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_client_callbacks_t {
+    /// Attach to particular shared memory segment
     attach_fn: unsafe extern "C" fn(
         out_segment: &mut MaybeUninit<z_shm_segment_t>,
         segment_id: z_segment_id_t,

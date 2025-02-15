@@ -15,21 +15,17 @@
 use std::mem::MaybeUninit;
 
 #[cfg(feature = "unstable")]
+use zenoh::{handlers::Callback, matching::MatchingStatus};
 use zenoh::{
-    handlers::Callback,
-    pubsub::{MatchingListener, MatchingStatus},
-};
-use zenoh::{
-    pubsub::Publisher,
+    internal::traits::{EncodingBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+    pubsub::{Publisher, PublisherBuilder},
     qos::{CongestionControl, Priority},
     session::SessionClosedError,
     Wait,
 };
 
 #[cfg(feature = "unstable")]
-use crate::z_moved_source_info_t;
-#[cfg(feature = "unstable")]
-use crate::zc_moved_closure_matching_status_t;
+use crate::z_moved_closure_matching_status_t;
 use crate::{
     result::{self},
     transmute::{
@@ -40,11 +36,12 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
-    zc_closure_matching_status_call, zc_closure_matching_status_loan, zc_locality_default,
+    transmute::IntoCType, z_closure_matching_status_call, z_closure_matching_status_loan,
+    z_entity_global_id_t, z_reliability_default, z_reliability_t, zc_locality_default,
     zc_locality_t,
 };
-
+#[cfg(feature = "unstable")]
+use crate::{z_matching_status_t, z_moved_source_info_t, z_owned_matching_listener_t};
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
@@ -54,7 +51,7 @@ pub struct z_publisher_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of messages from this publisher.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+    /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -68,19 +65,25 @@ pub struct z_publisher_options_t {
     pub allowed_destination: zc_locality_t,
 }
 
+impl Default for z_publisher_options_t {
+    fn default() -> Self {
+        Self {
+            encoding: None,
+            congestion_control: CongestionControl::DEFAULT_PUSH.into(),
+            priority: Priority::default().into(),
+            is_express: false,
+            #[cfg(feature = "unstable")]
+            reliability: z_reliability_default(),
+            #[cfg(feature = "unstable")]
+            allowed_destination: zc_locality_default(),
+        }
+    }
+}
+
 /// Constructs the default value for `z_publisher_options_t`.
 #[no_mangle]
 pub extern "C" fn z_publisher_options_default(this_: &mut MaybeUninit<z_publisher_options_t>) {
-    this_.write(z_publisher_options_t {
-        encoding: None,
-        congestion_control: CongestionControl::default().into(),
-        priority: Priority::default().into(),
-        is_express: false,
-        #[cfg(feature = "unstable")]
-        reliability: z_reliability_default(),
-        #[cfg(feature = "unstable")]
-        allowed_destination: zc_locality_default(),
-    });
+    this_.write(z_publisher_options_t::default());
 }
 
 pub use crate::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
@@ -89,26 +92,11 @@ decl_c_type!(
     loaned(z_loaned_publisher_t),
 );
 
-/// Constructs and declares a publisher for the given key expression.
-///
-/// Data can be put and deleted with this publisher with the help of the
-/// `z_publisher_put()` and `z_publisher_delete()` functions.
-///
-/// @param session: The Zenoh session.
-/// @param publisher: An unitilized location in memory where publisher will be constructed.
-/// @param key_expr: The key expression to publish.
-/// @param options: Additional options for the publisher.
-///
-/// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_declare_publisher(
-    session: &z_loaned_session_t,
-    publisher: &mut MaybeUninit<z_owned_publisher_t>,
-    key_expr: &z_loaned_keyexpr_t,
+pub(crate) fn _declare_publisher_inner(
+    session: &'static z_loaned_session_t,
+    key_expr: &'static z_loaned_keyexpr_t,
     options: Option<&mut z_publisher_options_t>,
-) -> result::z_result_t {
-    let this = publisher.as_rust_type_mut_uninit();
+) -> PublisherBuilder<'static, 'static> {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref().clone().into_owned();
     let mut p = session.declare_publisher(key_expr);
@@ -127,6 +115,29 @@ pub extern "C" fn z_declare_publisher(
             p = p.encoding(encoding.take_rust_type());
         }
     }
+    p
+}
+
+/// Constructs and declares a publisher for the given key expression.
+///
+/// Data can be put and deleted with this publisher with the help of the
+/// `z_publisher_put()` and `z_publisher_delete()` functions.
+///
+/// @param session: The Zenoh session.
+/// @param publisher: An uninitialized location in memory where publisher will be constructed.
+/// @param key_expr: The key expression to publish.
+/// @param options: Additional options for the publisher.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_declare_publisher(
+    session: &'static z_loaned_session_t,
+    publisher: &'static mut MaybeUninit<z_owned_publisher_t>,
+    key_expr: &'static z_loaned_keyexpr_t,
+    options: Option<&'static mut z_publisher_options_t>,
+) -> result::z_result_t {
+    let this = publisher.as_rust_type_mut_uninit();
+    let p = _declare_publisher_inner(session, key_expr, options);
     match p.wait() {
         Err(e) => {
             tracing::error!("{}", e);
@@ -142,13 +153,11 @@ pub extern "C" fn z_declare_publisher(
 
 /// Constructs a publisher in a gravestone state.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_internal_publisher_null(this_: &mut MaybeUninit<z_owned_publisher_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publisher is valid, ``false`` otherwise.
-#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_internal_publisher_check(this_: &z_owned_publisher_t) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -179,6 +188,7 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
 
 /// Options passed to the `z_publisher_put()` function.
 #[repr(C)]
+#[derive(Default)]
 pub struct z_publisher_put_options_t {
     ///  The encoding of the data to publish.
     pub encoding: Option<&'static mut z_moved_encoding_t>,
@@ -208,6 +218,29 @@ pub extern "C" fn z_publisher_put_options_default(
     });
 }
 
+pub(crate) fn _apply_pubisher_put_options<
+    T: SampleBuilderTrait + TimestampBuilderTrait + EncodingBuilderTrait,
+>(
+    builder: T,
+    options: &mut z_publisher_put_options_t,
+) -> T {
+    let mut builder = builder;
+    if let Some(encoding) = options.encoding.take() {
+        builder = builder.encoding(encoding.take_rust_type());
+    };
+    #[cfg(feature = "unstable")]
+    if let Some(source_info) = options.source_info.take() {
+        builder = builder.source_info(source_info.take_rust_type());
+    };
+    if let Some(attachment) = options.attachment.take() {
+        builder = builder.attachment(attachment.take_rust_type());
+    }
+    if let Some(timestamp) = options.timestamp {
+        builder = builder.timestamp(Some(*timestamp.as_rust_type_ref()));
+    }
+    builder
+}
+
 /// Sends a `PUT` message onto the publisher's key expression, transfering the payload ownership.
 ///
 ///
@@ -229,19 +262,7 @@ pub unsafe extern "C" fn z_publisher_put(
     let payload = payload.take_rust_type();
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        if let Some(encoding) = options.encoding.take() {
-            put = put.encoding(encoding.take_rust_type());
-        };
-        #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            put = put.source_info(source_info.take_rust_type());
-        };
-        if let Some(attachment) = options.attachment.take() {
-            put = put.attachment(attachment.take_rust_type());
-        }
-        if let Some(timestamp) = options.timestamp {
-            put = put.timestamp(Some(*timestamp.as_rust_type_ref()));
-        }
+        put = _apply_pubisher_put_options(put, options);
     }
 
     match put.wait() {
@@ -257,6 +278,7 @@ pub unsafe extern "C" fn z_publisher_put(
 /// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
 /// whenever issued via `z_publisher_delete()`.
 #[repr(C)]
+#[derive(Default)]
 pub struct z_publisher_delete_options_t {
     /// The timestamp of this message.
     pub timestamp: Option<&'static z_timestamp_t>,
@@ -268,8 +290,20 @@ pub struct z_publisher_delete_options_t {
 pub extern "C" fn z_publisher_delete_options_default(
     this: &mut MaybeUninit<z_publisher_delete_options_t>,
 ) {
-    this.write(z_publisher_delete_options_t { timestamp: None });
+    this.write(z_publisher_delete_options_t::default());
 }
+
+pub(crate) fn _apply_pubisher_delete_options<T: TimestampBuilderTrait>(
+    builder: T,
+    options: &mut z_publisher_delete_options_t,
+) -> T {
+    let mut builder = builder;
+    if let Some(timestamp) = options.timestamp {
+        builder = builder.timestamp(Some(*timestamp.as_rust_type_ref()));
+    }
+    builder
+}
+
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
 /// @return 0 in case of success, negative error code in case of failure.
@@ -277,14 +311,12 @@ pub extern "C" fn z_publisher_delete_options_default(
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
-    options: Option<&z_publisher_delete_options_t>,
+    options: Option<&mut z_publisher_delete_options_t>,
 ) -> result::z_result_t {
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
-        if let Some(timestamp) = options.timestamp {
-            del = del.timestamp(Some(*timestamp.as_rust_type_ref()));
-        }
+        del = _apply_pubisher_delete_options(del, options);
     }
     if let Err(e) = del.wait() {
         tracing::error!("{}", e);
@@ -311,56 +343,19 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
 }
 
 #[cfg(feature = "unstable")]
-pub use crate::opaque_types::{zc_moved_matching_listener_t, zc_owned_matching_listener_t};
-#[cfg(feature = "unstable")]
-decl_c_type!(
-    owned(zc_owned_matching_listener_t, option MatchingListener<()>),
-);
-
-#[no_mangle]
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs an empty matching listener.
-pub extern "C" fn zc_internal_matching_listener_null(
-    this_: &mut MaybeUninit<zc_owned_matching_listener_t>,
-) {
-    this_.as_rust_type_mut_uninit().write(None);
-}
-
-#[no_mangle]
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Checks the matching listener is for the gravestone state
-pub extern "C" fn zc_internal_matching_listener_check(
-    this_: &zc_owned_matching_listener_t,
-) -> bool {
-    this_.as_rust_type_ref().is_some()
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression.
-#[repr(C)]
-#[derive(Debug, Clone, Copy)]
-pub struct zc_matching_status_t {
-    /// True if there exist Subscribers matching the Publisher's key expression, false otherwise.
-    pub matching: bool,
-}
-
-#[cfg(feature = "unstable")]
-fn _publisher_matching_listener_declare_inner<'a, 'b>(
+fn _publisher_matching_listener_declare_inner<'a>(
     publisher: &'a z_loaned_publisher_t,
-    callback: &mut zc_moved_closure_matching_status_t,
-) -> zenoh::pubsub::MatchingListenerBuilder<'a, 'b, Callback<MatchingStatus>> {
+    callback: &mut z_moved_closure_matching_status_t,
+) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
     let publisher = publisher.as_rust_type_ref();
     let callback = callback.take_rust_type();
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
-            let status = zc_matching_status_t {
-                matching: matching_status.matching_subscribers(),
+            let status = z_matching_status_t {
+                matching: matching_status.matching(),
             };
-            zc_closure_matching_status_call(zc_closure_matching_status_loan(&callback), &status);
+            z_closure_matching_status_call(z_closure_matching_status_loan(&callback), &status);
         });
     listener
 }
@@ -370,15 +365,15 @@ fn _publisher_matching_listener_declare_inner<'a, 'b>(
 /// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param publisher: A publisher to associate with matching listener.
-/// @param matching_listener: An unitilized memory location where matching listener will be constructed. The matching listener will be automatically dropped when publisher is dropped.
-/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+/// @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the publisher is dropped.
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_publisher_declare_matching_listener(
+pub extern "C" fn z_publisher_declare_matching_listener(
     publisher: &'static z_loaned_publisher_t,
-    matching_listener: &mut MaybeUninit<zc_owned_matching_listener_t>,
-    callback: &mut zc_moved_closure_matching_status_t,
+    matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let this = matching_listener.as_rust_type_mut_uninit();
     let listener = _publisher_matching_listener_declare_inner(publisher, callback);
@@ -401,13 +396,13 @@ pub extern "C" fn zc_publisher_declare_matching_listener(
 /// The callback will be run in the background until the corresponding publisher is dropped.
 ///
 /// @param publisher: A publisher to associate with matching listener.
-/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber, disconnects or when the first subscriber connects).
+/// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
-pub extern "C" fn zc_publisher_declare_background_matching_listener(
+pub extern "C" fn z_publisher_declare_background_matching_listener(
     publisher: &'static z_loaned_publisher_t,
-    callback: &mut zc_moved_closure_matching_status_t,
+    callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
     let listener = _publisher_matching_listener_declare_inner(publisher, callback);
     match listener.background().wait() {
@@ -421,28 +416,19 @@ pub extern "C" fn zc_publisher_declare_background_matching_listener(
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given matching listener, droping and invalidating it.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_matching_listener_drop(this: &mut zc_moved_matching_listener_t) {
-    std::mem::drop(this.take_rust_type())
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn zc_publisher_get_matching_status(
+pub extern "C" fn z_publisher_get_matching_status(
     this: &'static z_loaned_publisher_t,
-    matching_status: &mut MaybeUninit<zc_matching_status_t>,
+    matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
     match this.as_rust_type_ref().matching_status().wait() {
         Ok(s) => {
-            matching_status.write(zc_matching_status_t {
-                matching: s.matching_subscribers(),
+            matching_status.write(z_matching_status_t {
+                matching: s.matching(),
             });
             result::Z_OK
         }

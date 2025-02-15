@@ -121,6 +121,14 @@ pub extern "C" fn z_sample_encoding(this_: &z_loaned_sample_t) -> &z_loaned_enco
 pub extern "C" fn z_sample_payload(this_: &z_loaned_sample_t) -> &z_loaned_bytes_t {
     this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
+/// Returns the mutable sample payload data.
+#[no_mangle]
+pub extern "C" fn z_sample_payload_mut(this_: &mut z_loaned_sample_t) -> &mut z_loaned_bytes_t {
+    this_
+        .as_rust_type_mut()
+        .payload_mut()
+        .as_loaned_c_type_mut()
+}
 
 /// Returns the sample kind.
 #[no_mangle]
@@ -517,6 +525,24 @@ pub enum z_congestion_control_t {
     BLOCK,
     /// Messages are dropped in case of congestion.
     DROP,
+}
+
+/// Returns the default congestion control value of zenoh push network messages, typically used for put operations.
+#[no_mangle]
+pub extern "C" fn z_internal_congestion_control_default_push() -> z_congestion_control_t {
+    CongestionControl::DEFAULT_PUSH.into()
+}
+
+/// Returns the default congestion control value of zenoh request network messages, typically used for get operations.
+#[no_mangle]
+pub extern "C" fn z_internal_congestion_control_default_request() -> z_congestion_control_t {
+    CongestionControl::DEFAULT_REQUEST.into()
+}
+
+/// Returns the default congestion control value of zenoh response network messages, typically used for reply operations.
+#[no_mangle]
+pub extern "C" fn z_internal_congestion_control_default_response() -> z_congestion_control_t {
+    CongestionControl::DEFAULT_RESPONSE.into()
 }
 
 impl From<CongestionControl> for z_congestion_control_t {

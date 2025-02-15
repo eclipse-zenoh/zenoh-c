@@ -14,31 +14,25 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
-        exit(-1);
-    }
+#define DEFAULT_SHARED_MEMORY_SIZE 32
 
-    char *keyexpr = "test/thr";
-    size_t len = atoi(argv[1]);
+struct args_t {
+    unsigned int size;                         // positional_1
+    unsigned long long shared_memory_size_mb;  // -s, --shared-memory
+};
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+int main(int argc, char** argv) {
+    char* keyexpr = "test/thr";
 
     zc_init_log_from_env_or("error");
 
     z_owned_config_t config;
-    z_config_default(&config);
-
-    if (argc > 2) {
-        if (zc_config_insert_json5(z_loan_mut(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    struct args_t args = parse_args(argc, argv, &config);
 
     z_owned_session_t s;
     if (z_open(&s, z_move(config), NULL) < 0) {
@@ -61,18 +55,18 @@ int main(int argc, char **argv) {
     printf("Creating POSIX SHM Provider...\n");
     z_alloc_alignment_t alignment = {0};
     z_owned_memory_layout_t layout;
-    z_memory_layout_new(&layout, len, alignment);
+    z_memory_layout_new(&layout, args.shared_memory_size_mb * 1024 * 1024, alignment);
     z_owned_shm_provider_t provider;
     z_posix_shm_provider_new(&provider, z_loan(layout));
 
     printf("Allocating single SHM buffer\n");
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), len, alignment);
+    z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
     if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...\n");
         return -1;
     }
-    memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, len);
+    memset(z_shm_mut_data_mut(z_loan_mut(alloc.buf)), 1, args.size);
     z_owned_shm_t shm;
     z_shm_from_mut(&shm, z_move(alloc.buf));
 
@@ -94,4 +88,42 @@ int main(int argc, char **argv) {
     z_drop(z_move(shm));
     z_drop(z_move(provider));
     z_drop(z_move(layout));
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pub_thr [OPTIONS] <PAYLOAD_SIZE>\n\n\
+    Arguments:\n\
+        <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
+    Options:\n\
+        -s, --shared-memory <SHARED_MEMORY_SIZE> (optional, number, default='%d'): shared memory size in MBytes.\n",
+        DEFAULT_SHARED_MEMORY_SIZE);
+    printf(COMMON_HELP);
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.shared_memory_size_mb, "s", "shared-memory", atoi, DEFAULT_SHARED_MEMORY_SIZE);
+
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args) {
+        printf("Unexpected additional positional arguments\n");
+        exit(-1);
+    }
+    if (!pos_args[0]) {
+        printf("<PAYLOAD_SIZE> argument is required\n");
+        free(pos_args);
+        exit(-1);
+    }
+    args.size = atoi(pos_args[0]);
+    free(pos_args);
+    return args;
 }

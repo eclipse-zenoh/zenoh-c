@@ -176,7 +176,7 @@ pub unsafe extern "C" fn z_bytes_to_owned_shm(
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_loaned_shm(
+pub unsafe extern "C" fn z_bytes_as_loaned_shm(
     this: &'static z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static z_loaned_shm_t>,
 ) -> z_result_t {
@@ -200,7 +200,8 @@ pub unsafe extern "C" fn z_bytes_to_loaned_shm(
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
 #[no_mangle]
-pub extern "C" fn z_bytes_to_mut_loaned_shm(
+#[allow(clippy::missing_safety_doc)]
+pub extern "C" fn z_bytes_as_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_result_t {
@@ -477,6 +478,31 @@ pub extern "C" fn z_bytes_slice_iterator_next(
             true
         }
         None => false,
+    }
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// Attempts to get a contiguous view to the underlying bytes.
+/// This is only possible if data is not fragmented, otherwise the function will fail.
+/// In case of fragmented data, consider using `z_bytes_get_slice_iterator()`.
+///
+/// @param this_: An instance of Zenoh data.
+/// @param view: An uninitialized memory location where a contiguous view on data will be constructed.
+/// @return  ​0​ upon success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn z_bytes_get_contiguous_view(
+    this: &'static z_loaned_bytes_t,
+    view: &mut MaybeUninit<z_view_slice_t>,
+) -> result::z_result_t {
+    let payload = this.as_rust_type_ref();
+    match payload.to_bytes() {
+        std::borrow::Cow::Borrowed(s) => {
+            view.as_rust_type_mut_uninit()
+                .write(CSliceView::from_slice(s));
+            result::Z_OK
+        }
+        std::borrow::Cow::Owned(_) => result::Z_EINVAL,
     }
 }
 

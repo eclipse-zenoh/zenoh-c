@@ -17,8 +17,11 @@
 #include "parse_args.h"
 #include "zenoh.h"
 
+#define DEFAULT_PRIORITY Z_PRIORITY_DATA
 struct args_t {
-    unsigned int size;  // positional_1
+    unsigned int size;      // positional_1
+    z_priority_t priority;  // -p, --priority
+    bool express;           // --express
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -44,6 +47,8 @@ int main(int argc, char** argv) {
     z_publisher_options_t options;
     z_publisher_options_default(&options);
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    options.priority = args.priority;
+    options.is_express = args.express;
 
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
@@ -71,19 +76,20 @@ void print_help() {
         "\
     Usage: z_pub_thr [OPTIONS] <PAYLOAD_SIZE>\n\n\
     Arguments:\n\
-        <PAYLOAD_SIZE> (required, int): Size of the payload to publish\n\n\
-    Options:\n");
+        <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
+    Options:\n\
+        -p, --priority <PRIORITY> (optional, number [%d - %d], default='%d'): Priority for sending data\n\
+        --express (optional): Batch messages.\n",
+        Z_PRIORITY_REAL_TIME, Z_PRIORITY_BACKGROUND, DEFAULT_PRIORITY);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.priority, "p", "priority", parse_priority, DEFAULT_PRIORITY);
+    args.express = _Z_CHECK_FLAG("express");
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -100,7 +106,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
-    unsigned int size = atoi(pos_args[0]);
+    args.size = atoi(pos_args[0]);
     free(pos_args);
-    return (struct args_t){.size = size};
+    return args;
 }

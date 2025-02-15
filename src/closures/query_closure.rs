@@ -26,7 +26,7 @@ use crate::{
 #[repr(C)]
 pub struct z_owned_closure_query_t {
     pub _context: *mut c_void,
-    pub _call: Option<extern "C" fn(reply: &mut z_loaned_query_t, context: *mut c_void)>,
+    pub _call: Option<extern "C" fn(query: &mut z_loaned_query_t, context: *mut c_void)>,
     pub _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 

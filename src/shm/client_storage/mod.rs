@@ -90,6 +90,7 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Add client to the list.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_add_client(
     this: &mut zc_loaned_shm_client_list_t,
@@ -109,6 +110,7 @@ decl_c_type!(
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Reference the global client storage.
 #[no_mangle]
 pub extern "C" fn z_ref_shm_client_storage_global(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
@@ -118,6 +120,7 @@ pub extern "C" fn z_ref_shm_client_storage_global(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Construct client storage with default client set.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new_default(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
@@ -130,6 +133,7 @@ pub extern "C" fn z_shm_client_storage_new_default(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Create a new client storage object.
 #[no_mangle]
 pub extern "C" fn z_shm_client_storage_new(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,

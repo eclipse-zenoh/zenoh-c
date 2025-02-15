@@ -21,8 +21,8 @@
 #define DEFAULT_VALUE "Put from C!"
 
 struct args_t {
-    char* keyexpr;  // -k
-    char* value;    // -v
+    char* keyexpr;  // -k, --key
+    char* value;    // -p, --payload
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
@@ -46,19 +46,8 @@ int main(int argc, char** argv) {
 
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, args.value);
-    z_put_options_t options;
-    z_put_options_default(&options);
 
-    z_owned_bytes_t attachment;
-    ze_owned_serializer_t serializer;
-    ze_serializer_empty(&serializer);
-    ze_serializer_serialize_sequence_length(z_loan_mut(serializer), 1);  // 1 key-value pair
-    ze_serializer_serialize_str(z_loan_mut(serializer), "hello");
-    ze_serializer_serialize_str(z_loan_mut(serializer), "there");
-    ze_serializer_finish(z_move(serializer), &attachment);
-
-    options.attachment = z_move(attachment);  // attachement is consumed by z_put, so no need to drop it manually
-    int res = z_put(z_loan(s), z_loan(ke), z_move(payload), &options);
+    int res = z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     if (res < 0) {
         printf("Put failed...\n");
     }
@@ -72,28 +61,18 @@ void print_help() {
         "\
     Usage: z_put [OPTIONS]\n\n\
     Options:\n\
-        -k <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
-        -v <VALUE> (optional, string, default='%s'): The value to write\n",
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
-    printf(
-        "\
-        -h: print help\n");
 }
 
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
-    if (parse_opt(argc, argv, "h", false)) {
-        print_help();
-        exit(1);
-    }
-    const char* keyexpr = parse_opt(argc, argv, "k", true);
-    if (!keyexpr) {
-        keyexpr = DEFAULT_KEYEXPR;
-    }
-    const char* value = parse_opt(argc, argv, "v", true);
-    if (!value) {
-        value = DEFAULT_VALUE;
-    }
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
+
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
@@ -107,5 +86,5 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         exit(-1);
     }
     free(pos_args);
-    return (struct args_t){.keyexpr = (char*)keyexpr, .value = (char*)value};
+    return args;
 }

@@ -38,7 +38,7 @@ pub struct z_put_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of this message.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
@@ -67,7 +67,7 @@ pub struct z_put_options_t {
 pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
     this_.write(z_put_options_t {
         encoding: None,
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_PUSH.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -143,7 +143,7 @@ pub struct z_delete_options_t {
     pub congestion_control: z_congestion_control_t,
     /// The priority of the delete message.
     pub priority: z_priority_t,
-    /// If true, Zenoh will not wait to batch this operation with others to reduce the bandwith.
+    /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The timestamp of this message.
     pub timestamp: Option<&'static mut z_timestamp_t>,
@@ -164,7 +164,7 @@ pub struct z_delete_options_t {
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
     this_.write(z_delete_options_t {
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_PUSH.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,

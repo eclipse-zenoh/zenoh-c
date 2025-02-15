@@ -35,8 +35,14 @@ zenoh_opaque.h:
   - z_loaned_query_t!
   - z_owned_queryable_t!
   - z_loaned_queryable_t!
+  - z_owned_querier_t!#unstable
+  - z_loaned_querier_t!#unstable
   - ze_owned_querying_subscriber_t!#unstable
   - ze_loaned_querying_subscriber_t!#unstable
+  - ze_owned_advanced_subscriber_t!#unstable
+  - ze_loaned_advanced_subscriber_t!#unstable
+  - ze_owned_advanced_publisher_t!#unstable
+  - ze_loaned_advanced_publisher_t!#unstable
   - z_owned_keyexpr_t!
   - z_view_keyexpr_t!
   - z_loaned_keyexpr_t!
@@ -51,11 +57,11 @@ zenoh_opaque.h:
   - z_timestamp_t!
   - z_owned_publisher_t!
   - z_loaned_publisher_t!
-  - zc_owned_matching_listener_t!#unstable
+  - z_owned_matching_listener_t!#unstable
   - z_owned_subscriber_t!
   - z_loaned_subscriber_t!
-  - zc_owned_liveliness_token_t!#unstable
-  - zc_loaned_liveliness_token_t!#unstable
+  - z_owned_liveliness_token_t!
+  - z_loaned_liveliness_token_t!
   - ze_owned_publication_cache_t!#unstable
   - z_owned_mutex_t!
   - z_loaned_mutex_t!
@@ -70,7 +76,7 @@ zenoh_opaque.h:
   - z_loaned_closure_sample_t!
   - z_loaned_closure_zid_t!
   - zc_loaned_closure_log_t!
-  - zc_loaned_closure_matching_status_t!#unstable
+  - z_loaned_closure_matching_status_t!#unstable
   - z_owned_shm_client_t!#shared-memory#unstable
   - zc_owned_shm_client_list_t!#shared-memory#unstable
   - zc_loaned_shm_client_list_t!#shared-memory#unstable
@@ -117,4 +123,4 @@ zenoh_opaque.h:
   - z_loaned_fifo_handler_reply_t!
   - z_owned_ring_handler_reply_t!
   - z_loaned_ring_handler_reply_t!
-
+  - zc_owned_concurrent_close_handle_t!#unstable

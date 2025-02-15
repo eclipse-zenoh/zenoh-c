@@ -12,7 +12,11 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{ffi::CStr, mem::MaybeUninit, ptr::null};
+use std::{
+    ffi::CStr,
+    mem::MaybeUninit,
+    ptr::{null, null_mut},
+};
 
 use libc::c_char;
 use zenoh::{
@@ -62,6 +66,17 @@ pub extern "C" fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned
     this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
+/// Returns mutable reply error payload.
+#[no_mangle]
+pub extern "C" fn z_reply_err_payload_mut(
+    this_: &mut z_loaned_reply_err_t,
+) -> &mut z_loaned_bytes_t {
+    this_
+        .as_rust_type_mut()
+        .payload_mut()
+        .as_loaned_c_type_mut()
+}
+
 /// Returns reply error encoding.
 #[no_mangle]
 pub extern "C" fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
@@ -72,6 +87,14 @@ pub extern "C" fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loane
 #[no_mangle]
 pub extern "C" fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
+}
+
+/// Mutably borrows reply error.
+#[no_mangle]
+pub extern "C" fn z_reply_err_loan_mut(
+    this_: &mut z_owned_reply_err_t,
+) -> &mut z_loaned_reply_err_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Frees the memory and resets the reply error it to its default value.
@@ -105,6 +128,18 @@ pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned
     }
 }
 
+/// Yields the contents of the reply by asserting it indicates a success.
+///
+/// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_ok_mut(this_: &mut z_loaned_reply_t) -> *mut z_loaned_sample_t {
+    match this_.as_rust_type_mut().result_mut() {
+        Ok(sample) => sample.as_loaned_c_type_mut() as _,
+        Err(_) => null_mut(),
+    }
+}
+
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
@@ -114,6 +149,20 @@ pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loane
     match this_.as_rust_type_ref().result() {
         Ok(_) => null(),
         Err(v) => v.as_loaned_c_type_ref(),
+    }
+}
+
+/// Yields the contents of the reply by asserting it indicates a failure.
+///
+/// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_err_mut(
+    this_: &mut z_loaned_reply_t,
+) -> *mut z_loaned_reply_err_t {
+    match this_.as_rust_type_mut().result_mut() {
+        Ok(_) => null_mut(),
+        Err(v) => v.as_loaned_c_type_mut(),
     }
 }
 
@@ -161,7 +210,7 @@ pub struct z_get_options_t {
     pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing the query.
     pub congestion_control: z_congestion_control_t,
-    /// If true, Zenoh will not wait to batch this message with others to reduce the bandwith.
+    /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -192,7 +241,7 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
     this_.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]

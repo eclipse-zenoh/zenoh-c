@@ -29,6 +29,10 @@ pub mod result;
 pub use crate::collections::*;
 mod config;
 pub use crate::config::*;
+#[cfg(feature = "unstable")]
+mod close;
+#[cfg(feature = "unstable")]
+pub use crate::close::*;
 pub mod encoding;
 pub use crate::encoding::*;
 mod commons;
@@ -41,6 +45,10 @@ mod info;
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;
+#[cfg(feature = "unstable")]
+mod querier;
+#[cfg(feature = "unstable")]
+pub use crate::querier::*;
 mod queryable;
 pub use crate::queryable::*;
 mod put;
@@ -57,10 +65,12 @@ mod closures;
 pub use closures::*;
 pub mod platform;
 pub use platform::*;
-#[cfg(feature = "unstable")]
 mod liveliness;
-#[cfg(feature = "unstable")]
 pub use liveliness::*;
+#[cfg(feature = "unstable")]
+mod matching;
+#[cfg(feature = "unstable")]
+pub use matching::*;
 #[cfg(feature = "unstable")]
 mod publication_cache;
 #[cfg(feature = "unstable")]
@@ -69,6 +79,14 @@ pub use publication_cache::*;
 mod querying_subscriber;
 #[cfg(feature = "unstable")]
 pub use querying_subscriber::*;
+#[cfg(feature = "unstable")]
+mod advanced_subscriber;
+#[cfg(feature = "unstable")]
+pub use advanced_subscriber::*;
+#[cfg(feature = "unstable")]
+mod advanced_publisher;
+#[cfg(feature = "unstable")]
+pub use advanced_publisher::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
 

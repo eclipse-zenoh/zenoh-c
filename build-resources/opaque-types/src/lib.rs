@@ -1,5 +1,6 @@
 #![allow(unused_doc_comments)]
 #![allow(dead_code)]
+#![allow(deprecated)]
 use core::ffi::c_void;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use std::sync::Arc;
@@ -13,6 +14,7 @@ use zenoh::{
     config::Config,
     handlers::{FifoChannelHandler, RingChannelHandler},
     key_expr::KeyExpr,
+    liveliness::LivelinessToken,
     pubsub::{Publisher, Subscriber},
     query::{Query, Queryable, Reply, ReplyError},
     sample::Sample,
@@ -22,10 +24,7 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    liveliness::LivelinessToken,
-    pubsub::MatchingListener,
-    sample::SourceInfo,
-    session::EntityGlobalId
+    matching::MatchingListener, query::Querier, sample::SourceInfo, session::EntityGlobalId,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
@@ -51,11 +50,11 @@ macro_rules! get_opaque_type_data {
     };
 }
 
-/// A serialized Zenoh data.
+/// A Zenoh data.
 ///
 /// To minimize copies and reallocations, Zenoh may provide data in several separate buffers.
 get_opaque_type_data!(ZBytes, z_owned_bytes_t);
-/// A loaned serialized Zenoh data.
+/// A loaned Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
 pub struct CSlice {
@@ -131,6 +130,16 @@ get_opaque_type_data!(Query, z_loaned_query_t);
 get_opaque_type_data!(Option<Queryable<()>>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
 get_opaque_type_data!(Queryable<()>, z_loaned_queryable_t);
+
+#[cfg(feature = "unstable")]
+/// An owned Zenoh querier.
+///
+/// Sends queries to matching queryables.
+get_opaque_type_data!(Option<Querier>, z_owned_querier_t);
+#[cfg(feature = "unstable")]
+/// A loaned Zenoh queryable.
+get_opaque_type_data!(Querier, z_loaned_querier_t);
+
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh querying subscriber.
@@ -149,6 +158,51 @@ get_opaque_type_data!(
     ze_loaned_querying_subscriber_t
 );
 
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned Zenoh advanced subscriber.
+///
+/// In addition to receiving the data it is subscribed to,
+/// it is also able to receive notifications regarding missed samples and/or automatically recover them.
+get_opaque_type_data!(
+    Option<zenoh_ext::AdvancedSubscriber<()>>,
+    ze_owned_advanced_subscriber_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned Zenoh advanced subscriber.
+get_opaque_type_data!(
+    zenoh_ext::AdvancedSubscriber<()>,
+    ze_loaned_advanced_subscriber_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
+///
+/// A listener that sends notification when the advanced subscriber misses a sample .
+/// Dropping the corresponding subscriber, also drops the listener.
+get_opaque_type_data!(
+    Option<zenoh_ext::SampleMissListener<()>>,
+    ze_owned_sample_miss_listener_t
+);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned Zenoh advanced publisher.
+///
+/// In addition to publishing the data,
+/// it also maintains the storage, allowing matching subscribers to retrive missed samples.
+get_opaque_type_data!(
+    Option<zenoh_ext::AdvancedPublisher<'static>>,
+    ze_owned_advanced_publisher_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned Zenoh advanced publisher.
+get_opaque_type_data!(
+    zenoh_ext::AdvancedPublisher<'static>,
+    ze_loaned_advanced_publisher_t
+);
 /// A Zenoh-allocated <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
 /// Key expressions can identify a single key or a set of keys.
@@ -185,6 +239,13 @@ get_opaque_type_data!(Option<Session>, z_owned_session_t);
 /// A loaned Zenoh session.
 get_opaque_type_data!(Session, z_loaned_session_t);
 
+#[cfg(feature = "unstable")]
+/// An owned Close handle
+get_opaque_type_data!(
+    Option<tokio::task::JoinHandle<zenoh::Result<()>>>,
+    zc_owned_concurrent_close_handle_t
+);
+
 /// An owned Zenoh configuration.
 get_opaque_type_data!(Option<Config>, z_owned_config_t);
 /// A loaned Zenoh configuration.
@@ -209,9 +270,9 @@ get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh matching listener.
 ///
-/// A listener that sends notifications when the [`MatchingStatus`] of a publisher changes.
+/// A listener that sends notifications when the [`MatchingStatus`] of a publisher or querier changes.
 /// Dropping the corresponding publisher, also drops matching listener.
-get_opaque_type_data!(Option<MatchingListener<()>>, zc_owned_matching_listener_t);
+get_opaque_type_data!(Option<MatchingListener<()>>, z_owned_matching_listener_t);
 
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
 ///
@@ -221,17 +282,14 @@ get_opaque_type_data!(Option<Subscriber<()>>, z_owned_subscriber_t);
 /// A loaned Zenoh subscriber.
 get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
 /// expressions.
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
-get_opaque_type_data!(Option<LivelinessToken>, zc_owned_liveliness_token_t);
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-get_opaque_type_data!(LivelinessToken, zc_loaned_liveliness_token_t);
+get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
+get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
+
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh publication cache.
@@ -314,7 +372,6 @@ get_opaque_type_data!(MemoryLayout, z_loaned_memory_layout_t);
 /// @brief An owned ChunkAllocResult.
 get_opaque_type_data!(Option<ChunkAllocResult>, z_owned_chunk_alloc_result_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned ZShm slice.

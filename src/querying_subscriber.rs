@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+#![allow(deprecated)]
 
 use std::mem::MaybeUninit;
 
@@ -47,7 +48,7 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
     this.as_rust_type_mut_uninit().write(None);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief A set of options that can be applied to a querying subscriber,
 /// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
@@ -70,7 +71,7 @@ pub struct ze_querying_subscriber_options_t {
     query_timeout_ms: u64,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Constructs the default value for `ze_querying_subscriber_options_t`.
 #[no_mangle]
 pub extern "C" fn ze_querying_subscriber_options_default(
@@ -126,7 +127,7 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
     });
     sub
 }
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Constructs and declares a querying subscriber for a given key expression.
 ///
 /// @param session: A Zenoh session.
@@ -161,7 +162,7 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Declares a background querying subscriber for a given key expression. Subscriber callback will be called to process the messages,
 /// until the corresponding session is closed or dropped.
 ///
@@ -189,7 +190,7 @@ pub unsafe extern "C" fn ze_declare_background_querying_subscriber(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Make querying subscriber perform an additional query on a specified selector.
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
 /// @return 0 in case of success, negative error code otherwise.
@@ -254,7 +255,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     result::Z_OK
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Undeclares querying subscriber callback and resets it to its gravestone state.
 /// This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
 #[no_mangle]
@@ -262,7 +263,7 @@ pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subs
     std::mem::drop(this_.take_rust_type())
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[no_mangle]
 pub extern "C" fn ze_internal_querying_subscriber_check(
@@ -271,7 +272,7 @@ pub extern "C" fn ze_internal_querying_subscriber_check(
     this_.as_rust_type_ref().is_some()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Borrows querying subscriber.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -284,7 +285,7 @@ pub unsafe extern "C" fn ze_querying_subscriber_loan(
         .as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Undeclares the given querying subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
