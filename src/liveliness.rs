@@ -24,7 +24,7 @@ use zenoh::{
 use crate::{
     opaque_types::{z_loaned_liveliness_token_t, z_owned_liveliness_token_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
     z_moved_liveliness_token_t, z_owned_subscriber_t,
@@ -156,12 +156,10 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
         .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
-                owned_sample
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+            z_closure_sample_call(
+                z_closure_sample_loan(&callback),
+                owned_sample.as_loaned_c_type_mut(),
+            )
         });
     sub
 }
@@ -256,12 +254,10 @@ pub extern "C" fn z_liveliness_get(
     let liveliness = session.liveliness();
     let mut builder = liveliness.get(key_expr).callback(move |response| {
         let mut owned_response = Some(response);
-        z_closure_reply_call(z_closure_reply_loan(&callback), unsafe {
-            owned_response
-                .as_mut()
-                .unwrap_unchecked()
-                .as_loaned_c_type_mut()
-        })
+        z_closure_reply_call(
+            z_closure_reply_loan(&callback),
+            owned_response.as_loaned_c_type_mut(),
+        )
     });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms));

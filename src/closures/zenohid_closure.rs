@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_id_t,
 };
 /// @brief A zenoh id-processing closure.
@@ -134,9 +134,9 @@ pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loan
 /// @brief Mutably borrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_zid_loan_mut(
-    closure: &z_owned_closure_zid_t,
-) -> &z_loaned_closure_zid_t {
-    closure.as_loaned_c_type_ref()
+    closure: &mut z_owned_closure_zid_t,
+) -> &mut z_loaned_closure_zid_t {
+    closure.as_loaned_c_type_mut()
 }
 
 /// @brief Constructs closure.

@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 
 use crate::{
-    transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_hello_t,
 };
 /// @brief A hello message-processing closure.
@@ -134,7 +134,7 @@ pub extern "C" fn z_closure_hello_loan(
     closure.as_loaned_c_type_ref()
 }
 
-/// Mutably norrows closure.
+/// Mutably borrows closure.
 #[no_mangle]
 pub extern "C" fn z_closure_hello_loan_mut(
     closure: &mut z_owned_closure_hello_t,

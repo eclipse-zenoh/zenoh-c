@@ -16,7 +16,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 
 use zenoh::shm::{PosixShmClient, ShmClient};
 
-use crate::{transmute::RustTypeRefUninit, z_owned_shm_client_t};
+use crate::{transmute::RustTypeMutUninit, z_owned_shm_client_t};
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new POSIX SHM Client.
