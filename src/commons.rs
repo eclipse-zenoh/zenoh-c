@@ -35,7 +35,10 @@ use crate::transmute::IntoCType;
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        CTypeRef, LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef,
+        TakeRustType,
+    },
     z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
@@ -99,8 +102,8 @@ pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
 use crate::opaque_types::z_loaned_sample_t;
 pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
-    owned(z_owned_sample_t, option Sample),
-    loaned(z_loaned_sample_t),
+    owned(z_owned_sample_t, Option<Sample>),
+    loaned(z_loaned_sample_t, Sample, Option<Sample>),
 );
 
 /// Returns the key expression of the sample.
@@ -220,13 +223,18 @@ pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sa
 
 /// Mutably borrows sample.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
-    this_
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+pub extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed sample.
+#[no_mangle]
+pub extern "C" fn z_sample_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_sample_t>,
+    src: &mut z_loaned_sample_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
@@ -579,7 +587,7 @@ pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
-    loaned(z_loaned_source_info_t, SourceInfo),
+    loaned(z_loaned_source_info_t),
 );
 
 #[cfg(feature = "unstable")]

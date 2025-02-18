@@ -32,7 +32,9 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
     CStringOwned,
@@ -199,7 +201,7 @@ pub unsafe extern "C" fn z_bytes_as_loaned_shm(
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_as_mut_loaned_shm(
+pub extern "C" fn z_bytes_as_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
 ) -> z_result_t {
@@ -658,7 +660,7 @@ pub unsafe extern "C" fn z_bytes_writer_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Muatably borrows writer.
+/// Mutably borrows writer.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_writer_loan_mut(

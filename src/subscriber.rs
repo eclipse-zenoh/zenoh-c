@@ -25,7 +25,7 @@ pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_own
 use crate::{
     keyexpr::*,
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{LoanedCTypeMut, LoanedCTypeRef, RustTypeMutUninit, RustTypeRef, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
 };
 #[cfg(feature = "unstable")]
@@ -97,12 +97,10 @@ pub(crate) fn _declare_subscriber_inner<'a, 'b>(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
-                owned_sample
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut()
-            })
+            z_closure_sample_call(
+                z_closure_sample_loan(&callback),
+                owned_sample.as_loaned_c_type_mut(),
+            )
         });
     #[cfg(feature = "unstable")]
     if let Some(options) = options {

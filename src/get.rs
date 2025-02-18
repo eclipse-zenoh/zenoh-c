@@ -29,7 +29,9 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
@@ -42,7 +44,7 @@ use crate::{
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyError),
-    loaned(z_loaned_reply_err_t, ReplyError),
+    loaned(z_loaned_reply_err_t),
 );
 
 /// Constructs an empty `z_owned_reply_err_t`.
@@ -103,8 +105,8 @@ pub extern "C" fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
 
 pub use crate::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
 decl_c_type!(
-    owned(z_owned_reply_t, option Reply),
-    loaned(z_loaned_reply_t),
+    owned(z_owned_reply_t, Option<Reply>),
+    loaned(z_loaned_reply_t, Reply, Option<Reply>),
 );
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
@@ -320,10 +322,7 @@ pub unsafe extern "C" fn z_get(
             let mut owned_response = Some(response);
             z_closure_reply_call(
                 z_closure_reply_loan(&callback),
-                owned_response
-                    .as_mut()
-                    .unwrap_unchecked()
-                    .as_loaned_c_type_mut(),
+                owned_response.as_loaned_c_type_mut(),
             )
         })
         .wait()
@@ -362,13 +361,18 @@ pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_repl
 
 /// Mutably borrows reply.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
-    this_
-        .as_rust_type_mut()
-        .as_mut()
-        .unwrap_unchecked()
-        .as_loaned_c_type_mut()
+pub extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
+    this_.as_rust_type_mut().as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed reply
+#[no_mangle]
+pub extern "C" fn z_reply_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_reply_t>,
+    src: &mut z_loaned_reply_t,
+) {
+    dst.as_rust_type_mut_uninit()
+        .write(std::mem::take(src.as_rust_type_mut()));
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.

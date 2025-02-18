@@ -25,7 +25,9 @@ use libc::strlen;
 
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
 };
 
 pub struct CSlice {
@@ -267,7 +269,7 @@ pub use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t
 
 decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
-    loaned(z_loaned_slice_t, CSlice),
+    loaned(z_loaned_slice_t, CSlice, CSlice),
     view(z_view_slice_t, CSliceView),
 );
 
@@ -529,7 +531,7 @@ impl From<CStringOwned> for CSlice {
 
 decl_c_type!(
     owned(z_owned_string_t, CStringOwned),
-    loaned(z_loaned_string_t, CString),
+    loaned(z_loaned_string_t, CString, CString),
     view(z_view_string_t, CStringView),
 );
 
@@ -767,17 +769,13 @@ pub extern "C" fn z_string_array_drop(this_: &mut z_moved_string_array_t) {
 
 /// Borrows string array.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_array_loan(
-    this: &z_owned_string_array_t,
-) -> &z_loaned_string_array_t {
+pub extern "C" fn z_string_array_loan(this: &z_owned_string_array_t) -> &z_loaned_string_array_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Mutably borrows string array.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_string_array_loan_mut(
+pub extern "C" fn z_string_array_loan_mut(
     this: &mut z_owned_string_array_t,
 ) -> &mut z_loaned_string_array_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()

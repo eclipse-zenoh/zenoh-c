@@ -23,7 +23,9 @@ use crate::zc_owned_concurrent_close_handle_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        LoanedCTypeMut, LoanedCTypeRef, RustTypeMut, RustTypeMutUninit, RustTypeRef, TakeRustType,
+    },
     z_moved_config_t, z_moved_session_t,
 };
 decl_c_type!(
@@ -42,7 +44,7 @@ pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_
         .as_loaned_c_type_ref()
 }
 
-// Mutably borrows session.
+/// Mutably borrows session.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_session_loan_mut(
