@@ -76,7 +76,7 @@ modify (`z_loaned_xxx_t*`) the object. In both cases, ownership remains with the
     z_drop(z_move(s));
     z_drop(z_move(s1));
 
-Moved types `z_moved_xxx_t`
+Moved Types `z_moved_xxx_t`
 ---------------------------
 
 When a function accepts a `z_moved_xxx_t*` parameter, it takes ownership of the passed object. 
@@ -102,7 +102,7 @@ View Types `z_view_xxx_t`
 
 `z_view_xxx_t` types are reference types that point to external data. These values do not need to be dropped and 
 remain valid only as long as the data they reference is valid. Internally the view types are the variants of
-owned types that do not own the data. This allows to use view and owned types interchangeably.
+owned types that do not own the data. This allows using view and owned types interchangeably.
 
 .. code-block:: c
 
@@ -120,15 +120,15 @@ owned types that do not own the data. This allows to use view and owned types in
 Options Structures `z_xxx_options_t`
 ------------------------------------
 
-`z_xxx_options_t` are Plain Old Data (POD) structures used to pass multiple parameters to functions. This makes API 
-compact and allows to extend the API keeping backward compatibility.
+`z_xxx_options_t` are Plain Old Data (POD) structures used to pass multiple parameters to functions. This makes the API 
+compact and allows extending the API while keeping backward compatibility.
 
 Note that when an "options" structure contains `z_moved_xxx_t*` fields, assigning `z_move` to this field does not 
 affect the owned object. However, passing the structure to a function transfers ownership of the object. Example:
 
 .. code-block:: c
 
-    // assume that we want to mark our message with some metadate of type int64_t
+    // assume that we want to mark our message with some metadata of type int64_t
     z_publisher_put_options_t options;
     z_publisher_put_options_default(&options);
     int64_t metadata = 42;
@@ -143,9 +143,9 @@ affect the owned object. However, passing the structure to a function transfers 
 
 
 Other Structures and Enums `z_xxx_t`
------------------------------------------
+------------------------------------
 
-Types named `z_xxx_t` are copyable, and can be passed by value. Some of them are just plain data structures or enums, like 
+Types named `z_xxx_t` are copyable and can be passed by value. Some of them are just plain data structures or enums, like 
 `z_timestamp_t`, `z_priority_t`. Some are temporary data access structures, like `z_bytes_slice_iterator_t`, `z_bytes_reader_t`, etc.
 
 .. code-block:: c
@@ -207,8 +207,8 @@ Functions `z_xxx_take_from_loaned` accept pointers to uninitialized `z_owned_xxx
 `z_loaned_xxx_t*` source pointers.
 
 These functions move data from the source `z_loaned_xxx_t` structure into the destination one. The source
-structure is set to "valid but unspecified" state: it **have** to be dropped, no other operation on it is safe,
-unless if it's explicitly specified. See also section "Comparison with C++ move semantics".
+structure is set to a "valid but unspecified" state: it **has** to be dropped, no other operation on it is safe,
+unless it is explicitly specified. See also section "Comparison with C++ move semantics".
 
 The `z_take_from_loaned` macro accepts `z_owned_xxx_t*` and `z_loaned_xxx_t*` pointers and calls the corresponding
 `z_xxx_take_from_loaned` function.
@@ -216,10 +216,10 @@ The `z_take_from_loaned` macro accepts `z_owned_xxx_t*` and `z_loaned_xxx_t*` po
 Drop operation
 --------------
 
-Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources hold by corresponding
-`z_owned_xxx_t` object and sets this object to gravestone state, safe to double drop.
+Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources held by the corresponding
+`z_owned_xxx_t` object and sets this object to a gravestone state, safe to double drop.
 
-`z_drop` macro accepts `z_moved_xxx_t*` and calls corresponding `z_xxx_drop` function.
+The `z_drop` macro accepts `z_moved_xxx_t*` and calls the corresponding `z_xxx_drop` function.
 
 Comparison with C++ move semantics
 ==================================
@@ -265,16 +265,16 @@ Examples:
     consume_string(z_move(s));
     // no need to drop s here, passing it by z_move promises that it's dropped inside consume_string
 
-`z_take_from_loaned` usage *(Notice that this example if fictional: actually take from loaned is implemented only
+`z_take_from_loaned` usage *(Notice that take from loaned is implemented only
 for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_reply_t*`, `z_loaned_hello_t*`, `z_loaned_query_t*`)*:
 
 .. code-block:: c
     void sub_callback(z_loaned_sample_t* sample, void* arg) {
         z_owned_sample_t s;
         z_take_from_loaned(&s, sample);
-        // Now we can save `s`` for further processing, e.g. send it to another thread
+        // Now we can save `s` for further processing, e.g. send it to another thread
 
-        // no need to drop `sample`` here, the subscriber will drop it        
+        // no need to drop `sample` here, the subscriber will drop it        
     }
     ...
     z_owned_closure_sample_t callback;
