@@ -371,6 +371,19 @@ pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z
         .as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed reply
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_reply_t>,
+    src: &mut z_loaned_reply_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Reply::empty());
+    dst.write(Some(src));
+}
+
 /// The replies consolidation strategy to apply on replies to a `z_get()`.
 #[repr(C)]
 #[derive(Clone, Copy)]

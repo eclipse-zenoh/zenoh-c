@@ -229,6 +229,19 @@ pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut
         .as_loaned_c_type_mut()
 }
 
+/// Takes ownership of the mutably borrowed sample.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_sample_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_sample_t>,
+    src: &mut z_loaned_sample_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Sample::empty());
+    dst.write(Some(src));
+}
+
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_sample_drop(this_: &mut z_moved_sample_t) {

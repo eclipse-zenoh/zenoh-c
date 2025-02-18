@@ -998,7 +998,7 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         )
         .unwrap();
 
-    // Collect all function signatures to be wrappeb by macros and verify that all necessary functions are present for each entity
+    // Collect all function signatures to be wrapped by macros and verify that all necessary functions are present for each entity
     let (move_funcs, take_funcs) = make_move_take_signatures(path_in);
     let loan_funcs = find_loan_functions(path_in);
     let loan_mut_funcs = find_loan_mut_functions(path_in);

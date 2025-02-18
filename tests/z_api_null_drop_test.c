@@ -45,6 +45,16 @@
         assert(!z_internal_check(v)); \
     }
 
+#define TEST_TAKE_MUT(name, take_loan_func) \
+    {                                       \
+        name v;                             \
+        name v1;                            \
+        z_internal_null(&v1);               \
+        memset(&v, -1, sizeof(v));          \
+        take_loan_func(&v1, z_loan_mut(v)); \
+        assert(!z_internal_check(v));       \
+    }
+
 int main(void) {
     TEST(z_owned_session_t)
     TEST(z_owned_keyexpr_t)
@@ -75,6 +85,11 @@ int main(void) {
     // TEST(z_owned_task_t)
     // TEST(z_owned_mutex_t)
     // TEST(z_owned_condvar_t)
+
+    TEST_TAKE_MUT(z_owned_sample_t, z_sample_take_from_loaned)
+    TEST_TAKE_MUT(z_owned_query_t, z_query_take_from_loaned)
+    TEST_TAKE_MUT(z_owned_reply_t, z_reply_take_from_loaned)
+    TEST_TAKE_MUT(z_owned_hello_t, z_hello_take_from_loaned)
 
     return 0;
 }
