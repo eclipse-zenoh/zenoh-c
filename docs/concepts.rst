@@ -198,8 +198,7 @@ Functions `z_xxx_take` accept pointers to uninitialized `z_owned_xxx_t` destinat
 These functions move data from the source `z_owned_xxx_t` structure into the destination one. The source
 structure is set to an empty "gravestone" state, like after a drop operation.
 
-The `z_take` macro accepts `z_moved_xxx_t*` pointer and calls the corresponding
-`z_xxx_take` functions.
+The `z_take` macro accepts `z_moved_xxx_t*` pointer and calls the corresponding `z_xxx_take` function.
 
 Take from mutably loaned object operation
 -----------------------------------------
@@ -211,13 +210,16 @@ These functions move data from the source `z_loaned_xxx_t` structure into the de
 structure is set to "valid but unspecified" state: it **have** to be dropped, no other operation on it is safe,
 unless if it's explicitly specified. See also section "Comparison with C++ move semantics".
 
+The `z_take_from_loaned` macro accepts `z_owned_xxx_t*` and `z_loaned_xxx_t*` pointers and calls the corresponding
+`z_xxx_take_from_loaned` function.
+
 Drop operation
 --------------
 
 Function `z_xxx_drop` accepts `z_moved_xxx_t*` pointer. It frees all resources hold by corresponding
 `z_owned_xxx_t` object and sets this object to gravestone state, safe to double drop.
 
-`z_drop` macro accepts `z_moved_xxx_t*` and calls corresponding `z_xxx_drop` function
+`z_drop` macro accepts `z_moved_xxx_t*` and calls corresponding `z_xxx_drop` function.
 
 Comparison with C++ move semantics
 ==================================
@@ -231,22 +233,19 @@ There are no automatic destructors in C, so for the same logic, we would need to
 This is inconvenient, so for the move operation, our requirement is stricter than for C++: if a function expects `z_moved_xxx_t*`, it 
 should leave the object on the passed pointer in a "gravestone" state, i.e., a state that does not hold any external resources and is safe to be forgotten.
 
-Extending the move semantic for loaned references
-=================================================
+There is one important situation when we need to support move semantics similar to the C++ one: callbacks.
 
-There is one important situation when we need to support move semantic similar to the C++ one: callbacks.
-
-The arguments of callbacks are "mutable loaned" references (e.g. `z_loaned_sample_t*`). This allows to developer to not care about ownership of the object passed to callback:
+The arguments of callbacks are "mutable loaned" references (e.g. `z_loaned_sample_t*`). This allows the developer to not care about ownership of the object passed to the callback:
 the object passed is guaranteed to be destroyed by the caller.
 
-But on the other hand sometimes it's necessary to take ownership of the object passed to callback for further processing. Therefore the take
-operation from mutable reference is required.
+But on the other hand, sometimes it's necessary to take ownership of the object passed to the callback for further processing. Therefore, the take
+operation from a mutable reference is required.
 
-To resolve this the `z_xxx_take_from_loaned` operation is introduced for `z_loaned_xxx_t*`. It behaves similarly to `z_xxx_take` for `z_moved_xxx_t*`: constructing new 
-`z_owned_xxx_t` object, taking the data from the source object and leaving the source object in probably unusable state. But unlike `z_xxx_take`, the `z_xxx_take_from_loaned` doesn't
-guarantee "gravestone" state after the operation, i.e. after the "take from loaned" operation the developer is still obliged to drop the source object.
+To resolve this, the `z_xxx_take_from_loaned` operation is introduced for `z_loaned_xxx_t*`. It behaves similarly to `z_xxx_take` for `z_moved_xxx_t*`: constructing a new 
+`z_owned_xxx_t` object, taking the data from the source object, and leaving the source object in a probably unusable state. But unlike `z_xxx_take`, the `z_xxx_take_from_loaned` doesn't
+guarantee a "gravestone" state after the operation, i.e., after the "take from loaned" operation, the developer is still obliged to drop the source object.
 
-Important: Zenoh API guarantees that it never uses this operation inside its code. I.e. it's always safe to pass object to function with `z_loan_mut` and continue using it after return.
+Important: The Zenoh API guarantees that it never uses this operation inside its code. I.e., it's always safe to pass an object to a function with `z_loan_mut` and continue using it after return.
 The only purpose of this functionality is to allow user code to take ownership of the object passed to callbacks.
 
 Examples:
