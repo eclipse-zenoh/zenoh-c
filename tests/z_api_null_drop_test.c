@@ -52,6 +52,7 @@
         z_internal_null(&v1);                   \
         memset(&v, -1, sizeof(v));              \
         z_take_from_loaned(&v1, z_loan_mut(v)); \
+        z_drop(z_move(v));                      \
         assert(!z_internal_check(v));           \
     }
 
