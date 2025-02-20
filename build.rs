@@ -184,6 +184,7 @@ fn generate_opaque_types() {
         };
         s += format!(
             "#[repr(C, align({align}))]
+#[rustfmt::skip]
 pub struct {type_name} {{
     {inner_field_name}: [u8; {size}],
 }}
@@ -196,10 +197,12 @@ pub struct {type_name} {{
             // done by "decl_c_type!" macro in transmute module.
             s += format!(
                 "#[repr(C)]
+#[rustfmt::skip]
 pub struct {moved_type_name} {{
     _this: {type_name},
 }}
 
+#[rustfmt::skip]
 impl crate::transmute::TakeCType for {moved_type_name} {{
     type CType = {type_name};
     fn take_c_type(&mut self) -> Self::CType {{
@@ -208,6 +211,7 @@ impl crate::transmute::TakeCType for {moved_type_name} {{
     }}
 }}
 
+#[rustfmt::skip]
 impl Drop for {type_name} {{
     fn drop(&mut self) {{
         use crate::transmute::{{RustTypeRef, Gravestone, IntoRustType}};
