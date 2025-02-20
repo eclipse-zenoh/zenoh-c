@@ -14,7 +14,6 @@
 
 use std::mem::MaybeUninit;
 
-
 //
 // The `Gravestone` trait is used to create valid instance of an object
 // which is safe to be forgotten without calling drop() method on it.
@@ -23,7 +22,7 @@ use std::mem::MaybeUninit;
 // after dropping the original object.
 //
 pub(crate) trait Gravestone {
-    // Create a gravestone object: an object which is safe to be forgotten 
+    // Create a gravestone object: an object which is safe to be forgotten
     // without calling drop() method on it.
     fn gravestone() -> Self;
     // Check if the object is in a gravestone state
