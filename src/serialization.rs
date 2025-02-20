@@ -26,7 +26,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
 };
@@ -359,7 +359,7 @@ pub extern "C" fn ze_deserialize_slice(
             tracing::error!("Failed to deserialize the payload: {}", e);
             slice
                 .as_rust_type_mut_uninit()
-                .write(CSliceOwned::default());
+                .write(CSliceOwned::gravestone());
             result::Z_EDESERIALIZE
         }
     }
@@ -442,7 +442,8 @@ pub unsafe extern "C" fn ze_deserialize_string(
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {}", e);
-            str.as_rust_type_mut_uninit().write(CStringOwned::default());
+            str.as_rust_type_mut_uninit()
+                .write(CStringOwned::gravestone());
             result::Z_EDESERIALIZE
         }
     }
@@ -750,7 +751,7 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
             tracing::error!("Failed to deserialize the payload: {}", e);
             slice
                 .as_rust_type_mut_uninit()
-                .write(CSliceOwned::default());
+                .write(CSliceOwned::gravestone());
             result::Z_EDESERIALIZE
         }
     }
@@ -822,7 +823,8 @@ pub extern "C" fn ze_deserializer_deserialize_string(
         }
         Err(e) => {
             tracing::error!("Failed to deserialize the payload: {}", e);
-            str.as_rust_type_mut_uninit().write(CStringOwned::default());
+            str.as_rust_type_mut_uninit()
+                .write(CStringOwned::gravestone());
             result::Z_EDESERIALIZE
         }
     }

@@ -35,7 +35,7 @@ use crate::transmute::IntoCType;
 use crate::z_moved_source_info_t;
 use crate::{
     result,
-    transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{CTypeRef, Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_id_t, z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t,
 };
 
@@ -594,6 +594,15 @@ decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
 );
+
+impl Gravestone for SourceInfo {
+    fn gravestone() -> Self {
+        SourceInfo::default()
+    }
+    fn is_gravestone(&self) -> bool {
+        self.source_id().is_none() && self.source_sn().is_none()
+    }
+}
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

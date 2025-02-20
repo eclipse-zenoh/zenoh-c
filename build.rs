@@ -196,7 +196,6 @@ pub struct {type_name} {{
             // done by "decl_c_type!" macro in transmute module.
             s += format!(
                 "#[repr(C)]
-#[derive(Default)]
 pub struct {moved_type_name} {{
     _this: {type_name},
 }}
@@ -204,14 +203,15 @@ pub struct {moved_type_name} {{
 impl crate::transmute::TakeCType for {moved_type_name} {{
     type CType = {type_name};
     fn take_c_type(&mut self) -> Self::CType {{
-        std::mem::take(&mut self._this)
+        use crate::transmute::Gravestone;
+        std::mem::replace(&mut self._this, {type_name}::gravestone())
     }}
 }}
 
 impl Drop for {type_name} {{
     fn drop(&mut self) {{
-        use crate::transmute::RustTypeRef;
-        std::mem::take(self.as_rust_type_mut());
+        use crate::transmute::{{RustTypeRef, Gravestone, IntoRustType}};
+        let _ = std::mem::replace(self.as_rust_type_mut(), {type_name}::gravestone().into_rust_type());
     }}
 }}
 "
@@ -1279,12 +1279,10 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 pub fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re= Regex::new(r"void (\w+)_take_from_loaned\(struct (\w+) \*(\w+)").unwrap();
+    let re = Regex::new(r"void (\w+)_take_from_loaned\(struct (\w+) \*(\w+)").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (_, [func_name, arg_type, arg_name]) in
-        re.captures_iter(&bindings).map(|c| c.extract())
-    {
+    for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
         let (prefix, _, semantic, postfix) = split_type_name(arg_type);
         let z_owned_type = format!("{}_{}_{}_{}*", prefix, "owned", semantic, postfix);
         let z_loaned_type = format!("{}_{}_{}_{}*", prefix, "loaned", semantic, postfix);
@@ -1294,7 +1292,7 @@ pub fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> 
             func_name.to_string() + "_take_from_loaned",
             vec![
                 FuncArg::new(&z_owned_type, arg_name),
-                FuncArg::new(&z_loaned_type, "src")
+                FuncArg::new(&z_loaned_type, "src"),
             ],
         );
         res.push(f);
