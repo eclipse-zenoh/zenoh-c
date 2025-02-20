@@ -30,6 +30,8 @@ use zenoh::{
 };
 
 #[cfg(feature = "unstable")]
+use crate::transmute::Gravestone;
+#[cfg(feature = "unstable")]
 use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
