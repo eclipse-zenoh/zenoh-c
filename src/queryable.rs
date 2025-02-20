@@ -104,7 +104,7 @@ pub unsafe extern "C" fn z_query_take_from_loaned(
 ) {
     let dst = dst.as_rust_type_mut_uninit();
     let src = src.as_rust_type_mut();
-    let src = std::mem::replace(src, src.empty());
+    let src = std::mem::replace(src, Query::empty());
     dst.write(Some(src));
 }
 
