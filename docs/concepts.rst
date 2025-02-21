@@ -207,8 +207,12 @@ Functions `z_xxx_take_from_loaned` accept pointers to uninitialized `z_owned_xxx
 `z_loaned_xxx_t*` source pointers.
 
 These functions move data from the source `z_loaned_xxx_t` structure into the destination one. The source
-structure is set to a "valid but unspecified" state: it **has** to be dropped, no other operation on it is safe,
-unless it is explicitly specified. See also section "Comparison with C++ move semantics".
+structure is set to a "valid but unspecified" state. Usually it's some empty state (e.g. null buffer pointer 
+and zero length, etc), but no guarantees are provided, the behavior depends on the implementation.
+
+This also means that the source object still **has** to be dropped by its owner.
+
+See also section "Comparison with C++ move semantics".
 
 The `z_take_from_loaned` macro accepts `z_owned_xxx_t*` and `z_loaned_xxx_t*` pointers and calls the corresponding
 `z_xxx_take_from_loaned` function.
@@ -273,8 +277,6 @@ for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_repl
         z_owned_sample_t s;
         z_take_from_loaned(&s, sample);
         // Now we can save `s` for further processing, e.g. send it to another thread
-
-        // no need to drop `sample` here, the subscriber will drop it        
     }
     ...
     z_owned_closure_sample_t callback;
