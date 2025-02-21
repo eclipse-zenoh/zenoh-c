@@ -94,6 +94,20 @@ pub unsafe extern "C" fn z_query_loan_mut(
         .unwrap_unchecked()
         .as_loaned_c_type_mut()
 }
+
+/// Takes ownership of the mutably borrowed query
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_query_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_query_t>,
+    src: &mut z_loaned_query_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Query::empty());
+    dst.write(Some(src));
+}
+
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {

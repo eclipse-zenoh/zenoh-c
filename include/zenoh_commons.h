@@ -2800,6 +2800,10 @@ ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
  */
 ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
 /**
+ * Mutably borrows hello message.
+ */
+ZENOHC_API struct z_loaned_hello_t *z_hello_loan_mut(struct z_owned_hello_t *this_);
+/**
  * Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
  *
  * The lifetime of locator strings is bound to `this_`.
@@ -2807,6 +2811,10 @@ ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hell
 ZENOHC_API
 void z_hello_locators(const struct z_loaned_hello_t *this_,
                       struct z_owned_string_array_t *locators_out);
+/**
+ * Takes ownership of the mutably borrowed hello
+ */
+ZENOHC_API void z_hello_take_from_loaned(struct z_owned_hello_t *dst, struct z_loaned_hello_t *src);
 /**
  * Returns type of Zenoh entity that transmitted hello message.
  */
@@ -4068,6 +4076,10 @@ ZENOHC_API void z_query_reply_err_options_default(struct z_query_reply_err_optio
  */
 ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *this_);
 /**
+ * Takes ownership of the mutably borrowed query
+ */
+ZENOHC_API void z_query_take_from_loaned(struct z_owned_query_t *dst, struct z_loaned_query_t *src);
+/**
  * Create a default `z_query_target_t`.
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
@@ -4214,6 +4226,10 @@ ZENOHC_API
 bool z_reply_replier_id(const struct z_loaned_reply_t *this_,
                         struct z_id_t *out_id);
 #endif
+/**
+ * Takes ownership of the mutably borrowed reply
+ */
+ZENOHC_API void z_reply_take_from_loaned(struct z_owned_reply_t *dst, struct z_loaned_reply_t *src);
 /**
  * Constructs send and recieve ends of the ring channel
  */
@@ -4385,6 +4401,12 @@ enum z_reliability_t z_sample_reliability(const struct z_loaned_sample_t *this_)
 ZENOHC_API
 const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
 #endif
+/**
+ * Takes ownership of the mutably borrowed sample.
+ */
+ZENOHC_API
+void z_sample_take_from_loaned(struct z_owned_sample_t *dst,
+                               struct z_loaned_sample_t *src);
 /**
  * Returns the sample timestamp.
  *

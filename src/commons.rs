@@ -30,6 +30,8 @@ use zenoh::{
 };
 
 #[cfg(feature = "unstable")]
+use crate::transmute::Gravestone;
+#[cfg(feature = "unstable")]
 use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
@@ -227,6 +229,19 @@ pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut
         .as_mut()
         .unwrap_unchecked()
         .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed sample.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_sample_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_sample_t>,
+    src: &mut z_loaned_sample_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Sample::empty());
+    dst.write(Some(src));
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
@@ -581,6 +596,16 @@ decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
 );
+
+#[cfg(feature = "unstable")]
+impl Gravestone for SourceInfo {
+    fn gravestone() -> Self {
+        SourceInfo::default()
+    }
+    fn is_gravestone(&self) -> bool {
+        self.source_id().is_none() && self.source_sn().is_none()
+    }
+}
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

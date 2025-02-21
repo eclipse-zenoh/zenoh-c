@@ -49,6 +49,30 @@ pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hell
         .as_loaned_c_type_ref()
 }
 
+/// Mutably borrows hello message.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_loan_mut(this_: &mut z_owned_hello_t) -> &mut z_loaned_hello_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed hello
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_hello_t>,
+    src: &mut z_loaned_hello_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Hello::empty());
+    dst.write(Some(src));
+}
+
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {

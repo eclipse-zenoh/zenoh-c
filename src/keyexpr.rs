@@ -26,26 +26,35 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
 
 decl_c_type! {
-    owned(z_owned_keyexpr_t, option KeyExpr<'static>),
+    owned(z_owned_keyexpr_t, KeyExpr<'static>),
     loaned(z_loaned_keyexpr_t),
-    view(z_view_keyexpr_t, Option<KeyExpr<'static>>),
+    view(z_view_keyexpr_t, KeyExpr<'static>),
+}
+
+impl Gravestone for KeyExpr<'static> {
+    fn gravestone() -> Self {
+        KeyExpr::dummy()
+    }
+    fn is_gravestone(&self) -> bool {
+        self.is_dummy()
+    }
 }
 
 /// Constructs an owned key expression in a gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_keyexpr_null(this_: &mut MaybeUninit<z_owned_keyexpr_t>) {
-    this_.as_rust_type_mut_uninit().write(None);
+    this_.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
 }
 
 /// Constructs a view key expression in empty state
 #[no_mangle]
 pub extern "C" fn z_view_keyexpr_empty(this_: &mut MaybeUninit<z_view_keyexpr_t>) {
-    this_.as_rust_type_mut_uninit().write(None);
+    this_.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
 }
 
 fn keyexpr_create_inner(
@@ -127,22 +136,14 @@ pub unsafe extern "C" fn z_keyexpr_from_str_autocanonize(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
-    this_
-        .as_rust_type_ref()
-        .as_ref()
-        .unwrap_unchecked()
-        .as_loaned_c_type_ref()
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Borrows `z_view_keyexpr_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_view_keyexpr_loan(this_: &z_view_keyexpr_t) -> &z_loaned_keyexpr_t {
-    this_
-        .as_rust_type_ref()
-        .as_ref()
-        .unwrap_unchecked()
-        .as_loaned_c_type_ref()
+    this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Frees key expression and resets it to its gravestone state.
@@ -154,13 +155,13 @@ pub extern "C" fn z_keyexpr_drop(this_: &mut z_moved_keyexpr_t) {
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_internal_keyexpr_check(this_: &z_owned_keyexpr_t) -> bool {
-    this_.as_rust_type_ref().is_some()
+    !this_.as_rust_type_ref().is_gravestone()
 }
 
 /// Returns ``true`` if `keyexpr` is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
 pub extern "C" fn z_view_keyexpr_is_empty(this_: &z_view_keyexpr_t) -> bool {
-    this_.as_rust_type_ref().is_none()
+    this_.as_rust_type_ref().is_gravestone()
 }
 
 /// Returns 0 if the passed string is a valid (and canon) key expression.
@@ -234,17 +235,17 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr(
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if expr.is_null() {
-        this.write(None);
+        this.write(KeyExpr::gravestone());
         return result::Z_EINVAL;
     }
     let expr = std::slice::from_raw_parts_mut(expr as _, len);
     match keyexpr_create(expr, false, false) {
         Ok(ke) => {
-            this.write(Some(ke));
+            this.write(ke);
             result::Z_OK
         }
         Err(e) => {
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             e
         }
     }
@@ -265,17 +266,17 @@ pub unsafe extern "C" fn z_keyexpr_from_substr(
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if expr.is_null() {
-        this.write(None);
+        this.write(KeyExpr::gravestone());
         return result::Z_EINVAL;
     }
     let expr = std::slice::from_raw_parts_mut(expr as _, len);
     match keyexpr_create(expr, false, true) {
         Ok(ke) => {
-            this.write(Some(ke));
+            this.write(ke);
             result::Z_OK
         }
         Err(e) => {
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             e
         }
     }
@@ -298,7 +299,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if start.is_null() {
-        this.write(None);
+        this.write(KeyExpr::gravestone());
         return result::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
@@ -306,11 +307,11 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_autocanonize(
     match keyexpr_create(name, true, false) {
         Ok(ke) => {
             *len = ke.len();
-            this.write(Some(ke));
+            this.write(ke);
             result::Z_OK
         }
         Err(e) => {
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             e
         }
     }
@@ -331,7 +332,7 @@ pub unsafe extern "C" fn z_keyexpr_from_substr_autocanonize(
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     if start.is_null() {
-        this.write(None);
+        this.write(KeyExpr::gravestone());
         return result::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
@@ -339,11 +340,11 @@ pub unsafe extern "C" fn z_keyexpr_from_substr_autocanonize(
     match keyexpr_create(name, true, true) {
         Ok(ke) => {
             *len = ke.len();
-            this.write(Some(ke));
+            this.write(ke);
             result::Z_OK
         }
         Err(e) => {
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             e
         }
     }
@@ -360,7 +361,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str(
     expr: *const c_char,
 ) -> z_result_t {
     if expr.is_null() {
-        this.as_rust_type_mut_uninit().write(None);
+        this.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
         result::Z_EINVAL
     } else {
         let len = if expr.is_null() {
@@ -383,7 +384,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str_autocanonize(
     expr: *mut c_char,
 ) -> z_result_t {
     if expr.is_null() {
-        this.as_rust_type_mut_uninit().write(None);
+        this.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
         result::Z_EINVAL
     } else {
         let mut len = libc::strlen(expr);
@@ -412,13 +413,13 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_unchecked(
     len: usize,
 ) {
     if start.is_null() {
-        this.as_rust_type_mut_uninit().write(None);
+        this.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
         return;
     }
     let name = std::slice::from_raw_parts(start as _, len);
     let name = std::str::from_utf8_unchecked(name);
     let name: KeyExpr = keyexpr::from_str_unchecked(name).into();
-    this.as_rust_type_mut_uninit().write(Some(name));
+    this.as_rust_type_mut_uninit().write(name);
 }
 
 /// Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
@@ -475,12 +476,12 @@ pub extern "C" fn z_declare_keyexpr(
     let session = session.as_rust_type_ref();
     match session.declare_keyexpr(key_expr).wait() {
         Ok(id) => {
-            this.write(Some(id.into_owned()));
+            this.write(id.into_owned());
             result::Z_OK
         }
         Err(e) => {
             tracing::debug!("{}", e);
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             result::Z_EGENERIC
         }
     }
@@ -494,7 +495,8 @@ pub extern "C" fn z_undeclare_keyexpr(
     session: &z_loaned_session_t,
     key_expr: &mut z_moved_keyexpr_t,
 ) -> result::z_result_t {
-    let Some(kexpr) = key_expr.take_rust_type() else {
+    let kexpr = key_expr.take_rust_type();
+    if kexpr.is_gravestone() {
         tracing::debug!("Attempted to undeclare dropped keyexpr");
         return result::Z_EINVAL;
     };
@@ -566,18 +568,18 @@ pub unsafe extern "C" fn z_keyexpr_concat(
                 left,
                 e
             );
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             return result::Z_EINVAL;
         }
     };
     match left.concat(right) {
         Ok(result) => {
-            this.write(Some(result));
+            this.write(result);
             result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             result::Z_EGENERIC
         }
     }
@@ -596,12 +598,12 @@ pub extern "C" fn z_keyexpr_join(
     let this = this.as_rust_type_mut_uninit();
     match left.join(right.as_str()) {
         Ok(result) => {
-            this.write(Some(result));
+            this.write(result);
             result::Z_OK
         }
         Err(e) => {
             tracing::error!("{}", e);
-            this.write(None);
+            this.write(KeyExpr::gravestone());
             result::Z_EGENERIC
         }
     }
@@ -651,5 +653,5 @@ pub extern "C" fn z_keyexpr_relation_to(
 #[no_mangle]
 extern "C" fn z_keyexpr_clone(dst: &mut MaybeUninit<z_owned_keyexpr_t>, this: &z_loaned_keyexpr_t) {
     dst.as_rust_type_mut_uninit()
-        .write(Some(this.as_rust_type_ref().clone()));
+        .write(this.as_rust_type_ref().clone());
 }
