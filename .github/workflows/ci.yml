@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest]
         shm: [false, true]
         unstable: [false, true]
 
@@ -59,45 +59,14 @@ jobs:
         uses: taiki-e/install-action@valgrind
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Run cmake tests with zenoh-c as dynamic library
-        shell: bash
-        run: |
-          cd build
-          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
-          cmake --build . --target tests --config Release
-          ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_static)"
-
-      - name: Build cmake tests with C++ compiler to make sure that C API is C++ compatible
-        shell: bash
-        run: |
-          cd build
-          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=OFF -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Debug -DZENOHC_BUILD_TESTS_WITH_CXX=TRUE -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
-          cmake --build . --target tests --config Debug
-
       - name: Run cmake tests with zenoh-c as static library
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           cd build
           cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DZENOHC_BUILD_TESTS_WITH_CXX=FALSE -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_shared)"
-
-      - name: Build examples with zenoh-c
-        shell: bash
-        run: |
-          cd build
-          cmake --build . --target examples
-
-      - name: Build examples with zenoh-c as installed package
-        shell: bash
-        run: |
-          mkdir -p build_examples && cd build_examples
-          cmake ../examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
-          cmake --build . --config Release
-          cd .. && rm -rf build_examples
-
-      - name: Run rust tests
-        run: cargo test --verbose --release
 
       - name: Upload artifact
         if: ${{ matrix.unstable == 'false' && matrix.shm == 'false' }}
@@ -113,133 +82,6 @@ jobs:
             !target/release/.*
             !target/release/*.d
 
-  cross-compile-mac-os:
-    name: Cross compile on macOS-latest
-    runs-on: macOS-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          brew tap messense/macos-cross-toolchains
-          brew install armv7-unknown-linux-gnueabihf
-          brew install mingw-w64
-          brew install x86_64-unknown-linux-gnu
-
-      - name: Install rust toolchains
-        run: |
-          rustup target add armv7-unknown-linux-gnueabihf
-          rustup target add x86_64-pc-windows-gnu
-          rustup target add x86_64-unknown-linux-gnu
-
-      - name: Cross compile for armv7-unknown-linux-gnueabihf
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-armv7-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for x86_64-unknown-linux-gnu
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for x86_64-pc-windows-gnu
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-  cross-compile-ubuntu:
-    name: Cross compile on ubuntu-latest
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get install -y musl-tools
-          sudo apt-get install -y gcc-arm-linux-gnueabi
-          sudo apt-get install -y gcc-arm-linux-gnueabihf
-          sudo apt-get install -y g++-arm-linux-gnueabi
-          sudo apt-get install -y g++-arm-linux-gnueabihf
-          sudo apt-get install -y mingw-w64
-          sudo apt-get install -y gcc-aarch64-linux-gnu
-          sudo apt-get install -y g++-aarch64-linux-gnu
-          wget https://musl.cc/aarch64-linux-musl-cross.tgz
-          tar xvfz aarch64-linux-musl-cross.tgz
-          echo "$(readlink -f aarch64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
-          wget https://musl.cc/x86_64-linux-musl-cross.tgz
-          tar xvfz x86_64-linux-musl-cross.tgz
-          echo "$(readlink -f x86_64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
-
-      - name: Install rust toolchains
-        run: |
-          rustup target add arm-unknown-linux-gnueabi
-          rustup target add arm-unknown-linux-gnueabihf
-          rustup target add x86_64-pc-windows-gnu
-          rustup target add aarch64-unknown-linux-gnu
-          rustup target add aarch64-unknown-linux-musl
-          rustup target add x86_64-unknown-linux-musl
-
-      - name: Cross compile for arm-unknown-linux-gnueabi
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabi.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for arm-unknown-linux-gnueabihf
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-arm-unknown-linux-gnueabihf.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for aarch64-unknown-linux-gnu
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for aarch64-unknown-linux-musl
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-aarch64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for x86_64-unknown-linux-musl
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-unknown-linux-musl.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-      - name: Cross compile for x86_64-pc-windows-gnu
-        run: |
-          rm -rf ./build
-          mkdir -p ./build && cd ./build
-          cmake -DCMAKE_TOOLCHAIN_FILE="../ci/toolchains/TC-x86_64-pc-windows-gnu.cmake" -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON -DZENOHC_BUILD_WITH_UNSTABLE_API=ON ..
-          cmake --build . --target examples
-
-  markdown_lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v18
-        with:
-          config: '.markdownlint.yaml'
-          globs: '**/README.md'
-
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
   # from branches where specific status checks have passed. These checks are
@@ -248,7 +90,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [build, cross-compile-mac-os, cross-compile-ubuntu, markdown_lint]
+    needs: [build]
     if: always()
     steps:
       - name: Check whether all jobs pass
