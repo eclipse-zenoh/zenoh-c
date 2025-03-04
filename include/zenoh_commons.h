@@ -425,6 +425,14 @@ typedef struct z_queryable_options_t {
    * The completeness of the Queryable.
    */
   bool complete;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   * Restricts the matching requests that will be received by this Queryable to the ones
+   * that have the compatible allowed_destination.
+   */
+  enum zc_locality_t allowed_origin;
+#endif
 } z_queryable_options_t;
 /**
  * Options passed to the `z_declare_subscriber()` function.
@@ -438,7 +446,8 @@ typedef struct z_subscriber_options_t {
 #endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * Restricts the matching publications that will be received by this Subscribers to the ones
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   * Restricts the matching publications that will be received by this Subscriber to the ones
    * that have the compatible allowed_destination.
    */
   enum zc_locality_t allowed_origin;
