@@ -13,11 +13,11 @@
 //
 use std::mem::MaybeUninit;
 
-use async_std::task;
 use zenoh::{
     config::{WhatAmI, WhatAmIMatcher},
     scouting::Hello,
 };
+use zenoh_runtime::ZRuntime;
 
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
@@ -199,7 +199,7 @@ pub extern "C" fn z_scout(
         return result::Z_EINVAL;
     };
 
-    task::block_on(async move {
+    ZRuntime::Application.block_in_place(async move {
         let scout = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut owned_h = Some(h);
@@ -209,7 +209,8 @@ pub extern "C" fn z_scout(
             })
             .await
             .unwrap();
-        async_std::task::sleep(std::time::Duration::from_millis(timeout)).await;
+
+        tokio::time::sleep(std::time::Duration::from_millis(timeout)).await;
         std::mem::drop(scout);
     });
     Z_OK
