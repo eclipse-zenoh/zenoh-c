@@ -72,7 +72,7 @@ fn keyexpr_create_inner(
         if should_auto_canonize {
             name.canonize();
         }
-        return keyexpr::new(name).map(|k| k.into());
+        keyexpr::new(name).map(|k| k.into())
     }
 }
 
@@ -453,7 +453,7 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
         z_view_string_from_substr(
             out_string,
             this.as_bytes().as_ptr() as _,
-            this.as_bytes().len(),
+            this.len(),
         )
     };
 }

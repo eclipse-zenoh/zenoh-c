@@ -75,7 +75,7 @@ pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
 /// Borrows the query.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loaned_query_t {
+pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &'static z_loaned_query_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -87,7 +87,7 @@ pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loa
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_query_loan_mut(
     this_: &'static mut z_owned_query_t,
-) -> &mut z_loaned_query_t {
+) -> &'static mut z_loaned_query_t {
     this_
         .as_rust_type_mut()
         .as_mut()

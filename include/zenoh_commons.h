@@ -1842,6 +1842,7 @@ ZENOHC_API void z_close_options_default(struct z_close_options_t *this_);
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1881,6 +1882,7 @@ struct z_loaned_closure_hello_t *z_closure_hello_loan_mut(struct z_owned_closure
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @brief Constructs closure.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
@@ -1929,6 +1931,7 @@ const struct z_loaned_closure_matching_status_t *z_closure_matching_status_loan(
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1968,6 +1971,7 @@ struct z_loaned_closure_query_t *z_closure_query_loan_mut(struct z_owned_closure
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -2008,6 +2012,7 @@ struct z_loaned_closure_reply_t *z_closure_reply_loan_mut(struct z_owned_closure
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -2047,6 +2052,7 @@ struct z_loaned_closure_sample_t *z_closure_sample_loan_mut(struct z_owned_closu
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -5315,6 +5321,7 @@ z_result_t z_whatami_to_view_string(enum z_whatami_t whatami,
  * There is no ideal signal to trigger this cleanup, so by default, zenoh triggers it in the following moments:
  * - first POSIX SHM segment creation
  * - process exit via exit() call or return from maint function
+ *
  * It is OK to additionally trigger this function at any time, but be aware that this can be costly.
  *
  * For non-linux platforms this function currently does nothing
@@ -5332,6 +5339,7 @@ void zc_cleanup_orphaned_shm_segments(void);
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -5865,6 +5873,7 @@ void ze_advanced_subscriber_recovery_options_default(struct ze_advanced_subscrib
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @brief Constructs closure.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.

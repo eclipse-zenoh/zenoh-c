@@ -204,7 +204,6 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
     selector: &z_loaned_keyexpr_t,
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
-    unsafe impl Sync for z_get_options_t {}
     let sub = this.as_rust_type_ref();
     let session = sub.1;
     let selector = selector.as_rust_type_ref().clone();
