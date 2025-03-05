@@ -449,13 +449,7 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
     out_string: &mut MaybeUninit<z_view_string_t>,
 ) {
     let this = this.as_rust_type_ref();
-    unsafe {
-        z_view_string_from_substr(
-            out_string,
-            this.as_bytes().as_ptr() as _,
-            this.len(),
-        )
-    };
+    unsafe { z_view_string_from_substr(out_string, this.as_bytes().as_ptr() as _, this.len()) };
 }
 
 /// Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,
