@@ -194,13 +194,13 @@ and release files will be located at
 
 ## Rust Version
 
-The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.75.0`.
+The Rust version we use is defined in [rust-toolchain.toml](rust-toolchain.toml), which is `1.85.0`.
 There might be some memory mapping issue if you use the later version.
 
 You can also specify the Rust version.
 
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0"
+cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.85.0"
 ```
 
 ## Zenoh features support (enabling/disabling protocols, etc)
