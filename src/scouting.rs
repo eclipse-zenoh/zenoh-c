@@ -21,7 +21,7 @@ use zenoh_runtime::ZRuntime;
 
 pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
-    result::{self, Z_OK},
+    result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
@@ -190,8 +190,12 @@ pub extern "C" fn z_scout(
 ) -> result::z_result_t {
     let callback = callback.take_rust_type();
     let options = options.cloned().unwrap_or_default();
-    let what =
-        WhatAmIMatcher::try_from(options.what as u8).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
+
+    let Ok(what) = WhatAmIMatcher::try_from(options.what as u8) else {
+        tracing::error!("Invalid WhatAmIMatcher value: {:?}", options.what);
+        return result::Z_EINVAL;
+    };
+
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
     let Some(config) = config.take_rust_type() else {
@@ -200,20 +204,26 @@ pub extern "C" fn z_scout(
     };
 
     ZRuntime::Application.block_in_place(async move {
-        let scout = zenoh::scout(what, config)
+        let res = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut owned_h = Some(h);
                 z_closure_hello_call(z_closure_hello_loan(&callback), unsafe {
                     owned_h.as_mut().unwrap_unchecked().as_loaned_c_type_mut()
                 })
             })
-            .await
-            .unwrap();
+            .await;
 
-        tokio::time::sleep(std::time::Duration::from_millis(timeout)).await;
-        std::mem::drop(scout);
-    });
-    Z_OK
+        match res {
+            Ok(_) => {
+                tokio::time::sleep(std::time::Duration::from_millis(timeout)).await;
+                result::Z_OK
+            }
+            Err(e) => {
+                tracing::error!("{}", e);
+                result::Z_EGENERIC
+            }
+        }
+    })
 }
 
 /// Constructs a non-owned non-null-terminated string from the kind of zenoh entity.
