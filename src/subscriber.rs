@@ -61,7 +61,8 @@ pub struct z_subscriber_options_t {
     /// Dummy field to avoid having fieldless struct
     pub _0: u8,
     #[cfg(feature = "unstable")]
-    /// Restricts the matching publications that will be received by this Subscribers to the ones
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    /// Restricts the matching publications that will be received by this Subscriber to the ones
     /// that have the compatible allowed_destination.
     pub allowed_origin: zc_locality_t,
 }

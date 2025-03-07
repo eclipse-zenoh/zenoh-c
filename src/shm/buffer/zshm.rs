@@ -36,7 +36,7 @@ pub extern "C" fn z_shm_from_mut(
     this_: &mut MaybeUninit<z_owned_shm_t>,
     that: &mut z_moved_shm_mut_t,
 ) {
-    let shm: Option<ZShm> = that.take_rust_type().take().map(|val| val.into());
+    let shm: Option<ZShm> = that.take_rust_type().map(|val| val.into());
     this_.as_rust_type_mut_uninit().write(shm);
 }
 

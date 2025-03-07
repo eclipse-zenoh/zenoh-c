@@ -336,7 +336,7 @@ fn configure() {
                 .unwrap();
         }
     }
-    file.unlock().unwrap();
+    fs2::FileExt::unlock(&file).unwrap();
 }
 
 fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
@@ -353,7 +353,7 @@ fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
         file.lock_exclusive().unwrap();
         let mut buf = String::new();
         file.read_to_string(&mut buf).unwrap();
-        file.unlock().unwrap();
+        fs2::FileExt::unlock(&file).unwrap();
 
         // Remove _T_ from enum variant name
         let buf = buf.replace("_T_", "_");
@@ -374,7 +374,7 @@ fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
             .unwrap();
         file.lock_exclusive().unwrap();
         file.write_all(buf.as_bytes()).unwrap();
-        file.unlock().unwrap();
+        fs2::FileExt::unlock(&file).unwrap();
     }
 }
 
@@ -424,7 +424,7 @@ fn split_bindings(split_guide: &SplitGuide) -> Result<(), String> {
         record.is_used()?;
     }
     for (_, file) in files {
-        file.into_inner().unwrap().unlock().unwrap();
+        fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
     }
     std::fs::remove_file(GENERATION_PATH).unwrap();
     Ok(())
@@ -628,7 +628,7 @@ impl<'a> Record<'a> {
 }
 
 // Print all comments first, skip whitespaces
-impl<'a> std::fmt::Display for Record<'a> {
+impl std::fmt::Display for Record<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.tokens
             .iter()
@@ -666,7 +666,7 @@ struct Token<'a> {
     id: &'a str,
     span: Cow<'a, str>,
 }
-impl<'a> std::fmt::Display for Token<'a> {
+impl std::fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // f.write_str(format!("{:?} [", self.tt).as_str())?;
         f.write_str(&self.span)?;
@@ -1411,6 +1411,7 @@ pub fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
+    let multiple_spaces = Regex::new(r"\s\s+").unwrap();
     for (
         _,
         [return_type, prefix, suffix, closure_type, closure_name, call_signature_raw, drop_signature],
@@ -1418,7 +1419,6 @@ pub fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     {
         let mut call_signature: String = call_signature_raw.to_string().replace("struct ", "");
         call_signature = call_signature.replace("enum ", "");
-        let multiple_spaces = Regex::new(r"\s\s+").unwrap();
         call_signature = multiple_spaces
             .replace_all(&call_signature, " ")
             .to_string();
@@ -1887,7 +1887,7 @@ pub fn process_feature_defines(input_path: &str) -> Result<String, Box<dyn std::
     let mut out = String::new();
     let mut skip = false;
     let mut nest_level: usize = 0;
-    for line in lines.flatten() {
+    for line in lines.map_while(Result::ok) {
         if line.starts_with("#ifdef") && skip {
             nest_level += 1;
         } else if line.starts_with("#endif") && skip {

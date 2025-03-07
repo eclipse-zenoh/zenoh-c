@@ -73,7 +73,7 @@ decl_c_type!(
 
 /// Borrows config.
 #[no_mangle]
-pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &z_loaned_config_t {
+pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &'static z_loaned_config_t {
     let this = this_.as_rust_type_ref();
     let this = unsafe { this.as_ref().unwrap_unchecked() };
     this.as_loaned_c_type_ref()
