@@ -1288,9 +1288,9 @@ typedef struct ze_loaned_closure_miss_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_publication_cache_options_t {
   /**
-   * The prefix used for queryable.
+   * The suffix used for queryable.
    */
-  const struct z_loaned_keyexpr_t *queryable_prefix;
+  const struct z_loaned_keyexpr_t *queryable_suffix;
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * The restriction for the matching queries that will be receive by this publication cache.
