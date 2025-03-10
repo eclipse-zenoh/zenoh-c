@@ -30,8 +30,10 @@ use crate::{
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t, zc_locality_t,
+    z_view_string_from_substr, z_view_string_t,
 };
+#[cfg(feature = "unstable")]
+use crate::zc_locality_t;
 #[cfg(feature = "unstable")]
 use crate::{z_entity_global_id_t, z_moved_source_info_t, zc_locality_default};
 decl_c_type!(
