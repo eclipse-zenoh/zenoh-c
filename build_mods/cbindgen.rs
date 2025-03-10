@@ -763,20 +763,6 @@ pub fn process_feature_defines(input_path: &str) -> Result<String, Box<dyn std::
     Ok(out)
 }
 
-
-pub fn generate_bindings() {
-    cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
-        .expect("Unable to generate bindings")
-        .write_to_file("include/zenoh-gen-buggy.h");
-
-    fix_cbindgen("include/zenoh-gen-buggy.h", "include/zenoh-gen.h");
-    std::fs::remove_file("include/zenoh-gen-buggy.h").unwrap();
-
-    preprocess_header("include/zenoh-gen.h", "include/zenoh-cpp.h");
-    create_generics_header("include/zenoh-cpp.h", "include/zenoh_macros.h");
-    std::fs::remove_file("include/zenoh-cpp.h").unwrap();
-}
-
 pub fn create_generics_header(path_in: &str, path_out: &str) {
     let mut file_out = std::fs::File::options()
         .read(false)
@@ -1379,27 +1365,6 @@ pub fn generate_generic_clone_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
-    let mut out = String::new();
-    for sig in macro_func {
-        let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
-        out += &format!(
-            "static inline void {}({} {}, {} {}) {{ *{} = {}->_this; {}_internal_{}_null(&{}->_this); }}\n",
-            sig.func_name,
-            sig.args[0].typename.typename,
-            sig.args[0].name,
-            sig.args[1].typename.typename,
-            sig.args[1].name,
-            sig.args[0].name,
-            sig.args[1].name,
-            prefix,
-            semantic,
-            sig.args[1].name,
-        );
-    }
-    out
-}
-
-pub fn generate_take_from_loaned_functions(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
