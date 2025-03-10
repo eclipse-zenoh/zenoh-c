@@ -6,7 +6,7 @@ use std::io::{BufRead, BufWriter, Read, Write};
 use fs2::FileExt;
 use regex::Regex;
 
-use super::{split_type_name, test_feature, RUST_TO_C_FEATURES};
+use super::{cargo_target_dir, split_type_name, test_feature, RUST_TO_C_FEATURES};
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
@@ -1672,4 +1672,29 @@ pub fn evaluate_c_defines_line(line: &str) -> bool {
         Ok(v) => v == evalexpr::Value::from(false),
         Err(_) => panic!("Failed to evaluate {}", &s),
     }
+}
+
+pub fn generate_c_headers() {
+    cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
+        .expect("Unable to generate bindings")
+        .write_to_file(BUGGY_GENERATION_PATH);
+
+    fix_cbindgen(BUGGY_GENERATION_PATH, GENERATION_PATH);
+    std::fs::remove_file(BUGGY_GENERATION_PATH).unwrap();
+
+    preprocess_header(GENERATION_PATH, PREPROCESS_PATH);
+    create_generics_header(PREPROCESS_PATH, "include/zenoh_macros.h");
+    std::fs::remove_file(PREPROCESS_PATH).unwrap();
+
+    configure();
+    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
+    split_bindings(&split_guide).unwrap();
+    text_replace(split_guide.rules.iter().map(|(name, _)| name.as_str()));
+
+    fs_extra::copy_items(
+        &["include"],
+        cargo_target_dir(),
+        &fs_extra::dir::CopyOptions::default().overwrite(true),
+    )
+    .expect("include should be copied to CARGO_TARGET_DIR");
 }

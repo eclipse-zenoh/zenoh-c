@@ -1,7 +1,31 @@
+use std::{env, path::PathBuf};
+
 use phf::phf_map;
 
-mod opaque_types;
-mod cbindgen;
+pub mod opaque_types;
+pub mod cbindgen;
+
+// See: https://github.com/rust-lang/cargo/issues/9661
+// See: https://github.com/rust-lang/cargo/issues/545
+fn cargo_target_dir() -> PathBuf {
+    let out_dir = PathBuf::from(env::var("OUT_DIR").expect("OUT_DIR should be set"));
+    let profile = env::var("PROFILE").expect("PROFILE should be set");
+
+    let mut target_dir = None;
+    let mut out_dir_path = out_dir.as_path();
+    while let Some(parent) = out_dir_path.parent() {
+        if parent.ends_with(&profile) {
+            target_dir = Some(parent);
+            break;
+        }
+        out_dir_path = parent;
+    }
+
+    target_dir
+        .expect("OUT_DIR should be a child of a PROFILE directory")
+        .to_path_buf()
+}
+
 
 pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let mut split = type_name.split('_');
