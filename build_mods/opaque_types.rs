@@ -1,7 +1,10 @@
+use core::panic;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use phf::phf_map;
 use regex::Regex;
+
+use crate::get_build_rs_path;
 
 use super::{split_type_name, test_feature};
 
@@ -20,13 +23,6 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
     "transport_ws" =>  "Z_FEATURE_TRANSPORT_WS",
     "transport_vsock" => "Z_FEATURE_VSOCK"
 };
-
-fn get_build_rs_path() -> PathBuf {
-    let file_path = file!();
-    let mut path_buf = PathBuf::new();
-    path_buf.push(file_path);
-    path_buf.parent().unwrap().to_path_buf()
-}
 
 fn produce_opaque_types_data() -> PathBuf {
     let target = std::env::var("TARGET").unwrap();
@@ -142,7 +138,6 @@ fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
     let mut comments = Vec::new();
     let mut opaque_lines = Vec::new();
     let mut res = HashMap::new();
-
     for line in std::fs::read_to_string(path_in).unwrap().lines() {
         if line.starts_with("///") {
             comments.push(line.to_string());

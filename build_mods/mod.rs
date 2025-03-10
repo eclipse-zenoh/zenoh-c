@@ -1,5 +1,4 @@
 use std::{env, path::PathBuf};
-
 use phf::phf_map;
 
 pub mod opaque_types;
