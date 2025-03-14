@@ -24,7 +24,7 @@ jobs:
         run: find include/ src/ tests/ examples/ -iname "*.h" -o -iname "*.c" | xargs clang-format -n -Werror
 
   build:
-    name: Build on ${{ matrix.os }}
+    name: "Build on ${{ matrix.os }} shm: ${{ matrix.shm }} unstable: ${{ matrix.unstable }}"
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
