@@ -6,10 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-shared-memory = [
-    "zenoh/shared-memory",
-    "zenoh-protocol/shared-memory",
-]
+shared-memory = ["zenoh/shared-memory", "zenoh-protocol/shared-memory"]
 unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
 auth_pubkey = ["zenoh/auth_pubkey"]
 auth_usrpwd = ["zenoh/auth_usrpwd"]
@@ -30,9 +27,9 @@ panic = [
 default = ["zenoh/default"]
 
 [dependencies]
-zenoh = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], branch = "main" }
-zenoh-protocol = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], default-features = false, branch = "main" }
+zenoh-protocol = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 const_format = "0.2.32"
 flume = "*"
 tokio = "*"

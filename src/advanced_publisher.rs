@@ -54,7 +54,7 @@ impl Default for ze_advanced_publisher_cache_options_t {
         Self {
             is_enabled: true,
             max_samples: 1,
-            congestion_control: CongestionControl::default().into(),
+            congestion_control: CongestionControl::DEFAULT_PUSH.into(),
             priority: Priority::default().into(),
             is_express: false,
         }

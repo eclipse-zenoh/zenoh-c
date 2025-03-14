@@ -75,7 +75,7 @@ pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_op
     this_.write(z_querier_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         priority: Priority::default().into(),
         is_express: false,
         #[cfg(feature = "unstable")]

@@ -27,7 +27,7 @@ use zenoh::bytes::Encoding;
 pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
 
@@ -35,6 +35,15 @@ decl_c_type!(
     owned(z_owned_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
 );
+
+impl Gravestone for Encoding {
+    fn gravestone() -> Self {
+        Encoding::default()
+    }
+    fn is_gravestone(&self) -> bool {
+        self == &Self::default()
+    }
+}
 
 /// Constructs a `z_owned_encoding_t` from a specified substring.
 #[no_mangle]
@@ -127,7 +136,7 @@ pub unsafe extern "C" fn z_encoding_to_string(
     out_str: &mut MaybeUninit<z_owned_string_t>,
 ) {
     let s: Cow<'static, str> = this.as_rust_type_ref().into();
-    z_string_copy_from_substr(out_str, s.as_bytes().as_ptr() as _, s.as_bytes().len());
+    z_string_copy_from_substr(out_str, s.as_bytes().as_ptr() as _, s.len());
 }
 
 /// Returns a loaned default `z_loaned_encoding_t`.

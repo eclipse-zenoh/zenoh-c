@@ -125,6 +125,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_condvar_t : z_condvar_loan_mut, \
         z_owned_config_t : z_config_loan_mut, \
         z_owned_encoding_t : z_encoding_loan_mut, \
+        z_owned_hello_t : z_hello_loan_mut, \
         z_owned_mutex_t : z_mutex_loan_mut, \
         z_owned_publisher_t : z_publisher_loan_mut, \
         z_owned_querier_t : z_querier_loan_mut, \
@@ -429,6 +430,14 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         ze_owned_serializer_t* : ze_serializer_take \
     )(this_, x)
 
+#define z_take_from_loaned(dst, src) \
+    _Generic((dst), \
+        z_owned_hello_t* : z_hello_take_from_loaned, \
+        z_owned_query_t* : z_query_take_from_loaned, \
+        z_owned_reply_t* : z_reply_take_from_loaned, \
+        z_owned_sample_t* : z_sample_take_from_loaned \
+    )(dst, src)
+
 #define z_internal_check(this_) \
     _Generic((this_), \
         z_owned_alloc_layout_t : z_internal_alloc_layout_check, \
@@ -678,6 +687,7 @@ inline z_loaned_closure_sample_t* z_loan_mut(z_owned_closure_sample_t& closure) 
 inline z_loaned_condvar_t* z_loan_mut(z_owned_condvar_t& this_) { return z_condvar_loan_mut(&this_); };
 inline z_loaned_config_t* z_loan_mut(z_owned_config_t& this_) { return z_config_loan_mut(&this_); };
 inline z_loaned_encoding_t* z_loan_mut(z_owned_encoding_t& this_) { return z_encoding_loan_mut(&this_); };
+inline z_loaned_hello_t* z_loan_mut(z_owned_hello_t& this_) { return z_hello_loan_mut(&this_); };
 inline z_loaned_mutex_t* z_loan_mut(z_owned_mutex_t& this_) { return z_mutex_loan_mut(&this_); };
 inline z_loaned_publisher_t* z_loan_mut(z_owned_publisher_t& this_) { return z_publisher_loan_mut(&this_); };
 inline z_loaned_querier_t* z_loan_mut(z_owned_querier_t& this_) { return z_querier_loan_mut(&this_); };
@@ -1079,6 +1089,20 @@ inline void z_take(ze_owned_sample_miss_listener_t* this_, ze_moved_sample_miss_
 };
 inline void z_take(ze_owned_serializer_t* this_, ze_moved_serializer_t* x) {
     ze_serializer_take(this_, x);
+};
+
+
+inline void z_take_from_loaned(z_owned_hello_t* dst, z_loaned_hello_t* src) {
+    z_hello_take_from_loaned(dst, src);
+};
+inline void z_take_from_loaned(z_owned_query_t* dst, z_loaned_query_t* src) {
+    z_query_take_from_loaned(dst, src);
+};
+inline void z_take_from_loaned(z_owned_reply_t* dst, z_loaned_reply_t* src) {
+    z_reply_take_from_loaned(dst, src);
+};
+inline void z_take_from_loaned(z_owned_sample_t* dst, z_loaned_sample_t* src) {
+    z_sample_take_from_loaned(dst, src);
 };
 
 

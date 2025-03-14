@@ -154,6 +154,7 @@ pub extern "C" fn z_closure_matching_status_loan(
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+///
 /// @brief Constructs closure.
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.

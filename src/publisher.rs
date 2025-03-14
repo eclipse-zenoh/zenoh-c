@@ -67,7 +67,7 @@ impl Default for z_publisher_options_t {
     fn default() -> Self {
         Self {
             encoding: None,
-            congestion_control: CongestionControl::default().into(),
+            congestion_control: CongestionControl::DEFAULT_PUSH.into(),
             priority: Priority::default().into(),
             is_express: false,
             #[cfg(feature = "unstable")]

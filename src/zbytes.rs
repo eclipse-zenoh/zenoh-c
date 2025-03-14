@@ -32,7 +32,7 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
     CStringOwned,
@@ -42,6 +42,15 @@ use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
 decl_c_type! {
     owned(z_owned_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t),
+}
+
+impl Gravestone for ZBytes {
+    fn gravestone() -> Self {
+        ZBytes::default()
+    }
+    fn is_gravestone(&self) -> bool {
+        self.is_empty()
+    }
 }
 
 /// The gravestone value for `z_owned_bytes_t`.
@@ -118,7 +127,8 @@ pub unsafe extern "C" fn z_bytes_to_string(
         }
         Err(e) => {
             tracing::error!("Failed to convert the payload: {}", e);
-            dst.as_rust_type_mut_uninit().write(CStringOwned::default());
+            dst.as_rust_type_mut_uninit()
+                .write(CStringOwned::gravestone());
             result::Z_EINVAL
         }
     }

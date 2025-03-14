@@ -30,8 +30,8 @@ use crate::{zc_locality_default, zc_locality_t};
 /// @brief Options passed to the `ze_declare_publication_cache()` function.
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
-    /// The prefix used for queryable.
-    pub queryable_prefix: *const z_loaned_keyexpr_t,
+    /// The suffix used for queryable.
+    pub queryable_suffix: *const z_loaned_keyexpr_t,
     /// The restriction for the matching queries that will be receive by this publication cache.
     #[cfg(feature = "unstable")]
     pub queryable_origin: zc_locality_t,
@@ -50,7 +50,7 @@ pub extern "C" fn ze_publication_cache_options_default(
     this: &mut MaybeUninit<ze_publication_cache_options_t>,
 ) {
     this.write(ze_publication_cache_options_t {
-        queryable_prefix: null(),
+        queryable_suffix: null(),
         #[cfg(feature = "unstable")]
         queryable_origin: zc_locality_default(),
         queryable_complete: false,
@@ -88,9 +88,9 @@ fn _declare_publication_cache_inner<'a, 'b, 'c>(
         if options.resources_limit != 0 {
             p = p.resources_limit(options.resources_limit)
         }
-        if let Some(queryable_prefix) = unsafe { options.queryable_prefix.as_ref() } {
-            let queryable_prefix = queryable_prefix.as_rust_type_ref();
-            p = p.queryable_prefix(queryable_prefix.clone());
+        if let Some(queryable_suffix) = unsafe { options.queryable_suffix.as_ref() } {
+            let queryable_suffix = queryable_suffix.as_rust_type_ref();
+            p = p.queryable_suffix(queryable_suffix.clone());
         }
     }
     p

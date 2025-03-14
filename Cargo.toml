@@ -13,7 +13,7 @@
 #
 [package]
 name = "zenoh-c"
-version = "1.2.0"
+version = "1.2.1"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
@@ -63,7 +63,6 @@ default = [
 maintenance = { status = "actively-developed" }
 
 [dependencies]
-async-std = "=1.12.0"
 chrono = "0.4.37"
 json5 = "0.4.1"
 lazy_static = "1.4.0"
@@ -74,10 +73,10 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", features=["internal"], branch = "main" }
-zenoh-runtime = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-zenoh-util = { version = "1.2.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
+zenoh-runtime = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh-util = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
 
 [build-dependencies]
@@ -108,7 +107,7 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
-depends = "libzenohc (=1.2.0)"
+depends = "libzenohc (=1.2.1)"
 assets = [["include/*", "usr/include/", "755"]]
 
 [profile.dev]
