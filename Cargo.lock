@@ -374,6 +374,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "common-helpers"
+version = "0.1.0"
+dependencies = [
+ "phf",
+]
+
+[[package]]
 name = "concurrent-queue"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3493,6 +3500,7 @@ version = "1.2.1"
 dependencies = [
  "cbindgen",
  "chrono",
+ "common-helpers",
  "const_format",
  "evalexpr",
  "flume",

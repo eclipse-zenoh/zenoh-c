@@ -5,13 +5,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use common_helpers::{cargo_target_dir, split_type_name, test_feature};
 use fs2::FileExt;
 use phf::phf_map;
 use regex::Regex;
 
-use super::{
-    cargo_target_dir, split_bindings, split_type_name, test_feature, FuncArg, FunctionSignature,
-};
+use super::{split_bindings, FuncArg, FunctionSignature};
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";

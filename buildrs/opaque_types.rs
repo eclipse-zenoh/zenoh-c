@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use regex::Regex;
 
-use super::{get_build_rs_path, split_type_name, test_feature, FEATURES};
+use common_helpers::{get_build_rs_path, split_type_name, test_feature, FEATURES};
 
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
@@ -118,7 +118,10 @@ fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
     let mut comments = Vec::new();
     let mut opaque_lines = Vec::new();
     let mut res = HashMap::new();
-    for line in std::fs::read_to_string(path_in).unwrap().lines() {
+    for line in std::fs::read_to_string(&path_in)
+        .unwrap_or_else(|_| panic!("failed to read file {}", path_in.display()))
+        .lines()
+    {
         if line.starts_with("///") {
             comments.push(line.to_string());
             continue;
