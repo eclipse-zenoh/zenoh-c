@@ -1,5 +1,6 @@
-use phf::phf_set;
 use std::{env, path::PathBuf};
+
+use phf::phf_set;
 
 pub fn get_build_rs_path() -> PathBuf {
     let file_path = file!();
@@ -97,6 +98,3 @@ pub fn cargo_target_dir() -> PathBuf {
         .expect("OUT_DIR should be a child of a PROFILE directory")
         .to_path_buf()
 }
-
-
-

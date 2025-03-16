@@ -1,10 +1,17 @@
-use std::{collections::HashSet, fs::File, io::{BufRead, Read, Write}, path::{Path, PathBuf}};
+use std::{
+    collections::HashSet,
+    fs::File,
+    io::{BufRead, Read, Write},
+    path::{Path, PathBuf},
+};
 
 use fs2::FileExt;
 use phf::phf_map;
 use regex::Regex;
 
-use super::{cargo_target_dir, split_bindings, split_type_name, test_feature, FuncArg, FunctionSignature};
+use super::{
+    cargo_target_dir, split_bindings, split_type_name, test_feature, FuncArg, FunctionSignature,
+};
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
@@ -39,7 +46,7 @@ pub fn generate_c_headers() {
     std::fs::remove_file(PREPROCESS_PATH).unwrap();
 
     configure();
-    let files= split_bindings(GENERATION_PATH).unwrap();
+    let files = split_bindings(GENERATION_PATH).unwrap();
     text_replace(files.iter());
 
     fs_extra::copy_items(
@@ -440,9 +447,7 @@ fn evaluate_c_defines_line(line: &str) -> bool {
     }
 }
 
-fn make_move_take_signatures(
-    path_in: &str,
-) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
+fn make_move_take_signatures(path_in: &str) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
     let mut move_funcs = Vec::<FunctionSignature>::new();
@@ -725,11 +730,7 @@ fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
     res
 }
 
-fn generate_generic_c(
-    macro_func: &[FunctionSignature],
-    generic_name: &str,
-    decay: bool,
-) -> String {
+fn generate_generic_c(macro_func: &[FunctionSignature], generic_name: &str, decay: bool) -> String {
     let va_args = macro_func
         .iter()
         .any(|f| f.args.len() != macro_func[0].args.len());

@@ -1,4 +1,9 @@
-use std::{borrow::Cow, collections::HashMap, io::{BufWriter, Write}, path::{Path, PathBuf}};
+use std::{
+    borrow::Cow,
+    collections::HashMap,
+    io::{BufWriter, Write},
+    path::{Path, PathBuf},
+};
 
 use fs2::FileExt;
 
@@ -81,9 +86,7 @@ impl SplitGuide {
             for rule in rules {
                 match rule {
                     SplitRule::Brand(brand) if *brand == record.rt => shared.push(file),
-                    SplitRule::Exclusive(id) if record.contains_id(id) => {
-                        exclusives.push(file)
-                    }
+                    SplitRule::Exclusive(id) if record.contains_id(id) => exclusives.push(file),
                     SplitRule::Shared(id) if record.contains_id(id) => shared.push(file),
                     _ => {}
                 }
@@ -610,13 +613,13 @@ pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
     for record in &records {
         record.is_used()?;
     }
-    let files = files.into_iter().map(|(path, file)| {
-        fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
-        path.to_path_buf()
-    }).collect();
+    let files = files
+        .into_iter()
+        .map(|(path, file)| {
+            fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
+            path.to_path_buf()
+        })
+        .collect();
     std::fs::remove_file(genetation_path).unwrap();
     Ok(files)
 }
-
-
-

@@ -111,7 +111,6 @@ fn produce_opaque_types_data() -> PathBuf {
     output_file_path
 }
 
-
 fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
     let current_folder = get_build_rs_path();
     let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
