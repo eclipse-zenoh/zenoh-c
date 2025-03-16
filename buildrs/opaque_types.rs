@@ -1,66 +1,8 @@
-use core::panic;
-use std::collections::HashMap;
-use std::path::PathBuf;
-use phf::phf_map;
+use std::{collections::HashMap, path::PathBuf};
+
 use regex::Regex;
 
-use crate::get_build_rs_path;
-
-use super::{split_type_name, test_feature};
-
-static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
-    "unstable" => "Z_FEATURE_UNSTABLE_API",
-    "shared-memory" => "Z_FEATURE_SHARED_MEMORY",
-    "auth_pubkey" => "Z_FEATURE_AUTH_PUBKEY",
-    "auth_usrpwd" => "Z_FEATURE_AUTH_USRPWD",
-    "transport_multilink" => "Z_FEATURE_TRANSPORT_MULTILINK",
-    "transport_compression" => "Z_FEATURE_TRANSPORT_COMPRESSION",
-    "transport_quic"  => "Z_FEATURE_TRANSPORT_QUIC",
-    "transport_tcp" =>  "Z_FEATURE_TRANSPORT_TCP",
-    "transport_tls" =>  "Z_FEATURE_TRANSPORT_TLS",
-    "transport_udp" =>  "Z_FEATURE_TRANSPORT_UDP",
-    "transport_unixsock-stream" =>  "Z_FEATURE_TRANSPORT_UNIXSOCK_STREAM",
-    "transport_ws" =>  "Z_FEATURE_TRANSPORT_WS",
-    "transport_vsock" => "Z_FEATURE_VSOCK"
-};
-
-fn produce_opaque_types_data() -> PathBuf {
-    let target = std::env::var("TARGET").unwrap();
-    let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let current_folder = get_build_rs_path();
-    let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
-    let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
-    let stdio = std::process::Stdio::from(out_file);
-
-    let mut linker_args = Vec::<String>::new();
-    if !linker.is_empty() {
-        linker_args.push("--config".to_string());
-        linker_args.push(format!("target.{target}.linker=\"{linker}\""));
-    }
-    #[allow(unused_mut)]
-    let mut feature_args: Vec<&str> = vec!["-F", "panic"];
-    for (rust_feature, _c_feature) in RUST_TO_C_FEATURES.entries() {
-        if test_feature(rust_feature) {
-            feature_args.push("-F");
-            feature_args.push(rust_feature);
-        }
-    }
-
-    let _ = std::process::Command::new("cargo")
-        .arg("build")
-        .args(feature_args)
-        .args(linker_args)
-        .arg("--target")
-        .arg(target)
-        .arg("--manifest-path")
-        .arg(manifest_path)
-        .stderr(stdio)
-        .output()
-        .unwrap();
-
-    output_file_path
-}
+use super::{get_build_rs_path, split_type_name, test_feature, FEATURES};
 
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
@@ -130,6 +72,45 @@ impl Drop for {type_name} {{
     }
     std::fs::write(path_out, data_out).unwrap();
 }
+
+fn produce_opaque_types_data() -> PathBuf {
+    let target = std::env::var("TARGET").unwrap();
+    let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
+    let current_folder = get_build_rs_path();
+    let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
+    let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
+    let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
+    let stdio = std::process::Stdio::from(out_file);
+
+    let mut linker_args = Vec::<String>::new();
+    if !linker.is_empty() {
+        linker_args.push("--config".to_string());
+        linker_args.push(format!("target.{target}.linker=\"{linker}\""));
+    }
+    #[allow(unused_mut)]
+    let mut feature_args: Vec<&str> = vec!["-F", "panic"];
+    for feature in FEATURES.iter() {
+        if test_feature(feature) {
+            feature_args.push("-F");
+            feature_args.push(feature);
+        }
+    }
+
+    let _ = std::process::Command::new("cargo")
+        .arg("build")
+        .args(feature_args)
+        .args(linker_args)
+        .arg("--target")
+        .arg(target)
+        .arg("--manifest-path")
+        .arg(manifest_path)
+        .stderr(stdio)
+        .output()
+        .unwrap();
+
+    output_file_path
+}
+
 
 fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
     let current_folder = get_build_rs_path();
