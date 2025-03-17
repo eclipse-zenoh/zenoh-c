@@ -1,10 +1,6 @@
-mod buildrs;
-
-use buildrs::{generate_c_headers, generate_opaque_types};
-
 fn main() {
-    generate_opaque_types();
-    generate_c_headers();
+    opaque_types_generator::generate_opaque_types();
+    cbindgen_generator::generate_c_headers();
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=buildrs");
     println!("cargo:rerun-if-changed=src");

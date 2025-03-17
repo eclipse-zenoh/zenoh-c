@@ -88,6 +88,8 @@ fs_extra = "1.3.0"
 evalexpr = "11.3.0"
 phf = { version = "0.11.2", features = ["macros"] }
 common-helpers = { path = "./build-resources/common-helpers" }
+opaque-types-generator = { path = "./build-resources/opaque-types-generator" }
+cbindgen-generator = { path = "./build-resources/cbindgen-generator" }
 
 [lib]
 path = "@CARGO_PROJECT_DIR@src/lib.rs"

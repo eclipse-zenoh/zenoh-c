@@ -1,0 +1,9 @@
+[package]
+name = "opaque-types-generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+phf = { version = "0.11.2", features = ["macros"] }
+regex = "1.7.1"
+common-helpers = { path = "../common-helpers" }
