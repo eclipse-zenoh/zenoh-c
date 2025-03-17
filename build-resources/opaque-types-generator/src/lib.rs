@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use regex::Regex;
 
-use common_helpers::{get_build_rs_path, split_type_name, test_feature, FEATURES};
+use common_helpers::{features, get_build_rs_path, split_type_name};
 
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
@@ -89,11 +89,9 @@ fn produce_opaque_types_data() -> PathBuf {
     }
     #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec!["-F", "panic"];
-    for feature in FEATURES.iter() {
-        if test_feature(feature) {
-            feature_args.push("-F");
-            feature_args.push(feature);
-        }
+    for feature in features() {
+        feature_args.push("-F");
+        feature_args.push(feature);
     }
 
     let _ = std::process::Command::new("cargo")

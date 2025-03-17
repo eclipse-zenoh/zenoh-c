@@ -1,6 +1,4 @@
-use std::{env, path::PathBuf};
-
-use phf::phf_set;
+use std::{collections::BTreeSet, env, path::PathBuf};
 
 pub fn get_build_rs_path() -> PathBuf {
     let file_path = file!();
@@ -37,21 +35,9 @@ pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     (prefix, category, semantic, postfix)
 }
 
-pub static FEATURES: phf::Set<&'static str> = phf_set! {
-    "unstable",
-    "shared-memory",
-    "auth_pubkey",
-    "auth_usrpwd",
-    "transport_multilink",
-    "transport_compression",
-    "transport_quic" ,
-    "transport_tcp",
-    "transport_tls",
-    "transport_udp",
-    "transport_unixsock-stream",
-    "transport_ws",
-    "transport_vsock"
-};
+pub fn features() -> BTreeSet<&'static str> {
+    zenoh::FEATURES.split(" zenoh/").collect()
+}
 
 pub fn test_feature(feature: &str) -> bool {
     zenoh::FEATURES.contains(format!(" zenoh/{feature}").as_str())
