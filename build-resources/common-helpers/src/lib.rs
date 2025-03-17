@@ -54,35 +54,7 @@ pub static FEATURES: phf::Set<&'static str> = phf_set! {
 };
 
 pub fn test_feature(feature: &str) -> bool {
-    match feature {
-        #[cfg(feature = "shared-memory")]
-        "shared-memory" => true,
-        #[cfg(feature = "unstable")]
-        "unstable" => true,
-        #[cfg(feature = "auth_pubkey")]
-        "auth_pubkey" => true,
-        #[cfg(feature = "auth_usrpwd")]
-        "auth_usrpwd" => true,
-        #[cfg(feature = "transport_multilink")]
-        "transport_multilink" => true,
-        #[cfg(feature = "transport_compression")]
-        "transport_compression" => true,
-        #[cfg(feature = "transport_quic")]
-        "transport_quic" => true,
-        #[cfg(feature = "transport_tcp")]
-        "transport_tcp" => true,
-        #[cfg(feature = "transport_tls")]
-        "transport_tls" => true,
-        #[cfg(feature = "transport_udp")]
-        "transport_udp" => true,
-        #[cfg(feature = "transport_unixsock-stream")]
-        "transport_unixsock-stream" => true,
-        #[cfg(feature = "transport_ws")]
-        "transport_ws" => true,
-        #[cfg(feature = "transport_vsock")]
-        "transport_vsock" => true,
-        _ => false,
-    }
+    zenoh::FEATURES.contains(format!(" zenoh/{feature}").as_str())
 }
 
 // See: https://github.com/rust-lang/cargo/issues/9661
