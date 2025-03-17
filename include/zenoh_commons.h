@@ -16,32 +16,6 @@
 #define ALIGN(n)
 #define ZENOHC_API
 #endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Allocation errors
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef enum z_alloc_error_t {
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Defragmentation needed.
-   */
-  Z_ALLOC_ERROR_NEED_DEFRAGMENT,
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * The provider is out of memory.
-   */
-  Z_ALLOC_ERROR_OUT_OF_MEMORY,
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Other error.
-   */
-  Z_ALLOC_ERROR_OTHER,
-#endif
-} z_alloc_error_t;
-#endif
 typedef enum z_congestion_control_t {
   /**
    * Messages are not dropped in case of congestion.
@@ -102,26 +76,6 @@ typedef enum z_keyexpr_intersection_level_t {
    */
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Layouting errors
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef enum z_layout_error_t {
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Layout arguments are incorrect.
-   */
-  Z_LAYOUT_ERROR_INCORRECT_LAYOUT_ARGS,
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Layout incompatible with provider.
-   */
-  Z_LAYOUT_ERROR_PROVIDER_INCOMPATIBLE_LAYOUT,
-#endif
-} z_layout_error_t;
 #endif
 /**
  * The priority of zenoh messages.
@@ -216,52 +170,6 @@ typedef enum z_whatami_t {
   Z_WHATAMI_CLIENT = 4,
 } z_whatami_t;
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Status of SHM buffer allocation operation.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef enum zc_buf_alloc_status_t {
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Allocation ok
-   */
-  ZC_BUF_ALLOC_STATUS_OK = 0,
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Allocation error
-   */
-  ZC_BUF_ALLOC_STATUS_ALLOC_ERROR = 1,
-#endif
-} zc_buf_alloc_status_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Status of SHM buffer layouting + allocation operation.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef enum zc_buf_layout_alloc_status_t {
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Allocation ok
-   */
-  ZC_BUF_LAYOUT_ALLOC_STATUS_OK = 0,
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Allocation error
-   */
-  ZC_BUF_LAYOUT_ALLOC_STATUS_ALLOC_ERROR = 1,
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-  /**
-   * Layouting error
-   */
-  ZC_BUF_LAYOUT_ALLOC_STATUS_LAYOUT_ERROR = 2,
-#endif
-} zc_buf_layout_alloc_status_t;
-#endif
-/**
  * The locality of samples to be received by subscribers or targeted by publishers.
  */
 typedef enum zc_locality_t {
@@ -329,56 +237,19 @@ typedef enum zc_reply_keyexpr_t {
   ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zc_reply_keyexpr_t;
 #endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A result of SHM buffer allocation operation.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct z_buf_alloc_result_t {
-  enum zc_buf_alloc_status_t status;
-  z_owned_shm_mut_t buf;
-  enum z_alloc_error_t error;
-} z_buf_alloc_result_t;
-#endif
+typedef struct z_moved_alloc_layout_t {
+  struct z_owned_alloc_layout_t _this;
+} z_moved_alloc_layout_t;
 typedef int8_t z_result_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief An AllocAlignment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct z_alloc_alignment_t {
-  uint8_t pow;
-} z_alloc_alignment_t;
-#endif
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct zc_threadsafe_context_data_t {
-  void *ptr;
-} zc_threadsafe_context_data_t;
-#endif
-/**
- * A tread-safe droppable context.
- * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
- * information to each callback.
- *
- * This is a thread-safe context - the associated callbacks may be executed concurrently with the same
- * zc_context_t instance. In other words, all the callbacks associated with this context data MUST be
- * thread-safe.
- *
- * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted.The
- * delete_fn is guaranteed to be executed only once at some point of time after the last associated
- * callback call returns.
- * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
- * be executed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct zc_threadsafe_context_t {
-  struct zc_threadsafe_context_data_t context;
-  void (*delete_fn)(void*);
-} zc_threadsafe_context_t;
-#endif
 typedef struct z_moved_bytes_t {
   struct z_owned_bytes_t _this;
 } z_moved_bytes_t;
+typedef struct z_moved_shm_t {
+  struct z_owned_shm_t _this;
+} z_moved_shm_t;
+typedef struct z_moved_shm_mut_t {
+  struct z_owned_shm_mut_t _this;
+} z_moved_shm_mut_t;
 typedef struct z_moved_slice_t {
   struct z_owned_slice_t _this;
 } z_moved_slice_t;
@@ -394,41 +265,9 @@ typedef struct ALIGN(8) z_bytes_slice_iterator_t {
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t _this;
 } z_moved_bytes_writer_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Unique segment identifier.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef uint32_t z_segment_id_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Chunk id within it's segment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef uint32_t z_chunk_id_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A ChunkDescriptor.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct z_chunk_descriptor_t {
-  z_segment_id_t segment;
-  z_chunk_id_t chunk;
-  size_t len;
-} z_chunk_descriptor_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief An AllocatedChunk.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct z_allocated_chunk_t {
-  struct z_chunk_descriptor_t descriptpr;
-  void *data;
-} z_allocated_chunk_t;
-#endif
+typedef struct z_moved_chunk_alloc_result_t {
+  struct z_owned_chunk_alloc_result_t _this;
+} z_moved_chunk_alloc_result_t;
 /**
  * Monotonic clock
  */
@@ -858,6 +697,9 @@ typedef struct z_moved_liveliness_token_t {
 typedef struct z_moved_matching_listener_t {
   struct z_owned_matching_listener_t _this;
 } z_moved_matching_listener_t;
+typedef struct z_moved_memory_layout_t {
+  struct z_owned_memory_layout_t _this;
+} z_moved_memory_layout_t;
 typedef struct z_moved_mutex_t {
   struct z_owned_mutex_t _this;
 } z_moved_mutex_t;
@@ -1111,52 +953,15 @@ typedef struct z_scout_options_t {
 typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Callbacks for ShmSegment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct zc_shm_segment_callbacks_t {
-  /**
-   * Obtain the actual region of memory identified by it's id.
-   */
-  uint8_t *(*map_fn)(z_chunk_id_t chunk_id, void *context);
-} zc_shm_segment_callbacks_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief An ShmSegment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct z_shm_segment_t {
-  struct zc_threadsafe_context_t context;
-  struct zc_shm_segment_callbacks_t callbacks;
-} z_shm_segment_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Callback for ShmClient.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct zc_shm_client_callbacks_t {
-  /**
-   * Attach to particular shared memory segment
-   */
-  bool (*attach_fn)(struct z_shm_segment_t *out_segment, z_segment_id_t segment_id, void *context);
-} zc_shm_client_callbacks_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A result of SHM buffer layouting + allocation operation.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct z_buf_layout_alloc_result_t {
-  enum zc_buf_layout_alloc_status_t status;
-  z_owned_shm_mut_t buf;
-  enum z_alloc_error_t alloc_error;
-  enum z_layout_error_t layout_error;
-} z_buf_layout_alloc_result_t;
-#endif
+typedef struct z_moved_shm_client_t {
+  struct z_owned_shm_client_t _this;
+} z_moved_shm_client_t;
+typedef struct z_moved_shm_client_storage_t {
+  struct z_owned_shm_client_storage_t _this;
+} z_moved_shm_client_storage_t;
+typedef struct z_moved_shm_provider_t {
+  struct z_owned_shm_provider_t _this;
+} z_moved_shm_provider_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Unique protocol identifier.
@@ -1165,47 +970,6 @@ typedef struct z_buf_layout_alloc_result_t {
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 typedef uint32_t z_protocol_id_t;
-#endif
-/**
- * A non-tread-safe droppable context.
- * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
- * information to each callback.
- *
- * This is a non-thread-safe context - zenoh-c guarantees that associated callbacks that share the same
- * zc_context_t instance will never be executed concurrently. In other words, all the callbacks associated
- * with this context data are not required to be thread-safe.
- *
- * NOTE: Remember that the same callback interfaces associated with different zc_context_t instances can
- * still be executed concurrently. The exact behavior depends on user's application, but we strongly
- * discourage our users from pinning to some specific behavior unless they _really_ understand what they
- * are doing.
- *
- * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted. The
- * delete_fn is guaranteed to be executed only once at some point of time after the last associated
- * callback call returns.
- * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
- * be executed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct zc_context_t {
-  void *context;
-  void (*delete_fn)(void*);
-} zc_context_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Callbacks for ShmProviderBackend.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef struct zc_shm_provider_backend_callbacks_t {
-  void (*alloc_fn)(z_owned_chunk_alloc_result_t *out_result,
-                   const z_loaned_memory_layout_t *layout,
-                   void *context);
-  void (*free_fn)(const struct z_chunk_descriptor_t *chunk, void *context);
-  size_t (*defragment_fn)(void *context);
-  size_t (*available_fn)(void *context);
-  void (*layout_for_fn)(z_owned_memory_layout_t *layout, void *context);
-} zc_shm_provider_backend_callbacks_t;
 #endif
 typedef struct z_moved_string_array_t {
   struct z_owned_string_array_t _this;
@@ -1249,6 +1013,9 @@ typedef struct zc_internal_encoding_data_t {
   const uint8_t *schema_ptr;
   size_t schema_len;
 } zc_internal_encoding_data_t;
+typedef struct zc_moved_shm_client_list_t {
+  struct zc_owned_shm_client_list_t _this;
+} zc_moved_shm_client_list_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
@@ -1624,7 +1391,7 @@ ZENOHC_API extern const unsigned int Z_SHM_POSIX_PROTOCOL_ID;
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_alloc_layout_alloc(struct z_buf_alloc_result_t *out_result,
-                          const z_loaned_alloc_layout_t *layout);
+                          const struct z_loaned_alloc_layout_t *layout);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1633,7 +1400,7 @@ void z_alloc_layout_alloc(struct z_buf_alloc_result_t *out_result,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_alloc_layout_alloc_gc(struct z_buf_alloc_result_t *out_result,
-                             const z_loaned_alloc_layout_t *layout);
+                             const struct z_loaned_alloc_layout_t *layout);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1642,7 +1409,7 @@ void z_alloc_layout_alloc_gc(struct z_buf_alloc_result_t *out_result,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_alloc_layout_alloc_gc_defrag(struct z_buf_alloc_result_t *out_result,
-                                    const z_loaned_alloc_layout_t *layout);
+                                    const struct z_loaned_alloc_layout_t *layout);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1651,7 +1418,7 @@ void z_alloc_layout_alloc_gc_defrag(struct z_buf_alloc_result_t *out_result,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_alloc_layout_alloc_gc_defrag_blocking(struct z_buf_alloc_result_t *out_result,
-                                             const z_loaned_alloc_layout_t *layout);
+                                             const struct z_loaned_alloc_layout_t *layout);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1660,7 +1427,7 @@ void z_alloc_layout_alloc_gc_defrag_blocking(struct z_buf_alloc_result_t *out_re
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_alloc_layout_alloc_gc_defrag_dealloc(struct z_buf_alloc_result_t *out_result,
-                                            const z_loaned_alloc_layout_t *layout);
+                                            const struct z_loaned_alloc_layout_t *layout);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1668,7 +1435,7 @@ void z_alloc_layout_alloc_gc_defrag_dealloc(struct z_buf_alloc_result_t *out_res
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_alloc_layout_drop(z_moved_alloc_layout_t *this_);
+void z_alloc_layout_drop(struct z_moved_alloc_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1676,7 +1443,7 @@ void z_alloc_layout_drop(z_moved_alloc_layout_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const z_loaned_alloc_layout_t *z_alloc_layout_loan(const z_owned_alloc_layout_t *this_);
+const struct z_loaned_alloc_layout_t *z_alloc_layout_loan(const struct z_owned_alloc_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1684,8 +1451,8 @@ const z_loaned_alloc_layout_t *z_alloc_layout_loan(const z_owned_alloc_layout_t 
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_alloc_layout_new(z_owned_alloc_layout_t *this_,
-                              const z_loaned_shm_provider_t *provider,
+z_result_t z_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
+                              const struct z_loaned_shm_provider_t *provider,
                               size_t size,
                               struct z_alloc_alignment_t alignment);
 #endif
@@ -1697,7 +1464,7 @@ z_result_t z_alloc_layout_new(z_owned_alloc_layout_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_buf_alloc_result_t *out_result,
-                                                           const z_loaned_alloc_layout_t *layout,
+                                                           const struct z_loaned_alloc_layout_t *layout,
                                                            struct zc_threadsafe_context_t result_context,
                                                            void (*result_callback)(void*,
                                                                                    struct z_buf_alloc_result_t*));
@@ -1712,7 +1479,7 @@ z_result_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_buf_alloc_re
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_bytes_as_loaned_shm(const struct z_loaned_bytes_t *this_,
-                                 const z_loaned_shm_t **dst);
+                                 const struct z_loaned_shm_t **dst);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1724,7 +1491,7 @@ z_result_t z_bytes_as_loaned_shm(const struct z_loaned_bytes_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_bytes_as_mut_loaned_shm(struct z_loaned_bytes_t *this_,
-                                     z_loaned_shm_t **dst);
+                                     struct z_loaned_shm_t **dst);
 #endif
 /**
  * Constructs an owned shallow copy of data in provided uninitialized memory location.
@@ -1791,7 +1558,7 @@ z_result_t z_bytes_from_buf(struct z_owned_bytes_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_bytes_from_shm(struct z_owned_bytes_t *this_,
-                            z_moved_shm_t *shm);
+                            struct z_moved_shm_t *shm);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1800,7 +1567,7 @@ z_result_t z_bytes_from_shm(struct z_owned_bytes_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_bytes_from_shm_mut(struct z_owned_bytes_t *this_,
-                                z_moved_shm_mut_t *shm);
+                                struct z_moved_shm_mut_t *shm);
 #endif
 /**
  * Converts a slice into `z_owned_bytes_t`.
@@ -1942,7 +1709,7 @@ bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_bytes_to_owned_shm(const struct z_loaned_bytes_t *this_,
-                                z_owned_shm_t *dst);
+                                struct z_owned_shm_t *dst);
 #endif
 /**
  * Converts data into an owned slice.
@@ -2015,7 +1782,7 @@ z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_chunk_alloc_result_drop(z_moved_chunk_alloc_result_t *this_);
+void z_chunk_alloc_result_drop(struct z_moved_chunk_alloc_result_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -2023,7 +1790,7 @@ void z_chunk_alloc_result_drop(z_moved_chunk_alloc_result_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_chunk_alloc_result_new_error(z_owned_chunk_alloc_result_t *this_,
+void z_chunk_alloc_result_new_error(struct z_owned_chunk_alloc_result_t *this_,
                                     enum z_alloc_error_t alloc_error);
 #endif
 /**
@@ -2032,7 +1799,7 @@ void z_chunk_alloc_result_new_error(z_owned_chunk_alloc_result_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_chunk_alloc_result_new_ok(z_owned_chunk_alloc_result_t *this_,
+z_result_t z_chunk_alloc_result_new_ok(struct z_owned_chunk_alloc_result_t *this_,
                                        struct z_allocated_chunk_t allocated_chunk);
 #endif
 /**
@@ -3111,7 +2878,7 @@ ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_alloc_layout_check(const z_owned_alloc_layout_t *this_);
+bool z_internal_alloc_layout_check(const struct z_owned_alloc_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3119,7 +2886,7 @@ bool z_internal_alloc_layout_check(const z_owned_alloc_layout_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_alloc_layout_null(z_owned_alloc_layout_t *this_);
+void z_internal_alloc_layout_null(struct z_owned_alloc_layout_t *this_);
 #endif
 /**
  * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
@@ -3143,7 +2910,7 @@ ZENOHC_API void z_internal_bytes_writer_null(struct z_owned_bytes_writer_t *this
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_chunk_alloc_result_check(const z_owned_chunk_alloc_result_t *this_);
+bool z_internal_chunk_alloc_result_check(const struct z_owned_chunk_alloc_result_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3151,7 +2918,7 @@ bool z_internal_chunk_alloc_result_check(const z_owned_chunk_alloc_result_t *thi
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_chunk_alloc_result_null(z_owned_chunk_alloc_result_t *this_);
+void z_internal_chunk_alloc_result_null(struct z_owned_chunk_alloc_result_t *this_);
 #endif
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
@@ -3321,7 +3088,7 @@ void z_internal_matching_listener_null(struct z_owned_matching_listener_t *this_
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_memory_layout_check(const z_owned_memory_layout_t *this_);
+bool z_internal_memory_layout_check(const struct z_owned_memory_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3329,7 +3096,7 @@ bool z_internal_memory_layout_check(const z_owned_memory_layout_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_memory_layout_null(z_owned_memory_layout_t *this_);
+void z_internal_memory_layout_null(struct z_owned_memory_layout_t *this_);
 #endif
 /**
  * Returns ``true`` if mutex is valid, ``false`` otherwise.
@@ -3444,7 +3211,7 @@ ZENOHC_API void z_internal_session_null(struct z_owned_session_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_shm_check(const z_owned_shm_t *this_);
+bool z_internal_shm_check(const struct z_owned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3452,7 +3219,7 @@ bool z_internal_shm_check(const z_owned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_shm_client_check(const z_owned_shm_client_t *this_);
+bool z_internal_shm_client_check(const struct z_owned_shm_client_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3460,7 +3227,7 @@ bool z_internal_shm_client_check(const z_owned_shm_client_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_shm_client_null(z_owned_shm_client_t *this_);
+void z_internal_shm_client_null(struct z_owned_shm_client_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3468,7 +3235,7 @@ void z_internal_shm_client_null(z_owned_shm_client_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_shm_client_storage_check(const z_owned_shm_client_storage_t *this_);
+bool z_internal_shm_client_storage_check(const struct z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3476,7 +3243,7 @@ bool z_internal_shm_client_storage_check(const z_owned_shm_client_storage_t *thi
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_shm_client_storage_null(z_owned_shm_client_storage_t *this_);
+void z_internal_shm_client_storage_null(struct z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3484,7 +3251,7 @@ void z_internal_shm_client_storage_null(z_owned_shm_client_storage_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_shm_mut_check(const z_owned_shm_mut_t *this_);
+bool z_internal_shm_mut_check(const struct z_owned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3492,7 +3259,7 @@ bool z_internal_shm_mut_check(const z_owned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_shm_mut_null(z_owned_shm_mut_t *this_);
+void z_internal_shm_mut_null(struct z_owned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3500,7 +3267,7 @@ void z_internal_shm_mut_null(z_owned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_shm_null(z_owned_shm_t *this_);
+void z_internal_shm_null(struct z_owned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3508,7 +3275,7 @@ void z_internal_shm_null(z_owned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_shm_provider_check(const z_owned_shm_provider_t *this_);
+bool z_internal_shm_provider_check(const struct z_owned_shm_provider_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3516,7 +3283,7 @@ bool z_internal_shm_provider_check(const z_owned_shm_provider_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_shm_provider_null(z_owned_shm_provider_t *this_);
+void z_internal_shm_provider_null(struct z_owned_shm_provider_t *this_);
 #endif
 /**
  * @return ``true`` if slice is not empty, ``false`` otherwise.
@@ -3812,7 +3579,7 @@ void z_matching_listener_drop(struct z_moved_matching_listener_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_memory_layout_drop(z_moved_memory_layout_t *this_);
+void z_memory_layout_drop(struct z_moved_memory_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3820,7 +3587,7 @@ void z_memory_layout_drop(z_moved_memory_layout_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_memory_layout_get_data(const z_loaned_memory_layout_t *this_,
+void z_memory_layout_get_data(const struct z_loaned_memory_layout_t *this_,
                               size_t *out_size,
                               struct z_alloc_alignment_t *out_alignment);
 #endif
@@ -3830,7 +3597,7 @@ void z_memory_layout_get_data(const z_loaned_memory_layout_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const z_loaned_memory_layout_t *z_memory_layout_loan(const z_owned_memory_layout_t *this_);
+const struct z_loaned_memory_layout_t *z_memory_layout_loan(const struct z_owned_memory_layout_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3838,7 +3605,7 @@ const z_loaned_memory_layout_t *z_memory_layout_loan(const z_owned_memory_layout
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_memory_layout_new(z_owned_memory_layout_t *this_,
+z_result_t z_memory_layout_new(struct z_owned_memory_layout_t *this_,
                                size_t size,
                                struct z_alloc_alignment_t alignment);
 #endif
@@ -3894,7 +3661,7 @@ ZENOHC_API void z_open_options_default(struct z_open_options_t *this_);
 ZENOHC_API
 z_result_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
                                           struct z_moved_config_t *config,
-                                          const z_loaned_shm_client_storage_t *shm_clients);
+                                          const struct z_loaned_shm_client_storage_t *shm_clients);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3902,7 +3669,7 @@ z_result_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_posix_shm_client_new(z_owned_shm_client_t *this_);
+void z_posix_shm_client_new(struct z_owned_shm_client_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3910,8 +3677,8 @@ void z_posix_shm_client_new(z_owned_shm_client_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_posix_shm_provider_new(z_owned_shm_provider_t *this_,
-                                    const z_loaned_memory_layout_t *layout);
+z_result_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
+                                    const struct z_loaned_memory_layout_t *layout);
 #endif
 /**
  * Returns the default value of #z_priority_t.
@@ -4376,7 +4143,7 @@ ZENOHC_API uint8_t z_random_u8(void);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_ref_shm_client_storage_global(z_owned_shm_client_storage_t *this_);
+void z_ref_shm_client_storage_global(struct z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4699,7 +4466,7 @@ ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_client_drop(z_moved_shm_client_t *this_);
+void z_shm_client_drop(struct z_moved_shm_client_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4707,7 +4474,7 @@ void z_shm_client_drop(z_moved_shm_client_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_client_new(z_owned_shm_client_t *this_,
+void z_shm_client_new(struct z_owned_shm_client_t *this_,
                       struct zc_threadsafe_context_t context,
                       struct zc_shm_client_callbacks_t callbacks);
 #endif
@@ -4717,8 +4484,8 @@ void z_shm_client_new(z_owned_shm_client_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_client_storage_clone(z_owned_shm_client_storage_t *this_,
-                                const z_loaned_shm_client_storage_t *from);
+void z_shm_client_storage_clone(struct z_owned_shm_client_storage_t *this_,
+                                const struct z_loaned_shm_client_storage_t *from);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4726,7 +4493,7 @@ void z_shm_client_storage_clone(z_owned_shm_client_storage_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_client_storage_drop(z_moved_shm_client_storage_t *this_);
+void z_shm_client_storage_drop(struct z_moved_shm_client_storage_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4734,7 +4501,7 @@ void z_shm_client_storage_drop(z_moved_shm_client_storage_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const z_owned_shm_client_storage_t *this_);
+const struct z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const struct z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4742,8 +4509,8 @@ const z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const z_owned_shm
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_shm_client_storage_new(z_owned_shm_client_storage_t *this_,
-                                    const zc_loaned_shm_client_list_t *clients,
+z_result_t z_shm_client_storage_new(struct z_owned_shm_client_storage_t *this_,
+                                    const struct zc_loaned_shm_client_list_t *clients,
                                     bool add_default_client_set);
 #endif
 /**
@@ -4752,7 +4519,7 @@ z_result_t z_shm_client_storage_new(z_owned_shm_client_storage_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_client_storage_new_default(z_owned_shm_client_storage_t *this_);
+void z_shm_client_storage_new_default(struct z_owned_shm_client_storage_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4760,8 +4527,8 @@ void z_shm_client_storage_new_default(z_owned_shm_client_storage_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_clone(z_owned_shm_t *out,
-                 const z_loaned_shm_t *this_);
+void z_shm_clone(struct z_owned_shm_t *out,
+                 const struct z_loaned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4769,7 +4536,7 @@ void z_shm_clone(z_owned_shm_t *out,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const unsigned char *z_shm_data(const z_loaned_shm_t *this_);
+const unsigned char *z_shm_data(const struct z_loaned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4777,7 +4544,7 @@ const unsigned char *z_shm_data(const z_loaned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_drop(z_moved_shm_t *this_);
+void z_shm_drop(struct z_moved_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4785,8 +4552,8 @@ void z_shm_drop(z_moved_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_from_mut(z_owned_shm_t *this_,
-                    z_moved_shm_mut_t *that);
+void z_shm_from_mut(struct z_owned_shm_t *this_,
+                    struct z_moved_shm_mut_t *that);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4794,7 +4561,7 @@ void z_shm_from_mut(z_owned_shm_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-size_t z_shm_len(const z_loaned_shm_t *this_);
+size_t z_shm_len(const struct z_loaned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4802,7 +4569,7 @@ size_t z_shm_len(const z_loaned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const z_loaned_shm_t *z_shm_loan(const z_owned_shm_t *this_);
+const struct z_loaned_shm_t *z_shm_loan(const struct z_owned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4810,7 +4577,7 @@ const z_loaned_shm_t *z_shm_loan(const z_owned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_loaned_shm_t *z_shm_loan_mut(z_owned_shm_t *this_);
+struct z_loaned_shm_t *z_shm_loan_mut(struct z_owned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4818,7 +4585,7 @@ z_loaned_shm_t *z_shm_loan_mut(z_owned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const unsigned char *z_shm_mut_data(const z_loaned_shm_mut_t *this_);
+const unsigned char *z_shm_mut_data(const struct z_loaned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4826,7 +4593,7 @@ const unsigned char *z_shm_mut_data(const z_loaned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-unsigned char *z_shm_mut_data_mut(z_loaned_shm_mut_t *this_);
+unsigned char *z_shm_mut_data_mut(struct z_loaned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4834,7 +4601,7 @@ unsigned char *z_shm_mut_data_mut(z_loaned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_mut_drop(z_moved_shm_mut_t *this_);
+void z_shm_mut_drop(struct z_moved_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4842,7 +4609,7 @@ void z_shm_mut_drop(z_moved_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-size_t z_shm_mut_len(const z_loaned_shm_mut_t *this_);
+size_t z_shm_mut_len(const struct z_loaned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4850,7 +4617,7 @@ size_t z_shm_mut_len(const z_loaned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const z_loaned_shm_mut_t *z_shm_mut_loan(const z_owned_shm_mut_t *this_);
+const struct z_loaned_shm_mut_t *z_shm_mut_loan(const struct z_owned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4858,7 +4625,7 @@ const z_loaned_shm_mut_t *z_shm_mut_loan(const z_owned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_loaned_shm_mut_t *z_shm_mut_loan_mut(z_owned_shm_mut_t *this_);
+struct z_loaned_shm_mut_t *z_shm_mut_loan_mut(struct z_owned_shm_mut_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4872,9 +4639,9 @@ z_loaned_shm_mut_t *z_shm_mut_loan_mut(z_owned_shm_mut_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_shm_mut_try_from_immut(z_owned_shm_mut_t *this_,
-                                    z_moved_shm_t *that,
-                                    z_owned_shm_t *immut);
+z_result_t z_shm_mut_try_from_immut(struct z_owned_shm_mut_t *this_,
+                                    struct z_moved_shm_t *that,
+                                    struct z_owned_shm_t *immut);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4883,7 +4650,7 @@ z_result_t z_shm_mut_try_from_immut(z_owned_shm_mut_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_alloc(struct z_buf_layout_alloc_result_t *out_result,
-                          const z_loaned_shm_provider_t *provider,
+                          const struct z_loaned_shm_provider_t *provider,
                           size_t size,
                           struct z_alloc_alignment_t alignment);
 #endif
@@ -4894,7 +4661,7 @@ void z_shm_provider_alloc(struct z_buf_layout_alloc_result_t *out_result,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_alloc_gc(struct z_buf_layout_alloc_result_t *out_result,
-                             const z_loaned_shm_provider_t *provider,
+                             const struct z_loaned_shm_provider_t *provider,
                              size_t size,
                              struct z_alloc_alignment_t alignment);
 #endif
@@ -4905,7 +4672,7 @@ void z_shm_provider_alloc_gc(struct z_buf_layout_alloc_result_t *out_result,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_alloc_gc_defrag(struct z_buf_layout_alloc_result_t *out_result,
-                                    const z_loaned_shm_provider_t *provider,
+                                    const struct z_loaned_shm_provider_t *provider,
                                     size_t size,
                                     struct z_alloc_alignment_t alignment);
 #endif
@@ -4917,7 +4684,7 @@ void z_shm_provider_alloc_gc_defrag(struct z_buf_layout_alloc_result_t *out_resu
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t z_shm_provider_alloc_gc_defrag_async(struct z_buf_layout_alloc_result_t *out_result,
-                                                const z_loaned_shm_provider_t *provider,
+                                                const struct z_loaned_shm_provider_t *provider,
                                                 size_t size,
                                                 struct z_alloc_alignment_t alignment,
                                                 struct zc_threadsafe_context_t result_context,
@@ -4931,7 +4698,7 @@ z_result_t z_shm_provider_alloc_gc_defrag_async(struct z_buf_layout_alloc_result
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_alloc_gc_defrag_blocking(struct z_buf_layout_alloc_result_t *out_result,
-                                             const z_loaned_shm_provider_t *provider,
+                                             const struct z_loaned_shm_provider_t *provider,
                                              size_t size,
                                              struct z_alloc_alignment_t alignment);
 #endif
@@ -4942,7 +4709,7 @@ void z_shm_provider_alloc_gc_defrag_blocking(struct z_buf_layout_alloc_result_t 
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_alloc_gc_defrag_dealloc(struct z_buf_layout_alloc_result_t *out_result,
-                                            const z_loaned_shm_provider_t *provider,
+                                            const struct z_loaned_shm_provider_t *provider,
                                             size_t size,
                                             struct z_alloc_alignment_t alignment);
 #endif
@@ -4952,7 +4719,7 @@ void z_shm_provider_alloc_gc_defrag_dealloc(struct z_buf_layout_alloc_result_t *
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-size_t z_shm_provider_available(const z_loaned_shm_provider_t *provider);
+size_t z_shm_provider_available(const struct z_loaned_shm_provider_t *provider);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4961,7 +4728,7 @@ size_t z_shm_provider_available(const z_loaned_shm_provider_t *provider);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-size_t z_shm_provider_defragment(const z_loaned_shm_provider_t *provider);
+size_t z_shm_provider_defragment(const struct z_loaned_shm_provider_t *provider);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4969,7 +4736,7 @@ size_t z_shm_provider_defragment(const z_loaned_shm_provider_t *provider);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_provider_drop(z_moved_shm_provider_t *this_);
+void z_shm_provider_drop(struct z_moved_shm_provider_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4977,7 +4744,7 @@ void z_shm_provider_drop(z_moved_shm_provider_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-size_t z_shm_provider_garbage_collect(const z_loaned_shm_provider_t *provider);
+size_t z_shm_provider_garbage_collect(const struct z_loaned_shm_provider_t *provider);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4985,7 +4752,7 @@ size_t z_shm_provider_garbage_collect(const z_loaned_shm_provider_t *provider);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const z_loaned_shm_provider_t *z_shm_provider_loan(const z_owned_shm_provider_t *this_);
+const struct z_loaned_shm_provider_t *z_shm_provider_loan(const struct z_owned_shm_provider_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4993,8 +4760,8 @@ const z_loaned_shm_provider_t *z_shm_provider_loan(const z_owned_shm_provider_t 
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t z_shm_provider_map(z_owned_shm_mut_t *out_result,
-                              const z_loaned_shm_provider_t *provider,
+z_result_t z_shm_provider_map(struct z_owned_shm_mut_t *out_result,
+                              const struct z_loaned_shm_provider_t *provider,
                               struct z_allocated_chunk_t allocated_chunk,
                               size_t len);
 #endif
@@ -5004,7 +4771,7 @@ z_result_t z_shm_provider_map(z_owned_shm_mut_t *out_result,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_provider_new(z_owned_shm_provider_t *this_,
+void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
                         z_protocol_id_t id,
                         struct zc_context_t context,
                         struct zc_shm_provider_backend_callbacks_t callbacks);
@@ -5015,7 +4782,7 @@ void z_shm_provider_new(z_owned_shm_provider_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_provider_threadsafe_new(z_owned_shm_provider_t *this_,
+void z_shm_provider_threadsafe_new(struct z_owned_shm_provider_t *this_,
                                    z_protocol_id_t id,
                                    struct zc_threadsafe_context_t context,
                                    struct zc_shm_provider_backend_callbacks_t callbacks);
@@ -5026,7 +4793,7 @@ void z_shm_provider_threadsafe_new(z_owned_shm_provider_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_loaned_shm_mut_t *z_shm_try_mut(z_owned_shm_t *this_);
+struct z_loaned_shm_mut_t *z_shm_try_mut(struct z_owned_shm_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5035,7 +4802,7 @@ z_loaned_shm_mut_t *z_shm_try_mut(z_owned_shm_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_loaned_shm_mut_t *z_shm_try_reloan_mut(z_loaned_shm_t *this_);
+struct z_loaned_shm_mut_t *z_shm_try_reloan_mut(struct z_loaned_shm_t *this_);
 #endif
 /**
  * Puts current thread to sleep for specified amount of milliseconds.
@@ -5733,7 +5500,7 @@ struct zc_internal_encoding_data_t zc_internal_encoding_get_data(const struct z_
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool zc_internal_shm_client_list_check(const zc_owned_shm_client_list_t *this_);
+bool zc_internal_shm_client_list_check(const struct zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5741,7 +5508,7 @@ bool zc_internal_shm_client_list_check(const zc_owned_shm_client_list_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void zc_internal_shm_client_list_null(zc_owned_shm_client_list_t *this_);
+void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5765,9 +5532,9 @@ enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_shm_client_list_add_client(zc_loaned_shm_client_list_t *this_,
+z_result_t zc_shm_client_list_add_client(struct zc_loaned_shm_client_list_t *this_,
                                          z_protocol_id_t id,
-                                         z_moved_shm_client_t *client);
+                                         struct z_moved_shm_client_t *client);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5775,7 +5542,7 @@ z_result_t zc_shm_client_list_add_client(zc_loaned_shm_client_list_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void zc_shm_client_list_drop(zc_moved_shm_client_list_t *this_);
+void zc_shm_client_list_drop(struct zc_moved_shm_client_list_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5783,7 +5550,7 @@ void zc_shm_client_list_drop(zc_moved_shm_client_list_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const zc_owned_shm_client_list_t *this_);
+const struct zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const struct zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5791,7 +5558,7 @@ const zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const zc_owned_shm_cl
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(zc_owned_shm_client_list_t *this_);
+struct zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(struct zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5799,7 +5566,7 @@ zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(zc_owned_shm_client_lis
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void zc_shm_client_list_new(zc_owned_shm_client_list_t *this_);
+void zc_shm_client_list_new(struct zc_owned_shm_client_list_t *this_);
 #endif
 /**
  * Stops all Zenoh tasks and drops all related static variables.
