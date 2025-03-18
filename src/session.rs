@@ -85,7 +85,7 @@ pub extern "C" fn z_open(
     _options: Option<&z_open_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    let Some(config) = config.take_rust_type().take() else {
+    let Some(config) = config.take_rust_type() else {
         tracing::error!("Config not provided");
         this.write(None);
         return result::Z_EINVAL;

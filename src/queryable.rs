@@ -30,10 +30,10 @@ use crate::{
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t,
+    z_view_string_from_substr, z_view_string_t, zc_locality_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{z_entity_global_id_t, z_moved_source_info_t};
+use crate::{z_entity_global_id_t, z_moved_source_info_t, zc_locality_default};
 decl_c_type!(
     owned(z_owned_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),
@@ -75,7 +75,9 @@ pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
 /// Borrows the query.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loaned_query_t {
+pub unsafe extern "C" fn z_query_loan(
+    this_: &'static z_owned_query_t,
+) -> &'static z_loaned_query_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -87,13 +89,27 @@ pub unsafe extern "C" fn z_query_loan(this_: &'static z_owned_query_t) -> &z_loa
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_query_loan_mut(
     this_: &'static mut z_owned_query_t,
-) -> &mut z_loaned_query_t {
+) -> &'static mut z_loaned_query_t {
     this_
         .as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
         .as_loaned_c_type_mut()
 }
+
+/// Takes ownership of the mutably borrowed query
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_query_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_query_t>,
+    src: &mut z_loaned_query_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Query::empty());
+    dst.write(Some(src));
+}
+
 /// Destroys the query resetting it to its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {
@@ -114,12 +130,21 @@ pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &
 pub struct z_queryable_options_t {
     /// The completeness of the Queryable.
     pub complete: bool,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    /// Restricts the matching requests that will be received by this Queryable to the ones
+    /// that have the compatible allowed_destination.
+    pub allowed_origin: zc_locality_t,
 }
 /// Constructs the default value for `z_query_reply_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
-    this_.write(z_queryable_options_t { complete: false });
+    this_.write(z_queryable_options_t {
+        complete: false,
+        #[cfg(feature = "unstable")]
+        allowed_origin: zc_locality_default(),
+    });
 }
 
 /// Represents the set of options that can be applied to a query reply,
@@ -152,7 +177,7 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
     this_.write(z_query_reply_options_t {
         encoding: None,
-        congestion_control: CongestionControl::Block.into(),
+        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -209,7 +234,7 @@ pub extern "C" fn z_query_reply_del_options_default(
     this: &mut MaybeUninit<z_query_reply_del_options_t>,
 ) {
     this.write(z_query_reply_del_options_t {
-        congestion_control: CongestionControl::Block.into(),
+        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -231,6 +256,10 @@ fn _declare_queryable_inner<'a, 'b>(
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
         builder = builder.complete(options.complete);
+        #[cfg(feature = "unstable")]
+        {
+            builder = builder.allowed_origin(options.allowed_origin.into())
+        }
     }
     let queryable = builder.callback(move |query| {
         let mut owned_query = Some(query);

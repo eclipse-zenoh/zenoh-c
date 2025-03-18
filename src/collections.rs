@@ -25,7 +25,7 @@ use libc::strlen;
 
 use crate::{
     result::{self, z_result_t},
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 pub struct CSlice {
@@ -42,10 +42,27 @@ pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_voi
     std::mem::drop(b);
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct CSliceOwned(CSlice);
-#[derive(Default)]
 pub struct CSliceView(CSlice);
+
+impl Gravestone for CSliceOwned {
+    fn gravestone() -> Self {
+        Self(CSlice::gravestone())
+    }
+    fn is_gravestone(&self) -> bool {
+        self.0.is_gravestone()
+    }
+}
+
+impl Gravestone for CSliceView {
+    fn gravestone() -> Self {
+        Self(CSlice::gravestone())
+    }
+    fn is_gravestone(&self) -> bool {
+        self.0.is_gravestone()
+    }
+}
 
 impl Deref for CSliceOwned {
     type Target = CSlice;
@@ -158,7 +175,7 @@ impl CSlice {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned_unchecked(data: *const u8, len: usize) -> Self {
         if len == 0 {
-            return Self::default();
+            return Self::gravestone();
         }
         let b = unsafe { from_raw_parts(data, len).to_vec().into_boxed_slice() };
         let slice = Box::leak(b);
@@ -216,14 +233,17 @@ impl Clone for CSlice {
     }
 }
 
-impl Default for CSlice {
-    fn default() -> Self {
+impl Gravestone for CSlice {
+    fn gravestone() -> Self {
         Self {
             data: null(),
             len: 0,
             drop: None,
             context: null_mut(),
         }
+    }
+    fn is_gravestone(&self) -> bool {
+        self.data.is_null()
     }
 }
 
@@ -274,7 +294,9 @@ decl_c_type!(
 /// Constructs an empty view slice.
 #[no_mangle]
 pub extern "C" fn z_view_slice_empty(this_: &mut MaybeUninit<z_view_slice_t>) {
-    this_.as_rust_type_mut_uninit().write(CSliceView::default());
+    this_
+        .as_rust_type_mut_uninit()
+        .write(CSliceView::gravestone());
 }
 
 /// Constructs a `len` bytes long view starting at `start`.
@@ -294,7 +316,7 @@ pub unsafe extern "C" fn z_view_slice_from_buf(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CSliceView::default());
+            this.write(CSliceView::gravestone());
             e
         }
     }
@@ -317,7 +339,7 @@ pub extern "C" fn z_view_slice_is_empty(this_: &z_view_slice_t) -> bool {
 pub extern "C" fn z_slice_empty(this_: &mut MaybeUninit<z_owned_slice_t>) {
     this_
         .as_rust_type_mut_uninit()
-        .write(CSliceOwned::default());
+        .write(CSliceOwned::gravestone());
 }
 
 /// Constructs an empty `z_owned_slice_t`.
@@ -387,7 +409,7 @@ pub unsafe extern "C" fn z_slice_copy_from_buf(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CSliceOwned::default());
+            this.write(CSliceOwned::gravestone());
             e
         }
     }
@@ -417,7 +439,7 @@ pub unsafe extern "C" fn z_slice_from_buf(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CSliceOwned::default());
+            this.write(CSliceOwned::gravestone());
             e
         }
     }
@@ -427,12 +449,37 @@ pub use crate::opaque_types::{
     z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
 };
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 pub struct CString(CSlice);
-#[derive(Default)]
 pub struct CStringOwned(CString);
-#[derive(Default)]
 pub struct CStringView(CString);
+
+impl Gravestone for CString {
+    fn gravestone() -> Self {
+        Self(CSlice::gravestone())
+    }
+    fn is_gravestone(&self) -> bool {
+        self.0.is_gravestone()
+    }
+}
+
+impl Gravestone for CStringOwned {
+    fn gravestone() -> Self {
+        Self(CString::gravestone())
+    }
+    fn is_gravestone(&self) -> bool {
+        self.0.is_gravestone()
+    }
+}
+
+impl Gravestone for CStringView {
+    fn gravestone() -> Self {
+        Self(CString::gravestone())
+    }
+    fn is_gravestone(&self) -> bool {
+        self.0.is_gravestone()
+    }
+}
 
 impl CString {
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
@@ -551,7 +598,7 @@ pub extern "C" fn z_internal_string_check(this_: &z_owned_string_t) -> bool {
 pub extern "C" fn z_internal_string_null(this_: &mut MaybeUninit<z_owned_string_t>) {
     this_
         .as_rust_type_mut_uninit()
-        .write(CStringOwned::default());
+        .write(CStringOwned::gravestone());
 }
 
 /// @return ``true`` if view string is valid, ``false`` if it is in a gravestone state.
@@ -566,7 +613,7 @@ pub extern "C" fn z_view_string_is_empty(this_: &z_view_string_t) -> bool {
 pub unsafe extern "C" fn z_string_empty(this_: &mut MaybeUninit<z_owned_string_t>) {
     this_
         .as_rust_type_mut_uninit()
-        .write(CStringOwned::default());
+        .write(CStringOwned::gravestone());
 }
 
 /// Constructs an empty view string.
@@ -575,7 +622,7 @@ pub unsafe extern "C" fn z_string_empty(this_: &mut MaybeUninit<z_owned_string_t
 pub unsafe extern "C" fn z_view_string_empty(this_: &mut MaybeUninit<z_view_string_t>) {
     this_
         .as_rust_type_mut_uninit()
-        .write(CStringView::default());
+        .write(CStringView::gravestone());
 }
 
 /// Borrows string.
@@ -619,7 +666,7 @@ pub unsafe extern "C" fn z_string_copy_from_substr(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CStringOwned::default());
+            this.write(CStringOwned::gravestone());
             e
         }
     }
@@ -646,7 +693,7 @@ pub unsafe extern "C" fn z_string_from_str(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CStringOwned::default());
+            this.write(CStringOwned::gravestone());
             e
         }
     }
@@ -668,7 +715,7 @@ pub unsafe extern "C" fn z_view_string_from_str(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CStringView::default());
+            this.write(CStringView::gravestone());
             e
         }
     }
@@ -691,7 +738,7 @@ pub unsafe extern "C" fn z_view_string_from_substr(
             result::Z_OK
         }
         Err(e) => {
-            this.write(CStringView::default());
+            this.write(CStringView::gravestone());
             e
         }
     }
@@ -741,10 +788,19 @@ decl_c_type!(
     loaned(z_loaned_string_array_t),
 );
 
+impl Gravestone for ZVector {
+    fn gravestone() -> Self {
+        Vec::new()
+    }
+    fn is_gravestone(&self) -> bool {
+        self.is_empty()
+    }
+}
+
 /// Constructs a new empty string array.
 #[no_mangle]
 pub extern "C" fn z_string_array_new(this_: &mut MaybeUninit<z_owned_string_array_t>) {
-    this_.as_rust_type_mut_uninit().write(ZVector::new());
+    this_.as_rust_type_mut_uninit().write(ZVector::gravestone());
 }
 
 /// Constructs string array in its gravestone state.

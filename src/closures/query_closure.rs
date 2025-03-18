@@ -150,6 +150,7 @@ pub extern "C" fn z_closure_query_loan_mut(
 ///   - `call` will never be called once `drop` has started.
 ///   - `drop` will only be called **once**, and **after every** `call` has ended.
 ///   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+///
 /// @param this_: uninitialized memory location where new closure will be constructed.
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.

@@ -23,6 +23,7 @@ use zenoh::shm::cleanup_orphaned_shm_segments;
 /// There is no ideal signal to trigger this cleanup, so by default, zenoh triggers it in the following moments:
 /// - first POSIX SHM segment creation
 /// - process exit via exit() call or return from maint function
+///
 /// It is OK to additionally trigger this function at any time, but be aware that this can be costly.
 ///
 /// For non-linux platforms this function currently does nothing

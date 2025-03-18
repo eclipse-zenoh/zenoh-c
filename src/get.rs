@@ -29,7 +29,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result,
-    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
@@ -45,17 +45,28 @@ decl_c_type!(
     loaned(z_loaned_reply_err_t, ReplyError),
 );
 
+impl Gravestone for ReplyError {
+    fn gravestone() -> Self {
+        ReplyError::empty()
+    }
+    fn is_gravestone(&self) -> bool {
+        self.payload().is_empty()
+    }
+}
+
 /// Constructs an empty `z_owned_reply_err_t`.
 #[no_mangle]
 pub extern "C" fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
-    this_.as_rust_type_mut_uninit().write(ReplyError::default());
+    this_
+        .as_rust_type_mut_uninit()
+        .write(ReplyError::gravestone());
 }
 
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_internal_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
-    !this_.as_rust_type_ref().payload().is_empty()
+    !this_.as_rust_type_ref().is_gravestone()
 }
 
 /// Returns reply error payload.
@@ -239,7 +250,7 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
     this_.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
-        congestion_control: CongestionControl::default().into(),
+        congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
@@ -369,6 +380,19 @@ pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z
         .as_mut()
         .unwrap_unchecked()
         .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed reply
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_reply_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_reply_t>,
+    src: &mut z_loaned_reply_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Reply::empty());
+    dst.write(Some(src));
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.

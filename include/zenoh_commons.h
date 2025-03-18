@@ -425,6 +425,14 @@ typedef struct z_queryable_options_t {
    * The completeness of the Queryable.
    */
   bool complete;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   * Restricts the matching requests that will be received by this Queryable to the ones
+   * that have the compatible allowed_destination.
+   */
+  enum zc_locality_t allowed_origin;
+#endif
 } z_queryable_options_t;
 /**
  * Options passed to the `z_declare_subscriber()` function.
@@ -438,7 +446,8 @@ typedef struct z_subscriber_options_t {
 #endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * Restricts the matching publications that will be received by this Subscribers to the ones
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   * Restricts the matching publications that will be received by this Subscriber to the ones
    * that have the compatible allowed_destination.
    */
   enum zc_locality_t allowed_origin;
@@ -1279,9 +1288,9 @@ typedef struct ze_loaned_closure_miss_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_publication_cache_options_t {
   /**
-   * The prefix used for queryable.
+   * The suffix used for queryable.
    */
-  const struct z_loaned_keyexpr_t *queryable_prefix;
+  const struct z_loaned_keyexpr_t *queryable_suffix;
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * The restriction for the matching queries that will be receive by this publication cache.
@@ -1833,6 +1842,7 @@ ZENOHC_API void z_close_options_default(struct z_close_options_t *this_);
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1872,6 +1882,7 @@ struct z_loaned_closure_hello_t *z_closure_hello_loan_mut(struct z_owned_closure
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @brief Constructs closure.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
@@ -1920,6 +1931,7 @@ const struct z_loaned_closure_matching_status_t *z_closure_matching_status_loan(
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1959,6 +1971,7 @@ struct z_loaned_closure_query_t *z_closure_query_loan_mut(struct z_owned_closure
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -1999,6 +2012,7 @@ struct z_loaned_closure_reply_t *z_closure_reply_loan_mut(struct z_owned_closure
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -2038,6 +2052,7 @@ struct z_loaned_closure_sample_t *z_closure_sample_loan_mut(struct z_owned_closu
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -2800,6 +2815,10 @@ ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
  */
 ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
 /**
+ * Mutably borrows hello message.
+ */
+ZENOHC_API struct z_loaned_hello_t *z_hello_loan_mut(struct z_owned_hello_t *this_);
+/**
  * Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
  *
  * The lifetime of locator strings is bound to `this_`.
@@ -2807,6 +2826,10 @@ ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hell
 ZENOHC_API
 void z_hello_locators(const struct z_loaned_hello_t *this_,
                       struct z_owned_string_array_t *locators_out);
+/**
+ * Takes ownership of the mutably borrowed hello
+ */
+ZENOHC_API void z_hello_take_from_loaned(struct z_owned_hello_t *dst, struct z_loaned_hello_t *src);
 /**
  * Returns type of Zenoh entity that transmitted hello message.
  */
@@ -2969,6 +2992,21 @@ ZENOHC_API bool z_internal_config_check(const struct z_owned_config_t *this_);
  * Constructs config in its gravestone state.
  */
 ZENOHC_API void z_internal_config_null(struct z_owned_config_t *this_);
+/**
+ * Returns the default congestion control value of zenoh push network messages, typically used for put operations.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_internal_congestion_control_default_push(void);
+/**
+ * Returns the default congestion control value of zenoh request network messages, typically used for get operations.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_internal_congestion_control_default_request(void);
+/**
+ * Returns the default congestion control value of zenoh response network messages, typically used for reply operations.
+ */
+ZENOHC_API
+enum z_congestion_control_t z_internal_congestion_control_default_response(void);
 /**
  * Returns ``true`` if encoding is in non-default state, ``false`` otherwise.
  */
@@ -4053,6 +4091,10 @@ ZENOHC_API void z_query_reply_err_options_default(struct z_query_reply_err_optio
  */
 ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *this_);
 /**
+ * Takes ownership of the mutably borrowed query
+ */
+ZENOHC_API void z_query_take_from_loaned(struct z_owned_query_t *dst, struct z_loaned_query_t *src);
+/**
  * Create a default `z_query_target_t`.
  */
 ZENOHC_API enum z_query_target_t z_query_target_default(void);
@@ -4199,6 +4241,10 @@ ZENOHC_API
 bool z_reply_replier_id(const struct z_loaned_reply_t *this_,
                         struct z_id_t *out_id);
 #endif
+/**
+ * Takes ownership of the mutably borrowed reply
+ */
+ZENOHC_API void z_reply_take_from_loaned(struct z_owned_reply_t *dst, struct z_loaned_reply_t *src);
 /**
  * Constructs send and recieve ends of the ring channel
  */
@@ -4370,6 +4416,12 @@ enum z_reliability_t z_sample_reliability(const struct z_loaned_sample_t *this_)
 ZENOHC_API
 const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
 #endif
+/**
+ * Takes ownership of the mutably borrowed sample.
+ */
+ZENOHC_API
+void z_sample_take_from_loaned(struct z_owned_sample_t *dst,
+                               struct z_loaned_sample_t *src);
 /**
  * Returns the sample timestamp.
  *
@@ -5269,6 +5321,7 @@ z_result_t z_whatami_to_view_string(enum z_whatami_t whatami,
  * There is no ideal signal to trigger this cleanup, so by default, zenoh triggers it in the following moments:
  * - first POSIX SHM segment creation
  * - process exit via exit() call or return from maint function
+ *
  * It is OK to additionally trigger this function at any time, but be aware that this can be costly.
  *
  * For non-linux platforms this function currently does nothing
@@ -5286,6 +5339,7 @@ void zc_cleanup_orphaned_shm_segments(void);
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.
  * @param drop: an optional function to be called once on closure drop.
@@ -5819,6 +5873,7 @@ void ze_advanced_subscriber_recovery_options_default(struct ze_advanced_subscrib
  *   - `call` will never be called once `drop` has started.
  *   - `drop` will only be called **once**, and **after every** `call` has ended.
  *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
  * @brief Constructs closure.
  * @param this_: uninitialized memory location where new closure will be constructed.
  * @param call: a closure body.

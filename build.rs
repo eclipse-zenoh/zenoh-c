@@ -184,6 +184,7 @@ fn generate_opaque_types() {
         };
         s += format!(
             "#[repr(C, align({align}))]
+#[rustfmt::skip]
 pub struct {type_name} {{
     {inner_field_name}: [u8; {size}],
 }}
@@ -196,22 +197,25 @@ pub struct {type_name} {{
             // done by "decl_c_type!" macro in transmute module.
             s += format!(
                 "#[repr(C)]
-#[derive(Default)]
+#[rustfmt::skip]
 pub struct {moved_type_name} {{
     _this: {type_name},
 }}
 
+#[rustfmt::skip]
 impl crate::transmute::TakeCType for {moved_type_name} {{
     type CType = {type_name};
     fn take_c_type(&mut self) -> Self::CType {{
-        std::mem::take(&mut self._this)
+        use crate::transmute::Gravestone;
+        std::mem::replace(&mut self._this, {type_name}::gravestone())
     }}
 }}
 
+#[rustfmt::skip]
 impl Drop for {type_name} {{
     fn drop(&mut self) {{
-        use crate::transmute::RustTypeRef;
-        std::mem::take(self.as_rust_type_mut());
+        use crate::transmute::{{RustTypeRef, Gravestone, IntoRustType}};
+        let _ = std::mem::replace(self.as_rust_type_mut(), {type_name}::gravestone().into_rust_type());
     }}
 }}
 "
@@ -332,7 +336,7 @@ fn configure() {
                 .unwrap();
         }
     }
-    file.unlock().unwrap();
+    fs2::FileExt::unlock(&file).unwrap();
 }
 
 fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
@@ -349,7 +353,7 @@ fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
         file.lock_exclusive().unwrap();
         let mut buf = String::new();
         file.read_to_string(&mut buf).unwrap();
-        file.unlock().unwrap();
+        fs2::FileExt::unlock(&file).unwrap();
 
         // Remove _T_ from enum variant name
         let buf = buf.replace("_T_", "_");
@@ -370,7 +374,7 @@ fn text_replace<'a>(files: impl Iterator<Item = &'a str>) {
             .unwrap();
         file.lock_exclusive().unwrap();
         file.write_all(buf.as_bytes()).unwrap();
-        file.unlock().unwrap();
+        fs2::FileExt::unlock(&file).unwrap();
     }
 }
 
@@ -420,7 +424,7 @@ fn split_bindings(split_guide: &SplitGuide) -> Result<(), String> {
         record.is_used()?;
     }
     for (_, file) in files {
-        file.into_inner().unwrap().unlock().unwrap();
+        fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
     }
     std::fs::remove_file(GENERATION_PATH).unwrap();
     Ok(())
@@ -624,7 +628,7 @@ impl<'a> Record<'a> {
 }
 
 // Print all comments first, skip whitespaces
-impl<'a> std::fmt::Display for Record<'a> {
+impl std::fmt::Display for Record<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.tokens
             .iter()
@@ -662,7 +666,7 @@ struct Token<'a> {
     id: &'a str,
     span: Cow<'a, str>,
 }
-impl<'a> std::fmt::Display for Token<'a> {
+impl std::fmt::Display for Token<'_> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // f.write_str(format!("{:?} [", self.tt).as_str())?;
         f.write_str(&self.span)?;
@@ -998,10 +1002,11 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
         )
         .unwrap();
 
-    // Collect all function signatures to be wrappeb by macros and verify that all necessary functions are present for each entity
+    // Collect all function signatures to be wrapped by macros and verify that all necessary functions are present for each entity
     let (move_funcs, take_funcs) = make_move_take_signatures(path_in);
     let loan_funcs = find_loan_functions(path_in);
     let loan_mut_funcs = find_loan_mut_functions(path_in);
+    let take_from_loaned_funcs = find_take_from_loaned_functions(path_in);
     let drop_funcs = find_drop_functions(path_in);
     let null_funcs = find_null_functions(path_in);
     let check_funcs = find_check_functions(path_in);
@@ -1103,6 +1108,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_take_from_loaned_c(&take_from_loaned_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_check_c(&check_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
@@ -1159,6 +1168,10 @@ pub fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
     let out = generate_generic_take_cpp(&take_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_take_from_loaned_cpp(&take_from_loaned_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -1262,6 +1275,29 @@ pub fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
             &(return_type.to_string() + "*"),
             func_name.to_string() + "_loan_mut",
             vec![FuncArg::new(&(arg_type.to_string() + "*"), arg_name)],
+        );
+        res.push(f);
+    }
+    res
+}
+
+pub fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
+    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let re = Regex::new(r"void (\w+)_take_from_loaned\(struct (\w+) \*(\w+)").unwrap();
+    let mut res = Vec::<FunctionSignature>::new();
+
+    for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
+        let (prefix, _, semantic, postfix) = split_type_name(arg_type);
+        let z_owned_type = format!("{}_{}_{}_{}*", prefix, "owned", semantic, postfix);
+        let z_loaned_type = format!("{}_{}_{}_{}*", prefix, "loaned", semantic, postfix);
+        let f = FunctionSignature::new(
+            semantic,
+            "void",
+            func_name.to_string() + "_take_from_loaned",
+            vec![
+                FuncArg::new(&z_owned_type, arg_name),
+                FuncArg::new(&z_loaned_type, "src"),
+            ],
         );
         res.push(f);
     }
@@ -1375,6 +1411,7 @@ pub fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
+    let multiple_spaces = Regex::new(r"\s\s+").unwrap();
     for (
         _,
         [return_type, prefix, suffix, closure_type, closure_name, call_signature_raw, drop_signature],
@@ -1382,7 +1419,6 @@ pub fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     {
         let mut call_signature: String = call_signature_raw.to_string().replace("struct ", "");
         call_signature = call_signature.replace("enum ", "");
-        let multiple_spaces = Regex::new(r"\s\s+").unwrap();
         call_signature = multiple_spaces
             .replace_all(&call_signature, " ")
             .to_string();
@@ -1521,6 +1557,10 @@ pub fn generate_generic_take_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_take", false)
 }
 
+pub fn generate_generic_take_from_loaned_c(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_c(macro_func, "z_take_from_loaned", false)
+}
+
 pub fn generate_generic_drop_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_drop", false)
 }
@@ -1530,6 +1570,27 @@ pub fn generate_generic_clone_c(macro_func: &[FunctionSignature]) -> String {
 }
 
 pub fn generate_take_functions(macro_func: &[FunctionSignature]) -> String {
+    let mut out = String::new();
+    for sig in macro_func {
+        let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
+        out += &format!(
+            "static inline void {}({} {}, {} {}) {{ *{} = {}->_this; {}_internal_{}_null(&{}->_this); }}\n",
+            sig.func_name,
+            sig.args[0].typename.typename,
+            sig.args[0].name,
+            sig.args[1].typename.typename,
+            sig.args[1].name,
+            sig.args[0].name,
+            sig.args[1].name,
+            prefix,
+            semantic,
+            sig.args[1].name,
+        );
+    }
+    out
+}
+
+pub fn generate_take_from_loaned_functions(macro_func: &[FunctionSignature]) -> String {
     let mut out = String::new();
     for sig in macro_func {
         let (prefix, _, semantic, _) = split_type_name(&sig.args[0].typename.typename);
@@ -1724,6 +1785,10 @@ pub fn generate_generic_take_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_take", false)
 }
 
+pub fn generate_generic_take_from_loaned_cpp(macro_func: &[FunctionSignature]) -> String {
+    generate_generic_cpp(macro_func, "z_take_from_loaned", false)
+}
+
 pub fn generate_generic_null_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_internal_null", false)
 }
@@ -1822,7 +1887,7 @@ pub fn process_feature_defines(input_path: &str) -> Result<String, Box<dyn std::
     let mut out = String::new();
     let mut skip = false;
     let mut nest_level: usize = 0;
-    for line in lines.flatten() {
+    for line in lines.map_while(Result::ok) {
         if line.starts_with("#ifdef") && skip {
             nest_level += 1;
         } else if line.starts_with("#endif") && skip {

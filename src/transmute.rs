@@ -14,6 +14,30 @@
 
 use std::mem::MaybeUninit;
 
+//
+// The `Gravestone` trait is used to create valid instance of an object
+// which is safe to be forgotten without calling drop() method on it.
+//
+// The result of this metod is placed to zenoh-c object representation
+// after dropping the original object.
+//
+pub(crate) trait Gravestone {
+    // Create a gravestone object: an object which is safe to be forgotten
+    // without calling drop() method on it.
+    fn gravestone() -> Self;
+    // Check if the object is in a gravestone state
+    fn is_gravestone(&self) -> bool;
+}
+
+impl<T> Gravestone for Option<T> {
+    fn gravestone() -> Self {
+        None
+    }
+    fn is_gravestone(&self) -> bool {
+        self.is_none()
+    }
+}
+
 #[allow(dead_code)]
 pub(crate) trait CTypeRef: Sized {
     type CType;
@@ -205,9 +229,12 @@ macro_rules! impl_transmute {
         }
     };
     (take_rust ($c_type:ty, $rust_type:ty)) => {
-        impl Default for $c_type {
-            fn default() -> Self {
-                unsafe { std::mem::transmute::<$rust_type, $c_type>(<$rust_type>::default()) }
+        impl $crate::transmute::Gravestone for $c_type {
+            fn gravestone() -> Self {
+                unsafe { std::mem::transmute::<$rust_type, $c_type>(<$rust_type>::gravestone()) }
+            }
+            fn is_gravestone(&self) -> bool {
+                self.as_rust_type_ref().is_gravestone()
             }
         }
     };
