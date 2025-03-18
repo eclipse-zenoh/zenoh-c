@@ -87,7 +87,7 @@ cbindgen-generator = { path = "build-resources/cbindgen-generator" }
 
 [lib]
 path = "src/lib.rs"
-name = "zenohcd"
+name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 
