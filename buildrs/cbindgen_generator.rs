@@ -9,7 +9,10 @@ use fs2::FileExt;
 use phf::phf_map;
 use regex::Regex;
 
-use super::{common_helpers::{cargo_target_dir, split_type_name, test_feature}, splitguide::{split_bindings, FuncArg, FunctionSignature}};
+use super::{
+    common_helpers::{cargo_target_dir, split_type_name, test_feature},
+    splitguide::{split_bindings, FuncArg, FunctionSignature},
+};
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";

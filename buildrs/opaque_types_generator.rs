@@ -2,9 +2,8 @@ use std::{collections::HashMap, path::PathBuf};
 
 use regex::Regex;
 
-use crate::get_build_rs_path;
-
 use super::common_helpers::{features, split_type_name};
+use crate::get_build_rs_path;
 
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
