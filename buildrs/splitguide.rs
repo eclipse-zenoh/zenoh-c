@@ -7,7 +7,7 @@ use std::{
 
 use fs2::FileExt;
 
-use common_helpers::test_feature;
+use super::common_helpers::test_feature;
 
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//

@@ -1,21 +1,5 @@
 use std::{collections::BTreeSet, env, path::PathBuf};
 
-pub fn get_build_rs_path() -> PathBuf {
-    let file_path = file!();
-    let mut path_buf = PathBuf::new();
-    path_buf.push(file_path);
-    path_buf
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .parent()
-        .unwrap()
-        .to_path_buf()
-}
-
 pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let mut split = type_name.split('_');
     let prefix = split

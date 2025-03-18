@@ -276,20 +276,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cbindgen-generator"
-version = "0.1.0"
-dependencies = [
- "cbindgen",
- "common-helpers",
- "evalexpr",
- "fs2",
- "fs_extra",
- "phf",
- "regex",
- "serde_yaml",
-]
-
-[[package]]
 name = "cc"
 version = "1.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -385,14 +371,6 @@ checksum = "ba5a308b75df32fe02788e748662718f03fde005016435c444eea572398219fd"
 dependencies = [
  "bytes",
  "memchr",
-]
-
-[[package]]
-name = "common-helpers"
-version = "0.1.0"
-dependencies = [
- "phf",
- "zenoh",
 ]
 
 [[package]]
@@ -1464,15 +1442,6 @@ name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
-
-[[package]]
-name = "opaque-types-generator"
-version = "0.1.0"
-dependencies = [
- "common-helpers",
- "phf",
- "regex",
-]
 
 [[package]]
 name = "openssl-probe"
@@ -3522,16 +3491,20 @@ dependencies = [
 name = "zenoh-c"
 version = "1.2.1"
 dependencies = [
- "cbindgen-generator",
+ "cbindgen",
  "chrono",
- "common-helpers",
  "const_format",
+ "evalexpr",
  "flume",
+ "fs2",
+ "fs_extra",
  "json5",
  "lazy_static",
  "libc",
- "opaque-types-generator",
+ "phf",
  "rand",
+ "regex",
+ "serde_yaml",
  "spin",
  "tokio",
  "tracing",
