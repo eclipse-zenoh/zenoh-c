@@ -81,9 +81,9 @@ flume = "*"
 
 [build-dependencies]
 zenoh = { version = "1.2.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-common-helpers = { path = "./build-resources/common-helpers" }
-opaque-types-generator = { path = "./build-resources/opaque-types-generator" }
-cbindgen-generator = { path = "./build-resources/cbindgen-generator" }
+common-helpers = { path = "@CARGO_PROJECT_DIR@build-resources/common-helpers" }
+opaque-types-generator = { path = "@CARGO_PROJECT_DIR@build-resources/opaque-types-generator" }
+cbindgen-generator = { path = "@CARGO_PROJECT_DIR@build-resources/cbindgen-generator" }
 
 [lib]
 path = "@CARGO_PROJECT_DIR@src/lib.rs"
