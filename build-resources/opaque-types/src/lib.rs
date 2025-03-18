@@ -449,6 +449,7 @@ type PosixSHMProvider = ShmProvider<StaticProtocolID<POSIX_PROTOCOL_ID>, PosixSh
 enum CDummySHMProvider {
     Posix(PosixSHMProvider),
     Dynamic(DummySHMProvider),
+    DynamicThreadsafe(DummySHMProvider),
 }
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
