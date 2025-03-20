@@ -1,7 +1,7 @@
 use std::slice::from_raw_parts_mut;
 
 use libc::c_void;
-use rand::{random, thread_rng, RngCore};
+use rand::{random, rng, RngCore};
 
 /// Generates random `uint8_t`.
 #[no_mangle]
@@ -35,5 +35,5 @@ pub unsafe extern "C" fn z_random_fill(buf: *mut c_void, len: usize) {
         return;
     }
     let b: &mut [u8] = from_raw_parts_mut(buf as *mut u8, len);
-    thread_rng().fill_bytes(b);
+    rng().fill_bytes(b);
 }

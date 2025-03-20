@@ -1383,7 +1383,13 @@ ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
 ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
 ZENOHC_API extern const char *Z_CONFIG_SHARED_MEMORY_KEY;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Protocol identifier for POSIX SHM Protocol.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API extern const unsigned int Z_SHM_POSIX_PROTOCOL_ID;
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation without any additional actions.
