@@ -1,0 +1,14 @@
+[package]
+name = "cbindgen-generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+phf = { version = "0.11.2", features = ["macros"] }
+cbindgen = "0.26.0"
+fs2 = "0.4.3"
+regex = "1.7.1"
+serde_yaml = "0.9.19"
+fs_extra = "1.3.0"
+evalexpr = "11.3.0"
+common-helpers = { path = "../common-helpers" }
