@@ -29,38 +29,50 @@ pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
 pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_CONNECT_KEY: &c_char =
     unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_LISTEN_KEY: &c_char =
     unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_USER_KEY: &c_char =
     unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_PASSWORD_KEY: &c_char =
     unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &c_char =
     unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &c_char =
     unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &c_char =
     unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &c_char =
     unsafe { &*(b"scouting/timeout\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
     unsafe { &*(b"scouting/delay\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
     unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
+#[allow(clippy::manual_c_str_literals)] // For 1.75 compatibility
 #[no_mangle]
 pub static Z_CONFIG_SHARED_MEMORY_KEY: &c_char =
     unsafe { &*(b"transport/shared_memory/enabled\0".as_ptr() as *const c_char) };

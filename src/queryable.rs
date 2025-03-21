@@ -22,10 +22,6 @@ use zenoh::{
 };
 
 pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
-#[cfg(feature = "unstable")]
-use crate::transmute::IntoCType;
-#[cfg(feature = "unstable")]
-use crate::zc_locality_t;
 use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -35,7 +31,10 @@ use crate::{
     z_view_string_from_substr, z_view_string_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{z_entity_global_id_t, z_moved_source_info_t, zc_locality_default};
+use crate::{
+    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_locality_default,
+    zc_locality_t,
+};
 decl_c_type!(
     owned(z_owned_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),

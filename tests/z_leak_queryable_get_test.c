@@ -50,6 +50,24 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_query_reply(query, z_query_keyexpr(query), z_move(reply_payload), &options);
 }
 
+void reply_handler(z_loaned_reply_t *reply, void *context) {
+    size_t *received_replies = (size_t *)context;
+    (*received_replies)++;
+
+    const z_loaned_sample_t *sample = z_reply_ok(reply);
+    assert(sample != NULL);
+
+    z_view_string_t key_str;
+    z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
+
+    z_owned_string_t reply_str;
+    z_bytes_to_string(z_sample_payload(sample), &reply_str);
+
+    printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
+           (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
+    z_drop(z_move(reply_str));
+}
+
 int main(int argc, char **argv) {
     printf("Declaring Queryable on %s\n", QUERYABLE_KEY_EXPR);
 
@@ -91,31 +109,11 @@ int main(int argc, char **argv) {
 
         options.payload = z_move(payload);
 
-        z_owned_fifo_handler_reply_t handler;
         z_owned_closure_reply_t closure;
-        z_fifo_channel_reply_new(&closure, &handler, 16);
+        z_closure(&closure, reply_handler, NULL, &received_replies);
 
         z_get(z_loan(get_session), z_loan(get_keyexpr), "", z_move(closure), &options);
 
-        z_owned_reply_t reply;
-        while (z_recv(z_loan(handler), &reply) == Z_OK) {
-            received_replies++;
-            const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
-            assert(sample != NULL);
-
-            z_view_string_t key_str;
-            z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
-
-            z_owned_string_t reply_str;
-            z_bytes_to_string(z_sample_payload(sample), &reply_str);
-
-            printf(">> Received ('%.*s': '%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)),
-                   (int)z_string_len(z_loan(reply_str)), z_string_data(z_loan(reply_str)));
-            z_drop(z_move(reply_str));
-            z_drop(z_move(reply));
-        }
-
-        z_drop(z_move(handler));
         z_sleep_s(1);
     }
     assert(received_replies == 5);
