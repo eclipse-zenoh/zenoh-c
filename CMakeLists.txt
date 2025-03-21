@@ -35,7 +35,6 @@ declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Shoul
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
 declare_cache_var(ZENOHC_TREAT_WARNING_AS_ERROR OFF BOOL "Whether to treat compilation warnings as errors")
-declare_cache_var(ZENOHC_BUILD_RS "build.rs" STRING "Path to custom build.rs file")
 set(CMAKE_COMPILE_WARNING_AS_ERROR ${ZENOHC_TREAT_WARNING_AS_ERROR})
 
 set(project_version "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
