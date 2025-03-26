@@ -24,6 +24,7 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
+    internal::builders::close::NolocalJoinHandle,
     matching::MatchingListener, query::Querier, sample::SourceInfo, session::EntityGlobalId,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -242,7 +243,7 @@ get_opaque_type_data!(Session, z_loaned_session_t);
 #[cfg(feature = "unstable")]
 /// An owned Close handle
 get_opaque_type_data!(
-    Option<tokio::task::JoinHandle<zenoh::Result<()>>>,
+    Option<NolocalJoinHandle<zenoh::Result<()>>>,
     zc_owned_concurrent_close_handle_t
 );
 

@@ -14,19 +14,17 @@
 
 use std::mem::MaybeUninit;
 
-use zenoh_runtime::ZRuntime;
+use zenoh::{internal::builders::close::NolocalJoinHandle, Wait};
 
-#[cfg(feature = "unstable")]
-use crate::opaque_types::zc_owned_concurrent_close_handle_t;
 use crate::{
+    opaque_types::zc_owned_concurrent_close_handle_t,
     result::{z_result_t, Z_EIO, Z_OK},
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
     zc_moved_concurrent_close_handle_t,
 };
 
-#[cfg(feature = "unstable")]
 decl_c_type!(
-    owned(zc_owned_concurrent_close_handle_t, option tokio::task::JoinHandle<zenoh::Result<()>>),
+    owned(zc_owned_concurrent_close_handle_t, option NolocalJoinHandle<zenoh::Result<()>>),
 );
 
 /// @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.
@@ -35,7 +33,7 @@ decl_c_type!(
 pub unsafe extern "C" fn zc_concurrent_close_handle_wait(
     handle: &mut zc_moved_concurrent_close_handle_t,
 ) -> z_result_t {
-    match ZRuntime::Application.block_on(handle.take_rust_type().unwrap_unchecked()) {
+    match handle.take_rust_type().unwrap_unchecked().wait() {
         Ok(_) => Z_OK,
         Err(e) => {
             tracing::error!("Close error: {}", e);
