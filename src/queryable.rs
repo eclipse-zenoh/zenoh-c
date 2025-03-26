@@ -22,18 +22,19 @@ use zenoh::{
 };
 
 pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
-#[cfg(feature = "unstable")]
-use crate::transmute::IntoCType;
 use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t, zc_locality_t,
+    z_view_string_from_substr, z_view_string_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{z_entity_global_id_t, z_moved_source_info_t, zc_locality_default};
+use crate::{
+    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_locality_default,
+    zc_locality_t,
+};
 decl_c_type!(
     owned(z_owned_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),

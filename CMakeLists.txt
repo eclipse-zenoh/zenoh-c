@@ -248,6 +248,7 @@ add_custom_command(
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
+	USES_TERMINAL
 )
 add_custom_target(cargo ALL DEPENDS "${libs}")
 

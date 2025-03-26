@@ -61,17 +61,19 @@ git commit version.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump versi
 
 # Select all package dependencies that match $bump_deps_pattern and bump them to $bump_deps_version
 if [[ "$bump_deps_pattern" != '' ]]; then
-  deps=$(toml get Cargo.toml dependencies | jq -r "keys[] | select(test(\"$bump_deps_pattern\"))")
-  for dep in $deps; do
-    if [[ -n $bump_deps_version ]]; then
-      toml_set_in_place Cargo.toml "dependencies.$dep.version" "$bump_deps_version"
-      toml_set_in_place Cargo.toml.in "dependencies.$dep.version" "$bump_deps_version"
-    fi
+  for deps_key in "dependencies" "build-dependencies"; do
+    deps=$(toml get Cargo.toml $deps_key | jq -r "keys[] | select(test(\"$bump_deps_pattern\"))")
+    for dep in $deps; do
+      if [[ -n $bump_deps_version ]]; then
+        toml_set_in_place Cargo.toml "$deps_key.$dep.version" "$bump_deps_version"
+        toml_set_in_place Cargo.toml.in "$deps_key.$dep.version" "$bump_deps_version"
+      fi
 
-    if [[ -n $bump_deps_branch ]]; then
-      toml_set_in_place Cargo.toml "dependencies.$dep.branch" "$bump_deps_branch"
-      toml_set_in_place Cargo.toml.in "dependencies.$dep.branch" "$bump_deps_branch"
-    fi
+      if [[ -n $bump_deps_branch ]]; then
+        toml_set_in_place Cargo.toml "$deps_key.$dep.branch" "$bump_deps_branch"
+        toml_set_in_place Cargo.toml.in "$deps_key.$dep.branch" "$bump_deps_branch"
+      fi
+    done
   done
   opaque_types_deps=$(toml get build-resources/opaque-types/Cargo.toml dependencies | jq -r "keys[] | select(test(\"$bump_deps_pattern\"))")
   for dep in $opaque_types_deps; do
