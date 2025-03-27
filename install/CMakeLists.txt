@@ -40,6 +40,11 @@ function(install_zenohc_lib configurations property_postfix package_name)
     get_target_property(NATIVE_STATIC_LIBS zenohc::static INTERFACE_LINK_LIBRARIES)
     get_filename_component(STATICLIB ${staticlib_path} NAME)
     install(FILES ${staticlib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations} COMPONENT dev)
+    
+    if (ZENOHC_BUILD_ZENOHD)
+        get_target_property(zenohd_path zenohc::zenohd IMPORTED_LOCATION_${property_postfix})
+        install(PROGRAMS ${zenohd_path} DESTINATION ${CMAKE_INSTALL_BINDIR} CONFIGURATIONS ${configurations} COMPONENT lib)
+    endif()
 
     set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}")
 
@@ -47,7 +52,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
     configure_package_config_file(
         "PackageConfig.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}Config.cmake"
-        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR ZENOHC_INSTALL_DYLIBDIR
+        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR ZENOHC_INSTALL_DYLIBDIR CMAKE_INSTALL_BINDIR
         INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
     # Generate <Package>Version.cmake
@@ -69,10 +74,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
         CONFIGURATIONS ${configurations}
         RENAME ${package_name}ConfigVersion.cmake
         COMPONENT dev)
-
-
 endfunction()
-
 
 #
 # Install headers
