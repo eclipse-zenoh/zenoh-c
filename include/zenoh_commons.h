@@ -237,6 +237,25 @@ typedef enum zc_reply_keyexpr_t {
   ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zc_reply_keyexpr_t;
 #endif
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef enum ze_advanced_publisher_heartbeat_mode_t {
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * Allow last sample miss detection through periodic heartbeat.
+   * Periodically send the last published Sample's sequence number to allow last sample recovery.
+   */
+  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC,
+#endif
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * Allow last sample miss detection through sporadic heartbeat.
+   * Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
+   * but only if it changed since last period.
+   */
+  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC,
+#endif
+} ze_advanced_publisher_heartbeat_mode_t;
+#endif
 typedef struct z_moved_alloc_layout_t {
   struct z_owned_alloc_layout_t _this;
 } z_moved_alloc_layout_t;
@@ -1070,6 +1089,10 @@ typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
    * Must be set to ``true``, to enable sample miss detection.
    */
   bool is_enabled;
+  /**
+   * Allow last sample miss detection through sporadic or periodic heartbeat.
+   */
+  enum ze_advanced_publisher_heartbeat_mode_t heartbeat_mode;
   /**
    * If different from zero, the publisher will send heartbeats with the specified period, which
    * can be used by Advanced Subscribers for last sample(s) miss detection (if last sample miss detection with zero query period is enabled).
