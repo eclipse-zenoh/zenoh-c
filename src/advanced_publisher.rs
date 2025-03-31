@@ -102,7 +102,7 @@ pub enum ze_advanced_publisher_heartbeat_mode_t {
 /// @brief Settings for sample miss detection on Advanced Publisher.
 #[repr(C)]
 pub struct ze_advanced_publisher_sample_miss_detection_options_t {
-    /// Must be set to ``true``, to enable sample miss detection by adding sequence numbers
+    /// Must be set to ``true``, to enable sample miss detection by adding sequence numbers.
     pub is_enabled: bool,
     /// Allow last sample miss detection through sporadic or periodic heartbeat.
     pub heartbeat_mode: ze_advanced_publisher_heartbeat_mode_t,
