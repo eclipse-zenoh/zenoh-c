@@ -129,11 +129,9 @@ impl From<&ze_advanced_publisher_sample_miss_detection_options_t> for MissDetect
             m = m.sporadic_heartbeat(Duration::from_millis(val.heartbeat_period_ms))
         } else if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::PERIODIC {
             m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
-        } else {
-            if val.heartbeat_period_ms > 0 {
-                tracing::warn!("ze_advanced_publisher_sample_miss_detection_options_t: heartbeat_mode=NONE but heartbeat_period_ms={}. heartbeat_mode=PERIODIC is used instead, but this behavor will be removed later", val.heartbeat_period_ms);
-                m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
-            }
+        } else if val.heartbeat_period_ms > 0 {
+            tracing::warn!("ze_advanced_publisher_sample_miss_detection_options_t: heartbeat_mode=NONE but heartbeat_period_ms={}. heartbeat_mode=PERIODIC is used instead, but this behavor will be removed later", val.heartbeat_period_ms);
+            m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
         }
         m
     }
