@@ -87,6 +87,8 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ze_advanced_publisher_heartbeat_mode_t {
+    /// Disable heartbeat-based last sample miss detection.
+    NONE,
     /// Allow last sample miss detection through periodic heartbeat.
     /// Periodically send the last published Sample's sequence number to allow last sample recovery.
     PERIODIC,
@@ -114,7 +116,7 @@ impl Default for ze_advanced_publisher_sample_miss_detection_options_t {
     fn default() -> Self {
         Self {
             is_enabled: true,
-            heartbeat_mode: ze_advanced_publisher_heartbeat_mode_t::PERIODIC,
+            heartbeat_mode: ze_advanced_publisher_heartbeat_mode_t::NONE,
             heartbeat_period_ms: 0,
         }
     }
@@ -123,11 +125,14 @@ impl Default for ze_advanced_publisher_sample_miss_detection_options_t {
 impl From<&ze_advanced_publisher_sample_miss_detection_options_t> for MissDetectionConfig {
     fn from(val: &ze_advanced_publisher_sample_miss_detection_options_t) -> Self {
         let mut m = MissDetectionConfig::default();
-        if val.is_enabled && val.heartbeat_period_ms > 0 {
-            if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::PERIODIC {
+        if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::SPORADIC {
+            m = m.sporadic_heartbeat(Duration::from_millis(val.heartbeat_period_ms))
+        } else if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::PERIODIC {
+            m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
+        } else {
+            if val.heartbeat_period_ms > 0 {
+                tracing::warn!("ze_advanced_publisher_sample_miss_detection_options_t: heartbeat_mode=NONE but heartbeat_period_ms={}. heartbeat_mode=PERIODIC is used instead, but this behavor will be removed later", val.heartbeat_period_ms);
                 m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
-            } else {
-                m = m.sporadic_heartbeat(Duration::from_millis(val.heartbeat_period_ms))
             }
         }
         m

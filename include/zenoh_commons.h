@@ -241,6 +241,12 @@ typedef enum zc_reply_keyexpr_t {
 typedef enum ze_advanced_publisher_heartbeat_mode_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
+   * Disable heartbeat-based last sample miss detection.
+   */
+  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_NONE,
+#endif
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
    * Allow last sample miss detection through periodic heartbeat.
    * Periodically send the last published Sample's sequence number to allow last sample recovery.
    */
