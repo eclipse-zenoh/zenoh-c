@@ -83,15 +83,31 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
     }
 }
 
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ze_advanced_publisher_heartbeat_mode_t {
+    /// Disable heartbeat-based last sample miss detection.
+    NONE,
+    /// Allow last sample miss detection through periodic heartbeat.
+    /// Periodically send the last published Sample's sequence number to allow last sample recovery.
+    PERIODIC,
+    /// Allow last sample miss detection through sporadic heartbeat.
+    /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
+    /// but only if it changed since last period.
+    SPORADIC,
+}
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for sample miss detection on Advanced Publisher.
 #[repr(C)]
 pub struct ze_advanced_publisher_sample_miss_detection_options_t {
-    /// Must be set to ``true``, to enable sample miss detection.
+    /// Must be set to ``true``, to enable sample miss detection by adding sequence numbers.
     pub is_enabled: bool,
-    /// If different from zero, the publisher will send heartbeats with the specified period, which
+    /// Allow last sample miss detection through sporadic or periodic heartbeat.
+    pub heartbeat_mode: ze_advanced_publisher_heartbeat_mode_t,
+    /// If heartbeat_mode is not NONE, the publisher will send heartbeats with the specified period, which
     /// can be used by Advanced Subscribers for last sample(s) miss detection (if last sample miss detection with zero query period is enabled).
-    /// Otherwise, missed samples will be retransmitted based on Advanced Subscriber queries.
     pub heartbeat_period_ms: u64,
 }
 
@@ -99,6 +115,7 @@ impl Default for ze_advanced_publisher_sample_miss_detection_options_t {
     fn default() -> Self {
         Self {
             is_enabled: true,
+            heartbeat_mode: ze_advanced_publisher_heartbeat_mode_t::NONE,
             heartbeat_period_ms: 0,
         }
     }
@@ -107,7 +124,12 @@ impl Default for ze_advanced_publisher_sample_miss_detection_options_t {
 impl From<&ze_advanced_publisher_sample_miss_detection_options_t> for MissDetectionConfig {
     fn from(val: &ze_advanced_publisher_sample_miss_detection_options_t) -> Self {
         let mut m = MissDetectionConfig::default();
-        if val.heartbeat_period_ms > 0 {
+        if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::SPORADIC {
+            m = m.sporadic_heartbeat(Duration::from_millis(val.heartbeat_period_ms))
+        } else if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::PERIODIC {
+            m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
+        } else if val.heartbeat_period_ms > 0 {
+            tracing::warn!("ze_advanced_publisher_sample_miss_detection_options_t: heartbeat_mode=NONE but heartbeat_period_ms={}. heartbeat_mode=PERIODIC is used instead, but this behavor will be removed later", val.heartbeat_period_ms);
             m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
         }
         m

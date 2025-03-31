@@ -59,6 +59,7 @@ int main(int argc, char** argv) {
     ze_advanced_publisher_sample_miss_detection_options_default(&pub_opts.sample_miss_detection);
     // or pub_opts.sample_miss_detection = true
     pub_opts.sample_miss_detection.heartbeat_period_ms = 500;
+    pub_opts.sample_miss_detection.heartbeat_mode = ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC;
     // if not set, publisher will retransmit samples based on periodic queries from advanced subscriber
 
     if (ze_declare_advanced_publisher(z_loan(s), &pub, z_loan(ke), &pub_opts) < 0) {
