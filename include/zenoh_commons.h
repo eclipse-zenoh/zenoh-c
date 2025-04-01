@@ -1092,7 +1092,7 @@ typedef struct ze_moved_advanced_publisher_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
   /**
-   * Must be set to ``true``, to enable sample miss detection.
+   * Must be set to ``true``, to enable sample miss detection by adding sequence numbers.
    */
   bool is_enabled;
   /**
@@ -1100,9 +1100,8 @@ typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
    */
   enum ze_advanced_publisher_heartbeat_mode_t heartbeat_mode;
   /**
-   * If different from zero, the publisher will send heartbeats with the specified period, which
+   * If heartbeat_mode is not NONE, the publisher will send heartbeats with the specified period, which
    * can be used by Advanced Subscribers for last sample(s) miss detection (if last sample miss detection with zero query period is enabled).
-   * Otherwise, missed samples will be retransmitted based on Advanced Subscriber queries.
    */
   uint64_t heartbeat_period_ms;
 } ze_advanced_publisher_sample_miss_detection_options_t;
