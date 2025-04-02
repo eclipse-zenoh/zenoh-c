@@ -75,7 +75,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build && cd build 
-          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
+          cmake .. -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local -DZENOHC_BUILD_WITH_SHARED_MEMORY=${{ matrix.shm }} -DZENOHC_BUILD_WITH_UNSTABLE_API=${{ matrix.unstable }}
           cmake --build . --target install --config Release
 
       - name: Install valgrind
@@ -115,7 +115,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p build_examples && cd build_examples
-          cmake ../examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=~/local
+          cmake ../examples -DZENOHC_TREAT_WARNING_AS_ERROR=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$HOME/local
           cmake --build . --config Release
           cd .. && rm -rf build_examples
 
