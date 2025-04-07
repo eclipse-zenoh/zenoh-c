@@ -87,7 +87,9 @@ else()
 	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+# note: case-insensitive build configuration check
+string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
+if (CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
 	set(DEBUG TRUE)
 endif()
 
@@ -133,7 +135,9 @@ set(cargo_lib_name_release zenohc)
 if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
 	# same Cargo.toml is for ide, debug and release configurations
 	# This happens only for non-multiconfig generators, so testing for debug/release on configuration stage is allowed
-	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	# note: case-insensitive build configuration check
+	string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
+	if (CMAKE_BUILD_TYPE_LOWER STREQUAL "Debug")
 		set(cargo_lib_name ${cargo_lib_name_debug})
 	else()
 		set(cargo_lib_name ${cargo_lib_name_release})
