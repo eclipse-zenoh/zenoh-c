@@ -42,6 +42,7 @@ pub extern "C" fn z_posix_shm_provider_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
     layout: &z_loaned_memory_layout_t,
 ) -> z_result_t {
+    let this = this.as_rust_type_mut_uninit();
     match PosixShmProviderBackend::builder()
         .with_layout(layout.as_rust_type_ref())
         .wait()
@@ -51,11 +52,11 @@ pub extern "C" fn z_posix_shm_provider_new(
                 .protocol_id::<POSIX_PROTOCOL_ID>()
                 .backend(backend)
                 .wait();
-            this.as_rust_type_mut_uninit()
-                .write(Some(CSHMProvider::Posix(provider)));
+            this.write(Some(CSHMProvider::Posix(provider)));
             Z_OK
         }
         Err(e) => {
+            this.write(None);
             tracing::error!("{}", e);
             Z_EINVAL
         }
