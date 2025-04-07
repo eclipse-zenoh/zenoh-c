@@ -137,7 +137,7 @@ if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
 	# This happens only for non-multiconfig generators, so testing for debug/release on configuration stage is allowed
 	# note: case-insensitive build configuration check
 	string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_LOWER)
-	if (CMAKE_BUILD_TYPE_LOWER STREQUAL "Debug")
+	if (CMAKE_BUILD_TYPE_LOWER STREQUAL "debug")
 		set(cargo_lib_name ${cargo_lib_name_debug})
 	else()
 		set(cargo_lib_name ${cargo_lib_name_release})
