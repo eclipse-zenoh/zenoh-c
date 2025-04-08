@@ -12,7 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <assert.h>
-#include <stdatomic.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
@@ -21,19 +20,28 @@
 
 #undef NDEBUG
 #include <assert.h>
+z_owned_mutex_t mu;
 
 void data_handler(z_loaned_sample_t *sample, void *arg) {
-    atomic_int *val = (atomic_int *)arg;
-    atomic_fetch_add(val, 1);
+    int *val = (int *)arg;
+    z_mutex_lock(z_loan_mut(mu));
+    (*val)++;
+    z_mutex_unlock(z_loan_mut(mu));
     z_sleep_s(5);
-    atomic_fetch_add(val, 1);
+    z_mutex_lock(z_loan_mut(mu));
+    (*val)++;
+    z_mutex_unlock(z_loan_mut(mu));
 }
 
 void query_handler(z_loaned_query_t *query, void *arg) {
-    atomic_int *val = (atomic_int *)arg;
-    atomic_fetch_add(val, 1);
+    int *val = (int *)arg;
+    z_mutex_lock(z_loan_mut(mu));
+    (*val)++;
+    z_mutex_unlock(z_loan_mut(mu));
     z_sleep_s(5);
-    atomic_fetch_add(val, 1);
+    z_mutex_lock(z_loan_mut(mu));
+    (*val)++;
+    z_mutex_unlock(z_loan_mut(mu));
 
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/query_callbacks_drop");
@@ -43,13 +51,18 @@ void query_handler(z_loaned_query_t *query, void *arg) {
 }
 
 void reply_handler(z_loaned_reply_t *reply, void *arg) {
-    atomic_int *val = (atomic_int *)arg;
-    atomic_fetch_add(val, 1);
+    int *val = (int *)arg;
+    z_mutex_lock(z_loan_mut(mu));
+    (*val)++;
+    z_mutex_unlock(z_loan_mut(mu));
     z_sleep_s(5);
-    atomic_fetch_add(val, 1);
+    z_mutex_lock(z_loan_mut(mu));
+    (*val)++;
+    z_mutex_unlock(z_loan_mut(mu));
 }
 
 void test_pub_sub() {
+    z_mutex_init(&mu);
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/callbacks_drop");
 
@@ -61,7 +74,7 @@ void test_pub_sub() {
     assert(z_open(&s1, z_move(c1), NULL) == Z_OK);
     assert(z_open(&s2, z_move(c2), NULL) == Z_OK);
 
-    atomic_int val = ATOMIC_VAR_INIT(0);
+    int val = 0;
     z_owned_subscriber_t sub;
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, (void *)&val);
@@ -74,14 +87,18 @@ void test_pub_sub() {
     z_sleep_s(1);
     z_drop(z_move(sub));
     int out = 0;
-    out = atomic_load(&val);
+    z_mutex_lock(z_loan_mut(mu));
+    out = val;
+    z_mutex_unlock(z_loan_mut(mu));
     assert(out == 2);
 
     z_drop(z_move(s1));
     z_drop(z_move(s2));
+    z_drop(z_move(mu));
 }
 
 void test_query_reply() {
+    z_mutex_init(&mu);
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/query_callbacks_drop");
 
@@ -93,7 +110,7 @@ void test_query_reply() {
     assert(z_open(&s1, z_move(c1), NULL) == Z_OK);
     assert(z_open(&s2, z_move(c2), NULL) == Z_OK);
 
-    atomic_int val = ATOMIC_VAR_INIT(0);
+    int val = 0;
     z_owned_queryable_t q;
     z_owned_closure_query_t q_callback;
     z_closure(&q_callback, query_handler, NULL, (void *)&val);
@@ -108,15 +125,20 @@ void test_query_reply() {
     z_sleep_s(1);
     z_drop(z_move(q));
     int out = 0;
-    out = atomic_load(&val);
+    z_mutex_lock(z_loan_mut(mu));
+    out = val;
+    z_mutex_unlock(z_loan_mut(mu));
     assert(out == 2);
 
     z_sleep_s(1);
     z_drop(z_move(s2));
-    out = atomic_load(&val);
+    z_mutex_lock(z_loan_mut(mu));
+    out = val;
+    z_mutex_unlock(z_loan_mut(mu));
     assert(out == 4);
 
     z_drop(z_move(s1));
+    z_drop(z_move(mu));
 }
 
 int main(int argc, char **argv) {
