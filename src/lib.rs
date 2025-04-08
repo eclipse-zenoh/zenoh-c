@@ -102,6 +102,7 @@ mod serialization;
 // there will be no rusty `lang_start` entry point and our rusty code will run without some initialization
 // that is done there. In most of the cases this is OK, but sometimes lack of this initialization bites us.
 // This entry point is made as a replacement for our case and contains some necessary init.
+#[cfg(unix)]
 #[ctor::ctor]
 fn alternative_rusty_entry_point() {
     // See
