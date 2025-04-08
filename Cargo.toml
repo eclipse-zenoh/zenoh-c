@@ -64,6 +64,7 @@ maintenance = { status = "actively-developed" }
 
 [dependencies]
 chrono = "0.4.37"
+ctor = "0.4.1"
 json5 = "0.4.1"
 lazy_static = "1.4.0"
 libc = "0.2.139"
@@ -91,7 +92,7 @@ phf = { version = "0.11.2", features = ["macros"] }
 
 [lib]
 path = "src/lib.rs"
-name = "zenohc"
+name = "zenohcd"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 
