@@ -18,3 +18,17 @@
 #define Z_QUERY_TARGET_DEFAULT Z_QUERY_TARGET_BEST_MATCHING
 #define Z_RELIABILITY_DEFAULT Z_RELIABILITY_RELIABLE
 #define Z_SAMPLE_KIND_DEFAULT Z_SAMPLE_KIND_PUT
+
+// config keys
+#define Z_CONFIG_MODE_KEY "mode"
+#define Z_CONFIG_CONNECT_KEY "connect/endpoints"
+#define Z_CONFIG_LISTEN_KEY "listen/endpoints"
+#define Z_CONFIG_USER_KEY "transport/auth/usrpwd/user"
+#define Z_CONFIG_PASSWORD_KEY "transport/auth/usrpwd/password"
+#define Z_CONFIG_MULTICAST_SCOUTING_KEY "scouting/multicast/enabled"
+#define Z_CONFIG_MULTICAST_INTERFACE_KEY "scouting/multicast/interface"
+#define Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY "scouting/multicast/address"
+#define Z_CONFIG_SCOUTING_DELAY_KEY "scouting/delay"
+#define Z_CONFIG_SCOUTING_TIMEOUT_KEY "scouting/timeout"
+#define Z_CONFIG_ADD_TIMESTAMP_KEY "timestamping/enabled"
+#define Z_CONFIG_SHARED_MEMORY_KEY "transport/shared_memory/enabled"
