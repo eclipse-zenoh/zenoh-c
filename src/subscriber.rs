@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, ops::Deref};
 
 use zenoh::{
     handlers::Callback,
@@ -27,12 +27,26 @@ use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
+    SgNotifier, SyncGroup, SyncObj,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t, zc_locality_default, zc_locality_t};
 
+pub(crate) struct CSubscriber {
+    pub(crate) subscriber: Subscriber<()>,
+    pub(crate) _sg: SyncGroup,
+}
+
+impl Deref for CSubscriber {
+    type Target = Subscriber<()>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.subscriber
+    }
+}
+
 decl_c_type!(
-    owned(z_owned_subscriber_t, option Subscriber<()>),
+    owned(z_owned_subscriber_t, option CSubscriber),
     loaned(z_loaned_subscriber_t),
 );
 
@@ -89,16 +103,18 @@ pub(crate) fn _declare_subscriber_inner<'a, 'b>(
     session: &'a z_loaned_session_t,
     key_expr: &'b z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
+    notifier: SgNotifier,
     options: Option<&mut z_subscriber_options_t>,
 ) -> SubscriberBuilder<'a, 'b, Callback<Sample>> {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let mut subscriber = session
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+            z_closure_sample_call(z_closure_sample_loan(&sync_callback.value), unsafe {
                 owned_sample
                     .as_mut()
                     .unwrap_unchecked()
@@ -130,10 +146,14 @@ pub extern "C" fn z_declare_subscriber(
     options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = subscriber.as_rust_type_mut_uninit();
-    let s = _declare_subscriber_inner(session, key_expr, callback, options);
+    let sg = SyncGroup::new();
+    let s = _declare_subscriber_inner(session, key_expr, callback, sg.notifier(), options);
     match s.wait() {
         Ok(sub) => {
-            this.write(Some(sub));
+            this.write(Some(CSubscriber {
+                subscriber: sub,
+                _sg: sg,
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -160,7 +180,13 @@ pub extern "C" fn z_declare_background_subscriber(
     callback: &mut z_moved_closure_sample_t,
     options: Option<&mut z_subscriber_options_t>,
 ) -> result::z_result_t {
-    let subscriber = _declare_subscriber_inner(session, key_expr, callback, options);
+    let subscriber = _declare_subscriber_inner(
+        session,
+        key_expr,
+        callback,
+        session.as_rust_type_ref().notifier(),
+        options,
+    );
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
@@ -199,7 +225,7 @@ pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> b
 #[no_mangle]
 pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
-        if let Err(e) = s.undeclare().wait() {
+        if let Err(e) = s.subscriber.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }

@@ -27,7 +27,7 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
-    z_moved_liveliness_token_t, z_owned_subscriber_t,
+    z_moved_liveliness_token_t, z_owned_subscriber_t, CSubscriber, SgNotifier, SyncGroup, SyncObj,
 };
 decl_c_type!(
     owned(z_owned_liveliness_token_t, option LivelinessToken),
@@ -145,18 +145,20 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
     session: &'a z_loaned_session_t,
     key_expr: &'b z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
+    notifier: SgNotifier,
     options: Option<&mut z_liveliness_subscriber_options_t>,
 ) -> LivelinessSubscriberBuilder<'a, 'b, Callback<Sample>> {
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let sub = session
         .liveliness()
         .declare_subscriber(key_expr)
         .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+            z_closure_sample_call(z_closure_sample_loan(&sync_callback.value), unsafe {
                 owned_sample
                     .as_mut()
                     .unwrap_unchecked()
@@ -183,10 +185,15 @@ pub extern "C" fn z_liveliness_declare_subscriber(
     options: Option<&mut z_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = subscriber.as_rust_type_mut_uninit();
-    let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
+    let sg = SyncGroup::new();
+    let subscriber =
+        _liveliness_declare_subscriber_inner(session, key_expr, callback, sg.notifier(), options);
     match subscriber.wait() {
         Ok(subscriber) => {
-            this.write(Some(subscriber));
+            this.write(Some(CSubscriber {
+                subscriber,
+                _sg: sg,
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -212,7 +219,13 @@ pub extern "C" fn z_liveliness_declare_background_subscriber(
     callback: &mut z_moved_closure_sample_t,
     options: Option<&mut z_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
-    let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
+    let subscriber = _liveliness_declare_subscriber_inner(
+        session,
+        key_expr,
+        callback,
+        session.as_rust_type_ref().notifier(),
+        options,
+    );
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {

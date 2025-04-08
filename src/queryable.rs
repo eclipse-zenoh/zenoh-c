@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, ops::Deref};
 
 use zenoh::{
     bytes::Encoding,
@@ -28,15 +28,29 @@ use crate::{
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t,
+    z_view_string_from_substr, z_view_string_t, SgNotifier, SyncGroup, SyncObj,
 };
 #[cfg(feature = "unstable")]
 use crate::{
     transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_locality_default,
     zc_locality_t,
 };
+
+pub(crate) struct CQueryable {
+    pub(crate) queryable: Queryable<()>,
+    _sg: SyncGroup,
+}
+
+impl Deref for CQueryable {
+    type Target = Queryable<()>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.queryable
+    }
+}
+
 decl_c_type!(
-    owned(z_owned_queryable_t, option Queryable<()>),
+    owned(z_owned_queryable_t, option CQueryable),
     loaned(z_loaned_queryable_t),
 );
 
@@ -249,11 +263,13 @@ fn _declare_queryable_inner<'a, 'b>(
     session: &'a z_loaned_session_t,
     key_expr: &'b z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_query_t,
+    notifier: SgNotifier,
     options: Option<&mut z_queryable_options_t>,
 ) -> QueryableBuilder<'a, 'b, Callback<Query>> {
     let session = session.as_rust_type_ref();
     let keyexpr = key_expr.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
         builder = builder.complete(options.complete);
@@ -264,7 +280,7 @@ fn _declare_queryable_inner<'a, 'b>(
     }
     let queryable = builder.callback(move |query| {
         let mut owned_query = Some(query);
-        z_closure_query_call(z_closure_query_loan(&callback), unsafe {
+        z_closure_query_call(z_closure_query_loan(&sync_callback.value), unsafe {
             owned_query
                 .as_mut()
                 .unwrap_unchecked()
@@ -292,10 +308,14 @@ pub extern "C" fn z_declare_queryable(
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
     let this = queryable.as_rust_type_mut_uninit();
-    let queryable = _declare_queryable_inner(session, key_expr, callback, options);
+    let sg = SyncGroup::new();
+    let queryable = _declare_queryable_inner(session, key_expr, callback, sg.notifier(), options);
     match queryable.wait() {
         Ok(q) => {
-            this.write(Some(q));
+            this.write(Some(CQueryable {
+                queryable: q,
+                _sg: sg,
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -322,7 +342,13 @@ pub extern "C" fn z_declare_background_queryable(
     callback: &mut z_moved_closure_query_t,
     options: Option<&mut z_queryable_options_t>,
 ) -> result::z_result_t {
-    let queryable = _declare_queryable_inner(session, key_expr, callback, options);
+    let queryable = _declare_queryable_inner(
+        session,
+        key_expr,
+        callback,
+        session.as_rust_type_ref().notifier(),
+        options,
+    );
     match queryable.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
@@ -569,7 +595,7 @@ pub extern "C" fn z_query_attachment_mut(
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
     if let Some(qable) = this_.take_rust_type() {
-        if let Err(e) = qable.undeclare().wait() {
+        if let Err(e) = qable.queryable.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }

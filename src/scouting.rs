@@ -24,7 +24,7 @@ use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
-    z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
+    z_owned_string_array_t, z_view_string_t, CString, CStringView, SyncGroup, SyncObj, ZVector,
 };
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
@@ -203,11 +203,13 @@ pub extern "C" fn z_scout(
         return result::Z_EINVAL;
     };
 
+    let sg = SyncGroup::new();
+    let sync_callback = SyncObj::new(callback, sg.notifier());
     ZRuntime::Application.block_in_place(async move {
         let res = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut owned_h = Some(h);
-                z_closure_hello_call(z_closure_hello_loan(&callback), unsafe {
+                z_closure_hello_call(z_closure_hello_loan(&sync_callback.value), unsafe {
                     owned_h.as_mut().unwrap_unchecked().as_loaned_c_type_mut()
                 })
             })

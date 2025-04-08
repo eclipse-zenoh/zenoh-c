@@ -9,6 +9,7 @@ use std::{
     thread::JoinHandle,
 };
 
+use flume::{Receiver, Sender};
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     config::Config,
@@ -24,8 +25,8 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    internal::builders::close::NolocalJoinHandle,
-    matching::MatchingListener, query::Querier, sample::SourceInfo, session::EntityGlobalId,
+    internal::builders::close::NolocalJoinHandle, matching::MatchingListener, query::Querier,
+    sample::SourceInfo, session::EntityGlobalId,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
@@ -49,6 +50,13 @@ macro_rules! get_opaque_type_data {
             panic!("{}", INFO_MESSAGE);
         };
     };
+}
+
+type SgNotifier = Sender<()>;
+
+pub(crate) struct SyncGroup {
+    waiter: Receiver<()>,
+    notifier: Option<SgNotifier>,
 }
 
 /// A Zenoh data.
@@ -125,21 +133,32 @@ get_opaque_type_data!(Option<Query>, z_owned_query_t);
 /// A loaned Zenoh query.
 get_opaque_type_data!(Query, z_loaned_query_t);
 
+struct CQueryable {
+    queryable: Queryable<()>,
+    sg: SyncGroup,
+}
+
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#queryable"> queryable </a>.
 ///
 /// Responds to queries sent via `z_get()` with intersecting key expression.
-get_opaque_type_data!(Option<Queryable<()>>, z_owned_queryable_t);
+get_opaque_type_data!(Option<CQueryable>, z_owned_queryable_t);
 /// A loaned Zenoh queryable.
-get_opaque_type_data!(Queryable<()>, z_loaned_queryable_t);
+get_opaque_type_data!(CQueryable, z_loaned_queryable_t);
+
+#[cfg(feature = "unstable")]
+struct CQuerier {
+    querier: Querier<'static>,
+    sg: SyncGroup,
+}
 
 #[cfg(feature = "unstable")]
 /// An owned Zenoh querier.
 ///
 /// Sends queries to matching queryables.
-get_opaque_type_data!(Option<Querier>, z_owned_querier_t);
+get_opaque_type_data!(Option<CQuerier>, z_owned_querier_t);
 #[cfg(feature = "unstable")]
 /// A loaned Zenoh queryable.
-get_opaque_type_data!(Querier, z_loaned_querier_t);
+get_opaque_type_data!(CQuerier, z_loaned_querier_t);
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -160,32 +179,42 @@ get_opaque_type_data!(
 );
 
 #[cfg(feature = "unstable")]
+struct CAdvancedSubscriber {
+    subscriber: zenoh_ext::AdvancedSubscriber<()>,
+    sg: SyncGroup,
+}
+
+#[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh advanced subscriber.
 ///
 /// In addition to receiving the data it is subscribed to,
 /// it is also able to receive notifications regarding missed samples and/or automatically recover them.
-get_opaque_type_data!(
-    Option<zenoh_ext::AdvancedSubscriber<()>>,
-    ze_owned_advanced_subscriber_t
-);
+get_opaque_type_data!(Option<CAdvancedSubscriber>, ze_owned_advanced_subscriber_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh advanced subscriber.
-get_opaque_type_data!(
-    zenoh_ext::AdvancedSubscriber<()>,
-    ze_loaned_advanced_subscriber_t
-);
+get_opaque_type_data!(CAdvancedSubscriber, ze_loaned_advanced_subscriber_t);
+
+#[cfg(feature = "unstable")]
+struct CSampleMissListener {
+    listener: zenoh_ext::SampleMissListener<()>,
+    sg: SyncGroup,
+}
+
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
 ///
 /// A listener that sends notification when the advanced subscriber misses a sample .
 /// Dropping the corresponding subscriber, also drops the listener.
-get_opaque_type_data!(
-    Option<zenoh_ext::SampleMissListener<()>>,
-    ze_owned_sample_miss_listener_t
-);
+get_opaque_type_data!(Option<CSampleMissListener>, ze_owned_sample_miss_listener_t);
+
+#[cfg(feature = "unstable")]
+struct CAdvancedPublisher {
+    publisher: zenoh_ext::AdvancedPublisher<'static>,
+    sg: SyncGroup,
+}
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -193,17 +222,11 @@ get_opaque_type_data!(
 ///
 /// In addition to publishing the data,
 /// it also maintains the storage, allowing matching subscribers to retrive missed samples.
-get_opaque_type_data!(
-    Option<zenoh_ext::AdvancedPublisher<'static>>,
-    ze_owned_advanced_publisher_t
-);
+get_opaque_type_data!(Option<CAdvancedPublisher>, ze_owned_advanced_publisher_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned Zenoh advanced publisher.
-get_opaque_type_data!(
-    zenoh_ext::AdvancedPublisher<'static>,
-    ze_loaned_advanced_publisher_t
-);
+get_opaque_type_data!(CAdvancedPublisher, ze_loaned_advanced_publisher_t);
 /// A Zenoh-allocated <a href="https://zenoh.io/docs/manual/abstractions/#key-expression"> key expression </a>.
 ///
 /// Key expressions can identify a single key or a set of keys.
@@ -235,10 +258,15 @@ get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
 /// both for local processing and network-wise.
 get_opaque_type_data!(KeyExpr<'static>, z_loaned_keyexpr_t);
 
+struct CSession {
+    session: Session,
+    sg: SyncGroup,
+}
+
 /// An owned Zenoh session.
-get_opaque_type_data!(Option<Session>, z_owned_session_t);
+get_opaque_type_data!(Option<CSession>, z_owned_session_t);
 /// A loaned Zenoh session.
-get_opaque_type_data!(Session, z_loaned_session_t);
+get_opaque_type_data!(CSession, z_loaned_session_t);
 
 #[cfg(feature = "unstable")]
 /// An owned Close handle
@@ -262,10 +290,22 @@ get_opaque_type_data!(ZenohId, z_id_t);
 /// It consists of a time generated by a Hybrid Logical Clock (HLC) in NPT64 format and a unique zenoh identifier.
 get_opaque_type_data!(Timestamp, z_timestamp_t);
 
+struct CPublisher {
+    publisher: Publisher<'static>,
+    #[cfg(feature = "unstable")]
+    sg: SyncGroup,
+}
+
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#publisher"> publisher </a>.
-get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
+get_opaque_type_data!(Option<CPublisher>, z_owned_publisher_t);
 /// A loaned Zenoh publisher.
-get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
+get_opaque_type_data!(CPublisher, z_loaned_publisher_t);
+
+#[cfg(feature = "unstable")]
+struct CMatchingListener {
+    listener: MatchingListener<()>,
+    sg: SyncGroup,
+}
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -273,15 +313,19 @@ get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
 ///
 /// A listener that sends notifications when the [`MatchingStatus`] of a publisher or querier changes.
 /// Dropping the corresponding publisher, also drops matching listener.
-get_opaque_type_data!(Option<MatchingListener<()>>, z_owned_matching_listener_t);
+get_opaque_type_data!(Option<CMatchingListener>, z_owned_matching_listener_t);
 
+struct CSubscriber {
+    subscriber: Subscriber<()>,
+    sg: SyncGroup,
+}
 /// An owned Zenoh <a href="https://zenoh.io/docs/manual/abstractions/#subscriber"> subscriber </a>.
 ///
 /// Receives data from publication on intersecting key expressions.
 /// Destroying the subscriber cancels the subscription.
-get_opaque_type_data!(Option<Subscriber<()>>, z_owned_subscriber_t);
+get_opaque_type_data!(Option<CSubscriber>, z_owned_subscriber_t);
 /// A loaned Zenoh subscriber.
-get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
+get_opaque_type_data!(CSubscriber, z_loaned_subscriber_t);
 
 /// @brief A liveliness token that can be used to provide the network with information about connectivity to its
 /// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key

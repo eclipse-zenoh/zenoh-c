@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, time::Duration};
+use std::{mem::MaybeUninit, ops::Deref, time::Duration};
 
 use zenoh::{
     handlers::Callback,
@@ -30,7 +30,8 @@ use crate::{
     z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
     z_entity_global_id_t, z_loaned_keyexpr_t, z_loaned_session_t, z_matching_status_t,
     z_moved_bytes_t, z_moved_closure_matching_status_t, z_owned_matching_listener_t, z_priority_t,
-    z_publisher_delete_options_t, z_publisher_options_t, z_publisher_put_options_t,
+    z_publisher_delete_options_t, z_publisher_options_t, z_publisher_put_options_t, SgNotifier,
+    SyncGroup,
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -189,8 +190,22 @@ pub extern "C" fn ze_advanced_publisher_options_default(
 pub use crate::opaque_types::{
     ze_loaned_advanced_publisher_t, ze_moved_advanced_publisher_t, ze_owned_advanced_publisher_t,
 };
+
+pub(crate) struct CAdvancedPublisher {
+    publisher: zenoh_ext::AdvancedPublisher<'static>,
+    sg: SyncGroup,
+}
+
+impl Deref for CAdvancedPublisher {
+    type Target = zenoh_ext::AdvancedPublisher<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.publisher
+    }
+}
+
 decl_c_type!(
-    owned(ze_owned_advanced_publisher_t, option zenoh_ext::AdvancedPublisher<'static>),
+    owned(ze_owned_advanced_publisher_t, option CAdvancedPublisher),
     loaned(ze_loaned_advanced_publisher_t),
 );
 
@@ -242,7 +257,10 @@ pub extern "C" fn ze_declare_advanced_publisher(
             result::Z_EGENERIC
         }
         Ok(publisher) => {
-            this.write(Some(publisher));
+            this.write(Some(CAdvancedPublisher {
+                publisher,
+                sg: SyncGroup::new(),
+            }));
             result::Z_OK
         }
     }
@@ -417,16 +435,23 @@ pub extern "C" fn ze_advanced_publisher_keyexpr(
 fn _advanced_publisher_matching_listener_declare_inner<'a>(
     publisher: &'a ze_loaned_advanced_publisher_t,
     callback: &mut z_moved_closure_matching_status_t,
+    notifier: SgNotifier,
 ) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
+    use crate::SyncObj;
+
     let publisher = publisher.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let listener = publisher
         .matching_listener()
         .callback_mut(move |matching_status| {
             let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            z_closure_matching_status_call(z_closure_matching_status_loan(&callback), &status);
+            z_closure_matching_status_call(
+                z_closure_matching_status_loan(&sync_callback.value),
+                &status,
+            );
         });
     listener
 }
@@ -446,11 +471,15 @@ pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
     matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
+    use crate::{CMatchingListener, SyncGroup};
+
     let this = matching_listener.as_rust_type_mut_uninit();
-    let listener = _advanced_publisher_matching_listener_declare_inner(publisher, callback);
+    let sg = SyncGroup::new();
+    let listener =
+        _advanced_publisher_matching_listener_declare_inner(publisher, callback, sg.notifier());
     match listener.wait() {
         Ok(listener) => {
-            this.write(Some(listener));
+            this.write(Some(CMatchingListener { listener, _sg: sg }));
             result::Z_OK
         }
         Err(e) => {
@@ -475,7 +504,11 @@ pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
     publisher: &'static ze_loaned_advanced_publisher_t,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
-    let listener = _advanced_publisher_matching_listener_declare_inner(publisher, callback);
+    let listener = _advanced_publisher_matching_listener_declare_inner(
+        publisher,
+        callback,
+        publisher.as_rust_type_ref().sg.notifier(),
+    );
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
@@ -528,7 +561,7 @@ pub extern "C" fn ze_undeclare_advanced_publisher(
     this_: &mut ze_moved_advanced_publisher_t,
 ) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
+        if let Err(e) = p.publisher.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_ENETWORK;
         }

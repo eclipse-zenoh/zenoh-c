@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, ops::Deref};
 
 use zenoh::{Session, Wait};
 
@@ -24,10 +24,30 @@ use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_moved_config_t, z_moved_session_t,
+    z_moved_config_t, z_moved_session_t, SgNotifier, SyncGroup,
 };
+
+pub(crate) struct CSession {
+    session: Session,
+    sg: SyncGroup,
+}
+
+impl CSession {
+    pub(crate) fn notifier(&self) -> SgNotifier {
+        self.sg.notifier()
+    }
+}
+
+impl Deref for CSession {
+    type Target = Session;
+
+    fn deref(&self) -> &Self::Target {
+        &self.session
+    }
+}
+
 decl_c_type!(
-    owned(z_owned_session_t, option Session),
+    owned(z_owned_session_t, option CSession),
     loaned(z_loaned_session_t),
 );
 
@@ -92,7 +112,10 @@ pub extern "C" fn z_open(
     };
     match zenoh::open(config).wait() {
         Ok(s) => {
-            this.write(Some(s));
+            this.write(Some(CSession {
+                session: s,
+                sg: SyncGroup::new(),
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -126,7 +149,10 @@ pub extern "C" fn z_open_with_custom_shm_clients(
         .wait()
     {
         Ok(s) => {
-            this.write(Some(s));
+            this.write(Some(CSession {
+                session: s,
+                sg: SyncGroup::new(),
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -187,7 +213,7 @@ pub extern "C" fn z_close(
     #[allow(unused)] options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
     #[allow(unused_mut)]
-    let mut close_builder = session.as_rust_type_mut().close();
+    let mut close_builder = session.as_rust_type_mut().session.close();
 
     #[cfg(feature = "unstable")]
     if let Some(options) = options {
@@ -219,7 +245,7 @@ pub extern "C" fn z_close(
 #[no_mangle]
 pub extern "C" fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
     let s = session.as_rust_type_ref();
-    s.is_closed()
+    s.session.is_closed()
 }
 
 /// Closes and invalidates the session.

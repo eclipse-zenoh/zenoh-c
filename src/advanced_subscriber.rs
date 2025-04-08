@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, time::Duration};
+use std::{mem::MaybeUninit, ops::Deref, time::Duration};
 
 use zenoh::{handlers::Callback, liveliness::LivelinessSubscriberBuilder, sample::Sample, Wait};
 use zenoh_ext::{AdvancedSubscriberBuilderExt, HistoryConfig, RecoveryConfig, SampleMissListener};
@@ -25,8 +25,27 @@ use crate::{
     z_moved_closure_sample_t, z_owned_subscriber_t, z_subscriber_options_t, ze_closure_miss_call,
     ze_closure_miss_loan, ze_loaned_advanced_subscriber_t, ze_moved_advanced_subscriber_t,
     ze_moved_closure_miss_t, ze_moved_sample_miss_listener_t, ze_owned_advanced_subscriber_t,
-    ze_owned_sample_miss_listener_t,
+    ze_owned_sample_miss_listener_t, CSubscriber, SgNotifier, SyncGroup, SyncObj,
 };
+
+pub(crate) struct CAdvancedSubscriber {
+    subscriber: zenoh_ext::AdvancedSubscriber<()>,
+    sg: SyncGroup,
+}
+
+impl CAdvancedSubscriber {
+    pub(crate) fn notifier(&self) -> SgNotifier {
+        self.sg.notifier()
+    }
+}
+
+impl Deref for CAdvancedSubscriber {
+    type Target = zenoh_ext::AdvancedSubscriber<()>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.subscriber
+    }
+}
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for retrievieng historical data for Advanced Subscriber.
@@ -196,12 +215,14 @@ fn _declare_advanced_subscriber_inner(
     session: &'static z_loaned_session_t,
     key_expr: &'static z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
+    notifier: SgNotifier,
     mut options: Option<&'static mut ze_advanced_subscriber_options_t>,
 ) -> zenoh_ext::AdvancedSubscriberBuilder<'static, 'static, 'static, Callback<Sample>> {
     let sub = _declare_subscriber_inner(
         session,
         key_expr,
         callback,
+        notifier,
         options.as_mut().map(|o| &mut o.subscriber_options),
     );
     let mut sub = sub.advanced();
@@ -239,7 +260,7 @@ fn _declare_advanced_subscriber_inner(
 }
 
 decl_c_type!(
-    owned(ze_owned_advanced_subscriber_t, option zenoh_ext::AdvancedSubscriber<()>),
+    owned(ze_owned_advanced_subscriber_t, option CAdvancedSubscriber),
     loaned(ze_loaned_advanced_subscriber_t),
 );
 
@@ -297,10 +318,14 @@ pub extern "C" fn ze_declare_advanced_subscriber(
     options: Option<&'static mut ze_advanced_subscriber_options_t>,
 ) -> result::z_result_t {
     let this = subscriber.as_rust_type_mut_uninit();
-    let s = _declare_advanced_subscriber_inner(session, key_expr, callback, options);
+    let sg = SyncGroup::new();
+    let s = _declare_advanced_subscriber_inner(session, key_expr, callback, sg.notifier(), options);
     match s.wait() {
         Ok(sub) => {
-            this.write(Some(sub));
+            this.write(Some(CAdvancedSubscriber {
+                subscriber: sub,
+                sg,
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -327,7 +352,13 @@ pub extern "C" fn ze_declare_background_advanced_subscriber(
     callback: &'static mut z_moved_closure_sample_t,
     options: Option<&'static mut ze_advanced_subscriber_options_t>,
 ) -> result::z_result_t {
-    let subscriber = _declare_advanced_subscriber_inner(session, key_expr, callback, options);
+    let subscriber = _declare_advanced_subscriber_inner(
+        session,
+        key_expr,
+        callback,
+        session.as_rust_type_ref().notifier(),
+        options,
+    );
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
@@ -346,7 +377,7 @@ pub extern "C" fn ze_undeclare_advanced_subscriber(
     this_: &mut ze_moved_advanced_subscriber_t,
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
-        if let Err(e) = s.undeclare().wait() {
+        if let Err(e) = s.subscriber.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_EGENERIC;
         }
@@ -364,8 +395,13 @@ pub struct ze_miss_t {
     pub nb: u32,
 }
 
+pub(crate) struct CSampleMissListener {
+    listener: SampleMissListener<()>,
+    _sg: SyncGroup,
+}
+
 decl_c_type!(
-    owned(ze_owned_sample_miss_listener_t, option SampleMissListener<()>),
+    owned(ze_owned_sample_miss_listener_t, option CSampleMissListener),
 );
 
 #[no_mangle]
@@ -403,7 +439,7 @@ pub extern "C" fn ze_undeclare_sample_miss_listener(
     this: &mut ze_moved_sample_miss_listener_t,
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
-        if let Err(e) = m.undeclare().wait() {
+        if let Err(e) = m.listener.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_ENETWORK;
         }
@@ -414,15 +450,17 @@ pub extern "C" fn ze_undeclare_sample_miss_listener(
 fn _advanced_subscriber_sample_miss_listener_declare_inner<'a>(
     subscriber: &'a ze_loaned_advanced_subscriber_t,
     callback: &mut ze_moved_closure_miss_t,
+    notifier: SgNotifier,
 ) -> zenoh_ext::SampleMissListenerBuilder<'a, Callback<zenoh_ext::Miss>> {
     let subscriber = subscriber.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let listener = subscriber.sample_miss_listener().callback_mut(move |miss| {
         let miss = ze_miss_t {
             source: miss.source().into_c_type(),
             nb: miss.nb(),
         };
-        ze_closure_miss_call(ze_closure_miss_loan(&callback), &miss);
+        ze_closure_miss_call(ze_closure_miss_loan(&sync_callback.value), &miss);
     });
     listener
 }
@@ -442,10 +480,15 @@ pub extern "C" fn ze_advanced_subscriber_declare_sample_miss_listener(
     callback: &mut ze_moved_closure_miss_t,
 ) -> result::z_result_t {
     let this = sample_miss_listener.as_rust_type_mut_uninit();
-    let listener = _advanced_subscriber_sample_miss_listener_declare_inner(subscriber, callback);
+    let sg = SyncGroup::new();
+    let listener = _advanced_subscriber_sample_miss_listener_declare_inner(
+        subscriber,
+        callback,
+        sg.notifier(),
+    );
     match listener.wait() {
         Ok(listener) => {
-            this.write(Some(listener));
+            this.write(Some(CSampleMissListener { listener, _sg: sg }));
             result::Z_OK
         }
         Err(e) => {
@@ -469,7 +512,11 @@ pub extern "C" fn ze_advanced_subscriber_declare_background_sample_miss_listener
     subscriber: &'static ze_loaned_advanced_subscriber_t,
     callback: &mut ze_moved_closure_miss_t,
 ) -> result::z_result_t {
-    let listener = _advanced_subscriber_sample_miss_listener_declare_inner(subscriber, callback);
+    let listener = _advanced_subscriber_sample_miss_listener_declare_inner(
+        subscriber,
+        callback,
+        subscriber.as_rust_type_ref().notifier(),
+    );
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
@@ -482,16 +529,18 @@ pub extern "C" fn ze_advanced_subscriber_declare_background_sample_miss_listener
 fn _advanced_subscriber_detect_publishers_inner(
     subscriber: &'static ze_loaned_advanced_subscriber_t,
     callback: &'static mut z_moved_closure_sample_t,
+    notifier: SgNotifier,
     options: Option<&'static mut z_liveliness_subscriber_options_t>,
 ) -> LivelinessSubscriberBuilder<'static, 'static, Callback<Sample>> {
     let subscriber = subscriber.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let sub = subscriber
         .detect_publishers()
         .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+            z_closure_sample_call(z_closure_sample_loan(&sync_callback.value), unsafe {
                 owned_sample
                     .as_mut()
                     .unwrap_unchecked()
@@ -518,10 +567,15 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers(
     options: Option<&'static mut z_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
     let liveliness_subscriber = liveliness_subscriber.as_rust_type_mut_uninit();
-    let builder = _advanced_subscriber_detect_publishers_inner(subscriber, callback, options);
+    let sg = SyncGroup::new();
+    let builder =
+        _advanced_subscriber_detect_publishers_inner(subscriber, callback, sg.notifier(), options);
     match builder.wait() {
         Ok(s) => {
-            liveliness_subscriber.write(Some(s));
+            liveliness_subscriber.write(Some(CSubscriber {
+                subscriber: s,
+                _sg: sg,
+            }));
             result::Z_OK
         }
         Err(e) => {
@@ -546,7 +600,12 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers_background(
     callback: &'static mut z_moved_closure_sample_t,
     options: Option<&'static mut z_liveliness_subscriber_options_t>,
 ) -> result::z_result_t {
-    let builder = _advanced_subscriber_detect_publishers_inner(subscriber, callback, options);
+    let builder = _advanced_subscriber_detect_publishers_inner(
+        subscriber,
+        callback,
+        subscriber.as_rust_type_ref().sg.notifier(),
+        options,
+    );
     match builder.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {

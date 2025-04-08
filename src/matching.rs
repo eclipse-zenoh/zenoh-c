@@ -20,9 +20,16 @@ pub use crate::opaque_types::{z_moved_matching_listener_t, z_owned_matching_list
 use crate::{
     result,
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
+    SyncGroup,
 };
+
+pub(crate) struct CMatchingListener {
+    pub(crate) listener: MatchingListener<()>,
+    pub(crate) _sg: SyncGroup,
+}
+
 decl_c_type!(
-    owned(z_owned_matching_listener_t, option MatchingListener<()>),
+    owned(z_owned_matching_listener_t, option CMatchingListener),
 );
 
 #[no_mangle]
@@ -67,7 +74,7 @@ pub extern "C" fn z_undeclare_matching_listener(
     this: &mut z_moved_matching_listener_t,
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
-        if let Err(e) = m.undeclare().wait() {
+        if let Err(e) = m.listener.undeclare().wait() {
             tracing::error!("{}", e);
             return result::Z_ENETWORK;
         }

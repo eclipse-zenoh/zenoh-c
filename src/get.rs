@@ -33,7 +33,7 @@ use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
-    z_query_target_t,
+    z_query_target_t, SyncObj,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -326,11 +326,12 @@ pub unsafe extern "C" fn z_get(
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
         }
     }
+    let sync_callback = SyncObj::new(callback, session.notifier());
     match get
         .callback(move |response| {
             let mut owned_response = Some(response);
             z_closure_reply_call(
-                z_closure_reply_loan(&callback),
+                z_closure_reply_loan(&sync_callback.value),
                 owned_response
                     .as_mut()
                     .unwrap_unchecked()

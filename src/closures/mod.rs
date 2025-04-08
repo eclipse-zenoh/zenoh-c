@@ -47,3 +47,47 @@ mod matching_status_closure;
 pub use miss_closure::*;
 #[cfg(feature = "unstable")]
 mod miss_closure;
+
+use flume::{Receiver, Sender};
+
+pub type SgNotifier = Sender<()>;
+
+pub(crate) struct SyncObj<T: Sized> {
+    pub(crate) value: T,
+    _notifier: SgNotifier,
+}
+
+impl<T> SyncObj<T> {
+    pub(crate) fn new(value: T, notifier: SgNotifier) -> Self {
+        Self {
+            value: value,
+            _notifier: notifier,
+        }
+    }
+}
+
+pub(crate) struct SyncGroup {
+    waiter: Receiver<()>,
+    notifier: Option<SgNotifier>,
+}
+
+impl SyncGroup {
+    pub(crate) fn new() -> SyncGroup {
+        let (notifier, waiter) = flume::bounded(0);
+        SyncGroup {
+            waiter,
+            notifier: Some(notifier),
+        }
+    }
+
+    pub(crate) fn notifier(&self) -> SgNotifier {
+        self.notifier.as_ref().unwrap().clone()
+    }
+}
+
+impl Drop for SyncGroup {
+    fn drop(&mut self) {
+        self.notifier.take();
+        self.waiter.recv().unwrap_err();
+    }
+}
