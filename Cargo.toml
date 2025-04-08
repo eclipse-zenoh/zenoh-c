@@ -92,7 +92,7 @@ phf = { version = "0.11.2", features = ["macros"] }
 
 [lib]
 path = "src/lib.rs"
-name = "zenohcd"
+name = "zenohc"
 crate-type = ["cdylib", "staticlib"]
 doctest = false
 
