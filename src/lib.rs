@@ -95,6 +95,27 @@ pub mod shm;
 
 mod serialization;
 
+// This is the entry point for zenoh-c
+// When compiling normal Rust executable, it includes rusty entry point `lang_start` that internally
+// calls `std::rt::init()` that is intended to initialize some of the internals for Rust and std.
+// However, when Rust library is used with non-rusty executable (this is exactly zenoh-c's case),
+// there will be no rusty `lang_start` entry point and our rusty code will run without some initialization
+// that is done there. In most of the cases this is OK, but sometimes lack of this initialization bites us.
+// This entry point is made as a replacement for our case and contains some necessary init.
+#[cfg(unix)]
+#[ctor::ctor]
+fn alternative_rusty_entry_point() {
+    // See
+    // https://github.com/eclipse-zenoh/zenoh-c/issues/294#issuecomment-2783671006
+    // and
+    // https://github.com/rust-lang/rust/issues/62569
+    unsafe {
+        libc::signal(libc::SIGPIPE, libc::SIG_IGN);
+    }
+
+    // TODO: do we need to call zenoh::try_init_log_from_env(); here???
+}
+
 /// Initializes the zenoh runtime logger, using rust environment settings.
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
