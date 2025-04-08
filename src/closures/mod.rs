@@ -60,7 +60,7 @@ pub(crate) struct SyncObj<T: Sized> {
 impl<T> SyncObj<T> {
     pub(crate) fn new(value: T, notifier: SgNotifier) -> Self {
         Self {
-            value: value,
+            value,
             _notifier: notifier,
         }
     }
