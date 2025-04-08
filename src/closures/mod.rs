@@ -57,6 +57,11 @@ pub(crate) struct SyncObj<T: Sized> {
     _notifier: SgNotifier,
 }
 
+// Due to unknown reason, drop is not being called on SyncObj (namely on _notifier field), without dummy drop implementation below.
+impl<T> Drop for SyncObj<T> {
+    fn drop(&mut self) {}
+}
+
 impl<T> SyncObj<T> {
     pub(crate) fn new(value: T, notifier: SgNotifier) -> Self {
         Self {
