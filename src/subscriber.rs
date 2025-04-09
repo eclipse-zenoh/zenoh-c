@@ -114,7 +114,7 @@ pub(crate) fn _declare_subscriber_inner<'a, 'b>(
         .declare_subscriber(key_expr)
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&sync_callback.value), unsafe {
+            z_closure_sample_call(z_closure_sample_loan(&sync_callback), unsafe {
                 owned_sample
                     .as_mut()
                     .unwrap_unchecked()

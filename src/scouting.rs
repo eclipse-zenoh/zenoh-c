@@ -209,7 +209,7 @@ pub extern "C" fn z_scout(
         let res = zenoh::scout(what, config)
             .callback(move |h| {
                 let mut owned_h = Some(h);
-                z_closure_hello_call(z_closure_hello_loan(&sync_callback.value), unsafe {
+                z_closure_hello_call(z_closure_hello_loan(&sync_callback), unsafe {
                     owned_h.as_mut().unwrap_unchecked().as_loaned_c_type_mut()
                 })
             })

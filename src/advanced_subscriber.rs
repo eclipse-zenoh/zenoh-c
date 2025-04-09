@@ -460,7 +460,7 @@ fn _advanced_subscriber_sample_miss_listener_declare_inner<'a>(
             source: miss.source().into_c_type(),
             nb: miss.nb(),
         };
-        ze_closure_miss_call(ze_closure_miss_loan(&sync_callback.value), &miss);
+        ze_closure_miss_call(ze_closure_miss_loan(&sync_callback), &miss);
     });
     listener
 }
@@ -540,7 +540,7 @@ fn _advanced_subscriber_detect_publishers_inner(
         .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&sync_callback.value), unsafe {
+            z_closure_sample_call(z_closure_sample_loan(&sync_callback), unsafe {
                 owned_sample
                     .as_mut()
                     .unwrap_unchecked()

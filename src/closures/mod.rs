@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 //
 // Copyright (c) 2017, 2022 ZettaScale Technology.
 //
@@ -53,13 +55,16 @@ use flume::{Receiver, Sender};
 pub type SgNotifier = Sender<()>;
 
 pub(crate) struct SyncObj<T: Sized> {
-    pub(crate) value: T,
+    value: T,
     _notifier: SgNotifier,
 }
 
-// Due to unknown reason, drop is not being called on SyncObj (namely on _notifier field), without dummy drop implementation below.
-impl<T> Drop for SyncObj<T> {
-    fn drop(&mut self) {}
+impl<T> Deref for SyncObj<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
 }
 
 impl<T> SyncObj<T> {

@@ -280,7 +280,7 @@ fn _declare_queryable_inner<'a, 'b>(
     }
     let queryable = builder.callback(move |query| {
         let mut owned_query = Some(query);
-        z_closure_query_call(z_closure_query_loan(&sync_callback.value), unsafe {
+        z_closure_query_call(z_closure_query_loan(&sync_callback), unsafe {
             owned_query
                 .as_mut()
                 .unwrap_unchecked()

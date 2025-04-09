@@ -158,7 +158,7 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
         .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
             let mut owned_sample = Some(sample);
-            z_closure_sample_call(z_closure_sample_loan(&sync_callback.value), unsafe {
+            z_closure_sample_call(z_closure_sample_loan(&sync_callback), unsafe {
                 owned_sample
                     .as_mut()
                     .unwrap_unchecked()

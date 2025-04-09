@@ -331,7 +331,7 @@ pub unsafe extern "C" fn z_get(
         .callback(move |response| {
             let mut owned_response = Some(response);
             z_closure_reply_call(
-                z_closure_reply_loan(&sync_callback.value),
+                z_closure_reply_loan(&sync_callback),
                 owned_response
                     .as_mut()
                     .unwrap_unchecked()

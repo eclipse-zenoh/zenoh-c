@@ -375,10 +375,7 @@ fn _publisher_matching_listener_declare_inner<'a>(
             let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            z_closure_matching_status_call(
-                z_closure_matching_status_loan(&sync_callback.value),
-                &status,
-            );
+            z_closure_matching_status_call(z_closure_matching_status_loan(&sync_callback), &status);
         });
     listener
 }

@@ -276,7 +276,7 @@ pub unsafe extern "C" fn z_querier_get(
         .callback(move |response| {
             let mut owned_response = Some(response);
             z_closure_reply_call(
-                z_closure_reply_loan(&sync_callback.value),
+                z_closure_reply_loan(&sync_callback),
                 owned_response
                     .as_mut()
                     .unwrap_unchecked()
@@ -324,10 +324,7 @@ fn _querier_matching_listener_declare_inner<'a>(
             let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            z_closure_matching_status_call(
-                z_closure_matching_status_loan(&sync_callback.value),
-                &status,
-            );
+            z_closure_matching_status_call(z_closure_matching_status_loan(&sync_callback), &status);
         });
     listener
 }
