@@ -92,6 +92,10 @@ void test_liveliness_sub() {
     z_liveliness_undeclare_token(z_move(t2));
     z_sleep_s(1);
     assert(context.token2_drop);
+
+    z_drop(z_move(sub));
+    z_drop(z_move(s1));
+    z_drop(z_move(s2));
 }
 
 void test_liveliness_get() {

@@ -1389,18 +1389,6 @@ typedef struct ze_moved_serializer_t {
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
-ZENOHC_API extern const char *Z_CONFIG_MODE_KEY;
-ZENOHC_API extern const char *Z_CONFIG_CONNECT_KEY;
-ZENOHC_API extern const char *Z_CONFIG_LISTEN_KEY;
-ZENOHC_API extern const char *Z_CONFIG_USER_KEY;
-ZENOHC_API extern const char *Z_CONFIG_PASSWORD_KEY;
-ZENOHC_API extern const char *Z_CONFIG_MULTICAST_SCOUTING_KEY;
-ZENOHC_API extern const char *Z_CONFIG_MULTICAST_INTERFACE_KEY;
-ZENOHC_API extern const char *Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY;
-ZENOHC_API extern const char *Z_CONFIG_SCOUTING_TIMEOUT_KEY;
-ZENOHC_API extern const char *Z_CONFIG_SCOUTING_DELAY_KEY;
-ZENOHC_API extern const char *Z_CONFIG_ADD_TIMESTAMP_KEY;
-ZENOHC_API extern const char *Z_CONFIG_SHARED_MEMORY_KEY;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Protocol identifier for POSIX SHM Protocol.
