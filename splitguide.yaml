@@ -43,6 +43,7 @@ zenoh_opaque.h:
   - ze_loaned_advanced_subscriber_t!#unstable
   - ze_owned_advanced_publisher_t!#unstable
   - ze_loaned_advanced_publisher_t!#unstable
+  - ze_owned_sample_miss_listener_t!#unstable
   - z_owned_keyexpr_t!
   - z_view_keyexpr_t!
   - z_loaned_keyexpr_t!
