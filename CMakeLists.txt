@@ -50,9 +50,9 @@ status_print(project_version)
 #
 # There are 3 possible variants of placement generated Cargo.toml files:
 # 1. Build in source tree (in IDE usually), using single config generator (Ninja, Makefiles)
-#    
+#
 #    In this case Cargo.toml is placed at the root of source tree to make it visible for rust-analyzer. When release or debug
-#    configuration is selected, Cargo.toml is updated accordingly 
+#    configuration is selected, Cargo.toml is updated accordingly
 #
 # 2. Build in source tree (in IDE usually), using multi config generator (Visual Studio, Ninja Multi-Config)
 #
@@ -123,7 +123,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_constants.h
 			DESTINATION ${cargo_toml_dir}/include/)
-	endif()	
+	endif()
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
 endfunction()
 
@@ -215,9 +215,9 @@ set_genexpr_condition(libs DEBUG $<CONFIG:Debug> "${libsd}" "${libsr}")
 #
 
 # Combine "--release" and "--manifest-path" options under DEBUG condition to avoid passing empty parameter to cargo command line in `add_custom_command`, causing build failure
-# This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on 
+# This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on
 # build stage when generator expressions are evaluated.
-set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug> 
+set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
@@ -327,4 +327,3 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/examples)
 	add_subdirectory(examples)
 endif()
-
