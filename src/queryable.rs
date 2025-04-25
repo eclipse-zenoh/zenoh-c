@@ -576,3 +576,14 @@ pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> resu
     }
     result::Z_OK
 }
+
+/// @brief Returns the key expression of the queryable.
+#[no_mangle]
+pub extern "C" fn z_queryable_keyexpr(
+    queryable: &'static z_loaned_queryable_t,
+) -> &'static z_loaned_keyexpr_t {
+    queryable
+        .as_rust_type_ref()
+        .key_expr()
+        .as_loaned_c_type_ref()
+}

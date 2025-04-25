@@ -629,6 +629,7 @@ Functions
 .. doxygenfunction:: z_undeclare_queryable
 .. doxygenfunction:: z_declare_background_queryable
 .. doxygenfunction:: z_queryable_id
+.. doxygenfunction:: z_queryable_keyexpr
 
 .. doxygenfunction:: z_queryable_options_default
 .. doxygenfunction:: z_query_reply_options_default

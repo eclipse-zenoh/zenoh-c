@@ -24,8 +24,8 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    internal::builders::close::NolocalJoinHandle,
-    matching::MatchingListener, query::Querier, sample::SourceInfo, session::EntityGlobalId,
+    internal::builders::close::NolocalJoinHandle, matching::MatchingListener, query::Querier,
+    sample::SourceInfo, session::EntityGlobalId,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::{
