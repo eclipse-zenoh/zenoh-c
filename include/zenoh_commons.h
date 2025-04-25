@@ -1380,13 +1380,6 @@ typedef struct ze_querying_subscriber_options_t {
 typedef struct ze_moved_publication_cache_t {
   struct ze_owned_publication_cache_t _this;
 } ze_moved_publication_cache_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A loaned Zenoh publication cache.
- */
-typedef struct ALIGN(8) ze_loaned_publication_cache_t {
-  uint8_t _0[96];
-} ze_loaned_publication_cache_t;
 typedef struct ze_moved_querying_subscriber_t {
   struct ze_owned_querying_subscriber_t _this;
 } ze_moved_querying_subscriber_t;
@@ -4133,6 +4126,11 @@ ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
 ZENOHC_API
 struct z_entity_global_id_t z_queryable_id(const struct z_loaned_queryable_t *queryable);
 #endif
+/**
+ * @brief Returns the key expression of the queryable.
+ */
+ZENOHC_API
+const struct z_loaned_keyexpr_t *z_queryable_keyexpr(const struct z_loaned_queryable_t *queryable);
 ZENOHC_API
 const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
 /**
