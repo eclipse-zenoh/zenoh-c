@@ -302,10 +302,6 @@ add_library(zenohc_shared SHARED IMPORTED GLOBAL)
 add_library(zenohc::shared ALIAS zenohc_shared)
 add_dependencies(zenohc_shared cargo)
 target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
-# Workaroud for https://github.com/rust-lang/cargo/issues/5045
-# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
-# If it's fixed, do not forget to correct PackageConfig.cmake.in also
-set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
 set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
 add_library(zenohc_static STATIC IMPORTED GLOBAL)
 add_library(zenohc::static ALIAS zenohc_static)
