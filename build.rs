@@ -20,7 +20,7 @@ fn main() {
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
         let name = std::env::var("CARGO_PKG_NAME").unwrap();
         // Create the shared library name by removing hyphens from the pkg_name
-        let soname = format!("lib{}.so", name.replace("-", ""));
+        let soname = format!("lib{}.so", name.replace('-', ""));
         println!("cargo:rustc-cdylib-link-arg=-Wl,-soname,{}", soname);
     }
 }
