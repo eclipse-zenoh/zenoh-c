@@ -100,8 +100,6 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    - `zenohc::static` for linking static library
    - `zenohc::lib` for linking static or dynamic library depending on boolean variable `BUILD_SHARED_LIBS`
 
-   For `Debug` configuration suffix `d` is added to names of library files (libzenohc**d**.so).
-
 5. VScode
 
    When zenoh-c project is opened in VSCode the build directory is set to `build` inside source tree (this is default behavior of Microsoft [CMake Tools]). The project build script detects this situation. In this case it places build files in `target` directory and `Cargo.toml` file (which is generated from `Cargo.toml.in`) into the root of source tree, as the rust developers used to and as the rust build tools expects by default. This behavior also can be explicitly enabled by setting `ZENOHC_BUILD_IN_SOURCE_TREE` variable to `TRUE`.
