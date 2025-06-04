@@ -197,10 +197,10 @@ jobs:
           sudo apt-get install -y mingw-w64
           sudo apt-get install -y gcc-aarch64-linux-gnu
           sudo apt-get install -y g++-aarch64-linux-gnu
-          wget https://musl.cc/aarch64-linux-musl-cross.tgz
+          wget https://github.com/ZettaScaleLabs/muslcc/raw/refs/heads/main/aarch64-linux-musl-cross.tgz?download= -O aarch64-linux-musl-cross.tgz
           tar xvfz aarch64-linux-musl-cross.tgz
           echo "$(readlink -f aarch64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
-          wget https://musl.cc/x86_64-linux-musl-cross.tgz
+          wget https://github.com/ZettaScaleLabs/muslcc/raw/refs/heads/main/x86_64-linux-musl-cross.tgz?download= -O x86_64-linux-musl-cross.tgz
           tar xvfz x86_64-linux-musl-cross.tgz
           echo "$(readlink -f x86_64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
 
