@@ -51,7 +51,7 @@
    or
 
    ```bash
-   z_put -k demo/example/test -v 'Hello World'
+   z_put -k demo/example/test -p 'Hello World'
    ```
 
 ### z_pub
@@ -68,7 +68,7 @@
    or
 
    ```bash
-   z_pub -k demo/example/test -v 'Hello World'
+   z_pub -k demo/example/test -p 'Hello World'
    ```
 
 ### z_sub
@@ -156,7 +156,7 @@
    or
 
    ```bash
-   z_queryable -k demo/example/queryable -v 'This is the result'
+   z_queryable -k demo/example/queryable -p 'This is the result'
    ```
 
 ### z_storage
