@@ -1195,7 +1195,7 @@ typedef struct ze_moved_closure_miss_t {
  * Dropping the corresponding subscriber, also drops the listener.
  */
 typedef struct ALIGN(8) ze_owned_sample_miss_listener_t {
-  uint8_t _0[16];
+  uint8_t _0[24];
 } ze_owned_sample_miss_listener_t;
 typedef struct ze_moved_advanced_subscriber_t {
   struct ze_owned_advanced_subscriber_t _this;
