@@ -8,7 +8,7 @@ use crate::get_build_rs_path;
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_build_rs_path();
-    let path_in = produce_opaque_types_data();
+    let (command, path_in) = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
@@ -80,15 +80,19 @@ impl Drop for {type_name} {{
 
     if good_error_count != total_error_count {
         panic!(
-            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\nCompiler output:\n{}",
-            total_error_count, good_error_count, data_in
+            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\nCommand executed:\n\n{}\n\n
+            Compiler output:\n\n{}",
+            total_error_count,
+            good_error_count,
+            command,
+            data_in
         );
     }
 
     std::fs::write(path_out, data_out).unwrap();
 }
 
-fn produce_opaque_types_data() -> PathBuf {
+fn produce_opaque_types_data() -> (String, PathBuf) {
     let target = std::env::var("TARGET").unwrap();
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let current_folder = get_build_rs_path();
@@ -104,24 +108,42 @@ fn produce_opaque_types_data() -> PathBuf {
     }
     #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec!["-F", "panic"];
-    for feature in features() {
+    for feature in features().iter().filter(|f| !f.is_empty()) {
         feature_args.push("-F");
         feature_args.push(feature);
     }
 
-    let _ = std::process::Command::new("cargo")
+    let mut command = std::process::Command::new("cargo");
+    command
         .arg("build")
         .args(feature_args)
         .args(linker_args)
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
-        .arg(manifest_path)
+        .arg(manifest_path);
+    let command_str = command
+        .get_program()
+        .to_string_lossy()
+        .to_string()
+        + " "
+        + &command
+            .get_args()
+            .map(|arg| {
+                let arg_str = arg.to_string_lossy().to_string();
+                if arg_str.contains(' ') || arg_str.contains('"') || arg_str.contains('\'') {
+                    format!("\"{}\"", arg_str.replace('"', "\\\""))
+                } else {
+                    arg_str
+                }
+            })
+            .collect::<Vec<String>>()
+            .join(" ");
+    let _ = command
         .stderr(stdio)
         .output()
         .unwrap();
-
-    output_file_path
+    (command_str, output_file_path)
 }
 
 fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
