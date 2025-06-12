@@ -15,8 +15,14 @@ pub fn generate_opaque_types() {
     let mut data_out = String::new();
     let mut docs = get_opaque_type_docs();
 
+    // Count the total number of errors in the input data
+    let total_error_count = data_in.lines().filter(|line| line.starts_with("error[E")).count();
+
+    // Scan for type size and layout information which is generated as compilation errors
+    let mut good_error_count = 0;
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
+        good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
         let mut s = String::new();
@@ -71,6 +77,14 @@ impl Drop for {type_name} {{
         }
         data_out += &s;
     }
+
+    if good_error_count != total_error_count {
+        panic!(
+            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\nCompiler output:\n{}",
+            total_error_count, good_error_count, data_in
+        );
+    }
+
     std::fs::write(path_out, data_out).unwrap();
 }
 
