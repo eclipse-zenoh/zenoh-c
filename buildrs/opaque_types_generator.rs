@@ -80,8 +80,7 @@ impl Drop for {type_name} {{
 
     if good_error_count != total_error_count {
         panic!(
-            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\nCommand executed:\n\n{}\n\n
-            Compiler output:\n\n{}",
+            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\n\nCommand executed:\n\n{}\n\nCompiler output:\n\n{}",
             total_error_count,
             good_error_count,
             command,
@@ -122,23 +121,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg(target)
         .arg("--manifest-path")
         .arg(manifest_path);
-    let command_str = command
-        .get_program()
-        .to_string_lossy()
-        .to_string()
-        + " "
-        + &command
-            .get_args()
-            .map(|arg| {
-                let arg_str = arg.to_string_lossy().to_string();
-                if arg_str.contains(' ') || arg_str.contains('"') || arg_str.contains('\'') {
-                    format!("\"{}\"", arg_str.replace('"', "\\\""))
-                } else {
-                    arg_str
-                }
-            })
-            .collect::<Vec<String>>()
-            .join(" ");
+    let command_str = format!("{:?}", command);
     let _ = command
         .stderr(stdio)
         .output()
