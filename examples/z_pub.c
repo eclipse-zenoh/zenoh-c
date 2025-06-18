@@ -65,7 +65,10 @@ int main(int argc, char** argv) {
     if (args.add_matching_listener) {
         z_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        z_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback));
+        if (z_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback)) < 0) {
+            printf("Unable to declare background matching listener for key expression!\n");
+            exit(-1);
+        }
     }
 #endif
 
