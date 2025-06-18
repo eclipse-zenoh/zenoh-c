@@ -17,8 +17,8 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        AllocLayout, AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, PosixShmProviderBackend,
-        ProtocolIDSource, ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
+        AllocLayout, AllocPolicy, AsyncAllocPolicy, PosixShmProviderBackend,
+         ShmProviderBackend,
     },
     Wait,
 };
@@ -112,7 +112,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 ) -> z_result_t {
     match layout.as_rust_type_ref() {
         super::alloc_layout::CSHMLayout::Posix(layout) => {
-            alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
+            alloc_async_impl::<Policy, PosixShmProviderBackend>(
                 out_result,
                 layout,
                 result_context,
@@ -124,7 +124,6 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
         super::alloc_layout::CSHMLayout::DynamicThreadsafe(layout) => {
             alloc_async_impl::<
                 Policy,
-                DynamicProtocolID,
                 DynamicShmProviderBackend<ThreadsafeContext>,
             >(out_result, layout, result_context, result_callback);
             Z_OK
@@ -134,11 +133,10 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 
 pub fn alloc_async_impl<
     Policy: AsyncAllocPolicy,
-    IDSource: ProtocolIDSource,
     Backend: ShmProviderBackend + Send + Sync,
 >(
     out_result: &'static mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &'static AllocLayout<'static, IDSource, Backend>,
+    layout: &'static AllocLayout<'static, Backend>,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
 ) {

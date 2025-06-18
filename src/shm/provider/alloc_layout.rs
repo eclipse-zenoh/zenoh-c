@@ -16,7 +16,7 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::shm::{
-    AllocLayout, BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc,
+    AllocLayout, BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc,
 };
 
 use super::{
@@ -34,10 +34,10 @@ use crate::{
 };
 
 pub type DynamicAllocLayout =
-    AllocLayout<'static, DynamicProtocolID, DynamicShmProviderBackend<Context>>;
+    AllocLayout<'static, DynamicShmProviderBackend<Context>>;
 
 pub type DynamicAllocLayoutThreadsafe =
-    AllocLayout<'static, DynamicProtocolID, DynamicShmProviderBackend<ThreadsafeContext>>;
+    AllocLayout<'static, DynamicShmProviderBackend<ThreadsafeContext>>;
 
 pub enum CSHMLayout {
     Posix(PosixAllocLayout),

@@ -16,11 +16,12 @@ use std::fmt::Debug;
 
 use libc::c_void;
 use zenoh::shm::{
-    ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend, ZLayoutError,
+    ProtocolID, WithProtocolID, ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend, ZLayoutError,
 };
 
 use super::chunk::z_chunk_descriptor_t;
 use crate::{
+    shm::common::types::z_protocol_id_t,
     context::DroppableContext,
     transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef},
     z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
@@ -40,6 +41,7 @@ pub struct zc_shm_provider_backend_callbacks_t {
     defragment_fn: unsafe extern "C" fn(context: *mut c_void) -> usize,
     available_fn: unsafe extern "C" fn(context: *mut c_void) -> usize,
     layout_for_fn: unsafe extern "C" fn(layout: *mut z_owned_memory_layout_t, context: *mut c_void),
+    id_fn: unsafe extern "C" fn(context: *mut c_void) -> z_protocol_id_t,
 }
 
 #[derive(Debug)]
@@ -55,8 +57,20 @@ impl<TContext> DynamicShmProviderBackend<TContext>
 where
     TContext: DroppableContext,
 {
-    pub fn new(context: TContext, callbacks: zc_shm_provider_backend_callbacks_t) -> Self {
+    pub fn new(
+        context: TContext,
+        callbacks: zc_shm_provider_backend_callbacks_t,
+    ) -> Self {
         Self { context, callbacks }
+    }
+}
+
+impl<TContext> WithProtocolID for DynamicShmProviderBackend<TContext>
+where
+    TContext: DroppableContext,
+{
+    fn id(&self) -> ProtocolID {
+        unsafe { (self.callbacks.id_fn)(self.context.get()) }
     }
 }
 

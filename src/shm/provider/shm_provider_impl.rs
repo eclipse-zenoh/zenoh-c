@@ -17,8 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        AllocPolicy, AsyncAllocPolicy, DynamicProtocolID, PosixShmProviderBackend,
-        ProtocolIDSource, ShmProvider, ShmProviderBackend, StaticProtocolID, POSIX_PROTOCOL_ID,
+        AllocPolicy, AsyncAllocPolicy, PosixShmProviderBackend, ShmProvider, ShmProviderBackend,
     },
     Wait,
 };
@@ -43,17 +42,15 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
 ) {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
-            alloc_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
-                out_result, provider, size, alignment,
-            )
+            alloc_impl::<Policy, PosixShmProviderBackend>(out_result, provider, size, alignment)
         }
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
-            alloc_impl::<Policy, DynamicProtocolID, DynamicShmProviderBackend<Context>>(
+            alloc_impl::<Policy, DynamicShmProviderBackend<Context>>(
                 out_result, provider, size, alignment,
             )
         }
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            alloc_impl::<Policy, DynamicProtocolID, DynamicShmProviderBackend<ThreadsafeContext>>(
+            alloc_impl::<Policy, DynamicShmProviderBackend<ThreadsafeContext>>(
                 out_result, provider, size, alignment,
             )
         }
@@ -73,7 +70,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 ) -> z_result_t {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
-            alloc_async_impl::<Policy, StaticProtocolID<POSIX_PROTOCOL_ID>, PosixShmProviderBackend>(
+            alloc_async_impl::<Policy, PosixShmProviderBackend>(
                 out_result,
                 provider,
                 size,
@@ -85,11 +82,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
         }
         super::shm_provider::CSHMProvider::Dynamic(_) => Z_EINVAL,
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            alloc_async_impl::<
-                Policy,
-                DynamicProtocolID,
-                DynamicShmProviderBackend<ThreadsafeContext>,
-            >(
+            alloc_async_impl::<Policy, DynamicShmProviderBackend<ThreadsafeContext>>(
                 out_result,
                 provider,
                 size,
@@ -158,9 +151,9 @@ pub(crate) fn map(
     }
 }
 
-fn alloc_impl<Policy: AllocPolicy, TProtocolID: ProtocolIDSource, TBackend: ShmProviderBackend>(
+fn alloc_impl<Policy: AllocPolicy, TBackend: ShmProviderBackend>(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
-    provider: &ShmProvider<TProtocolID, TBackend>,
+    provider: &ShmProvider<TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) {
@@ -175,11 +168,10 @@ fn alloc_impl<Policy: AllocPolicy, TProtocolID: ProtocolIDSource, TBackend: ShmP
 
 pub(crate) fn alloc_async_impl<
     Policy: AsyncAllocPolicy,
-    TProtocolID: ProtocolIDSource,
     TBackend: ShmProviderBackend + Send + Sync,
 >(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
-    provider: &'static ShmProvider<TProtocolID, TBackend>,
+    provider: &'static ShmProvider<TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
     result_context: ThreadsafeContext,
