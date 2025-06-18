@@ -52,14 +52,18 @@ int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
     ASSERT_CHECK_ERR(mbuf->_this);
     ASSERT_CHECK(buf);
 
-    { z_loaned_shm_mut_t* loaned = z_loan_mut(buf); }
+    {
+        z_loaned_shm_mut_t* loaned = z_loan_mut(buf);
+    }
 
     z_owned_shm_t immut;
     z_shm_from_mut(&immut, z_move(buf));
     ASSERT_CHECK(immut);
     ASSERT_CHECK_ERR(buf);
 
-    { const z_loaned_shm_t* loaned = z_loan(immut); }
+    {
+        const z_loaned_shm_t* loaned = z_loan(immut);
+    }
 
     {
         z_loaned_shm_t* loaned_immut = z_loan_mut(immut);
@@ -183,8 +187,7 @@ void delete_fn(void* context) {
     c->bytes = NULL;
     c->busy_flags = NULL;
 }
-void deref_segemnt_fn(void* context) {
-}
+void deref_segemnt_fn(void* context) {}
 void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned_memory_layout_t* layout,
               void* context) {
     assert(context);
@@ -204,11 +207,11 @@ void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned
         if (!c->busy_flags[i]) {
             c->busy_flags[i] = true;
             c->available--;
-            
+
             z_owned_ptr_in_segment_t ptr;
             zc_threadsafe_context_t segment = {{NULL}, &deref_segemnt_fn};
             z_ptr_in_segment_new(&ptr, &c->bytes[i], segment);
-            
+
             z_allocated_chunk_t chunk;
             chunk.ptr = z_move(ptr);
             uint64_t data_ptr = (uint64_t)(&c->bytes[i]);
@@ -286,8 +289,8 @@ int run_c_provider() {
     zc_context_t context = {&test_context, &delete_fn};
 
     // init callbacks
-    zc_shm_provider_backend_callbacks_t callbacks = {&alloc_fn, &free_fn, &defragment_fn, &available_fn,
-                                                     &layout_for_fn, &id_fn};
+    zc_shm_provider_backend_callbacks_t callbacks = {&alloc_fn,     &free_fn,       &defragment_fn,
+                                                     &available_fn, &layout_for_fn, &id_fn};
     // create provider
     z_owned_shm_provider_t provider;
     z_shm_provider_new(&provider, context, callbacks);
@@ -427,9 +430,7 @@ bool attach_fn(struct z_shm_segment_t* out_segment, z_segment_id_t id, void* con
     return true;
 }
 
-z_protocol_id_t client_id_fn(void* context) {
-    return 100500;
-}
+z_protocol_id_t client_id_fn(void* context) { return 100500; }
 
 int run_c_client() {
     // create client list
