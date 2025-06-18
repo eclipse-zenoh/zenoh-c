@@ -11,16 +11,16 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::num::TryFromIntError;
 use std::mem::MaybeUninit;
-use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
+use std::num::TryFromIntError;
 use std::sync::Arc;
+use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
 
 use crate::{
-    transmute::{LoanedCTypeRef, RustTypeRef, TakeRustType, RustTypeRefUninit},
-    opaque_types::{z_loaned_ptr_in_segment_t, z_owned_ptr_in_segment_t, z_moved_ptr_in_segment_t},
-    context::{ThreadsafeContext, zc_threadsafe_context_t},
+    context::{zc_threadsafe_context_t, ThreadsafeContext},
+    opaque_types::{z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t},
     shm::common::types::{z_chunk_id_t, z_segment_id_t},
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -71,7 +71,7 @@ decl_c_type!(
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Creates a new SHM Provider.
+/// @brief Creates a new data pointer in SHM Segment.
 #[no_mangle]
 pub extern "C" fn z_ptr_in_segment_new(
     this: &mut MaybeUninit<z_owned_ptr_in_segment_t>,
@@ -84,7 +84,7 @@ pub extern "C" fn z_ptr_in_segment_new(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs SHM Provider in its gravestone value.
+/// @brief Constructs data pointer in SHM Segment in its gravestone value.
 #[no_mangle]
 pub extern "C" fn z_internal_ptr_in_segment_null(
     this_: &mut MaybeUninit<z_owned_ptr_in_segment_t>,
@@ -100,7 +100,7 @@ pub extern "C" fn z_internal_ptr_in_segment_check(this_: &z_owned_ptr_in_segment
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Borrows SHM Provider.
+/// @brief Borrows data pointer in SHM Segment.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_ptr_in_segment_loan(
@@ -113,14 +113,14 @@ pub unsafe extern "C" fn z_ptr_in_segment_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Deletes SHM Provider.
+/// @brief Deletes data pointer in SHM Segment.
 #[no_mangle]
 pub extern "C" fn z_ptr_in_segment_drop(this_: &mut z_moved_ptr_in_segment_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy.
+/// @brief Makes a shallow data pointer in SHM Segment copy.
 #[no_mangle]
 pub extern "C" fn z_ptr_in_segment_clone(
     out: &mut MaybeUninit<z_owned_ptr_in_segment_t>,

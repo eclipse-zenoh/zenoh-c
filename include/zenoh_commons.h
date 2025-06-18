@@ -3118,7 +3118,7 @@ bool z_internal_ptr_in_segment_check(const struct z_owned_ptr_in_segment_t *this
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs SHM Provider in its gravestone value.
+ * @brief Constructs data pointer in SHM Segment in its gravestone value.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -3704,7 +3704,7 @@ z_result_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
 ZENOHC_API enum z_priority_t z_priority_default(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy.
+ * @brief Makes a shallow data pointer in SHM Segment copy.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -3713,7 +3713,7 @@ void z_ptr_in_segment_clone(struct z_owned_ptr_in_segment_t *out,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes SHM Provider.
+ * @brief Deletes data pointer in SHM Segment.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -3721,7 +3721,7 @@ void z_ptr_in_segment_drop(struct z_moved_ptr_in_segment_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows SHM Provider.
+ * @brief Borrows data pointer in SHM Segment.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
@@ -3729,7 +3729,7 @@ const struct z_loaned_ptr_in_segment_t *z_ptr_in_segment_loan(const struct z_own
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new SHM Provider.
+ * @brief Creates a new data pointer in SHM Segment.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
