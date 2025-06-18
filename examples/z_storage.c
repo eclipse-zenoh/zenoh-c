@@ -111,7 +111,7 @@ int main(int argc, char** argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config), NULL)) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     z_closure(&sub_callback, sub_handler, NULL, NULL);
     printf("Declaring Subscriber on '%s'...\n", args.keyexpr);
     z_owned_subscriber_t sub;
-    if (z_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(sub_callback), NULL)) {
+    if (z_declare_subscriber(z_loan(s), &sub, z_loan(ke), z_move(sub_callback), NULL) < 0) {
         printf("Unable to declare subscriber.\n");
         exit(-1);
     }
