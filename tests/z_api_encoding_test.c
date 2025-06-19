@@ -59,8 +59,7 @@ void test_encoding_with_id(void) {
     assert(z_internal_encoding_check(&e3));
 
     z_encoding_to_string(z_encoding_loan(&e3), &s);
-    assert(strncmp("custom_id;custom_schema", z_string_data(z_string_loan(&s)),
-                   z_string_len(z_string_loan(&s))) == 0);
+    assert(strncmp("custom_id;custom_schema", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
     z_encoding_drop(z_move(e3));
     z_string_drop(z_move(s));
 
@@ -69,8 +68,7 @@ void test_encoding_with_id(void) {
     assert(z_internal_encoding_check(&e4));
 
     z_encoding_to_string(z_encoding_loan(&e4), &s);
-    assert(strncmp("custom_id;custom", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) ==
-           0);
+    assert(strncmp("custom_id;custom", z_string_data(z_string_loan(&s)), z_string_len(z_string_loan(&s))) == 0);
     z_encoding_drop(z_move(e4));
     z_string_drop(z_move(s));
 }
