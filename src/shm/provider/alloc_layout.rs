@@ -15,9 +15,7 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
-use zenoh::shm::{
-    AllocLayout, BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc,
-};
+use zenoh::shm::{AllocLayout, BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc};
 
 use super::{
     alloc_layout_impl::{alloc, alloc_async, alloc_layout_new},
@@ -33,8 +31,7 @@ use crate::{
     z_owned_alloc_layout_t,
 };
 
-pub type DynamicAllocLayout =
-    AllocLayout<'static, DynamicShmProviderBackend<Context>>;
+pub type DynamicAllocLayout = AllocLayout<'static, DynamicShmProviderBackend<Context>>;
 
 pub type DynamicAllocLayoutThreadsafe =
     AllocLayout<'static, DynamicShmProviderBackend<ThreadsafeContext>>;

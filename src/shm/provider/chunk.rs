@@ -11,9 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
-use std::num::TryFromIntError;
-use std::sync::Arc;
+use std::{mem::MaybeUninit, num::TryFromIntError, sync::Arc};
+
 use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
 
 use crate::{

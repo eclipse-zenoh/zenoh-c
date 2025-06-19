@@ -16,13 +16,14 @@ use std::fmt::Debug;
 
 use libc::c_void;
 use zenoh::shm::{
-    ProtocolID, WithProtocolID, ChunkAllocResult, ChunkDescriptor, MemoryLayout, ShmProviderBackend, ZLayoutError,
+    ChunkAllocResult, ChunkDescriptor, MemoryLayout, ProtocolID, ShmProviderBackend,
+    WithProtocolID, ZLayoutError,
 };
 
 use super::chunk::z_chunk_descriptor_t;
 use crate::{
-    shm::common::types::z_protocol_id_t,
     context::DroppableContext,
+    shm::common::types::z_protocol_id_t,
     transmute::{LoanedCTypeRef, OwnedCTypeRef, RustTypeRef},
     z_loaned_memory_layout_t, z_owned_chunk_alloc_result_t, z_owned_memory_layout_t,
 };
@@ -57,10 +58,7 @@ impl<TContext> DynamicShmProviderBackend<TContext>
 where
     TContext: DroppableContext,
 {
-    pub fn new(
-        context: TContext,
-        callbacks: zc_shm_provider_backend_callbacks_t,
-    ) -> Self {
+    pub fn new(context: TContext, callbacks: zc_shm_provider_backend_callbacks_t) -> Self {
         Self { context, callbacks }
     }
 }

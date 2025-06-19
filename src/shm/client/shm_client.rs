@@ -16,7 +16,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 use libc::c_void;
 use zenoh::{
     internal::bail,
-    shm::{ProtocolID, WithProtocolID, SegmentID, ShmClient, ShmSegment},
+    shm::{ProtocolID, SegmentID, ShmClient, ShmSegment, WithProtocolID},
     Result,
 };
 
@@ -24,7 +24,7 @@ use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
 pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
-    shm::common::types::{z_segment_id_t, z_protocol_id_t},
+    shm::common::types::{z_protocol_id_t, z_segment_id_t},
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
@@ -41,9 +41,7 @@ pub struct zc_shm_client_callbacks_t {
     ) -> bool,
 
     /// ID of SHM Protocol this client implements
-    id_fn: unsafe extern "C" fn(
-        context: *mut c_void,
-    ) -> z_protocol_id_t,
+    id_fn: unsafe extern "C" fn(context: *mut c_void) -> z_protocol_id_t,
 }
 
 decl_c_type!(

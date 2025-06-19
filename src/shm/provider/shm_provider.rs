@@ -17,8 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc, ShmProvider,
-        ShmProviderBuilder,
+        BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc, ShmProvider, ShmProviderBuilder,
     },
     Wait,
 };
@@ -42,8 +41,7 @@ use crate::{
 
 pub type DynamicShmProvider = ShmProvider<DynamicShmProviderBackend<Context>>;
 
-pub type DynamicShmProviderThreadsafe =
-    ShmProvider<DynamicShmProviderBackend<ThreadsafeContext>>;
+pub type DynamicShmProviderThreadsafe = ShmProvider<DynamicShmProviderBackend<ThreadsafeContext>>;
 
 pub enum CSHMProvider {
     Posix(PosixShmProvider),
@@ -65,8 +63,7 @@ pub extern "C" fn z_shm_provider_new(
     callbacks: zc_shm_provider_backend_callbacks_t,
 ) {
     let backend = DynamicShmProviderBackend::new(context.into(), callbacks);
-    let provider = ShmProviderBuilder::backend(backend)
-        .wait();
+    let provider = ShmProviderBuilder::backend(backend).wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::Dynamic(provider)));
@@ -81,8 +78,7 @@ pub extern "C" fn z_shm_provider_threadsafe_new(
     callbacks: zc_shm_provider_backend_callbacks_t,
 ) {
     let backend = DynamicShmProviderBackend::new(context.into(), callbacks);
-    let provider = ShmProviderBuilder::backend(backend)
-        .wait();
+    let provider = ShmProviderBuilder::backend(backend).wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::DynamicThreadsafe(provider)));

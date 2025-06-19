@@ -64,7 +64,7 @@ impl ShmSegment for DynamicShmSegment {
                 Err("C callback returned null pointer!".into())
             } else {
                 Ok(cb_result)
-            }            
+            }
         }
     }
 }
