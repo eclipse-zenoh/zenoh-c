@@ -8,14 +8,14 @@
 #undef NDEBUG
 #include <assert.h>
 
-#define assert_str_eq(expected, actual_str) \
-    do { \
-        const char* _expected = (expected); \
-        const z_loaned_string_t* _actual = (actual_str); \
-        size_t _expected_len = strlen(_expected); \
-        assert(z_string_len(_actual) == _expected_len); \
+#define assert_str_eq(expected, actual_str)                                     \
+    do {                                                                        \
+        const char* _expected = (expected);                                     \
+        const z_loaned_string_t* _actual = (actual_str);                        \
+        size_t _expected_len = strlen(_expected);                               \
+        assert(z_string_len(_actual) == _expected_len);                         \
         assert(strncmp(_expected, z_string_data(_actual), _expected_len) == 0); \
-    } while(0)
+    } while (0)
 
 void test_null_encoding(void) {
     z_owned_encoding_t e;
