@@ -34,8 +34,8 @@ use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
-    z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CString,
-    CStringOwned,
+    z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView,
+    CStringInner, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
@@ -260,8 +260,8 @@ impl From<CSliceOwned> for ZBytes {
         ZBytes::from(value)
     }
 }
-impl From<CString> for ZBytes {
-    fn from(value: CString) -> Self {
+impl From<CStringInner> for ZBytes {
+    fn from(value: CStringInner) -> Self {
         let value: CSlice = value.into();
         ZBytes::from(value)
     }

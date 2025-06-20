@@ -24,7 +24,7 @@ use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
-    z_owned_string_array_t, z_view_string_t, CString, CStringView, ZVector,
+    z_owned_string_array_t, z_view_string_t, CStringInner, CStringView, ZVector,
 };
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
@@ -119,7 +119,7 @@ pub extern "C" fn z_hello_locators(
     let this = this.as_rust_type_ref();
     let mut locators = ZVector::with_capacity(this.locators().len());
     for l in this.locators().iter() {
-        locators.push(CString::new_borrowed_from_slice(l.as_str().as_bytes()));
+        locators.push(CStringInner::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
     locators_out.as_rust_type_mut_uninit().write(locators);
 }

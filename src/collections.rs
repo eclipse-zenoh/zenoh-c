@@ -449,12 +449,16 @@ pub use crate::opaque_types::{
     z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
 };
 
-#[derive(Clone)]
-pub struct CString(CSlice);
-pub struct CStringOwned(CString);
-pub struct CStringView(CString);
+// The wrappers which provides string-related interfaces to memory slice `CSlice`
+// Unlike the standard `std:ffi::CString` these structures doesn't provide
+// any guarantees about null-termination
 
-impl Gravestone for CString {
+#[derive(Clone)]
+pub struct CStringInner(CSlice);
+pub struct CStringOwned(CStringInner);
+pub struct CStringView(CStringInner);
+
+impl Gravestone for CStringInner {
     fn gravestone() -> Self {
         Self(CSlice::gravestone())
     }
@@ -465,7 +469,7 @@ impl Gravestone for CString {
 
 impl Gravestone for CStringOwned {
     fn gravestone() -> Self {
-        Self(CString::gravestone())
+        Self(CStringInner::gravestone())
     }
     fn is_gravestone(&self) -> bool {
         self.0.is_gravestone()
@@ -474,23 +478,25 @@ impl Gravestone for CStringOwned {
 
 impl Gravestone for CStringView {
     fn gravestone() -> Self {
-        Self(CString::gravestone())
+        Self(CStringInner::gravestone())
     }
     fn is_gravestone(&self) -> bool {
         self.0.is_gravestone()
     }
 }
 
-impl CString {
+impl CStringInner {
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
-        CString(CSlice::new_borrowed_from_slice(slice))
+        CStringInner(CSlice::new_borrowed_from_slice(slice))
     }
 }
 
 impl CStringOwned {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
-        Ok(CStringOwned(CString(CSlice::new_owned(data as _, len)?)))
+        Ok(CStringOwned(CStringInner(CSlice::new_owned(
+            data as _, len,
+        )?)))
     }
 
     #[allow(clippy::missing_safety_doc)]
@@ -500,7 +506,7 @@ impl CStringOwned {
         drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
         context: *mut c_void,
     ) -> Result<Self, z_result_t> {
-        Ok(CStringOwned(CString(CSlice::new(
+        Ok(CStringOwned(CStringInner(CSlice::new(
             data as _, len, drop, context,
         )?)))
     }
@@ -509,14 +515,16 @@ impl CStringOwned {
 impl CStringView {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_borrowed(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
-        Ok(CStringView(CString(CSlice::new_borrowed(data as _, len)?)))
+        Ok(CStringView(CStringInner(CSlice::new_borrowed(
+            data as _, len,
+        )?)))
     }
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
-        CStringView(CString::new_borrowed_from_slice(slice))
+        CStringView(CStringInner::new_borrowed_from_slice(slice))
     }
 }
 
-impl Deref for CString {
+impl Deref for CStringInner {
     type Target = CSlice;
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -524,20 +532,20 @@ impl Deref for CString {
 }
 
 impl Deref for CStringOwned {
-    type Target = CString;
+    type Target = CStringInner;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
 impl Deref for CStringView {
-    type Target = CString;
+    type Target = CStringInner;
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl AsRef<CSlice> for CString {
+impl AsRef<CSlice> for CStringInner {
     fn as_ref(&self) -> &CSlice {
         &self.0
     }
@@ -558,12 +566,12 @@ impl AsRef<CSlice> for CStringView {
 impl From<String> for CStringOwned {
     fn from(value: String) -> Self {
         let slice = Box::leak(value.into_boxed_str());
-        CStringOwned(CString(CSlice::wrap(slice.as_ptr(), slice.len())))
+        CStringOwned(CStringInner(CSlice::wrap(slice.as_ptr(), slice.len())))
     }
 }
 
-impl From<CString> for CSlice {
-    fn from(value: CString) -> Self {
+impl From<CStringInner> for CSlice {
+    fn from(value: CStringInner) -> Self {
         value.0
     }
 }
@@ -576,7 +584,7 @@ impl From<CStringOwned> for CSlice {
 
 decl_c_type!(
     owned(z_owned_string_t, CStringOwned),
-    loaned(z_loaned_string_t, CString),
+    loaned(z_loaned_string_t, CStringInner),
     view(z_view_string_t, CStringView),
 );
 
@@ -764,7 +772,7 @@ pub extern "C" fn z_string_clone(
 ) {
     let slice = this.as_rust_type_ref().clone_to_owned();
     dst.as_rust_type_mut_uninit()
-        .write(CStringOwned(CString(slice.0)));
+        .write(CStringOwned(CStringInner(slice.0)));
 }
 
 // Converts loaned string into loaned slice (with terminating 0 character).
@@ -782,7 +790,7 @@ pub extern "C" fn z_string_is_empty(this_: &z_loaned_string_t) -> bool {
 pub use crate::opaque_types::{
     z_loaned_string_array_t, z_moved_string_array_t, z_owned_string_array_t,
 };
-pub type ZVector = Vec<CString>;
+pub type ZVector = Vec<CStringInner>;
 decl_c_type!(
     owned(z_owned_string_array_t, ZVector),
     loaned(z_loaned_string_array_t),
@@ -877,7 +885,7 @@ pub extern "C" fn z_string_array_push_by_copy(
 ) -> usize {
     let this = this.as_rust_type_mut();
     let v = value.as_rust_type_ref();
-    this.push(CString(v.clone_to_owned().into()));
+    this.push(CStringInner(v.clone_to_owned().into()));
 
     this.len()
 }
@@ -892,7 +900,7 @@ pub extern "C" fn z_string_array_push_by_alias(
 ) -> usize {
     let this = this.as_rust_type_mut();
     let v = value.as_rust_type_ref();
-    this.push(CString(v.clone_to_borrowed()));
+    this.push(CStringInner(v.clone_to_borrowed()));
 
     this.len()
 }
