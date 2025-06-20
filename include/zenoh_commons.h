@@ -293,6 +293,9 @@ typedef struct z_moved_bytes_writer_t {
 typedef struct z_moved_chunk_alloc_result_t {
   struct z_owned_chunk_alloc_result_t _this;
 } z_moved_chunk_alloc_result_t;
+typedef struct z_moved_ptr_in_segment_t {
+  struct z_owned_ptr_in_segment_t _this;
+} z_moved_ptr_in_segment_t;
 /**
  * Monotonic clock
  */
@@ -987,15 +990,6 @@ typedef struct z_moved_shm_client_storage_t {
 typedef struct z_moved_shm_provider_t {
   struct z_owned_shm_provider_t _this;
 } z_moved_shm_provider_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Unique protocol identifier.
- * Here is a contract: it is up to user to make sure that incompatible ShmClient
- * and ShmProviderBackend implementations will never use the same ProtocolID.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef uint32_t z_protocol_id_t;
-#endif
 typedef struct z_moved_string_array_t {
   struct z_owned_string_array_t _this;
 } z_moved_string_array_t;
@@ -1195,7 +1189,7 @@ typedef struct ze_moved_closure_miss_t {
  * Dropping the corresponding subscriber, also drops the listener.
  */
 typedef struct ALIGN(8) ze_owned_sample_miss_listener_t {
-  uint8_t _0[16];
+  uint8_t _0[24];
 } ze_owned_sample_miss_listener_t;
 typedef struct ze_moved_advanced_subscriber_t {
   struct ze_owned_advanced_subscriber_t _this;
@@ -1392,13 +1386,6 @@ typedef struct ze_moved_serializer_t {
 ZENOHC_API extern const unsigned int Z_ROUTER;
 ZENOHC_API extern const unsigned int Z_PEER;
 ZENOHC_API extern const unsigned int Z_CLIENT;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Protocol identifier for POSIX SHM Protocol.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API extern const unsigned int Z_SHM_POSIX_PROTOCOL_ID;
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation without any additional actions.
@@ -3122,6 +3109,22 @@ ZENOHC_API bool z_internal_mutex_check(const struct z_owned_mutex_t *this_);
  */
 ZENOHC_API void z_internal_mutex_null(struct z_owned_mutex_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if `this` is valid.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+bool z_internal_ptr_in_segment_check(const struct z_owned_ptr_in_segment_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs data pointer in SHM Segment in its gravestone value.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_internal_ptr_in_segment_null(struct z_owned_ptr_in_segment_t *this_);
+#endif
+/**
  * Returns ``true`` if publisher is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_internal_publisher_check(const struct z_owned_publisher_t *this_);
@@ -3699,6 +3702,41 @@ z_result_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
  * Returns the default value of #z_priority_t.
  */
 ZENOHC_API enum z_priority_t z_priority_default(void);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Makes a shallow data pointer in SHM Segment copy.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_ptr_in_segment_clone(struct z_owned_ptr_in_segment_t *out,
+                            const struct z_loaned_ptr_in_segment_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Deletes data pointer in SHM Segment.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_ptr_in_segment_drop(struct z_moved_ptr_in_segment_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows data pointer in SHM Segment.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+const struct z_loaned_ptr_in_segment_t *z_ptr_in_segment_loan(const struct z_owned_ptr_in_segment_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Creates a new data pointer in SHM Segment.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_ptr_in_segment_new(struct z_owned_ptr_in_segment_t *this_,
+                          uint8_t *ptr,
+                          struct zc_threadsafe_context_t segment);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given publisher.
@@ -4792,7 +4830,6 @@ z_result_t z_shm_provider_map(struct z_owned_shm_mut_t *out_result,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
-                        z_protocol_id_t id,
                         struct zc_context_t context,
                         struct zc_shm_provider_backend_callbacks_t callbacks);
 #endif
@@ -4803,7 +4840,6 @@ void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 void z_shm_provider_threadsafe_new(struct z_owned_shm_provider_t *this_,
-                                   z_protocol_id_t id,
                                    struct zc_threadsafe_context_t context,
                                    struct zc_shm_provider_backend_callbacks_t callbacks);
 #endif
@@ -5553,7 +5589,6 @@ enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 z_result_t zc_shm_client_list_add_client(struct zc_loaned_shm_client_list_t *this_,
-                                         z_protocol_id_t id,
                                          struct z_moved_shm_client_t *client);
 #endif
 /**

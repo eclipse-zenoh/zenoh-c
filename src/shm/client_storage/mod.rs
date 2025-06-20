@@ -14,9 +14,8 @@
 
 use std::{mem::MaybeUninit, sync::Arc};
 
-use zenoh::shm::{ProtocolID, ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
+use zenoh::shm::{ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
-use super::common::types::z_protocol_id_t;
 use crate::{
     result::{z_result_t, Z_EINVAL, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -26,7 +25,7 @@ use crate::{
 };
 
 decl_c_type!(
-    owned(zc_owned_shm_client_list_t, option Vec<(ProtocolID, Arc<dyn ShmClient>)>),
+    owned(zc_owned_shm_client_list_t, option Vec<Arc<dyn ShmClient>>),
     loaned(zc_loaned_shm_client_list_t),
 );
 
@@ -34,8 +33,7 @@ decl_c_type!(
 /// @brief Creates a new empty list of SHM Clients.
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
-    let client_list: Vec<(ProtocolID, Arc<dyn ShmClient>)> = Vec::default();
-    this_.as_rust_type_mut_uninit().write(Some(client_list));
+    this_.as_rust_type_mut_uninit().write(Some(Vec::default()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -92,13 +90,12 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
 #[no_mangle]
 pub extern "C" fn zc_shm_client_list_add_client(
     this: &mut zc_loaned_shm_client_list_t,
-    id: z_protocol_id_t,
     client: &mut z_moved_shm_client_t,
 ) -> z_result_t {
     let Some(client) = client.take_rust_type() else {
         return Z_EINVAL;
     };
-    this.as_rust_type_mut().push((id, client));
+    this.as_rust_type_mut().push(client);
     Z_OK
 }
 

@@ -17,8 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        BlockOn, Deallocate, Defragment, DynamicProtocolID, GarbageCollect, JustAlloc, ShmProvider,
-        ShmProviderBuilder,
+        BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc, ShmProvider, ShmProviderBuilder,
     },
     Wait,
 };
@@ -33,7 +32,6 @@ use crate::{
     context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
     shm::{
-        common::types::z_protocol_id_t,
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::types::z_buf_layout_alloc_result_t,
     },
@@ -41,10 +39,9 @@ use crate::{
     z_loaned_shm_provider_t, z_moved_shm_provider_t, z_owned_shm_mut_t, z_owned_shm_provider_t,
 };
 
-pub type DynamicShmProvider = ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<Context>>;
+pub type DynamicShmProvider = ShmProvider<DynamicShmProviderBackend<Context>>;
 
-pub type DynamicShmProviderThreadsafe =
-    ShmProvider<DynamicProtocolID, DynamicShmProviderBackend<ThreadsafeContext>>;
+pub type DynamicShmProviderThreadsafe = ShmProvider<DynamicShmProviderBackend<ThreadsafeContext>>;
 
 pub enum CSHMProvider {
     Posix(PosixShmProvider),
@@ -62,15 +59,11 @@ decl_c_type!(
 #[no_mangle]
 pub extern "C" fn z_shm_provider_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
-    id: z_protocol_id_t,
     context: zc_context_t,
     callbacks: zc_shm_provider_backend_callbacks_t,
 ) {
     let backend = DynamicShmProviderBackend::new(context.into(), callbacks);
-    let provider = ShmProviderBuilder::builder()
-        .dynamic_protocol_id(id)
-        .backend(backend)
-        .wait();
+    let provider = ShmProviderBuilder::backend(backend).wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::Dynamic(provider)));
@@ -81,15 +74,11 @@ pub extern "C" fn z_shm_provider_new(
 #[no_mangle]
 pub extern "C" fn z_shm_provider_threadsafe_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
-    id: z_protocol_id_t,
     context: zc_threadsafe_context_t,
     callbacks: zc_shm_provider_backend_callbacks_t,
 ) {
     let backend = DynamicShmProviderBackend::new(context.into(), callbacks);
-    let provider = ShmProviderBuilder::builder()
-        .dynamic_protocol_id(id)
-        .backend(backend)
-        .wait();
+    let provider = ShmProviderBuilder::backend(backend).wait();
 
     this.as_rust_type_mut_uninit()
         .write(Some(CSHMProvider::DynamicThreadsafe(provider)));

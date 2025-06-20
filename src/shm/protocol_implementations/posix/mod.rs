@@ -14,4 +14,3 @@
 
 pub mod posix_shm_client;
 pub mod posix_shm_provider;
-pub mod protocol_id;
