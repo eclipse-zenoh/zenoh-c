@@ -449,7 +449,6 @@ pub use crate::opaque_types::{
     z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
 };
 
-
 // The wrappers which provides string-related interfaces to memory slice `CSlice`
 // Unlike the standard `std:ffi::CString` these structures doesn't provide
 // any guarantees about null-termination
@@ -495,7 +494,9 @@ impl CStringInner {
 impl CStringOwned {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
-        Ok(CStringOwned(CStringInner(CSlice::new_owned(data as _, len)?)))
+        Ok(CStringOwned(CStringInner(CSlice::new_owned(
+            data as _, len,
+        )?)))
     }
 
     #[allow(clippy::missing_safety_doc)]
@@ -514,7 +515,9 @@ impl CStringOwned {
 impl CStringView {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_borrowed(data: *const libc::c_char, len: usize) -> Result<Self, z_result_t> {
-        Ok(CStringView(CStringInner(CSlice::new_borrowed(data as _, len)?)))
+        Ok(CStringView(CStringInner(CSlice::new_borrowed(
+            data as _, len,
+        )?)))
     }
     pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
         CStringView(CStringInner::new_borrowed_from_slice(slice))

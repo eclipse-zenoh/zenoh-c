@@ -34,8 +34,8 @@ use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
-    z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView, CStringInner,
-    CStringOwned,
+    z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView,
+    CStringInner, CStringOwned,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
