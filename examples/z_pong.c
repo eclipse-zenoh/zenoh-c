@@ -31,19 +31,31 @@ int main(int argc, char** argv) {
     struct args_t args = parse_args(argc, argv, &config);
 
     z_owned_session_t session;
-    z_open(&session, z_move(config), NULL);
+    if (z_open(&session, z_move(config), NULL) < 0) {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+
     z_view_keyexpr_t ping;
     z_view_keyexpr_from_str_unchecked(&ping, "test/ping");
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
-    z_owned_publisher_t pub;
     z_publisher_options_t opts;
     z_publisher_options_default(&opts);
     opts.is_express = !args.no_express;
-    z_declare_publisher(z_loan(session), &pub, z_loan(pong), &opts);
+
+    z_owned_publisher_t pub;
+    if (z_declare_publisher(z_loan(session), &pub, z_loan(pong), &opts) < 0) {
+        printf("Unable to declare publisher for key expression!\n");
+        exit(-1);
+    }
+
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)&pub);
-    z_declare_background_subscriber(z_loan(session), z_loan(ping), z_move(respond), NULL);
+    if (z_declare_background_subscriber(z_loan(session), z_loan(ping), z_move(respond), NULL) < 0) {
+        printf("Unable to declare background subscriber for key expression!\n");
+        exit(-1);
+    }
 
     while (1) {
         z_sleep_s(1);
