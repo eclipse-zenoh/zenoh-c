@@ -122,7 +122,7 @@ void test_equals() {
     z_drop(z_move(e));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     test_null_encoding();
     test_encoding_without_id();
     test_encoding_with_id();
