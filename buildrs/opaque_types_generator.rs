@@ -16,7 +16,10 @@ pub fn generate_opaque_types() {
     let mut docs = get_opaque_type_docs();
 
     // Count the total number of errors in the input data
-    let total_error_count = data_in.lines().filter(|line| line.starts_with("error[E")).count();
+    let total_error_count = data_in
+        .lines()
+        .filter(|line| line.starts_with("error[E"))
+        .count();
 
     // Scan for type size and layout information which is generated as compilation errors
     let mut good_error_count = 0;
@@ -122,10 +125,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--manifest-path")
         .arg(manifest_path);
     let command_str = format!("{:?}", command);
-    let _ = command
-        .stderr(stdio)
-        .output()
-        .unwrap();
+    let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
 }
 
