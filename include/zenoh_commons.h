@@ -419,12 +419,41 @@ typedef struct ALIGN(8) z_bytes_slice_iterator_t {
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t _this;
 } z_moved_bytes_writer_t;
-typedef struct z_moved_chunk_alloc_result_t {
-  struct z_owned_chunk_alloc_result_t _this;
-} z_moved_chunk_alloc_result_t;
-typedef struct z_moved_ptr_in_segment_t {
-  struct z_owned_ptr_in_segment_t _this;
-} z_moved_ptr_in_segment_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Unique segment identifier.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef uint32_t z_segment_id_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Chunk id within it's segment.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef uint32_t z_chunk_id_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A ChunkDescriptor.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct z_chunk_descriptor_t {
+  z_segment_id_t segment;
+  z_chunk_id_t chunk;
+  size_t len;
+} z_chunk_descriptor_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief An AllocatedChunk.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct z_allocated_chunk_t {
+  struct z_chunk_descriptor_t descriptpr;
+  z_moved_ptr_in_segment_t *ptr;
+} z_allocated_chunk_t;
+#endif
 /**
  * Monotonic clock
  */
@@ -1107,15 +1136,107 @@ typedef struct z_scout_options_t {
 typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
-typedef struct z_moved_shm_client_t {
-  struct z_owned_shm_client_t _this;
-} z_moved_shm_client_t;
-typedef struct z_moved_shm_client_storage_t {
-  struct z_owned_shm_client_storage_t _this;
-} z_moved_shm_client_storage_t;
-typedef struct z_moved_shm_provider_t {
-  struct z_owned_shm_provider_t _this;
-} z_moved_shm_provider_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Callbacks for ShmSegment.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct zc_shm_segment_callbacks_t {
+  /**
+   * Obtain the actual region of memory identified by it's id.
+   */
+  uint8_t *(*map_fn)(z_chunk_id_t chunk_id, void *context);
+} zc_shm_segment_callbacks_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief An ShmSegment.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct z_shm_segment_t {
+  struct zc_threadsafe_context_t context;
+  struct zc_shm_segment_callbacks_t callbacks;
+} z_shm_segment_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Unique protocol identifier.
+ * Here is a contract: it is up to user to make sure that incompatible ShmClient
+ * and ShmProviderBackend implementations will never use the same ProtocolID.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef uint32_t z_protocol_id_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Callback for ShmClient.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct zc_shm_client_callbacks_t {
+  /**
+   * Attach to particular shared memory segment
+   */
+  bool (*attach_fn)(struct z_shm_segment_t *out_segment, z_segment_id_t segment_id, void *context);
+  /**
+   * ID of SHM Protocol this client implements
+   */
+  z_protocol_id_t (*id_fn)(void *context);
+} zc_shm_client_callbacks_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A result of SHM buffer layouting + allocation operation.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct z_buf_layout_alloc_result_t {
+  enum zc_buf_layout_alloc_status_t status;
+  z_owned_shm_mut_t buf;
+  enum z_alloc_error_t alloc_error;
+  enum z_layout_error_t layout_error;
+} z_buf_layout_alloc_result_t;
+#endif
+/**
+ * A non-tread-safe droppable context.
+ * Contexts are idiomatically used in C together with callback interfaces to deliver associated state
+ * information to each callback.
+ *
+ * This is a non-thread-safe context - zenoh-c guarantees that associated callbacks that share the same
+ * zc_context_t instance will never be executed concurrently. In other words, all the callbacks associated
+ * with this context data are not required to be thread-safe.
+ *
+ * NOTE: Remember that the same callback interfaces associated with different zc_context_t instances can
+ * still be executed concurrently. The exact behavior depends on user's application, but we strongly
+ * discourage our users from pinning to some specific behavior unless they _really_ understand what they
+ * are doing.
+ *
+ * Once moved to zenoh-c ownership, this context is guaranteed to execute delete_fn when deleted. The
+ * delete_fn is guaranteed to be executed only once at some point of time after the last associated
+ * callback call returns.
+ * NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
+ * be executed.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct zc_context_t {
+  void *context;
+  void (*delete_fn)(void*);
+} zc_context_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Callbacks for ShmProviderBackend.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef struct zc_shm_provider_backend_callbacks_t {
+  void (*alloc_fn)(z_owned_chunk_alloc_result_t *out_result,
+                   const z_loaned_memory_layout_t *layout,
+                   void *context);
+  void (*free_fn)(const struct z_chunk_descriptor_t *chunk, void *context);
+  size_t (*defragment_fn)(void *context);
+  size_t (*available_fn)(void *context);
+  void (*layout_for_fn)(z_owned_memory_layout_t *layout, void *context);
+  z_protocol_id_t (*id_fn)(void *context);
+} zc_shm_provider_backend_callbacks_t;
+#endif
 typedef struct z_moved_string_array_t {
   struct z_owned_string_array_t _this;
 } z_moved_string_array_t;
@@ -1298,19 +1419,6 @@ typedef struct ze_moved_closure_miss_t {
   struct ze_owned_closure_miss_t _this;
 } ze_moved_closure_miss_t;
 #endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
- *
- * A listener that sends notification when the advanced subscriber misses a sample .
- * Dropping the corresponding subscriber, also drops the listener.
- */
-typedef struct ALIGN(8) ze_owned_sample_miss_listener_t {
-  uint8_t _0[24];
-} ze_owned_sample_miss_listener_t;
-typedef struct ze_moved_advanced_subscriber_t {
-  struct ze_owned_advanced_subscriber_t _this;
-} ze_moved_advanced_subscriber_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Settings for retrievieng historical data for Advanced Subscriber.
@@ -3222,7 +3330,7 @@ ZENOHC_API void z_internal_mutex_null(struct z_owned_mutex_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-bool z_internal_ptr_in_segment_check(const struct z_owned_ptr_in_segment_t *this_);
+bool z_internal_ptr_in_segment_check(const z_owned_ptr_in_segment_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3230,7 +3338,7 @@ bool z_internal_ptr_in_segment_check(const struct z_owned_ptr_in_segment_t *this
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_internal_ptr_in_segment_null(struct z_owned_ptr_in_segment_t *this_);
+void z_internal_ptr_in_segment_null(z_owned_ptr_in_segment_t *this_);
 #endif
 /**
  * Returns ``true`` if publisher is valid, ``false`` otherwise.
@@ -3816,8 +3924,8 @@ ZENOHC_API enum z_priority_t z_priority_default(void);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_ptr_in_segment_clone(struct z_owned_ptr_in_segment_t *out,
-                            const struct z_loaned_ptr_in_segment_t *this_);
+void z_ptr_in_segment_clone(z_owned_ptr_in_segment_t *out,
+                            const z_loaned_ptr_in_segment_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3825,7 +3933,7 @@ void z_ptr_in_segment_clone(struct z_owned_ptr_in_segment_t *out,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_ptr_in_segment_drop(struct z_moved_ptr_in_segment_t *this_);
+void z_ptr_in_segment_drop(z_moved_ptr_in_segment_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3833,7 +3941,7 @@ void z_ptr_in_segment_drop(struct z_moved_ptr_in_segment_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-const struct z_loaned_ptr_in_segment_t *z_ptr_in_segment_loan(const struct z_owned_ptr_in_segment_t *this_);
+const z_loaned_ptr_in_segment_t *z_ptr_in_segment_loan(const z_owned_ptr_in_segment_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3841,7 +3949,7 @@ const struct z_loaned_ptr_in_segment_t *z_ptr_in_segment_loan(const struct z_own
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_ptr_in_segment_new(struct z_owned_ptr_in_segment_t *this_,
+void z_ptr_in_segment_new(z_owned_ptr_in_segment_t *this_,
                           uint8_t *ptr,
                           struct zc_threadsafe_context_t segment);
 #endif
@@ -4937,7 +5045,7 @@ z_result_t z_shm_provider_map(z_owned_shm_mut_t *out_result,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
+void z_shm_provider_new(z_owned_shm_provider_t *this_,
                         struct zc_context_t context,
                         struct zc_shm_provider_backend_callbacks_t callbacks);
 #endif
@@ -4947,7 +5055,7 @@ void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-void z_shm_provider_threadsafe_new(struct z_owned_shm_provider_t *this_,
+void z_shm_provider_threadsafe_new(z_owned_shm_provider_t *this_,
                                    struct zc_threadsafe_context_t context,
                                    struct zc_shm_provider_backend_callbacks_t callbacks);
 #endif
@@ -5694,8 +5802,8 @@ enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-z_result_t zc_shm_client_list_add_client(struct zc_loaned_shm_client_list_t *this_,
-                                         struct z_moved_shm_client_t *client);
+z_result_t zc_shm_client_list_add_client(zc_loaned_shm_client_list_t *this_,
+                                         z_moved_shm_client_t *client);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
