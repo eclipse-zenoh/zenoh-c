@@ -173,6 +173,7 @@ typedef struct {
     bool* busy_flags;
     size_t count;
     size_t available;
+    z_protocol_id_t id;
 } test_provider_context;
 
 void delete_fn(void* context) {
@@ -182,6 +183,7 @@ void delete_fn(void* context) {
     c->bytes = NULL;
     c->busy_flags = NULL;
 }
+void deref_segemnt_fn(void* context) {}
 void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned_memory_layout_t* layout,
               void* context) {
     assert(context);
@@ -202,12 +204,16 @@ void alloc_fn(struct z_owned_chunk_alloc_result_t* result, const struct z_loaned
             c->busy_flags[i] = true;
             c->available--;
 
+            z_owned_ptr_in_segment_t ptr;
+            zc_threadsafe_context_t segment = {{NULL}, &deref_segemnt_fn};
+            z_ptr_in_segment_new(&ptr, &c->bytes[i], segment);
+
             z_allocated_chunk_t chunk;
-            chunk.data = &c->bytes[i];
-            uint64_t ptr = (uint64_t)(chunk.data);
-            chunk.descriptpr.chunk = ptr & 0xFFFFFFFF;
+            chunk.ptr = z_move(ptr);
+            uint64_t data_ptr = (uint64_t)(&c->bytes[i]);
+            chunk.descriptpr.chunk = data_ptr & 0xFFFFFFFF;
             chunk.descriptpr.len = 1;
-            chunk.descriptpr.segment = (ptr >> 32) & 0xFFFFFFFF;
+            chunk.descriptpr.segment = (data_ptr >> 32) & 0xFFFFFFFF;
 
             z_chunk_alloc_result_new_ok(result, chunk);
             return;
@@ -259,9 +265,14 @@ void layout_for_fn(struct z_owned_memory_layout_t* layout, void* context) {
         z_memory_layout_drop(z_move(*layout));
     }
 }
+z_protocol_id_t id_fn(void* context) {
+    assert(context);
+
+    test_provider_context* c = (test_provider_context*)context;
+    return c->id;
+}
 
 int run_c_provider() {
-    const z_protocol_id_t id = 100500;
     const size_t size = 1024;
 
     // init test context
@@ -270,14 +281,15 @@ int run_c_provider() {
     test_context.count = size;
     test_context.busy_flags = (bool*)malloc(sizeof(bool) * size);
     test_context.bytes = (uint8_t*)malloc(sizeof(uint8_t) * size);
+    test_context.id = 100500;
     zc_context_t context = {&test_context, &delete_fn};
 
     // init callbacks
-    zc_shm_provider_backend_callbacks_t callbacks = {&alloc_fn, &free_fn, &defragment_fn, &available_fn,
-                                                     &layout_for_fn};
+    zc_shm_provider_backend_callbacks_t callbacks = {&alloc_fn,     &free_fn,       &defragment_fn,
+                                                     &available_fn, &layout_for_fn, &id_fn};
     // create provider
     z_owned_shm_provider_t provider;
-    z_shm_provider_new(&provider, id, context, callbacks);
+    z_shm_provider_new(&provider, context, callbacks);
     ASSERT_CHECK(provider)
 
     // test provider
@@ -379,7 +391,7 @@ int run_client_storage() {
     ASSERT_CHECK(client);
 
     // add client to the list
-    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), Z_SHM_POSIX_PROTOCOL_ID, z_move(client)));
+    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), z_move(client)));
     ASSERT_CHECK_ERR(client);
 
     // create client storage from the list
@@ -414,6 +426,8 @@ bool attach_fn(struct z_shm_segment_t* out_segment, z_segment_id_t id, void* con
     return true;
 }
 
+z_protocol_id_t client_id_fn(void* context) { return 100500; }
+
 int run_c_client() {
     // create client list
     zc_owned_shm_client_list_t list;
@@ -422,13 +436,13 @@ int run_c_client() {
 
     // create C SHM Client
     zc_threadsafe_context_t context = {NULL, &delete_client_fn};
-    zc_shm_client_callbacks_t callbacks = {&attach_fn};
+    zc_shm_client_callbacks_t callbacks = {&attach_fn, &client_id_fn};
     z_owned_shm_client_t client;
     z_shm_client_new(&client, context, callbacks);
     ASSERT_CHECK(client);
 
     // add client to the list
-    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), 100500, z_move(client)));
+    ASSERT_OK(zc_shm_client_list_add_client(z_loan_mut(list), z_move(client)));
     ASSERT_CHECK_ERR(client);
 
     // create client storage from the list

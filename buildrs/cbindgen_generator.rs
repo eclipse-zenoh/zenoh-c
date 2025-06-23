@@ -325,7 +325,10 @@ fn configure() {
     let major = version_parts[0];
     let minor = version_parts[1];
     let patch = version_parts[2];
-    let tweak = version_parts.get(3).unwrap_or(&"");
+    let tweak = version_parts
+        .get(3)
+        .map(|val| format!(" {val}"))
+        .unwrap_or("".to_string());
     file.write_all(
         format!(
             r#"#pragma once
@@ -333,7 +336,7 @@ fn configure() {
 #define ZENOH_C_MAJOR {}
 #define ZENOH_C_MINOR {}
 #define ZENOH_C_PATCH {}
-#define ZENOH_C_TWEAK {}
+#define ZENOH_C_TWEAK{}
 
 #define TARGET_ARCH_{}
 "#,

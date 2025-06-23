@@ -109,9 +109,12 @@ zenoh_opaque.h:
   - z_alloc_error_t!#shared-memory#unstable
   - z_segment_id_t!#shared-memory#unstable
   - z_chunk_id_t!#shared-memory#unstable
+  - z_protocol_id_t!#shared-memory#unstable
   - zc_context_t!#shared-memory#unstable
   - zc_threadsafe_context_t!#shared-memory#unstable
   - zc_threadsafe_context_data_t!#shared-memory#unstable
+  - z_owned_ptr_in_segment_t!#shared-memory#unstable
+  - z_loaned_ptr_in_segment_t!#shared-memory#unstable
   - z_owned_fifo_handler_sample_t!
   - z_loaned_fifo_handler_sample_t!
   - z_owned_ring_handler_sample_t!
