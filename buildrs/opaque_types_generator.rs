@@ -8,15 +8,24 @@ use crate::get_build_rs_path;
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_build_rs_path();
-    let path_in = produce_opaque_types_data();
+    let (command, path_in) = produce_opaque_types_data();
     let path_out = current_folder.join("./src/opaque_types/mod.rs");
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     let mut data_out = String::new();
     let mut docs = get_opaque_type_docs();
 
+    // Count the total number of errors in the input data
+    let total_error_count = data_in
+        .lines()
+        .filter(|line| line.starts_with("error[E"))
+        .count();
+
+    // Scan for type size and layout information which is generated as compilation errors
+    let mut good_error_count = 0;
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
     for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
+        good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
         let mut s = String::new();
@@ -71,10 +80,21 @@ impl Drop for {type_name} {{
         }
         data_out += &s;
     }
+
+    if good_error_count != total_error_count {
+        panic!(
+            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\n\nCommand executed:\n\n{}\n\nCompiler output:\n\n{}",
+            total_error_count,
+            good_error_count,
+            command,
+            data_in
+        );
+    }
+
     std::fs::write(path_out, data_out).unwrap();
 }
 
-fn produce_opaque_types_data() -> PathBuf {
+fn produce_opaque_types_data() -> (String, PathBuf) {
     let target = std::env::var("TARGET").unwrap();
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let current_folder = get_build_rs_path();
@@ -90,24 +110,23 @@ fn produce_opaque_types_data() -> PathBuf {
     }
     #[allow(unused_mut)]
     let mut feature_args: Vec<&str> = vec!["-F", "panic"];
-    for feature in features() {
+    for feature in features().iter().filter(|f| !f.is_empty()) {
         feature_args.push("-F");
         feature_args.push(feature);
     }
 
-    let _ = std::process::Command::new("cargo")
+    let mut command = std::process::Command::new("cargo");
+    command
         .arg("build")
         .args(feature_args)
         .args(linker_args)
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
-        .arg(manifest_path)
-        .stderr(stdio)
-        .output()
-        .unwrap();
-
-    output_file_path
+        .arg(manifest_path);
+    let command_str = format!("{:?}", command);
+    let _ = command.stderr(stdio).output().unwrap();
+    (command_str, output_file_path)
 }
 
 fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
