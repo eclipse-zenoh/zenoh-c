@@ -12,7 +12,7 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
-decl_c_type!(
+decl_c_type_inequal!(
     owned(z_owned_mutex_t, option(Mutex<()>, Option<MutexGuard<'static, ()>>)),
     loaned(z_loaned_mutex_t),
 );
