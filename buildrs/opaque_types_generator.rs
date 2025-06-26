@@ -122,7 +122,9 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
-        .arg(manifest_path);
+        .arg(manifest_path)
+        .arg("--target-dir")
+        .arg(get_out_rs_path().join("./build_resources/opaque_types"));
     let command_str = format!("{:?}", command);
     let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
