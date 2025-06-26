@@ -38,6 +38,44 @@ pub(crate) fn alloc_layout_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
+) -> z_result_t {
+    let layout = match provider.as_rust_type_ref() {
+        super::shm_provider::CSHMProvider::Posix(provider) => {
+            match provider.alloc(size).into_layout() {
+                Ok(layout) => CSHMLayout::Posix(layout),
+                Err(e) => {
+                    tracing::error!("{:?}", e);
+                    return Z_EINVAL;
+                }
+            }
+        }
+        super::shm_provider::CSHMProvider::Dynamic(provider) => {
+            match provider.alloc(size).into_layout() {
+                Ok(layout) => CSHMLayout::Dynamic(layout),
+                Err(e) => {
+                    tracing::error!("{:?}", e);
+                    return Z_EINVAL;
+                }
+            }
+        }
+        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
+            match provider.alloc(size).into_layout() {
+                Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
+                Err(e) => {
+                    tracing::error!("{:?}", e);
+                    return Z_EINVAL;
+                }
+            }
+        }
+    };
+    this.as_rust_type_mut_uninit().write(Some(layout));
+    Z_OK
+}
+
+pub(crate) fn alloc_layout_with_alignment_new(
+    this: &mut MaybeUninit<z_owned_alloc_layout_t>,
+    provider: &'static z_loaned_shm_provider_t,
+    size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_result_t {
     let layout = match provider.as_rust_type_ref() {

@@ -73,18 +73,14 @@ int main(int argc, char** argv) {
     const size_t total_size = 4096;
     const size_t buf_ok_size = total_size / 4;
 
-    z_alloc_alignment_t alignment = {0};
-    z_owned_memory_layout_t layout;
-    z_memory_layout_new(&layout, total_size, alignment);
-
     z_owned_shm_provider_t provider;
-    z_posix_shm_provider_new(&provider, z_loan(layout));
+    z_shm_provider_default_new(&provider, total_size);
 
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
 
         z_buf_layout_alloc_result_t alloc;
-        z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
+        z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size);
         if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
             {
                 uint8_t* buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
@@ -108,7 +104,6 @@ int main(int argc, char** argv) {
     z_drop(z_move(pub));
     z_drop(z_move(s));
     z_drop(z_move(provider));
-    z_drop(z_move(layout));
 
     return 0;
 }
