@@ -3,13 +3,13 @@ use std::{collections::HashMap, path::PathBuf};
 use regex::Regex;
 
 use super::common_helpers::{features, split_type_name};
-use crate::get_build_rs_path;
+use crate::{get_build_rs_path, get_out_rs_path};
 
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let current_folder = get_build_rs_path();
+    let current_folder = get_out_rs_path();
     let (command, path_in) = produce_opaque_types_data();
-    let path_out = current_folder.join("./src/opaque_types/mod.rs");
+    let path_out = current_folder.join("./opaque_types.rs");
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     let mut data_out = String::new();
@@ -97,9 +97,8 @@ impl Drop for {type_name} {{
 fn produce_opaque_types_data() -> (String, PathBuf) {
     let target = std::env::var("TARGET").unwrap();
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let current_folder = get_build_rs_path();
-    let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
+    let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
+    let output_file_path = get_out_rs_path().join("./.build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = std::process::Stdio::from(out_file);
 
@@ -123,7 +122,9 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
-        .arg(manifest_path);
+        .arg(manifest_path)
+        .arg("--target-dir")
+        .arg(get_out_rs_path().join("./build_resources/opaque_types"));
     let command_str = format!("{:?}", command);
     let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
