@@ -28,14 +28,14 @@ use crate::{
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
-pub struct CSlice {
+pub(crate) struct CSlice {
     data: *const u8,
     len: usize,
     drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
     context: *mut c_void,
 }
 
-pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_void) {
+pub(crate) extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_void) {
     let ptr = data as *const u8;
     let len = context as usize;
     let b = unsafe { Box::from_raw(slice_from_raw_parts(ptr, len).cast_mut()) };
@@ -43,8 +43,8 @@ pub extern "C" fn _z_drop_c_slice_default(data: *mut c_void, context: *mut c_voi
 }
 
 #[derive(Clone)]
-pub struct CSliceOwned(CSlice);
-pub struct CSliceView(CSlice);
+pub(crate) struct CSliceOwned(CSlice);
+pub(crate) struct CSliceView(CSlice);
 
 impl Gravestone for CSliceOwned {
     fn gravestone() -> Self {
@@ -129,7 +129,7 @@ impl CSliceOwned {
 }
 
 impl CSlice {
-    pub fn new_unchecked(
+    pub(crate) fn new_unchecked(
         data: *const u8,
         len: usize,
         drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
@@ -143,11 +143,11 @@ impl CSlice {
         }
     }
 
-    pub fn new_borrowed_unchecked(data: *const u8, len: usize) -> Self {
+    pub(crate) fn new_borrowed_unchecked(data: *const u8, len: usize) -> Self {
         Self::new_unchecked(data, len, None, null_mut())
     }
 
-    pub fn new(
+    pub(crate) fn new(
         data: *mut u8,
         len: usize,
         drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
@@ -160,7 +160,7 @@ impl CSlice {
         }
     }
 
-    pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
+    pub(crate) fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
             Err(result::Z_EINVAL)
         } else {
@@ -168,12 +168,12 @@ impl CSlice {
         }
     }
 
-    pub fn new_borrowed_from_slice(slice: &[u8]) -> Self {
+    pub(crate) fn new_borrowed_from_slice(slice: &[u8]) -> Self {
         Self::new_borrowed_unchecked(slice.as_ptr(), slice.len())
     }
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new_owned_unchecked(data: *const u8, len: usize) -> Self {
+    pub(crate) unsafe fn new_owned_unchecked(data: *const u8, len: usize) -> Self {
         if len == 0 {
             return Self::gravestone();
         }
@@ -182,12 +182,12 @@ impl CSlice {
         CSlice::wrap(slice.as_ptr(), len)
     }
 
-    pub fn wrap(data: *const u8, len: usize) -> Self {
+    pub(crate) fn wrap(data: *const u8, len: usize) -> Self {
         Self::new_unchecked(data, len, Some(_z_drop_c_slice_default), len as *mut c_void)
     }
 
     #[allow(clippy::missing_safety_doc)]
-    pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_result_t> {
+    pub(crate) unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
             Err(result::Z_EINVAL)
         } else {
@@ -195,34 +195,35 @@ impl CSlice {
         }
     }
 
-    pub fn slice(&self) -> &'static [u8] {
+    pub(crate) fn slice(&self) -> &'static [u8] {
         if self.len == 0 {
             return &[0u8; 0];
         }
         unsafe { from_raw_parts(self.data, self.len) }
     }
 
-    pub fn data(&self) -> *const u8 {
+    pub(crate) fn data(&self) -> *const u8 {
         self.data
     }
 
-    pub fn len(&self) -> usize {
+    pub(crate) fn len(&self) -> usize {
         self.len
     }
 
-    pub fn is_empty(&self) -> bool {
+    pub(crate) fn is_empty(&self) -> bool {
         self.len == 0
     }
 
-    pub fn is_owned(&self) -> bool {
+    #[allow(dead_code)]
+    pub(crate) fn is_owned(&self) -> bool {
         self.drop.is_some()
     }
 
-    pub fn clone_to_borrowed(&self) -> Self {
+    pub(crate) fn clone_to_borrowed(&self) -> Self {
         Self::new_borrowed_unchecked(self.data, self.len)
     }
 
-    pub fn clone_to_owned(&self) -> CSliceOwned {
+    pub(crate) fn clone_to_owned(&self) -> CSliceOwned {
         CSliceOwned(unsafe { Self::new_owned_unchecked(self.data(), self.len()) })
     }
 }
@@ -283,7 +284,7 @@ impl From<Vec<u8>> for CSlice {
 
 impl std::cmp::Eq for CSlice {}
 
-pub use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
+use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
 
 decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
@@ -454,9 +455,9 @@ pub use crate::opaque_types::{
 // any guarantees about null-termination
 
 #[derive(Clone)]
-pub struct CStringInner(CSlice);
-pub struct CStringOwned(CStringInner);
-pub struct CStringView(CStringInner);
+pub(crate) struct CStringInner(CSlice);
+pub(crate) struct CStringOwned(CStringInner);
+pub(crate) struct CStringView(CStringInner);
 
 impl Gravestone for CStringInner {
     fn gravestone() -> Self {
@@ -787,10 +788,10 @@ pub extern "C" fn z_string_is_empty(this_: &z_loaned_string_t) -> bool {
     this_.as_rust_type_ref().is_empty()
 }
 
-pub use crate::opaque_types::{
+use crate::opaque_types::{
     z_loaned_string_array_t, z_moved_string_array_t, z_owned_string_array_t,
 };
-pub type ZVector = Vec<CStringInner>;
+pub(crate) type ZVector = Vec<CStringInner>;
 decl_c_type!(
     owned(z_owned_string_array_t, ZVector),
     loaned(z_loaned_string_array_t),

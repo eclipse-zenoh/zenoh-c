@@ -120,7 +120,7 @@ fn alternative_rusty_entry_point() {
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
 /// Note that if the environment variable is not set, then logging will not be enabled.
-/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+/// See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
 #[no_mangle]
 pub extern "C" fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
@@ -130,7 +130,7 @@ pub extern "C" fn zc_try_init_log_from_env() {
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
 /// Note that if the environment variable is not set, then fallback filter will be used instead.
-/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+/// See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
 ///
 /// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
 #[no_mangle]
