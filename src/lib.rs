@@ -21,19 +21,19 @@ use libc::c_void;
 use crate::transmute::{LoanedCTypeRef, TakeRustType};
 #[macro_use]
 mod transmute;
-pub mod opaque_types;
+mod opaque_types;
 pub use crate::opaque_types::*;
 
 mod collections;
-pub mod result;
 pub use crate::collections::*;
+pub mod result;
 mod config;
 pub use crate::config::*;
 #[cfg(feature = "unstable")]
 mod close;
 #[cfg(feature = "unstable")]
 pub use crate::close::*;
-pub mod encoding;
+mod encoding;
 pub use crate::encoding::*;
 mod commons;
 pub use crate::commons::*;
@@ -63,7 +63,7 @@ mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
-pub mod platform;
+mod platform;
 pub use platform::*;
 mod liveliness;
 pub use liveliness::*;

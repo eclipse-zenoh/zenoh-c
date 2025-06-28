@@ -453,7 +453,7 @@ pub unsafe extern "C" fn z_bytes_copy_from_str(
     }
 }
 
-pub use crate::z_bytes_slice_iterator_t;
+use crate::z_bytes_slice_iterator_t;
 decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 
 /// Returns an iterator on raw bytes slices contained in the `z_loaned_bytes_t`.
@@ -548,7 +548,7 @@ pub unsafe extern "C" fn z_bytes_from_shm_mut(
     Z_OK
 }
 
-pub use crate::z_bytes_reader_t;
+use crate::z_bytes_reader_t;
 decl_c_type!(loaned(z_bytes_reader_t, ZBytesReader<'static>));
 
 /// Returns a reader for the data.
