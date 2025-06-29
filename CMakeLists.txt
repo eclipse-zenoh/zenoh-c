@@ -272,24 +272,40 @@ add_custom_target(cargo ALL DEPENDS "${libs}")
 #
 
 function(set_target_imported_locations target libr libd)
+	set(_loc_debug  ${cargo_binary_dir_debug}/${libd})
+	set(_loc_release ${cargo_binary_dir_release}/${libr})
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(_loc "${_loc_debug}")
+	else()
+		set(_loc "${_loc_release}")
+	endif()
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libd}
-		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${libr}
-		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${libr}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${libr}
+		IMPORTED_LOCATION ${_loc}
+		IMPORTED_LOCATION_DEBUG ${_loc_debug}
+		IMPORTED_LOCATION_RELEASE ${_loc_release}
+		IMPORTED_LOCATION_MINSIZEREL ${_loc_release}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${_loc_release}
 	)
 endfunction()
 
 function(set_target_imported_implib target libr libd)
+	set(_loc_debug  ${cargo_binary_dir_debug}/${libd})
+	set(_loc_release ${cargo_binary_dir_release}/${libr})
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(_loc "${_loc_debug}")
+	else()
+		set(_loc "${_loc_release}")
+	endif()
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libd}
-		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${libr}
-		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${libr}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${libr}
+		IMPORTED_IMPLIB ${_loc}
+		IMPORTED_IMPLIB_DEBUG ${_loc_debug}
+		IMPORTED_IMPLIB_RELEASE ${_loc_release}
+		IMPORTED_IMPLIB_MINSIZEREL ${_loc_release}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${_loc_release}
 	)
 endfunction()
 
