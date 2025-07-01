@@ -1,6 +1,9 @@
 #pragma once
 // clang-format off
+#include <stdbool.h>
 
+#include "zenoh_commons.h"
+#include "zenoh_opaque.h"
 
 #ifndef __cplusplus
 

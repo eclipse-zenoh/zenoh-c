@@ -3,8 +3,9 @@ zenoh_commons.h:
   - :const
   - :typedefs
   - :multiples
-zenoh_concrete.h:
+zenoh_includes.h:
   - :includes
+zenoh_defines.h:
   - :defines
 zenoh_opaque.h:
   - z_owned_bytes_t!

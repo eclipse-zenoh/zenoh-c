@@ -93,7 +93,10 @@ fn create_generics_header(path_in: &str, path_out: &str) {
         .write_all(
             "#pragma once
 // clang-format off
+#include <stdbool.h>
 
+#include \"zenoh_commons.h\"
+#include \"zenoh_opaque.h\"
 "
             .as_bytes(),
         )
