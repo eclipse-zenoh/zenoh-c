@@ -14,6 +14,7 @@
 
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     handlers::Callback,
     liveliness::{LivelinessSubscriberBuilder, LivelinessToken},
@@ -35,22 +36,22 @@ decl_c_type!(
 );
 
 /// @brief Constructs liveliness token in its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_liveliness_token_null(
+#[prebindgen]
+pub fn z_internal_liveliness_token_null(
     this_: &mut MaybeUninit<z_owned_liveliness_token_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_liveliness_token_check(this_: &z_owned_liveliness_token_t) -> bool {
+#[prebindgen]
+pub fn z_internal_liveliness_token_check(this_: &z_owned_liveliness_token_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_liveliness_token_drop(this_: &mut z_moved_liveliness_token_t) {
+#[prebindgen]
+pub fn z_liveliness_token_drop(this_: &mut z_moved_liveliness_token_t) {
     let _ = this_.take_rust_type();
 }
 
@@ -61,17 +62,17 @@ pub struct z_liveliness_token_options_t {
 }
 
 /// @brief Constructs default value for `z_liveliness_token_options_t`.
-#[no_mangle]
-pub extern "C" fn z_liveliness_token_options_default(
+#[prebindgen]
+pub fn z_liveliness_token_options_default(
     this: &mut MaybeUninit<z_liveliness_token_options_t>,
 ) {
     this.write(z_liveliness_token_options_t { _dummy: 0 });
 }
 
 /// @brief Borrows token.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_liveliness_token_loan(
+pub unsafe fn z_liveliness_token_loan(
     this: &z_owned_liveliness_token_t,
 ) -> &z_loaned_liveliness_token_t {
     this.as_rust_type_ref()
@@ -89,8 +90,8 @@ pub unsafe extern "C" fn z_liveliness_token_loan(
 /// @param token: An uninitialized memory location where liveliness token will be constructed.
 /// @param key_expr: A keyexpr to declare a liveliess token for.
 /// @param _options: Liveliness token declaration properties.
-#[no_mangle]
-pub extern "C" fn z_liveliness_declare_token(
+#[prebindgen]
+pub fn z_liveliness_declare_token(
     session: &z_loaned_session_t,
     token: &mut MaybeUninit<z_owned_liveliness_token_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -113,8 +114,8 @@ pub extern "C" fn z_liveliness_declare_token(
 }
 
 /// @brief Destroys a liveliness token, notifying subscribers of its destruction.
-#[no_mangle]
-pub extern "C" fn z_liveliness_undeclare_token(
+#[prebindgen]
+pub fn z_liveliness_undeclare_token(
     this: &mut z_moved_liveliness_token_t,
 ) -> result::z_result_t {
     if let Some(token) = this.take_rust_type() {
@@ -134,8 +135,8 @@ pub struct z_liveliness_subscriber_options_t {
 }
 
 /// @brief Constucts default value for `z_liveliness_declare_subscriber_options_t`.
-#[no_mangle]
-pub extern "C" fn z_liveliness_subscriber_options_default(
+#[prebindgen]
+pub fn z_liveliness_subscriber_options_default(
     this: &mut MaybeUninit<z_liveliness_subscriber_options_t>,
 ) {
     this.write(z_liveliness_subscriber_options_t { history: false });
@@ -174,8 +175,8 @@ fn _liveliness_declare_subscriber_inner<'a, 'b>(
 /// @param options: The options to be passed to the liveliness subscriber declaration.
 ///
 /// @return 0 in case of success, negative error values otherwise.
-#[no_mangle]
-pub extern "C" fn z_liveliness_declare_subscriber(
+#[prebindgen]
+pub fn z_liveliness_declare_subscriber(
     session: &z_loaned_session_t,
     subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -205,8 +206,8 @@ pub extern "C" fn z_liveliness_declare_subscriber(
 /// @param options: The options to be passed to the liveliness subscriber declaration.
 ///
 /// @return 0 in case of success, negative error values otherwise.
-#[no_mangle]
-pub extern "C" fn z_liveliness_declare_background_subscriber(
+#[prebindgen]
+pub fn z_liveliness_declare_background_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
@@ -230,8 +231,8 @@ pub struct z_liveliness_get_options_t {
 }
 
 /// @brief Constructs default value `z_liveliness_get_options_t`.
-#[no_mangle]
-pub extern "C" fn z_liveliness_get_options_default(
+#[prebindgen]
+pub fn z_liveliness_get_options_default(
     this: &mut MaybeUninit<z_liveliness_get_options_t>,
 ) {
     this.write(z_liveliness_get_options_t { timeout_ms: 10000 });
@@ -243,8 +244,8 @@ pub extern "C" fn z_liveliness_get_options_default(
 /// @param key_expr: The key expression to query liveliness tokens for.
 /// @param callback: The callback function that will be called for each received reply.
 /// @param options: Additional options for the liveliness get operation.
-#[no_mangle]
-pub extern "C" fn z_liveliness_get(
+#[prebindgen]
+pub fn z_liveliness_get(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_reply_t,

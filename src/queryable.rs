@@ -13,6 +13,7 @@
 //
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     bytes::Encoding,
     handlers::Callback,
@@ -41,15 +42,15 @@ decl_c_type!(
 );
 
 /// Constructs a queryable in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_queryable_null(this_: &mut MaybeUninit<z_owned_queryable_t>) {
+#[prebindgen]
+pub fn z_internal_queryable_null(this_: &mut MaybeUninit<z_owned_queryable_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 // Borrows Queryable
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryable_t {
+pub unsafe fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryable_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -64,19 +65,19 @@ decl_c_type!(
 );
 
 /// Constructs query in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_query_null(this_: &mut MaybeUninit<z_owned_query_t>) {
+#[prebindgen]
+pub fn z_internal_query_null(this_: &mut MaybeUninit<z_owned_query_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 /// Returns `false` if `this` is in a gravestone state, `true` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_query_check(query: &z_owned_query_t) -> bool {
+#[prebindgen]
+pub fn z_internal_query_check(query: &z_owned_query_t) -> bool {
     query.as_rust_type_ref().is_some()
 }
 /// Borrows the query.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_loan(
+pub unsafe fn z_query_loan(
     this_: &'static z_owned_query_t,
 ) -> &'static z_loaned_query_t {
     this_
@@ -86,9 +87,9 @@ pub unsafe extern "C" fn z_query_loan(
         .as_loaned_c_type_ref()
 }
 /// Mutably borrows the query.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_loan_mut(
+pub unsafe fn z_query_loan_mut(
     this_: &'static mut z_owned_query_t,
 ) -> &'static mut z_loaned_query_t {
     this_
@@ -99,9 +100,9 @@ pub unsafe extern "C" fn z_query_loan_mut(
 }
 
 /// Takes ownership of the mutably borrowed query
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_query_take_from_loaned(
+pub unsafe fn z_query_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_query_t>,
     src: &mut z_loaned_query_t,
 ) {
@@ -112,15 +113,15 @@ pub unsafe extern "C" fn z_query_take_from_loaned(
 }
 
 /// Destroys the query resetting it to its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_query_drop(this_: &mut z_moved_query_t) {
+#[prebindgen]
+pub fn z_query_drop(this_: &mut z_moved_query_t) {
     let _ = this_.take_rust_type();
 }
 /// Constructs a shallow copy of the query, allowing to keep it in an "open" state past the callback's return.
 ///
 /// This operation is infallible, but may return a gravestone value if `query` itself was a gravestone value (which cannot be the case in a callback).
-#[no_mangle]
-pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &z_loaned_query_t) {
+#[prebindgen]
+pub fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &z_loaned_query_t) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this_.as_rust_type_ref().clone()));
 }
@@ -138,9 +139,9 @@ pub struct z_queryable_options_t {
     pub allowed_origin: zc_locality_t,
 }
 /// Constructs the default value for `z_query_reply_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
+pub fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
     this_.write(z_queryable_options_t {
         complete: false,
         #[cfg(feature = "unstable")]
@@ -173,9 +174,9 @@ pub struct z_query_reply_options_t {
 }
 
 /// Constructs the default value for `z_query_reply_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
+pub fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
     this_.write(z_query_reply_options_t {
         encoding: None,
         congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
@@ -198,9 +199,9 @@ pub struct z_query_reply_err_options_t {
 }
 
 /// Constructs the default value for `z_query_reply_err_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_err_options_default(
+pub fn z_query_reply_err_options_default(
     this: &mut MaybeUninit<z_query_reply_err_options_t>,
 ) {
     this.write(z_query_reply_err_options_t { encoding: None });
@@ -229,9 +230,9 @@ pub struct z_query_reply_del_options_t {
 }
 
 /// Constructs the default value for `z_query_reply_del_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_query_reply_del_options_default(
+pub fn z_query_reply_del_options_default(
     this: &mut MaybeUninit<z_query_reply_del_options_t>,
 ) {
     this.write(z_query_reply_del_options_t {
@@ -283,8 +284,8 @@ fn _declare_queryable_inner<'a, 'b>(
 /// @param options: Options for the queryable.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
-#[no_mangle]
-pub extern "C" fn z_declare_queryable(
+#[prebindgen]
+pub fn z_declare_queryable(
     session: &z_loaned_session_t,
     queryable: &mut MaybeUninit<z_owned_queryable_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -315,8 +316,8 @@ pub extern "C" fn z_declare_queryable(
 /// @param options: Options for the queryable.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case )
-#[no_mangle]
-pub extern "C" fn z_declare_background_queryable(
+#[prebindgen]
+pub fn z_declare_background_queryable(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_query_t,
@@ -335,22 +336,22 @@ pub extern "C" fn z_declare_background_queryable(
 /// Undeclares queryable callback and resets it to its gravestone state.
 /// This is equivalent to calling `z_undeclare_queryable()` and discarding its return value.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
+#[prebindgen]
+pub fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
     std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> bool {
+#[prebindgen]
+pub fn z_internal_queryable_check(this_: &z_owned_queryable_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the queryable.
-#[no_mangle]
-pub extern "C" fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_global_id_t {
+#[prebindgen]
+pub fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_global_id_t {
     queryable.as_rust_type_ref().id().into_c_type()
 }
 
@@ -368,8 +369,8 @@ pub extern "C" fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_g
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_query_reply(
+#[prebindgen]
+pub fn z_query_reply(
     this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_moved_bytes_t,
@@ -418,8 +419,8 @@ pub extern "C" fn z_query_reply(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_query_reply_err(
+#[prebindgen]
+pub unsafe fn z_query_reply_err(
     this: &z_loaned_query_t,
     payload: &mut z_moved_bytes_t,
     options: Option<&mut z_query_reply_err_options_t>,
@@ -453,8 +454,8 @@ pub unsafe extern "C" fn z_query_reply_err(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_query_reply_del(
+#[prebindgen]
+pub unsafe fn z_query_reply_del(
     this: &z_loaned_query_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_query_reply_del_options_t>,
@@ -488,15 +489,15 @@ pub unsafe extern "C" fn z_query_reply_del(
 
 /// Gets query key expression.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_query_keyexpr(this_: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
+#[prebindgen]
+pub fn z_query_keyexpr(this_: &z_loaned_query_t) -> &z_loaned_keyexpr_t {
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_query_parameters(
+#[prebindgen]
+pub unsafe fn z_query_parameters(
     this: &z_loaned_query_t,
     parameters: &mut MaybeUninit<z_view_string_t>,
 ) {
@@ -508,8 +509,8 @@ pub unsafe extern "C" fn z_query_parameters(
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
 ///
 /// Returns NULL if query does not contain a payload.
-#[no_mangle]
-pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+#[prebindgen]
+pub fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
     this_
         .as_rust_type_ref()
         .payload()
@@ -519,8 +520,8 @@ pub extern "C" fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_
 /// Gets mutable query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload</a>.
 ///
 /// Returns NULL if query does not contain a payload.
-#[no_mangle]
-pub extern "C" fn z_query_payload_mut(
+#[prebindgen]
+pub fn z_query_payload_mut(
     this_: &mut z_loaned_query_t,
 ) -> Option<&mut z_loaned_bytes_t> {
     this_
@@ -532,8 +533,8 @@ pub extern "C" fn z_query_payload_mut(
 /// Gets query <a href="https://github.com/eclipse-zenoh/roadmap/blob/main/rfcs/ALL/Query%20Payload.md">payload encoding</a>.
 ///
 /// Returns NULL if query does not contain an encoding.
-#[no_mangle]
-pub extern "C" fn z_query_encoding(this_: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
+#[prebindgen]
+pub fn z_query_encoding(this_: &z_loaned_query_t) -> Option<&z_loaned_encoding_t> {
     this_
         .as_rust_type_ref()
         .encoding()
@@ -543,8 +544,8 @@ pub extern "C" fn z_query_encoding(this_: &z_loaned_query_t) -> Option<&z_loaned
 /// Gets query attachment.
 ///
 /// Returns NULL if query does not contain an attachment.
-#[no_mangle]
-pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
+#[prebindgen]
+pub fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
     this_
         .as_rust_type_ref()
         .attachment()
@@ -554,8 +555,8 @@ pub extern "C" fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loan
 /// Gets mutable query attachment.
 ///
 /// Returns NULL if query does not contain an attachment.
-#[no_mangle]
-pub extern "C" fn z_query_attachment_mut(
+#[prebindgen]
+pub fn z_query_attachment_mut(
     this_: &mut z_loaned_query_t,
 ) -> Option<&mut z_loaned_bytes_t> {
     this_
@@ -566,8 +567,8 @@ pub extern "C" fn z_query_attachment_mut(
 
 /// Undeclares a `z_owned_queryable_t`.
 /// Returns 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
     if let Some(qable) = this_.take_rust_type() {
         if let Err(e) = qable.undeclare().wait() {
             tracing::error!("{}", e);
@@ -578,8 +579,8 @@ pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> resu
 }
 
 /// @brief Returns the key expression of the queryable.
-#[no_mangle]
-pub extern "C" fn z_queryable_keyexpr(queryable: &z_loaned_queryable_t) -> &z_loaned_keyexpr_t {
+#[prebindgen]
+pub fn z_queryable_keyexpr(queryable: &z_loaned_queryable_t) -> &z_loaned_keyexpr_t {
     queryable
         .as_rust_type_ref()
         .key_expr()

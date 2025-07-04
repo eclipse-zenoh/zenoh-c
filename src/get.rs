@@ -19,6 +19,7 @@ use std::{
 };
 
 use libc::c_char;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
@@ -55,29 +56,29 @@ impl Gravestone for ReplyError {
 }
 
 /// Constructs an empty `z_owned_reply_err_t`.
-#[no_mangle]
-pub extern "C" fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
+#[prebindgen]
+pub fn z_internal_reply_err_null(this_: &mut MaybeUninit<z_owned_reply_err_t>) {
     this_
         .as_rust_type_mut_uninit()
         .write(ReplyError::gravestone());
 }
 
 /// Returns ``true`` if reply error is in non-default state, ``false`` otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
+pub fn z_internal_reply_err_check(this_: &'static z_owned_reply_err_t) -> bool {
     !this_.as_rust_type_ref().is_gravestone()
 }
 
 /// Returns reply error payload.
-#[no_mangle]
-pub extern "C" fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
+#[prebindgen]
+pub fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
     this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 
 /// Returns mutable reply error payload.
-#[no_mangle]
-pub extern "C" fn z_reply_err_payload_mut(
+#[prebindgen]
+pub fn z_reply_err_payload_mut(
     this_: &mut z_loaned_reply_err_t,
 ) -> &mut z_loaned_bytes_t {
     this_
@@ -87,28 +88,28 @@ pub extern "C" fn z_reply_err_payload_mut(
 }
 
 /// Returns reply error encoding.
-#[no_mangle]
-pub extern "C" fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
+#[prebindgen]
+pub fn z_reply_err_encoding(this_: &z_loaned_reply_err_t) -> &z_loaned_encoding_t {
     this_.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 
 /// Borrows reply error.
-#[no_mangle]
-pub extern "C" fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
+#[prebindgen]
+pub fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Mutably borrows reply error.
-#[no_mangle]
-pub extern "C" fn z_reply_err_loan_mut(
+#[prebindgen]
+pub fn z_reply_err_loan_mut(
     this_: &mut z_owned_reply_err_t,
 ) -> &mut z_loaned_reply_err_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Frees the memory and resets the reply error it to its default value.
-#[no_mangle]
-pub extern "C" fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
+#[prebindgen]
+pub fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
     let _ = this_.take_rust_type();
 }
 
@@ -119,18 +120,18 @@ decl_c_type!(
 );
 
 /// Returns ``true`` if reply contains a valid response, ``false`` otherwise (in this case it contains a errror value).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_is_ok(this_: &z_loaned_reply_t) -> bool {
+pub unsafe fn z_reply_is_ok(this_: &z_loaned_reply_t) -> bool {
     this_.as_rust_type_ref().result().is_ok()
 }
 
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
 /// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned_sample_t {
+pub unsafe fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned_sample_t {
     match this_.as_rust_type_ref().result() {
         Ok(sample) => sample.as_loaned_c_type_ref() as _,
         Err(_) => null(),
@@ -140,9 +141,9 @@ pub unsafe extern "C" fn z_reply_ok(this_: &z_loaned_reply_t) -> *const z_loaned
 /// Yields the contents of the reply by asserting it indicates a success.
 ///
 /// Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_ok_mut(this_: &mut z_loaned_reply_t) -> *mut z_loaned_sample_t {
+pub unsafe fn z_reply_ok_mut(this_: &mut z_loaned_reply_t) -> *mut z_loaned_sample_t {
     match this_.as_rust_type_mut().result_mut() {
         Ok(sample) => sample.as_loaned_c_type_mut() as _,
         Err(_) => null_mut(),
@@ -152,9 +153,9 @@ pub unsafe extern "C" fn z_reply_ok_mut(this_: &mut z_loaned_reply_t) -> *mut z_
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
+pub unsafe fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err_t {
     match this_.as_rust_type_ref().result() {
         Ok(_) => null(),
         Err(v) => v.as_loaned_c_type_ref(),
@@ -164,9 +165,9 @@ pub unsafe extern "C" fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loane
 /// Yields the contents of the reply by asserting it indicates a failure.
 ///
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_err_mut(
+pub unsafe fn z_reply_err_mut(
     this_: &mut z_loaned_reply_t,
 ) -> *mut z_loaned_reply_err_t {
     match this_.as_rust_type_mut().result_mut() {
@@ -179,9 +180,9 @@ pub unsafe extern "C" fn z_reply_err_mut(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets the id of the zenoh instance that answered this Reply.
 /// @return `true` if id is present.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_replier_id(
+pub unsafe fn z_reply_replier_id(
     this: &z_loaned_reply_t,
     out_id: &mut MaybeUninit<z_id_t>,
 ) -> bool {
@@ -195,13 +196,13 @@ pub unsafe extern "C" fn z_reply_replier_id(
 }
 
 /// Constructs the reply in its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
+#[prebindgen]
+pub fn z_internal_reply_null(this_: &mut MaybeUninit<z_owned_reply_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 /// Constructs an owned shallow copy of reply in provided uninitialized memory location.
-#[no_mangle]
-pub extern "C" fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this_: &z_loaned_reply_t) {
+#[prebindgen]
+pub fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this_: &z_loaned_reply_t) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this_.as_rust_type_ref().clone()));
 }
@@ -245,8 +246,8 @@ pub struct z_get_options_t {
 }
 
 /// Constructs default `z_get_options_t`
-#[no_mangle]
-pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
+#[prebindgen]
+pub fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
     this_.write(z_get_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
@@ -277,8 +278,8 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
 ///
 /// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_get(
+#[prebindgen]
+pub unsafe fn z_get(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,
@@ -349,21 +350,21 @@ pub unsafe extern "C" fn z_get(
 }
 
 /// Frees reply, resetting it to its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_reply_drop(this_: &mut z_moved_reply_t) {
+#[prebindgen]
+pub fn z_reply_drop(this_: &mut z_moved_reply_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if `reply` is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_reply_check(this_: &z_owned_reply_t) -> bool {
+#[prebindgen]
+pub fn z_internal_reply_check(this_: &z_owned_reply_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows reply.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
+pub unsafe fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -372,9 +373,9 @@ pub unsafe extern "C" fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_repl
 }
 
 /// Mutably borrows reply.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
+pub unsafe fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z_loaned_reply_t {
     this_
         .as_rust_type_mut()
         .as_mut()
@@ -383,9 +384,9 @@ pub unsafe extern "C" fn z_reply_loan_mut(this_: &mut z_owned_reply_t) -> &mut z
 }
 
 /// Takes ownership of the mutably borrowed reply
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_reply_take_from_loaned(
+pub unsafe fn z_reply_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_reply_t>,
     src: &mut z_loaned_reply_t,
 ) {
@@ -420,8 +421,8 @@ impl From<z_query_consolidation_t> for QueryConsolidation {
 }
 
 /// Creates a default `z_query_consolidation_t` (consolidation mode AUTO).
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
+#[prebindgen]
+pub fn z_query_consolidation_default() -> z_query_consolidation_t {
     QueryConsolidation::default().into()
 }
 
@@ -430,16 +431,16 @@ pub extern "C" fn z_query_consolidation_default() -> z_query_consolidation_t {
 /// A query consolidation strategy will automatically be selected depending the query selector.
 /// If the selector contains time range properties, no consolidation is performed.
 /// Otherwise the `z_query_consolidation_latest` strategy is used.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_auto() -> z_query_consolidation_t {
+#[prebindgen]
+pub fn z_query_consolidation_auto() -> z_query_consolidation_t {
     QueryConsolidation::AUTO.into()
 }
 
 /// Latest consolidation.
 ///
 /// This strategy optimizes bandwidth on all links in the system but will provide a very poor latency.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
+#[prebindgen]
+pub fn z_query_consolidation_latest() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Latest).into()
 }
 
@@ -447,22 +448,22 @@ pub extern "C" fn z_query_consolidation_latest() -> z_query_consolidation_t {
 ///
 /// This strategy offers the best latency. Replies are directly transmitted to the application when received
 /// without needing to wait for all replies. This mode does not guarantee that there will be no duplicates.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
+#[prebindgen]
+pub fn z_query_consolidation_monotonic() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::Monotonic).into()
 }
 
 /// No consolidation.
 ///
 /// This strategy is useful when querying timeseries data bases or when using quorums.
-#[no_mangle]
-pub extern "C" fn z_query_consolidation_none() -> z_query_consolidation_t {
+#[prebindgen]
+pub fn z_query_consolidation_none() -> z_query_consolidation_t {
     QueryConsolidation::from(ConsolidationMode::None).into()
 }
 
 /// Constructs a copy of the reply error message.
-#[no_mangle]
-extern "C" fn z_reply_err_clone(
+#[prebindgen]
+pub fn z_reply_err_clone(
     dst: &mut MaybeUninit<z_owned_reply_err_t>,
     this: &z_loaned_reply_err_t,
 ) {

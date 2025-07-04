@@ -49,8 +49,8 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Alloc Layout for SHM Provider.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_new(
+#[prebindgen]
+pub fn z_alloc_layout_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
@@ -61,23 +61,23 @@ pub extern "C" fn z_alloc_layout_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Alloc Layout in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_alloc_layout_null(this_: &mut MaybeUninit<z_owned_alloc_layout_t>) {
+#[prebindgen]
+pub fn z_internal_alloc_layout_null(this_: &mut MaybeUninit<z_owned_alloc_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
+#[prebindgen]
+pub fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows Alloc Layout.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_alloc_layout_loan(
+pub unsafe fn z_alloc_layout_loan(
     this: &z_owned_alloc_layout_t,
 ) -> &z_loaned_alloc_layout_t {
     this.as_rust_type_ref()
@@ -88,15 +88,15 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Alloc Layout.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
+#[prebindgen]
+pub fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation without any additional actions.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc(
+#[prebindgen]
+pub fn z_alloc_layout_alloc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
@@ -105,8 +105,8 @@ pub extern "C" fn z_alloc_layout_alloc(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection if needed.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc(
+#[prebindgen]
+pub fn z_alloc_layout_alloc_gc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
@@ -115,8 +115,8 @@ pub extern "C" fn z_alloc_layout_alloc_gc(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation if needed.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc_defrag(
+#[prebindgen]
+pub fn z_alloc_layout_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
@@ -125,8 +125,8 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc_defrag_dealloc(
+#[prebindgen]
+pub fn z_alloc_layout_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
@@ -135,8 +135,8 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag_dealloc(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc_defrag_blocking(
+#[prebindgen]
+pub fn z_alloc_layout_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_alloc_layout_t,
 ) {
@@ -146,8 +146,8 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag_blocking(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
 /// if used with non-threadsafe SHM Provider.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_threadsafe_alloc_gc_defrag_async(
+#[prebindgen]
+pub fn z_alloc_layout_threadsafe_alloc_gc_defrag_async(
     out_result: &'static mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &'static z_loaned_alloc_layout_t,
     result_context: zc_threadsafe_context_t,

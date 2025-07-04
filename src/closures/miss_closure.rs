@@ -76,9 +76,9 @@ impl Drop for ze_owned_closure_miss_t {
 }
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a null value of 'ze_owned_closure_miss_t' type
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_internal_closure_miss_null(
+pub unsafe fn ze_internal_closure_miss_null(
     this: *mut MaybeUninit<ze_owned_closure_miss_t>,
 ) {
     (*this).write(ze_owned_closure_miss_t::default());
@@ -86,15 +86,15 @@ pub unsafe extern "C" fn ze_internal_closure_miss_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn ze_internal_closure_miss_check(this: &ze_owned_closure_miss_t) -> bool {
+#[prebindgen]
+pub fn ze_internal_closure_miss_check(this: &ze_owned_closure_miss_t) -> bool {
     !this.is_empty()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn ze_closure_miss_call(
+#[prebindgen]
+pub fn ze_closure_miss_call(
     closure: &ze_loaned_closure_miss_t,
     mathing_status: &ze_miss_t,
 ) {
@@ -109,8 +109,8 @@ pub extern "C" fn ze_closure_miss_call(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn ze_closure_miss_drop(closure_: &mut ze_moved_closure_miss_t) {
+#[prebindgen]
+pub fn ze_closure_miss_drop(closure_: &mut ze_moved_closure_miss_t) {
     let _ = closure_.take_rust_type();
 }
 
@@ -134,8 +134,8 @@ impl<F: Fn(&ze_miss_t)> From<F> for ze_owned_closure_miss_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows closure.
-#[no_mangle]
-pub extern "C" fn ze_closure_miss_loan(
+#[prebindgen]
+pub fn ze_closure_miss_loan(
     closure: &ze_owned_closure_miss_t,
 ) -> &ze_loaned_closure_miss_t {
     closure.as_loaned_c_type_ref()
@@ -155,8 +155,8 @@ pub extern "C" fn ze_closure_miss_loan(
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
-#[no_mangle]
-pub extern "C" fn ze_closure_miss(
+#[prebindgen]
+pub fn ze_closure_miss(
     this: &mut MaybeUninit<ze_owned_closure_miss_t>,
     call: Option<extern "C" fn(matching_status: &ze_miss_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(context: *mut c_void)>,

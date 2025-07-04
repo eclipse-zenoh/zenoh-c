@@ -14,6 +14,7 @@
 
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{Session, Wait};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
@@ -32,9 +33,9 @@ decl_c_type!(
 );
 
 /// Borrows session.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
+pub unsafe fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -43,9 +44,9 @@ pub unsafe extern "C" fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_
 }
 
 // Mutably borrows session.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_session_loan_mut(
+pub unsafe fn z_session_loan_mut(
     this_: &mut z_owned_session_t,
 ) -> &mut z_loaned_session_t {
     this_
@@ -56,9 +57,9 @@ pub unsafe extern "C" fn z_session_loan_mut(
 }
 
 /// Constructs a Zenoh session in its gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_session_t>) {
+pub fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_session_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -69,8 +70,8 @@ pub struct z_open_options_t {
 }
 
 /// Constructs the default value for `z_open_options_t`.
-#[no_mangle]
-pub extern "C" fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
+#[prebindgen]
+pub fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
     this_.write(z_open_options_t { _dummy: 0 });
 }
 
@@ -78,8 +79,8 @@ pub extern "C" fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_open(
+#[prebindgen]
+pub fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
     _options: Option<&z_open_options_t>,
@@ -109,8 +110,8 @@ pub extern "C" fn z_open(
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_open_with_custom_shm_clients(
+#[prebindgen]
+pub fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
@@ -139,8 +140,8 @@ pub extern "C" fn z_open_with_custom_shm_clients(
 
 /// Returns ``true`` if `session` is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
+#[prebindgen]
+pub fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -164,9 +165,9 @@ pub struct z_close_options_t {
 }
 
 /// Constructs the default value for `z_close_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(unused)]
-pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
+pub fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
     this_.write(z_close_options_t {
         #[cfg(feature = "unstable")]
         internal_timeout_ms: 0,
@@ -181,8 +182,8 @@ pub extern "C" fn z_close_options_default(this_: &mut MaybeUninit<z_close_option
 /// After this operation, all calls for network operations for entites declared on this session will return a error.
 ///
 /// @return `0` in case of success, a negative value if an error occured while closing the session.
-#[no_mangle]
-pub extern "C" fn z_close(
+#[prebindgen]
+pub fn z_close(
     session: &mut z_loaned_session_t,
     #[allow(unused)] options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
@@ -216,14 +217,14 @@ pub extern "C" fn z_close(
 /// Checks if zenoh session is closed.
 ///
 /// @return `true` if session is closed, `false` otherwise.
-#[no_mangle]
-pub extern "C" fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
+#[prebindgen]
+pub fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
     let s = session.as_rust_type_ref();
     s.is_closed()
 }
 
 /// Closes and invalidates the session.
-#[no_mangle]
-pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
+#[prebindgen]
+pub fn z_session_drop(this_: &mut z_moved_session_t) {
     let _ = this_.take_rust_type();
 }

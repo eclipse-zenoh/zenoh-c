@@ -18,6 +18,7 @@ pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!(
 use std::{cmp::min, slice};
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::transmute::{LoanedCTypeRef, TakeRustType};
 #[macro_use]
@@ -122,8 +123,8 @@ fn alternative_rusty_entry_point() {
 ///
 /// Note that if the environment variable is not set, then logging will not be enabled.
 /// See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
-#[no_mangle]
-pub extern "C" fn zc_try_init_log_from_env() {
+#[prebindgen]
+pub fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
 }
 
@@ -134,9 +135,9 @@ pub extern "C" fn zc_try_init_log_from_env() {
 /// See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
 ///
 /// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_init_log_from_env_or(
+pub unsafe fn zc_init_log_from_env_or(
     fallback_filter: *const libc::c_char,
 ) -> result::z_result_t {
     match std::ffi::CStr::from_ptr(fallback_filter).to_str() {
@@ -153,8 +154,8 @@ pub unsafe extern "C" fn zc_init_log_from_env_or(
 /// @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
 /// Messages with lower severity levels will be ignored.
 /// @param callback: A closure that will be called with each log message severity level and content.
-#[no_mangle]
-pub extern "C" fn zc_init_log_with_callback(
+#[prebindgen]
+pub fn zc_init_log_with_callback(
     min_severity: zc_log_severity_t,
     callback: &mut zc_moved_closure_log_t,
 ) {
@@ -228,7 +229,7 @@ impl CopyableToCArray for &str {
 /// All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
 /// None of Zenoh functionality can be used after this call.
 /// Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
-#[no_mangle]
-pub extern "C" fn zc_stop_z_runtime() {
+#[prebindgen]
+pub fn zc_stop_z_runtime() {
     let _z = zenoh_runtime::ZRuntimePoolGuard;
 }

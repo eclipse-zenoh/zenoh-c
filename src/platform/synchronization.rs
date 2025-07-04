@@ -5,6 +5,7 @@ use std::{
 };
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 pub use crate::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
@@ -19,8 +20,8 @@ decl_c_type_inequal!(
 
 /// Constructs a mutex.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_mutex_init(this_: &mut MaybeUninit<z_owned_mutex_t>) -> result::z_result_t {
+#[prebindgen]
+pub fn z_mutex_init(this_: &mut MaybeUninit<z_owned_mutex_t>) -> result::z_result_t {
     this_.as_rust_type_mut_uninit().write(Some((
         Mutex::<()>::new(()),
         None::<MutexGuard<'static, ()>>,
@@ -29,27 +30,27 @@ pub extern "C" fn z_mutex_init(this_: &mut MaybeUninit<z_owned_mutex_t>) -> resu
 }
 
 /// Drops mutex and resets it to its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_mutex_drop(this_: &mut z_moved_mutex_t) {
+#[prebindgen]
+pub fn z_mutex_drop(this_: &mut z_moved_mutex_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if mutex is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_mutex_check(this_: &z_owned_mutex_t) -> bool {
+#[prebindgen]
+pub fn z_internal_mutex_check(this_: &z_owned_mutex_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs mutex in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_mutex_null(this_: &mut MaybeUninit<z_owned_mutex_t>) {
+#[prebindgen]
+pub fn z_internal_mutex_null(this_: &mut MaybeUninit<z_owned_mutex_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Mutably borrows mutex.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
+pub unsafe fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z_loaned_mutex_t {
     this_
         .as_rust_type_mut()
         .as_mut()
@@ -59,8 +60,8 @@ pub unsafe extern "C" fn z_mutex_loan_mut(this_: &mut z_owned_mutex_t) -> &mut z
 
 /// Locks mutex. If mutex is already locked, blocks the thread until it aquires the lock.
 /// @return 0 in case of success, negative error code in case of failure.
-#[no_mangle]
-pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::z_result_t {
     let this = this_.as_rust_type_mut();
 
     match this.0.lock() {
@@ -77,8 +78,8 @@ pub extern "C" fn z_mutex_lock(this_: &'static mut z_loaned_mutex_t) -> result::
 
 /// Unlocks previously locked mutex. If mutex was not locked by the current thread, the behaviour is undefined.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_result_t {
     let this = this_.as_rust_type_mut();
     if this.1.is_none() {
         return result::Z_EINVAL_MUTEX;
@@ -90,9 +91,9 @@ pub extern "C" fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_resu
 
 /// Tries to lock mutex. If mutex is already locked, return immediately.
 /// @return 0 in case of success, negative value if failed to aquire the lock.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_mutex_try_lock(
+pub unsafe fn z_mutex_try_lock(
     this: &'static mut z_loaned_mutex_t,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut();
@@ -115,33 +116,33 @@ decl_c_type_inequal!(
 );
 
 /// Constructs conditional variable.
-#[no_mangle]
-pub extern "C" fn z_condvar_init(this_: &mut MaybeUninit<z_owned_condvar_t>) {
+#[prebindgen]
+pub fn z_condvar_init(this_: &mut MaybeUninit<z_owned_condvar_t>) {
     this_.as_rust_type_mut_uninit().write(Some(Condvar::new()));
 }
 
 /// Constructs conditional variable in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_condvar_null(this_: &mut MaybeUninit<z_owned_condvar_t>) {
+#[prebindgen]
+pub fn z_internal_condvar_null(this_: &mut MaybeUninit<z_owned_condvar_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Drops conditional variable.
-#[no_mangle]
-pub extern "C" fn z_condvar_drop(this_: &mut z_moved_condvar_t) {
+#[prebindgen]
+pub fn z_condvar_drop(this_: &mut z_moved_condvar_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if conditional variable is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_condvar_check(this_: &z_owned_condvar_t) -> bool {
+#[prebindgen]
+pub fn z_internal_condvar_check(this_: &z_owned_condvar_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows conditional variable.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_condvar_t {
+pub unsafe fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_condvar_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -150,9 +151,9 @@ pub unsafe extern "C" fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_
 }
 
 /// Mutably borrows conditional variable.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_loan_mut(
+pub unsafe fn z_condvar_loan_mut(
     this: &mut z_owned_condvar_t,
 ) -> &mut z_loaned_condvar_t {
     this.as_rust_type_mut()
@@ -163,8 +164,8 @@ pub unsafe extern "C" fn z_condvar_loan_mut(
 
 /// Wakes up one blocked thread waiting on this condiitonal variable.
 /// @return 0 in case of success, negative error code in case of failure.
-#[no_mangle]
-pub extern "C" fn z_condvar_signal(this_: &z_loaned_condvar_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_condvar_signal(this_: &z_loaned_condvar_t) -> result::z_result_t {
     let this = this_.as_rust_type_ref();
     this.notify_one();
     result::Z_OK
@@ -175,9 +176,9 @@ pub extern "C" fn z_condvar_signal(this_: &z_loaned_condvar_t) -> result::z_resu
 /// The function atomically unlocks the guard mutex `m` and blocks the current thread.
 /// When the function returns the lock will have been re-aquired again.
 /// Note: The function may be subject to spurious wakeups.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_condvar_wait(
+pub unsafe fn z_condvar_wait(
     this: &z_loaned_condvar_t,
     m: &mut z_loaned_mutex_t,
 ) -> result::z_result_t {
@@ -206,20 +207,20 @@ decl_c_type!(
 pub struct z_task_attr_t(usize);
 
 /// Constructs task in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_task_null(this_: &mut MaybeUninit<z_owned_task_t>) {
+#[prebindgen]
+pub fn z_internal_task_null(this_: &mut MaybeUninit<z_owned_task_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Detaches the task and releases all allocated resources.
-#[no_mangle]
-pub extern "C" fn z_task_detach(this_: &mut z_moved_task_t) {
+#[prebindgen]
+pub fn z_task_detach(this_: &mut z_moved_task_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Joins the task and releases all allocated resources
-#[no_mangle]
-pub extern "C" fn z_task_join(this_: &mut z_moved_task_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_task_join(this_: &mut z_moved_task_t) -> result::z_result_t {
     let Some(task) = this_.take_rust_type() else {
         return result::Z_OK;
     };
@@ -230,14 +231,14 @@ pub extern "C" fn z_task_join(this_: &mut z_moved_task_t) -> result::z_result_t 
 }
 
 /// Drop the task. Same as `z_task_detach`. Use `z_task_join` to wait for the task completion.
-#[no_mangle]
-pub extern "C" fn z_task_drop(this_: &mut z_moved_task_t) {
+#[prebindgen]
+pub fn z_task_drop(this_: &mut z_moved_task_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if task is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_task_check(this_: &z_owned_task_t) -> bool {
+#[prebindgen]
+pub fn z_internal_task_check(this_: &z_owned_task_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -260,9 +261,9 @@ unsafe impl Send for FunArgPair {}
 /// @param _attr: Attributes of the task (currently unused).
 /// @param fun: Function to be executed by the task.
 /// @param arg: Argument that will be passed to the function `fun`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_task_init(
+pub unsafe fn z_task_init(
     this: &mut MaybeUninit<z_owned_task_t>,
     _attr: *const z_task_attr_t,
     fun: unsafe extern "C" fn(arg: *mut c_void) -> *mut c_void,

@@ -13,6 +13,7 @@
 //
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     qos::{CongestionControl, Priority},
     session::SessionClosedError,
@@ -62,9 +63,9 @@ pub struct z_put_options_t {
 }
 
 /// Constructs the default value for `z_put_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
+pub fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
     this_.write(z_put_options_t {
         encoding: None,
         congestion_control: CongestionControl::DEFAULT_PUSH.into(),
@@ -89,9 +90,9 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
 /// @param options: The put options (all owned values will be consumed upon function return).
 ///
 /// @return 0 in case of success, negative error values in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put(
+pub fn z_put(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_moved_bytes_t,
@@ -160,9 +161,9 @@ pub struct z_delete_options_t {
 }
 
 /// Constructs the default value for `z_delete_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
+pub unsafe fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
     this_.write(z_delete_options_t {
         congestion_control: CongestionControl::DEFAULT_PUSH.into(),
         priority: Priority::default().into(),
@@ -182,9 +183,9 @@ pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_dele
 /// @param options: The delete options.
 ///
 /// @return 0 in case of success, negative values in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_delete(
+pub fn z_delete(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,

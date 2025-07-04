@@ -70,8 +70,8 @@ pub struct z_querier_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `z_querier_options_t`.
-#[no_mangle]
-pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_options_t>) {
+#[prebindgen]
+pub fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_options_t>) {
     this_.write(z_querier_options_t {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
@@ -102,9 +102,9 @@ decl_c_type!(
 /// @param options: Additional options for the querier.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_declare_querier(
+pub fn z_declare_querier(
     session: &z_loaned_session_t,
     querier: &mut MaybeUninit<z_owned_querier_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -146,25 +146,25 @@ pub extern "C" fn z_declare_querier(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a querier in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_querier_null(this_: &mut MaybeUninit<z_owned_querier_t>) {
+pub fn z_internal_querier_null(this_: &mut MaybeUninit<z_owned_querier_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if querier is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_internal_querier_check(this_: &z_owned_querier_t) -> bool {
+#[prebindgen]
+pub fn z_internal_querier_check(this_: &z_owned_querier_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows querier.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_querier_loan(this_: &z_owned_querier_t) -> &z_loaned_querier_t {
+pub unsafe fn z_querier_loan(this_: &z_owned_querier_t) -> &z_loaned_querier_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -174,9 +174,9 @@ pub unsafe extern "C" fn z_querier_loan(this_: &z_owned_querier_t) -> &z_loaned_
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Mutably borrows querier.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_querier_loan_mut(
+pub unsafe fn z_querier_loan_mut(
     this: &mut z_owned_querier_t,
 ) -> &mut z_loaned_querier_t {
     this.as_rust_type_mut()
@@ -204,9 +204,9 @@ pub struct z_querier_get_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `z_querier_get_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_querier_get_options_default(this: &mut MaybeUninit<z_querier_get_options_t>) {
+pub fn z_querier_get_options_default(this: &mut MaybeUninit<z_querier_get_options_t>) {
     this.write(z_querier_get_options_t {
         payload: None,
         encoding: None,
@@ -227,8 +227,8 @@ pub extern "C" fn z_querier_get_options_default(this: &mut MaybeUninit<z_querier
 ///
 /// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_querier_get(
+#[prebindgen]
+pub unsafe fn z_querier_get(
     querier: &z_loaned_querier_t,
     parameters: *const c_char,
     callback: &mut z_moved_closure_reply_t,
@@ -280,15 +280,15 @@ pub unsafe extern "C" fn z_querier_get(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the querier.
-#[no_mangle]
-pub extern "C" fn z_querier_id(querier: &z_loaned_querier_t) -> z_entity_global_id_t {
+#[prebindgen]
+pub fn z_querier_id(querier: &z_loaned_querier_t) -> z_entity_global_id_t {
     querier.as_rust_type_ref().id().into_c_type()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the key expression of the querier.
-#[no_mangle]
-pub extern "C" fn z_querier_keyexpr(querier: &z_loaned_querier_t) -> &z_loaned_keyexpr_t {
+#[prebindgen]
+pub fn z_querier_keyexpr(querier: &z_loaned_querier_t) -> &z_loaned_keyexpr_t {
     querier.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
@@ -319,8 +319,8 @@ fn _querier_matching_listener_declare_inner<'a>(
 /// @param callback: A closure that will be called every time the matching status of the querier changes (If last queryable disconnects or when the first queryable connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_querier_declare_matching_listener(
+#[prebindgen]
+pub fn z_querier_declare_matching_listener(
     querier: &'static z_loaned_querier_t,
     matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
     callback: &mut z_moved_closure_matching_status_t,
@@ -349,8 +349,8 @@ pub extern "C" fn z_querier_declare_matching_listener(
 /// @param callback: A closure that will be called every time the matching status of the querier changes (If last queryable disconnects or when the first queryable connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_querier_declare_background_matching_listener(
+#[prebindgen]
+pub fn z_querier_declare_background_matching_listener(
     querier: &'static z_loaned_querier_t,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
@@ -369,9 +369,9 @@ pub extern "C" fn z_querier_declare_background_matching_listener(
 /// @brief Gets querier matching status - i.e. if there are any queryables matching its key expression and target.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_querier_get_matching_status(
+pub fn z_querier_get_matching_status(
     this: &'static z_loaned_querier_t,
     matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
@@ -391,9 +391,9 @@ pub extern "C" fn z_querier_get_matching_status(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Frees memory and resets querier to its gravestone state.
 /// This is equivalent to calling `z_undeclare_querier()` and discarding its return value.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
+pub fn z_querier_drop(this: &mut z_moved_querier_t) {
     std::mem::drop(this.take_rust_type())
 }
 
@@ -401,8 +401,8 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 /// @brief Undeclares the given querier.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
     if let Some(q) = this_.take_rust_type() {
         if let Err(e) = q.undeclare().wait() {
             tracing::error!("{}", e);
