@@ -11,8 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
 #![allow(non_camel_case_types)]
+
+pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!();
 
 use std::{cmp::min, slice};
 

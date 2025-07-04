@@ -1639,6 +1639,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "prebindgen"
+version = "0.1.0"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#bc40e59b3095d885a061485db2764dcdc67257bd"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "prebindgen-proc-macro"
+version = "0.1.0"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#bc40e59b3095d885a061485db2764dcdc67257bd"
+dependencies = [
+ "prebindgen",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "syn 2.0.87",
+]
+
+[[package]]
 name = "proc-macro-crate"
 version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3531,6 +3556,8 @@ dependencies = [
  "json5",
  "lazy_static",
  "libc",
+ "prebindgen",
+ "prebindgen-proc-macro",
  "rand 0.9.1",
  "regex",
  "spin 0.9.8",

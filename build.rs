@@ -16,6 +16,7 @@ pub fn get_out_rs_path() -> std::path::PathBuf {
 
 fn main() {
     buildrs::opaque_types_generator::generate_opaque_types();
+    prebindgen::init_prebindgen_out_dir();
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=buildrs");
     println!("cargo:rerun-if-changed=src");
