@@ -96,6 +96,7 @@ pub mod context;
 pub mod shm;
 
 mod serialization;
+pub use serialization::*;
 
 // This is the entry point for zenoh-c
 // When compiling normal Rust executable, it includes rusty entry point `lang_start` that internally

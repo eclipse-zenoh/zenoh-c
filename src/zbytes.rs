@@ -81,7 +81,7 @@ pub fn z_internal_bytes_check(this: &z_owned_bytes_t) -> bool {
 
 /// Borrows data.
 #[prebindgen]
-unsafe extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
+pub fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
@@ -706,7 +706,7 @@ pub unsafe fn z_bytes_writer_finish(
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[prebindgen]
-unsafe extern "C" fn z_bytes_writer_write_all(
+pub unsafe fn z_bytes_writer_write_all(
     this: &mut z_loaned_bytes_writer_t,
     src: *const u8,
     len: usize,

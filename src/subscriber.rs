@@ -68,6 +68,7 @@ pub struct z_subscriber_options_t {
     pub allowed_origin: zc_locality_t,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for z_subscriber_options_t {
     fn default() -> Self {
         Self {

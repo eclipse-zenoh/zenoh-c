@@ -333,7 +333,7 @@ pub fn ze_serialize_slice(
 /// @param len: Length of the buffer.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn ze_serialize_buf(
+pub unsafe fn ze_serialize_buf(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     data: *const u8,
     len: usize,
@@ -727,7 +727,8 @@ pub fn ze_serializer_serialize_slice(
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
 #[prebindgen]
-pub fn ze_serializer_serialize_buf(
+#[allow(clippy::missing_safety_doc)] 
+pub unsafe fn ze_serializer_serialize_buf(
     this: &mut ze_loaned_serializer_t,
     data: *const u8,
     len: usize,
@@ -804,7 +805,8 @@ pub fn ze_serializer_serialize_substr(
 /// The string should be a valid UTF-8.
 /// @return 0 in case of success, negative error code otherwise.
 #[prebindgen]
-pub fn ze_serializer_serialize_str(
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_serializer_serialize_str(
     this: &mut ze_loaned_serializer_t,
     str: *const libc::c_char,
 ) -> z_result_t {
