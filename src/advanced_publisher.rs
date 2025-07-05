@@ -35,6 +35,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_cache_options_t {
     /// Must be set to ``true``, to enable the cache.
@@ -65,7 +66,7 @@ impl Default for ze_advanced_publisher_cache_options_t {
 /// @brief Constructs the default value for `ze_advanced_publisher_cache_options_t`.
 #[prebindgen]
 pub fn ze_advanced_publisher_cache_options_default(
-    this: &mut MaybeUninit<ze_advanced_publisher_cache_options_t>,
+    this: &mut ::std::mem::MaybeUninit<ze_advanced_publisher_cache_options_t>,
 ) {
     this.write(ze_advanced_publisher_cache_options_t::default());
 }
@@ -100,6 +101,7 @@ pub enum ze_advanced_publisher_heartbeat_mode_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for sample miss detection on Advanced Publisher.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_sample_miss_detection_options_t {
     /// Must be set to ``true``, to enable sample miss detection by adding sequence numbers.
@@ -147,6 +149,7 @@ pub fn ze_advanced_publisher_sample_miss_detection_options_default(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_declare_advanced_publisher()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_options_t {
     /// Base publisher options.
@@ -297,6 +300,7 @@ pub unsafe fn ze_advanced_publisher_loan_mut(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_advanced_publisher_put()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_put_options_t {
     /// Base put options.
@@ -351,6 +355,7 @@ pub unsafe fn ze_advanced_publisher_put(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Represents the set of options that can be applied to the delete operation by a previously declared advanced publisher,
 /// whenever issued via `ze_advanced_publisher_delete()`.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_delete_options_t {
     /// Base delete options.

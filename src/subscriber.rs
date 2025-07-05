@@ -55,6 +55,7 @@ pub unsafe fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subsc
 }
 
 /// Options passed to the `z_declare_subscriber()` function.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {

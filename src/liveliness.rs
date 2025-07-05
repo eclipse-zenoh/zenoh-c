@@ -56,6 +56,7 @@ pub fn z_liveliness_token_drop(this_: &mut z_moved_liveliness_token_t) {
 }
 
 /// @brief The options for `z_liveliness_declare_token()`.
+#[prebindgen]
 #[repr(C)]
 pub struct z_liveliness_token_options_t {
     _dummy: u8,
@@ -128,6 +129,7 @@ pub fn z_liveliness_undeclare_token(
 }
 
 /// @brief The options for `z_liveliness_declare_subscriber()`
+#[prebindgen]
 #[repr(C)]
 pub struct z_liveliness_subscriber_options_t {
     /// If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
@@ -224,6 +226,7 @@ pub fn z_liveliness_declare_background_subscriber(
 }
 
 /// @brief The options for `z_liveliness_get()`
+#[prebindgen]
 #[repr(C)]
 pub struct z_liveliness_get_options_t {
     /// The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.

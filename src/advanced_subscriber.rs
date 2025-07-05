@@ -30,6 +30,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for retrievieng historical data for Advanced Subscriber.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_subscriber_history_options_t {
     /// Must be set to ``true``, to enable the history data recovery.
@@ -80,9 +81,10 @@ impl From<&ze_advanced_subscriber_history_options_t> for HistoryConfig {
     }
 }
 
-#[repr(C)]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for detection of the last sample(s) miss by Advanced Subscriber.
+#[prebindgen]
+#[repr(C)]
 pub struct ze_advanced_subscriber_last_sample_miss_detection_options_t {
     /// Must be set to ``true``, to enable the last sample(s) miss detection.
     pub is_enabled: bool,
@@ -115,6 +117,7 @@ pub fn ze_advanced_subscriber_last_sample_miss_detection_options_default(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for recovering lost messages for Advanced Subscriber.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_subscriber_recovery_options_t {
     /// Must be set to ``true``, to enable the lost sample recovery.
@@ -149,6 +152,7 @@ pub fn ze_advanced_subscriber_recovery_options_default(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `ze_declare_advanced_subscriber()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_subscriber_options_t {
     /// Base subscriber options.

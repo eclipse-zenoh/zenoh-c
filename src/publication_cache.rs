@@ -28,6 +28,7 @@ use crate::{zc_locality_default, zc_locality_t};
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Options passed to the `ze_declare_publication_cache()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     /// The suffix used for queryable.

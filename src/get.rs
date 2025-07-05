@@ -208,6 +208,7 @@ pub fn z_reply_clone(dst: &mut MaybeUninit<z_owned_reply_t>, this_: &z_loaned_re
 }
 
 /// Options passed to the `z_get()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct z_get_options_t {
     /// The Queryables that should be target of the query.

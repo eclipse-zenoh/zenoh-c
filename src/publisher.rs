@@ -42,6 +42,7 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{z_matching_status_t, z_moved_source_info_t, z_owned_matching_listener_t};
 /// Options passed to the `z_declare_publisher()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct z_publisher_options_t {
     /// Default encoding for messages put by this publisher.
@@ -186,6 +187,7 @@ pub unsafe fn z_publisher_loan_mut(
 }
 
 /// Options passed to the `z_publisher_put()` function.
+#[prebindgen]
 #[repr(C)]
 #[derive(Default)]
 pub struct z_publisher_put_options_t {
@@ -276,6 +278,7 @@ pub unsafe fn z_publisher_put(
 
 /// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
 /// whenever issued via `z_publisher_delete()`.
+#[prebindgen]
 #[repr(C)]
 #[derive(Default)]
 pub struct z_publisher_delete_options_t {

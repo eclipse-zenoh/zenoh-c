@@ -126,6 +126,7 @@ pub fn z_hello_locators(
 }
 
 /// Options to pass to `z_scout()`.
+#[prebindgen]
 #[derive(Clone)]
 #[repr(C)]
 pub struct z_scout_options_t {

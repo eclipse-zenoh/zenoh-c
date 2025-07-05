@@ -52,6 +52,7 @@ pub fn ze_internal_querying_subscriber_null(
 /// @brief A set of options that can be applied to a querying subscriber,
 /// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
+#[prebindgen]
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {

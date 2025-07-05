@@ -28,7 +28,7 @@ pub fn generate_opaque_types() {
         good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
-        let mut s = "#[prebindgen]\n".to_string();
+        let mut s = "#[prebindgen(\"types\")]\n".to_string();
         if category != Some("owned") {
             s += "#[derive(Copy, Clone)]\n";
         };
@@ -44,7 +44,7 @@ pub struct {type_name} {{
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
             s += format!(
-                "#[prebindgen]
+                "#[prebindgen(\"types\")]
 #[repr(C)]
 #[rustfmt::skip]
 pub struct {moved_type_name} {{

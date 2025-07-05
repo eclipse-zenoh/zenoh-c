@@ -30,6 +30,7 @@ use crate::{
 };
 
 /// Options passed to the `z_put()` function.
+#[prebindgen]
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
@@ -137,6 +138,7 @@ pub fn z_put(
 }
 
 /// Options passed to the `z_delete()` function.
+#[prebindgen]
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_delete_options_t {

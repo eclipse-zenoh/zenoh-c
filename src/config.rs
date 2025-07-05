@@ -23,11 +23,8 @@ use crate::{
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
 };
 
-#[prebindgen]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
-#[prebindgen]
 pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
-#[prebindgen]
 pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
 pub use crate::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};

@@ -127,6 +127,7 @@ pub fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &z_loaned_qu
 }
 
 /// Options passed to the `z_declare_queryable()` function.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_queryable_options_t {
@@ -151,6 +152,7 @@ pub fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t
 
 /// Represents the set of options that can be applied to a query reply,
 /// sent via `z_query_reply()`.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_reply_options_t {
@@ -191,6 +193,7 @@ pub fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_optio
 
 /// Represents the set of options that can be applied to a query reply error,
 /// sent via `z_query_reply_err()`.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_reply_err_options_t {
@@ -209,6 +212,7 @@ pub fn z_query_reply_err_options_default(
 
 /// Represents the set of options that can be applied to a query delete reply,
 /// sent via `z_query_reply_del()`.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_reply_del_options_t {

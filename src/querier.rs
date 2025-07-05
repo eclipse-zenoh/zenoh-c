@@ -42,6 +42,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `z_declare_querier()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct z_querier_options_t {
     /// The Queryables that should be target of the querier queries.
@@ -187,6 +188,7 @@ pub unsafe fn z_querier_loan_mut(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `z_querier_get()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct z_querier_get_options_t {
     /// An optional payload to attach to the query.

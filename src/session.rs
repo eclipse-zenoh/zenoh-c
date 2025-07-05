@@ -11,9 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
-use std::mem::MaybeUninit;
-
 use prebindgen_proc_macro::prebindgen;
 use zenoh::{Session, Wait};
 
@@ -23,7 +20,7 @@ use crate::z_loaned_shm_client_storage_t;
 use crate::zc_owned_concurrent_close_handle_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
-    result,
+    result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t,
 };
@@ -33,7 +30,7 @@ decl_c_type!(
 );
 
 /// Borrows session.
-#[prebindgen]
+#[prebindgen("ready")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
     this_
@@ -44,7 +41,7 @@ pub unsafe fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
 }
 
 // Mutably borrows session.
-#[prebindgen]
+#[prebindgen("ready")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_session_loan_mut(
     this_: &mut z_owned_session_t,
@@ -59,19 +56,20 @@ pub unsafe fn z_session_loan_mut(
 /// Constructs a Zenoh session in its gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_session_t>) {
+pub fn z_internal_session_null(this_: &mut std::mem::MaybeUninit<z_owned_session_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Options passed to the `z_open()` function.
+#[prebindgen("types")]
 #[repr(C)]
 pub struct z_open_options_t {
     _dummy: u8,
 }
 
 /// Constructs the default value for `z_open_options_t`.
-#[prebindgen]
-pub fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
+#[prebindgen("ready")]
+pub fn z_open_options_default(this_: &mut std::mem::MaybeUninit<z_open_options_t>) {
     this_.write(z_open_options_t { _dummy: 0 });
 }
 
@@ -79,12 +77,12 @@ pub fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
-#[prebindgen]
+#[prebindgen("ready")]
 pub fn z_open(
-    this: &mut MaybeUninit<z_owned_session_t>,
+    this: &mut std::mem::MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
     _options: Option<&z_open_options_t>,
-) -> result::z_result_t {
+) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let Some(config) = config.take_rust_type() else {
         tracing::error!("Config not provided");
@@ -115,7 +113,7 @@ pub fn z_open_with_custom_shm_clients(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
-) -> result::z_result_t {
+) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let Some(config) = config.take_rust_type() else {
         tracing::error!("Config not provided");
@@ -146,6 +144,7 @@ pub fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
 }
 
 /// Options passed to the `z_close()` function.
+#[prebindgen("types")]
 #[repr(C)]
 pub struct z_close_options_t {
     #[cfg(feature = "unstable")]
@@ -158,16 +157,16 @@ pub struct z_close_options_t {
     /// An optional uninitialized concurrent close handle. If set, the close operation will be executed
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
-    internal_out_concurrent: Option<&'static mut MaybeUninit<zc_owned_concurrent_close_handle_t>>,
+    internal_out_concurrent: Option<&'static mut std::mem::MaybeUninit<zc_owned_concurrent_close_handle_t>>,
 
     #[cfg(not(feature = "unstable"))]
     _dummy: u8,
 }
 
 /// Constructs the default value for `z_close_options_t`.
-#[prebindgen]
+#[prebindgen("ready")]
 #[allow(unused)]
-pub fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
+pub fn z_close_options_default(this_: &mut std::mem::MaybeUninit<z_close_options_t>) {
     this_.write(z_close_options_t {
         #[cfg(feature = "unstable")]
         internal_timeout_ms: 0,
@@ -182,11 +181,11 @@ pub fn z_close_options_default(this_: &mut MaybeUninit<z_close_options_t>) {
 /// After this operation, all calls for network operations for entites declared on this session will return a error.
 ///
 /// @return `0` in case of success, a negative value if an error occured while closing the session.
-#[prebindgen]
+#[prebindgen("ready")]
 pub fn z_close(
     session: &mut z_loaned_session_t,
     #[allow(unused)] options: Option<&mut z_close_options_t>,
-) -> result::z_result_t {
+) -> z_result_t {
     #[allow(unused_mut)]
     let mut close_builder = session.as_rust_type_mut().close();
 
@@ -217,14 +216,14 @@ pub fn z_close(
 /// Checks if zenoh session is closed.
 ///
 /// @return `true` if session is closed, `false` otherwise.
-#[prebindgen]
+#[prebindgen("ready")]
 pub fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
     let s = session.as_rust_type_ref();
     s.is_closed()
 }
 
 /// Closes and invalidates the session.
-#[prebindgen]
+#[prebindgen("ready")]
 pub fn z_session_drop(this_: &mut z_moved_session_t) {
     let _ = this_.take_rust_type();
 }
