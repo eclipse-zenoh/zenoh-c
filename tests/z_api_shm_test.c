@@ -113,7 +113,7 @@ int test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_allo
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    z_shm_provider_alloc_gc(&alloc, provider, size, alignment);
+    z_shm_provider_alloc_gc_aligned(&alloc, provider, size, alignment);
     if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         ASSERT_CHECK(alloc.buf);
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
@@ -139,7 +139,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
     {
         // make OK allocation layout
         z_owned_alloc_layout_t alloc_layout;
-        ASSERT_OK(z_alloc_layout_new(&alloc_layout, z_loan(*provider), buf_ok_size, alignment));
+        ASSERT_OK(z_alloc_layout_with_alignment_new(&alloc_layout, z_loan(*provider), buf_ok_size, alignment));
         ASSERT_CHECK(alloc_layout);
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
@@ -153,7 +153,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
     if (buf_err_size) {
         // make ERR allocation layout
         z_owned_alloc_layout_t alloc_layout;
-        ASSERT_OK(z_alloc_layout_new(&alloc_layout, z_loan(*provider), buf_err_size, alignment));
+        ASSERT_OK(z_alloc_layout_with_alignment_new(&alloc_layout, z_loan(*provider), buf_err_size, alignment));
         ASSERT_CHECK(alloc_layout);
         // test layouted allocation ERROR
         ASSERT_ERR(test_layouted_allocation(z_loan(alloc_layout)));
@@ -319,7 +319,7 @@ int run_posix_provider() {
     ASSERT_CHECK(layout);
 
     z_owned_shm_provider_t provider;
-    ASSERT_OK(z_posix_shm_provider_new(&provider, z_loan(layout)));
+    ASSERT_OK(z_posix_shm_provider_with_layout_new(&provider, z_loan(layout)));
     ASSERT_CHECK(provider);
 
     ASSERT_OK(test_provider(&provider, alignment, buf_ok_size, buf_err_size));

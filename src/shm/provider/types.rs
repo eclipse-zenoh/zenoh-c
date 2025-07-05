@@ -106,6 +106,23 @@ pub struct z_alloc_alignment_t {
     pow: u8,
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A 1-byte alignment.
+#[no_mangle]
+pub static ALIGN_1_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 0 };
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A 2-byte alignment.
+#[no_mangle]
+pub static ALIGN_2_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 1 };
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A 4-byte alignment.
+#[no_mangle]
+pub static ALIGN_4_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 2 };
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An 8-byte alignment.
+#[no_mangle]
+pub static ALIGN_8_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 3 };
+
 decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
 decl_c_type_inequal!(
@@ -121,6 +138,14 @@ pub extern "C" fn z_memory_layout_new(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_result_t {
+    fn create_memory_layout(
+        size: usize,
+        alignment: z_alloc_alignment_t,
+    ) -> Result<MemoryLayout, ZLayoutError> {
+        let alignment = AllocAlignment::new(alignment.pow)?;
+        MemoryLayout::new(size, alignment)
+    }
+
     match create_memory_layout(size, alignment) {
         Ok(layout) => {
             this.as_rust_type_mut_uninit().write(Some(layout));
@@ -131,14 +156,6 @@ pub extern "C" fn z_memory_layout_new(
             Z_EINVAL
         }
     }
-}
-
-fn create_memory_layout(
-    size: usize,
-    alignment: z_alloc_alignment_t,
-) -> Result<MemoryLayout, ZLayoutError> {
-    let alignment = AllocAlignment::new(alignment.pow)?;
-    MemoryLayout::new(size, alignment)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
