@@ -69,7 +69,7 @@ pub extern "C" fn z_shm_provider_default_new(
         }
         Err(e) => {
             tracing::error!("{:?}", e);
-            return Z_EINVAL;
+            Z_EINVAL
         }
     }
 }
