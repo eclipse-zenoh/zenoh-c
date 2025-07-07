@@ -103,25 +103,8 @@ impl From<z_layout_error_t> for ZLayoutError {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
-    pow: u8,
+    pub pow: u8,
 }
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A 1-byte alignment.
-#[no_mangle]
-pub static ALIGN_1_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 0 };
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A 2-byte alignment.
-#[no_mangle]
-pub static ALIGN_2_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 1 };
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A 4-byte alignment.
-#[no_mangle]
-pub static ALIGN_4_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 2 };
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An 8-byte alignment.
-#[no_mangle]
-pub static ALIGN_8_BYTE: z_alloc_alignment_t = z_alloc_alignment_t { pow: 3 };
 
 decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
 
