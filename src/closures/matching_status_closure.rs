@@ -34,7 +34,9 @@ pub struct z_owned_closure_matching_status_t {
 /// @brief Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_matching_status_t {
-    _0: [usize; 3],
+    _0: usize,
+    _1: usize,
+    _2: usize,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -79,9 +81,9 @@ impl Drop for z_owned_closure_matching_status_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_closure_matching_status_null(
-    this: *mut MaybeUninit<z_owned_closure_matching_status_t>,
+    this: &mut MaybeUninit<z_owned_closure_matching_status_t>,
 ) {
-    (*this).write(z_owned_closure_matching_status_t::default());
+    this.write(z_owned_closure_matching_status_t::default());
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

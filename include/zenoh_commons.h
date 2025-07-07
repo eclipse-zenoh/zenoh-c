@@ -20,11 +20,11 @@ typedef enum z_congestion_control_t {
   /**
    * Messages are not dropped in case of congestion.
    */
-  Z_CONGESTION_CONTROL_BLOCK,
+  Z_CONGESTION_CONTROL_BLOCK = 0,
   /**
    * Messages are dropped in case of congestion.
    */
-  Z_CONGESTION_CONTROL_DROP,
+  Z_CONGESTION_CONTROL_DROP = 1,
 } z_congestion_control_t;
 /**
  * Consolidation mode values.
@@ -117,15 +117,15 @@ typedef enum z_query_target_t {
   /**
    * The nearest complete queryable if any else all matching queryables.
    */
-  Z_QUERY_TARGET_BEST_MATCHING,
+  Z_QUERY_TARGET_BEST_MATCHING = 0,
   /**
    * All matching queryables.
    */
-  Z_QUERY_TARGET_ALL,
+  Z_QUERY_TARGET_ALL = 1,
   /**
    * All complete queryables.
    */
-  Z_QUERY_TARGET_ALL_COMPLETE,
+  Z_QUERY_TARGET_ALL_COMPLETE = 2,
 } z_query_target_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -138,11 +138,11 @@ typedef enum z_reliability_t {
   /**
    * Defines reliability as ``BEST_EFFORT``
    */
-  Z_RELIABILITY_BEST_EFFORT,
+  Z_RELIABILITY_BEST_EFFORT = 0,
   /**
    * Defines reliability as ``RELIABLE``
    */
-  Z_RELIABILITY_RELIABLE,
+  Z_RELIABILITY_RELIABLE = 1,
 } z_reliability_t;
 #endif
 typedef enum z_sample_kind_t {
@@ -159,10 +159,10 @@ typedef enum z_what_t {
   Z_WHAT_ROUTER = 1,
   Z_WHAT_PEER = 2,
   Z_WHAT_CLIENT = 4,
-  Z_WHAT_ROUTER_PEER = (1 | 2),
-  Z_WHAT_ROUTER_CLIENT = (1 | 4),
-  Z_WHAT_PEER_CLIENT = (2 | 4),
-  Z_WHAT_ROUTER_PEER_CLIENT = ((1 | 2) | 4),
+  Z_WHAT_ROUTER_PEER = 3,
+  Z_WHAT_ROUTER_CLIENT = 5,
+  Z_WHAT_PEER_CLIENT = 6,
+  Z_WHAT_ROUTER_PEER_CLIENT = 7,
 } z_what_t;
 typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
@@ -243,14 +243,14 @@ typedef enum ze_advanced_publisher_heartbeat_mode_t {
   /**
    * Disable heartbeat-based last sample miss detection.
    */
-  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_NONE,
+  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_NONE = 0,
 #endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * Allow last sample miss detection through periodic heartbeat.
    * Periodically send the last published Sample's sequence number to allow last sample recovery.
    */
-  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC,
+  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC = 1,
 #endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
@@ -258,7 +258,7 @@ typedef enum ze_advanced_publisher_heartbeat_mode_t {
    * Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
    * but only if it changed since last period.
    */
-  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC,
+  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC = 2,
 #endif
 } ze_advanced_publisher_heartbeat_mode_t;
 #endif
@@ -470,7 +470,7 @@ typedef struct z_subscriber_options_t {
   /**
    * Dummy field to avoid having fieldless struct
    */
-  uint8_t _0;
+  uint8_t _dummy;
 #endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
@@ -1300,7 +1300,9 @@ typedef struct ze_advanced_subscriber_options_t {
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct ze_loaned_closure_miss_t {
-  size_t _0[3];
+  size_t _0;
+  size_t _1;
+  size_t _2;
 } ze_loaned_closure_miss_t;
 #endif
 /**
