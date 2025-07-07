@@ -65,7 +65,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
     result_context: ThreadsafeContext,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
+        &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
 ) -> z_result_t {
     match provider.as_rust_type_ref() {
@@ -177,7 +177,7 @@ pub(crate) fn alloc_async_impl<
     result_context: ThreadsafeContext,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
+        &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
 ) {
     zenoh_runtime::ZRuntime::Application.spawn(async move {

@@ -190,7 +190,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_async(
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
+        &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
 ) -> z_result_t {
     alloc_async::<BlockOn<Defragment<GarbageCollect>>>(

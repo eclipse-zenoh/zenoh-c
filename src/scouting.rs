@@ -159,10 +159,10 @@ pub enum z_what_t {
     ROUTER = 0x01,
     PEER = 0x02,
     CLIENT = 0x04,
-    ROUTER_PEER = 0x01 | 0x02,
-    ROUTER_CLIENT = 0x01 | 0x04,
-    PEER_CLIENT = 0x02 | 0x04,
-    ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
+    ROUTER_PEER = 0x03,        // 0x01 | 0x02,
+    ROUTER_CLIENT = 0x05,      // 0x01 | 0x04,
+    PEER_CLIENT = 0x06,        // 0x02 | 0x04,
+    ROUTER_PEER_CLIENT = 0x07, // 0x01 | 0x02 | 0x04,
 }
 
 pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
