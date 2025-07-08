@@ -5597,6 +5597,11 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
+ * @brief Construct a view string on last error message.
+ * The view string only remains valid until next faillable zenoh API call.
+ */
+ZENOHC_API void zc_get_last_error(struct z_view_string_t *out);
+/**
  * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
  *

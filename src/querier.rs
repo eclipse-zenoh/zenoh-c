@@ -133,7 +133,7 @@ pub extern "C" fn z_declare_querier(
     }
     match q.wait() {
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -271,7 +271,7 @@ pub unsafe extern "C" fn z_querier_get(
         Ok(()) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -334,7 +334,7 @@ pub extern "C" fn z_querier_declare_matching_listener(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -358,7 +358,7 @@ pub extern "C" fn z_querier_declare_background_matching_listener(
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -383,7 +383,7 @@ pub extern "C" fn z_querier_get_matching_status(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_ENETWORK
         }
     }
@@ -405,7 +405,7 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
     if let Some(q) = this_.take_rust_type() {
         if let Err(e) = q.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }

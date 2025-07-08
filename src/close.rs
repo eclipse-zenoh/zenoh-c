@@ -36,7 +36,7 @@ pub unsafe extern "C" fn zc_concurrent_close_handle_wait(
     match handle.take_rust_type().unwrap_unchecked().wait() {
         Ok(_) => Z_OK,
         Err(e) => {
-            tracing::error!("Close error: {}", e);
+            crate::report_error!("Close error: {}", e);
             Z_EIO
         }
     }

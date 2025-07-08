@@ -237,7 +237,7 @@ pub extern "C" fn ze_declare_advanced_publisher(
     }
     match p.wait() {
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -342,7 +342,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_put(
         Ok(_) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -385,7 +385,7 @@ pub extern "C" fn ze_advanced_publisher_delete(
         del = _apply_pubisher_delete_options(del, &mut options.delete_options)
     }
     if let Err(e) = del.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         result::Z_EGENERIC
     } else {
         result::Z_OK
@@ -455,7 +455,7 @@ pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -479,7 +479,7 @@ pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -504,7 +504,7 @@ pub extern "C" fn ze_advanced_publisher_get_matching_status(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_ENETWORK
         }
     }
@@ -529,7 +529,7 @@ pub extern "C" fn ze_undeclare_advanced_publisher(
 ) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }

@@ -297,7 +297,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.0.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }

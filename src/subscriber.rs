@@ -137,7 +137,7 @@ pub extern "C" fn z_declare_subscriber(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -164,7 +164,7 @@ pub extern "C" fn z_declare_background_subscriber(
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -200,7 +200,7 @@ pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> b
 pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }

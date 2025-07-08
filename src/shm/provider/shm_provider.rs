@@ -68,7 +68,7 @@ pub extern "C" fn z_shm_provider_default_new(
             Z_OK
         }
         Err(e) => {
-            tracing::error!("{:?}", e);
+            crate::report_error!("{:?}", e);
             Z_EINVAL
         }
     }

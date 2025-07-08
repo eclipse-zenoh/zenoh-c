@@ -138,7 +138,7 @@ pub extern "C" fn z_declare_publisher(
     let p = _declare_publisher_inner(session, key_expr, options);
     match p.wait() {
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -267,7 +267,7 @@ pub unsafe extern "C" fn z_publisher_put(
         Ok(_) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -317,7 +317,7 @@ pub extern "C" fn z_publisher_delete(
         del = _apply_pubisher_delete_options(del, options);
     }
     if let Err(e) = del.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         result::Z_EGENERIC
     } else {
         result::Z_OK
@@ -382,7 +382,7 @@ pub extern "C" fn z_publisher_declare_matching_listener(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -406,7 +406,7 @@ pub extern "C" fn z_publisher_declare_background_matching_listener(
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -431,7 +431,7 @@ pub extern "C" fn z_publisher_get_matching_status(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_ENETWORK
         }
     }
@@ -452,7 +452,7 @@ pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
 pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }

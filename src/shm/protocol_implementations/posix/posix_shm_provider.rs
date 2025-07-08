@@ -46,7 +46,7 @@ pub extern "C" fn z_posix_shm_provider_new(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             Z_EINVAL
         }
     }
@@ -71,7 +71,7 @@ pub extern "C" fn z_posix_shm_provider_with_layout_new(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             Z_EINVAL
         }
     }

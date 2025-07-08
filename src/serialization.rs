@@ -121,7 +121,7 @@ where
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            crate::report_error!("Failed to deserialize the payload: {:?}", e);
             result::Z_EPARSE
         }
     }
@@ -356,7 +356,7 @@ pub extern "C" fn ze_deserialize_slice(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             slice
                 .as_rust_type_mut_uninit()
                 .write(CSliceOwned::gravestone());
@@ -381,7 +381,7 @@ pub extern "C" fn ze_serialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.as_rust_type_mut_uninit().write(ZBytes::new());
             result::Z_EUTF8
         }
@@ -407,7 +407,7 @@ pub unsafe extern "C" fn ze_serialize_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.as_rust_type_mut_uninit().write(ZBytes::new());
             result::Z_EUTF8
         }
@@ -441,7 +441,7 @@ pub unsafe extern "C" fn ze_deserialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             str.as_rust_type_mut_uninit()
                 .write(CStringOwned::gravestone());
             result::Z_EDESERIALIZE
@@ -484,7 +484,7 @@ where
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            crate::report_error!("Failed to deserialize the payload: {:?}", e);
             result::Z_EDESERIALIZE
         }
     }
@@ -748,7 +748,7 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             slice
                 .as_rust_type_mut_uninit()
                 .write(CSliceOwned::gravestone());
@@ -771,7 +771,7 @@ pub extern "C" fn ze_serializer_serialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EUTF8
         }
     }
@@ -793,7 +793,7 @@ pub extern "C" fn ze_serializer_serialize_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EUTF8
         }
     }
@@ -822,7 +822,7 @@ pub extern "C" fn ze_deserializer_deserialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             str.as_rust_type_mut_uninit()
                 .write(CStringOwned::gravestone());
             result::Z_EDESERIALIZE
@@ -857,7 +857,7 @@ pub extern "C" fn ze_deserializer_deserialize_sequence_length(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to read the sequence length: {}", e);
+            crate::report_error!("Failed to read the sequence length: {}", e);
             *len = 0;
             result::Z_EDESERIALIZE
         }

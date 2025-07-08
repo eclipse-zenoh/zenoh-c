@@ -98,7 +98,7 @@ pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_
     match closure._call {
         Some(call) => call(z_id, closure._context),
         None => {
-            tracing::error!("Attempted to call an uninitialized closure!");
+            crate::report_error!("Attempted to call an uninitialized closure!");
         }
     }
 }

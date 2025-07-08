@@ -108,7 +108,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Config key is not a valid utf-8 string: {}", e);
+            crate::report_error!("Config key is not a valid utf-8 string: {}", e);
             z_internal_string_null(out_value_string);
             return result::Z_EINVAL;
         }
@@ -124,7 +124,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
             result::Z_OK
         }
         None => {
-            tracing::error!("No value was found in the config for key: '{}'", key);
+            crate::report_error!("No value was found in the config for key: '{}'", key);
             z_internal_string_null(out_value_string);
             result::Z_EUNAVAILABLE
         }
@@ -160,21 +160,21 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Config key is not a valid utf-8 string: {}", e);
+            crate::report_error!("Config key is not a valid utf-8 string: {}", e);
             return result::Z_EINVAL;
         }
     };
     let value = match from_utf8(from_raw_parts(value as _, value_len)) {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Config value is not a valid utf-8 string: {}", e);
+            crate::report_error!("Config value is not a valid utf-8 string: {}", e);
             return result::Z_EINVAL;
         }
     };
     match config.insert_json5(key, value) {
         Ok(_) => 0,
         Err(e) => {
-            tracing::error!(
+            crate::report_error!(
                 "Failed to insert value '{}' for key '{}' into config: {}",
                 value,
                 key,
@@ -244,7 +244,7 @@ pub unsafe extern "C" fn zc_config_to_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Config is not a valid json5: {}", e);
+            crate::report_error!("Config is not a valid json5: {}", e);
             z_internal_string_null(out_config_string);
             result::Z_EPARSE
         }
@@ -266,13 +266,13 @@ pub unsafe extern "C" fn zc_config_from_file(
         Ok(path) => match zenoh::config::Config::from_file(path) {
             Ok(c) => Some(c),
             Err(e) => {
-                tracing::error!("Failed to read config from {}: {}", path, e);
+                crate::report_error!("Failed to read config from {}: {}", path, e);
                 res = result::Z_EPARSE;
                 None
             }
         },
         Err(e) => {
-            tracing::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
+            crate::report_error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
             res = result::Z_EIO;
             None
         }
@@ -295,7 +295,7 @@ pub unsafe extern "C" fn zc_config_from_env(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("Close error: {}", e);
             result::Z_EIO
         }
     }

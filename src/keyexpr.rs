@@ -87,12 +87,12 @@ unsafe fn keyexpr_create(
         Ok(name) => match keyexpr_create_inner(name, should_auto_canonize, should_copy) {
             Ok(v) => Ok(v),
             Err(e) => {
-                tracing::error!("Couldn't construct keyexpr: {}", e);
+                crate::report_error!("Couldn't construct keyexpr: {}", e);
                 Err(result::Z_EINVAL)
             }
         },
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             Err(result::Z_EPARSE)
         }
     }
@@ -556,7 +556,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
     let right = match std::str::from_utf8(right) {
         Ok(r) => r,
         Err(e) => {
-            tracing::error!(
+            crate::report_error!(
                 "Couldn't concatenate {:02x?} to {} because it is not valid UTF8: {}",
                 right,
                 left,
@@ -572,7 +572,7 @@ pub unsafe extern "C" fn z_keyexpr_concat(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(KeyExpr::gravestone());
             result::Z_EGENERIC
         }
@@ -596,7 +596,7 @@ pub extern "C" fn z_keyexpr_join(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(KeyExpr::gravestone());
             result::Z_EGENERIC
         }

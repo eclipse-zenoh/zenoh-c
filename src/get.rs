@@ -342,7 +342,7 @@ pub unsafe extern "C" fn z_get(
         Ok(()) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }

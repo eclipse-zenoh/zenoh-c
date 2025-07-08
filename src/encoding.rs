@@ -66,7 +66,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
                 result::Z_OK
             }
             Err(e) => {
-                tracing::error!("Can not create encoding from non UTF-8 string: {}", e);
+                crate::report_error!("Can not create encoding from non UTF-8 string: {}", e);
                 encoding.write(Encoding::default());
                 result::Z_EINVAL
             }
@@ -98,7 +98,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EINVAL
         }
     }

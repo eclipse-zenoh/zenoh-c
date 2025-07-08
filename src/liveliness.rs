@@ -105,7 +105,7 @@ pub extern "C" fn z_liveliness_declare_token(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to undeclare liveliness token: {e}");
+            crate::report_error!("Failed to undeclare liveliness token: {e}");
             this.write(None);
             result::Z_EGENERIC
         }
@@ -119,7 +119,7 @@ pub extern "C" fn z_liveliness_undeclare_token(
 ) -> result::z_result_t {
     if let Some(token) = this.take_rust_type() {
         if let Err(e) = token.undeclare().wait() {
-            tracing::error!("Failed to undeclare token: {e}");
+            crate::report_error!("Failed to undeclare token: {e}");
             return result::Z_EGENERIC;
         }
     }
@@ -190,7 +190,7 @@ pub extern "C" fn z_liveliness_declare_subscriber(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to subscribe to liveliness: {e}");
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
             this.write(None);
             result::Z_EGENERIC
         }
@@ -216,7 +216,7 @@ pub extern "C" fn z_liveliness_declare_background_subscriber(
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("Failed to subscribe to liveliness: {e}");
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
             result::Z_EGENERIC
         }
     }
@@ -269,7 +269,7 @@ pub extern "C" fn z_liveliness_get(
     match builder.wait() {
         Ok(()) => result::Z_OK,
         Err(e) => {
-            tracing::error!("Failed to subscribe to liveliness: {e}");
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
             result::Z_EGENERIC
         }
     }
