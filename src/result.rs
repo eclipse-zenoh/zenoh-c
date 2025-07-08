@@ -74,7 +74,7 @@ extern "C" fn zc_get_last_error(out: &mut MaybeUninit<z_view_string_t>) {
 
 #[macro_export]
 macro_rules! report_error{
-    ($($t: tt)*) => { 
+    ($($t: tt)*) => {
         {
             tracing::error!($($t)*);
             $crate::result::ERROR_DESCRIPTION.with_borrow_mut(|b| b.update(&format!($($t)*)));

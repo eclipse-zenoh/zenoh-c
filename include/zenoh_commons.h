@@ -5538,13 +5538,22 @@ z_result_t zc_concurrent_close_handle_wait(struct zc_moved_concurrent_close_hand
  */
 ZENOHC_API z_result_t zc_config_from_env(struct z_owned_config_t *this_);
 /**
- * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ * Constructs a configuration by parsing a file at `path` null-terminated string. Currently supported format is JSON5, a superset of JSON.
  *
  * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_result_t zc_config_from_file(struct z_owned_config_t *this_,
                                const char *path);
+/**
+ * Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_from_file_substr(struct z_owned_config_t *this_,
+                                      const char *path,
+                                      size_t len);
 /**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
@@ -5553,6 +5562,15 @@ z_result_t zc_config_from_file(struct z_owned_config_t *this_,
 ZENOHC_API
 z_result_t zc_config_from_str(struct z_owned_config_t *this_,
                               const char *s);
+/**
+ * Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_from_substr(struct z_owned_config_t *this_,
+                                 const char *s,
+                                 size_t len);
 /**
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
