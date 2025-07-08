@@ -35,6 +35,28 @@ pub type PosixAllocLayout = AllocLayout<'static, PosixShmProviderBackend>;
 #[prebindgen]
 pub fn z_posix_shm_provider_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
+    size: usize,
+) -> z_result_t {
+    let this = this.as_rust_type_mut_uninit();
+    match PosixShmProviderBackend::builder().with_size(size).wait() {
+        Ok(backend) => {
+            let provider = ShmProviderBuilder::backend(backend).wait();
+            this.write(Some(CSHMProvider::Posix(provider)));
+            Z_OK
+        }
+        Err(e) => {
+            this.write(None);
+            tracing::error!("{}", e);
+            Z_EINVAL
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates a new POSIX SHM Provider.
+#[no_mangle]
+pub extern "C" fn z_posix_shm_provider_with_layout_new(
+    this: &mut MaybeUninit<z_owned_shm_provider_t>,
     layout: &z_loaned_memory_layout_t,
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();

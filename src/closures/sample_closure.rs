@@ -34,7 +34,9 @@ pub struct z_owned_closure_sample_t {
 /// Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_sample_t {
-    _0: [usize; 3],
+    _0: usize,
+    _1: usize,
+    _2: usize,
 }
 
 /// Moved closure.

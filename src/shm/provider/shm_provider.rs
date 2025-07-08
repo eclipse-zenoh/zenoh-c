@@ -30,7 +30,7 @@ use super::{
 };
 use crate::{
     context::{zc_context_t, zc_threadsafe_context_t, Context, ThreadsafeContext},
-    result::z_result_t,
+    result::{z_result_t, Z_EINVAL, Z_OK},
     shm::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::types::z_buf_layout_alloc_result_t,
@@ -53,6 +53,26 @@ decl_c_type!(
     owned(z_owned_shm_provider_t, option CSHMProvider),
     loaned(z_loaned_shm_provider_t),
 );
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates a new SHM Provider ith default backend.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_default_new(
+    this: &mut MaybeUninit<z_owned_shm_provider_t>,
+    size: usize,
+) -> z_result_t {
+    match ShmProviderBuilder::default_backend(size).wait() {
+        Ok(provider) => {
+            this.as_rust_type_mut_uninit()
+                .write(Some(CSHMProvider::Posix(provider)));
+            Z_OK
+        }
+        Err(e) => {
+            tracing::error!("{:?}", e);
+            Z_EINVAL
+        }
+    }
+}
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new SHM Provider.
@@ -125,9 +145,8 @@ pub fn z_shm_provider_alloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
-    alignment: z_alloc_alignment_t,
 ) {
-    alloc::<JustAlloc>(out_result, provider, size, alignment)
+    alloc::<JustAlloc>(out_result, provider, size, z_alloc_alignment_t { pow: 0 })
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -137,9 +156,8 @@ pub fn z_shm_provider_alloc_gc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
-    alignment: z_alloc_alignment_t,
 ) {
-    alloc::<GarbageCollect>(out_result, provider, size, alignment)
+    alloc::<GarbageCollect>(out_result, provider, size, z_alloc_alignment_t { pow: 0 })
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -149,9 +167,8 @@ pub fn z_shm_provider_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
-    alignment: z_alloc_alignment_t,
 ) {
-    alloc::<Defragment<GarbageCollect>>(out_result, provider, size, alignment)
+    alloc::<Defragment<GarbageCollect>>(out_result, provider, size, z_alloc_alignment_t { pow: 0 })
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -161,9 +178,13 @@ pub fn z_shm_provider_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
-    alignment: z_alloc_alignment_t,
 ) {
-    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
+    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(
+        out_result,
+        provider,
+        size,
+        z_alloc_alignment_t { pow: 0 },
+    )
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -173,9 +194,13 @@ pub fn z_shm_provider_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
-    alignment: z_alloc_alignment_t,
 ) {
-    alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
+    alloc::<BlockOn<Defragment<GarbageCollect>>>(
+        out_result,
+        provider,
+        size,
+        z_alloc_alignment_t { pow: 0 },
+    )
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -186,11 +211,95 @@ pub fn z_shm_provider_alloc_gc_defrag_async(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
+    result_context: zc_threadsafe_context_t,
+    result_callback: unsafe extern "C" fn(
+        *mut c_void,
+        &mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    ),
+) -> z_result_t {
+    alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
+        out_result,
+        provider,
+        size,
+        z_alloc_alignment_t { pow: 0 },
+        result_context.into(),
+        result_callback,
+    )
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make aligned allocation without any additional actions.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_alloc_aligned(
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    provider: &z_loaned_shm_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+) {
+    alloc::<JustAlloc>(out_result, provider, size, alignment)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make aligned allocation performing garbage collection if needed.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_alloc_gc_aligned(
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    provider: &z_loaned_shm_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+) {
+    alloc::<GarbageCollect>(out_result, provider, size, alignment)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make aligned allocation performing garbage collection and/or defragmentation if needed.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_aligned(
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    provider: &z_loaned_shm_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+) {
+    alloc::<Defragment<GarbageCollect>>(out_result, provider, size, alignment)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make aligned allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc_aligned(
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    provider: &z_loaned_shm_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+) {
+    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make aligned allocation performing garbage collection and/or defragmentation and/or blocking if needed.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking_aligned(
+    out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    provider: &z_loaned_shm_provider_t,
+    size: usize,
+    alignment: z_alloc_alignment_t,
+) {
+    alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Make aligned allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
+/// if used with non-threadsafe SHM Provider.
+#[no_mangle]
+pub extern "C" fn z_shm_provider_alloc_gc_defrag_aligned_async(
+    out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
+    provider: &'static z_loaned_shm_provider_t,
+    size: usize,
     alignment: z_alloc_alignment_t,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(
         *mut c_void,
-        *mut MaybeUninit<z_buf_layout_alloc_result_t>,
+        &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     ),
 ) -> z_result_t {
     alloc_async::<BlockOn<Defragment<GarbageCollect>>>(

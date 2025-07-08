@@ -34,7 +34,9 @@ pub struct z_owned_closure_query_t {
 /// Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_query_t {
-    _0: [usize; 3],
+    _0: usize,
+    _1: usize,
+    _2: usize,
 }
 
 /// Moved closure.
@@ -77,9 +79,9 @@ impl Drop for z_owned_closure_query_t {
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_internal_closure_query_null(
-    this_: *mut MaybeUninit<z_owned_closure_query_t>,
+    this_: &mut MaybeUninit<z_owned_closure_query_t>,
 ) {
-    (*this_).write(z_owned_closure_query_t::default());
+    this_.write(z_owned_closure_query_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.

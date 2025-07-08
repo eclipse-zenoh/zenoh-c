@@ -89,14 +89,14 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ze_advanced_publisher_heartbeat_mode_t {
     /// Disable heartbeat-based last sample miss detection.
-    NONE,
+    NONE = 0,
     /// Allow last sample miss detection through periodic heartbeat.
     /// Periodically send the last published Sample's sequence number to allow last sample recovery.
-    PERIODIC,
+    PERIODIC = 1,
     /// Allow last sample miss detection through sporadic heartbeat.
     /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
     /// but only if it changed since last period.
-    SPORADIC,
+    SPORADIC = 2,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

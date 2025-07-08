@@ -18,7 +18,7 @@ use libc::c_void;
 use zenoh::shm::{AllocLayout, BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc};
 
 use super::{
-    alloc_layout_impl::{alloc, alloc_async, alloc_layout_new},
+    alloc_layout_impl::{alloc, alloc_async, alloc_layout_new, alloc_layout_with_alignment_new},
     shm_provider_backend::DynamicShmProviderBackend,
     types::{z_alloc_alignment_t, z_buf_alloc_result_t},
 };
@@ -54,9 +54,20 @@ pub fn z_alloc_layout_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
+) -> z_result_t {
+    alloc_layout_new(this, provider, size)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Creates a new Alloc Layout for SHM Provider specifying the exact alignment.
+#[no_mangle]
+pub extern "C" fn z_alloc_layout_with_alignment_new(
+    this: &mut MaybeUninit<z_owned_alloc_layout_t>,
+    provider: &'static z_loaned_shm_provider_t,
+    size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_result_t {
-    alloc_layout_new(this, provider, size, alignment)
+    alloc_layout_with_alignment_new(this, provider, size, alignment)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

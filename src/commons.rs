@@ -309,9 +309,9 @@ pub fn zc_locality_default() -> zc_locality_t {
 #[derive(Clone, Copy)]
 pub enum z_reliability_t {
     /// Defines reliability as ``BEST_EFFORT``
-    BEST_EFFORT,
+    BEST_EFFORT = 0,
     /// Defines reliability as ``RELIABLE``
-    RELIABLE,
+    RELIABLE = 1,
 }
 
 #[cfg(feature = "unstable")]
@@ -390,11 +390,11 @@ pub fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
 #[derive(Clone, Copy)]
 pub enum z_query_target_t {
     /// The nearest complete queryable if any else all matching queryables.
-    BEST_MATCHING,
+    BEST_MATCHING = 0,
     /// All matching queryables.
-    ALL,
+    ALL = 1,
     /// All complete queryables.
-    ALL_COMPLETE,
+    ALL_COMPLETE = 2,
 }
 
 impl From<QueryTarget> for z_query_target_t {
@@ -530,9 +530,9 @@ pub fn z_priority_default() -> z_priority_t {
 #[derive(Clone, Copy)]
 pub enum z_congestion_control_t {
     /// Messages are not dropped in case of congestion.
-    BLOCK,
+    BLOCK = 0,
     /// Messages are dropped in case of congestion.
-    DROP,
+    DROP = 1,
 }
 
 /// Returns the default congestion control value of zenoh push network messages, typically used for put operations.
