@@ -103,7 +103,7 @@ impl From<z_layout_error_t> for ZLayoutError {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
-    pow: u8,
+    pub pow: u8,
 }
 
 decl_c_type!(copy(z_alloc_alignment_t, AllocAlignment),);
@@ -121,6 +121,14 @@ pub extern "C" fn z_memory_layout_new(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_result_t {
+    fn create_memory_layout(
+        size: usize,
+        alignment: z_alloc_alignment_t,
+    ) -> Result<MemoryLayout, ZLayoutError> {
+        let alignment = AllocAlignment::new(alignment.pow)?;
+        MemoryLayout::new(size, alignment)
+    }
+
     match create_memory_layout(size, alignment) {
         Ok(layout) => {
             this.as_rust_type_mut_uninit().write(Some(layout));
@@ -131,14 +139,6 @@ pub extern "C" fn z_memory_layout_new(
             Z_EINVAL
         }
     }
-}
-
-fn create_memory_layout(
-    size: usize,
-    alignment: z_alloc_alignment_t,
-) -> Result<MemoryLayout, ZLayoutError> {
-    let alignment = AllocAlignment::new(alignment.pow)?;
-    MemoryLayout::new(size, alignment)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
