@@ -28,7 +28,8 @@ pub use crate::opaque_types::*;
 
 mod collections;
 pub use crate::collections::*;
-pub mod result;
+mod result;
+pub use crate::result::*;
 mod config;
 pub use crate::config::*;
 #[cfg(feature = "unstable")]
