@@ -59,7 +59,7 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 pub struct z_subscriber_options_t {
     #[cfg(not(feature = "unstable"))]
     /// Dummy field to avoid having fieldless struct
-    pub _0: u8,
+    pub _dummy: u8,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     /// Restricts the matching publications that will be received by this Subscriber to the ones
@@ -71,7 +71,7 @@ impl Default for z_subscriber_options_t {
     fn default() -> Self {
         Self {
             #[cfg(not(feature = "unstable"))]
-            _0: Default::default(),
+            _dummy: Default::default(),
             #[cfg(feature = "unstable")]
             allowed_origin: zc_locality_default(),
         }

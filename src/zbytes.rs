@@ -186,7 +186,7 @@ pub unsafe extern "C" fn z_bytes_to_owned_shm(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_as_loaned_shm(
     this: &'static z_loaned_bytes_t,
-    dst: &'static mut MaybeUninit<&'static z_loaned_shm_t>,
+    dst: &'static mut MaybeUninit<*const z_loaned_shm_t>,
 ) -> z_result_t {
     let payload = this.as_rust_type_ref();
     match payload.as_shm() {
@@ -211,12 +211,12 @@ pub unsafe extern "C" fn z_bytes_as_loaned_shm(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_bytes_as_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
-    dst: &'static mut MaybeUninit<&'static mut z_loaned_shm_t>,
+    dst: &'static mut MaybeUninit<*mut z_loaned_shm_t>,
 ) -> z_result_t {
     let payload = this.as_rust_type_mut();
     match payload.as_shm_mut() {
         Some(s) => {
-            dst.write(s.as_loaned_c_type_mut());
+            dst.write(s.as_loaned_c_type_mut() as *mut z_loaned_shm_t);
             result::Z_OK
         }
         None => {
