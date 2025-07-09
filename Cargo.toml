@@ -83,7 +83,7 @@ ctor = "0.4.1"
 [build-dependencies]
 zenoh = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
 regex = "1.7.1"
-prebindgen = { version = "0.1.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+prebindgen = { version = "0.2.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 
 [lib]
 path = "src/lib.rs"
