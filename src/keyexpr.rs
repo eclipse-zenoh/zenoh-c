@@ -92,7 +92,7 @@ unsafe fn keyexpr_create(
             }
         },
         Err(e) => {
-            crate::report_error!("{}", e);
+            crate::report_error!("Key expression is not a valid utf-8 string: {}", e);
             Err(result::Z_EPARSE)
         }
     }
@@ -207,6 +207,7 @@ pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) 
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize(start: *mut c_char, len: &mut usize) -> z_result_t {
     if start.is_null() {
+        crate::report_error!("Key expression can not be constructed from null string");
         return result::Z_EINVAL;
     }
     let name = std::slice::from_raw_parts_mut(start as _, *len);
