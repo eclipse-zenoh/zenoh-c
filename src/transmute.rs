@@ -145,7 +145,6 @@ macro_rules! validate_equivalence {
     };
 }
 
-#[macro_export]
 macro_rules! impl_transmute {
     (as_c ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::CTypeRef for $rust_type {
@@ -311,7 +310,6 @@ macro_rules! impl_owned {
 // But for some types which are not covered by C++ this restriction can be relaxed.
 // In this case the "inequal" variant should be used.
 
-#[macro_export]
 macro_rules! decl_c_type_inequal {
     //
     // Owned with with explicit rust loaned type - rarely used
@@ -397,7 +395,6 @@ macro_rules! decl_c_type_inequal {
     };
 }
 
-#[macro_export]
 macro_rules! decl_c_type {
     //
     // Owned type only

@@ -78,9 +78,9 @@ impl Drop for z_owned_closure_matching_status_t {
 }
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a null value of 'z_owned_closure_matching_status_t' type
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_internal_closure_matching_status_null(
+pub unsafe fn z_internal_closure_matching_status_null(
     this: &mut MaybeUninit<z_owned_closure_matching_status_t>,
 ) {
     this.write(z_owned_closure_matching_status_t::default());
@@ -88,8 +88,8 @@ pub unsafe extern "C" fn z_internal_closure_matching_status_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_closure_matching_status_check(
+#[prebindgen]
+pub fn z_internal_closure_matching_status_check(
     this: &z_owned_closure_matching_status_t,
 ) -> bool {
     !this.is_empty()
@@ -97,8 +97,8 @@ pub extern "C" fn z_internal_closure_matching_status_check(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_matching_status_call(
+#[prebindgen]
+pub fn z_closure_matching_status_call(
     closure: &z_loaned_closure_matching_status_t,
     mathing_status: &z_matching_status_t,
 ) {
@@ -113,8 +113,8 @@ pub extern "C" fn z_closure_matching_status_call(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_matching_status_drop(closure_: &mut z_moved_closure_matching_status_t) {
+#[prebindgen]
+pub fn z_closure_matching_status_drop(closure_: &mut z_moved_closure_matching_status_t) {
     let _ = closure_.take_rust_type();
 }
 
@@ -141,8 +141,8 @@ impl<F: Fn(&z_matching_status_t)> From<F> for z_owned_closure_matching_status_t 
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_matching_status_loan(
+#[prebindgen]
+pub fn z_closure_matching_status_loan(
     closure: &z_owned_closure_matching_status_t,
 ) -> &z_loaned_closure_matching_status_t {
     closure.as_loaned_c_type_ref()
@@ -162,8 +162,8 @@ pub extern "C" fn z_closure_matching_status_loan(
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
-#[no_mangle]
-pub extern "C" fn z_closure_matching_status(
+#[prebindgen]
+pub fn z_closure_matching_status(
     this: &mut MaybeUninit<z_owned_closure_matching_status_t>,
     call: Option<extern "C" fn(matching_status: &z_matching_status_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(context: *mut c_void)>,

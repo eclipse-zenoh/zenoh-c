@@ -15,6 +15,7 @@
 use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
+use prebindgen_proc_macro::prebindgen;
 #[cfg(feature = "unstable")]
 use zenoh::{
     qos::Reliability,
@@ -76,8 +77,8 @@ use crate::opaque_types::z_timestamp_t;
 decl_c_type!(copy(z_timestamp_t, Timestamp));
 
 /// Create uhlc timestamp from session id.
-#[no_mangle]
-pub extern "C" fn z_timestamp_new(
+#[prebindgen]
+pub fn z_timestamp_new(
     this: &mut MaybeUninit<z_timestamp_t>,
     session: &z_loaned_session_t,
 ) -> result::z_result_t {
@@ -87,14 +88,14 @@ pub extern "C" fn z_timestamp_new(
 }
 
 /// Returns NPT64 time associated with this timestamp.
-#[no_mangle]
-pub extern "C" fn z_timestamp_ntp64_time(this_: &z_timestamp_t) -> u64 {
+#[prebindgen]
+pub fn z_timestamp_ntp64_time(this_: &z_timestamp_t) -> u64 {
     this_.as_rust_type_ref().get_time().0
 }
 
 /// @brief Returns id associated with this timestamp.
-#[no_mangle]
-pub extern "C" fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
+#[prebindgen]
+pub fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
     this_.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
@@ -106,23 +107,23 @@ decl_c_type!(
 );
 
 /// Returns the key expression of the sample.
-#[no_mangle]
-pub extern "C" fn z_sample_keyexpr(this_: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
+#[prebindgen]
+pub fn z_sample_keyexpr(this_: &z_loaned_sample_t) -> &z_loaned_keyexpr_t {
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 /// Returns the encoding associated with the sample data.
-#[no_mangle]
-pub extern "C" fn z_sample_encoding(this_: &z_loaned_sample_t) -> &z_loaned_encoding_t {
+#[prebindgen]
+pub fn z_sample_encoding(this_: &z_loaned_sample_t) -> &z_loaned_encoding_t {
     this_.as_rust_type_ref().encoding().as_loaned_c_type_ref()
 }
 /// Returns the sample payload data.
-#[no_mangle]
-pub extern "C" fn z_sample_payload(this_: &z_loaned_sample_t) -> &z_loaned_bytes_t {
+#[prebindgen]
+pub fn z_sample_payload(this_: &z_loaned_sample_t) -> &z_loaned_bytes_t {
     this_.as_rust_type_ref().payload().as_loaned_c_type_ref()
 }
 /// Returns the mutable sample payload data.
-#[no_mangle]
-pub extern "C" fn z_sample_payload_mut(this_: &mut z_loaned_sample_t) -> &mut z_loaned_bytes_t {
+#[prebindgen]
+pub fn z_sample_payload_mut(this_: &mut z_loaned_sample_t) -> &mut z_loaned_bytes_t {
     this_
         .as_rust_type_mut()
         .payload_mut()
@@ -130,15 +131,15 @@ pub extern "C" fn z_sample_payload_mut(this_: &mut z_loaned_sample_t) -> &mut z_
 }
 
 /// Returns the sample kind.
-#[no_mangle]
-pub extern "C" fn z_sample_kind(this_: &z_loaned_sample_t) -> z_sample_kind_t {
+#[prebindgen]
+pub fn z_sample_kind(this_: &z_loaned_sample_t) -> z_sample_kind_t {
     this_.as_rust_type_ref().kind().into()
 }
 /// Returns the sample timestamp.
 ///
 /// Will return `NULL`, if sample is not associated with a timestamp.
-#[no_mangle]
-pub extern "C" fn z_sample_timestamp(this_: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
+#[prebindgen]
+pub fn z_sample_timestamp(this_: &z_loaned_sample_t) -> Option<&z_timestamp_t> {
     if let Some(t) = this_.as_rust_type_ref().timestamp() {
         Some(t.as_ctype_ref())
     } else {
@@ -149,8 +150,8 @@ pub extern "C" fn z_sample_timestamp(this_: &z_loaned_sample_t) -> Option<&z_tim
 /// Returns sample attachment.
 ///
 /// Returns `NULL`, if sample does not contain any attachment.
-#[no_mangle]
-pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
+#[prebindgen]
+pub fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loaned_bytes_t {
     match this_.as_rust_type_ref().attachment() {
         Some(attachment) => attachment.as_loaned_c_type_ref() as *const _,
         None => null(),
@@ -159,8 +160,8 @@ pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loa
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the sample source_info.
-#[no_mangle]
-pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_t {
+#[prebindgen]
+pub fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_t {
     this_
         .as_rust_type_ref()
         .source_info()
@@ -168,8 +169,8 @@ pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_s
 }
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
-#[no_mangle]
-pub extern "C" fn z_sample_clone(
+#[prebindgen]
+pub fn z_sample_clone(
     dst: &mut MaybeUninit<z_owned_sample_t>,
     this: &z_loaned_sample_t,
 ) {
@@ -178,41 +179,41 @@ pub extern "C" fn z_sample_clone(
 }
 
 /// Returns sample qos priority value.
-#[no_mangle]
-pub extern "C" fn z_sample_priority(this_: &z_loaned_sample_t) -> z_priority_t {
+#[prebindgen]
+pub fn z_sample_priority(this_: &z_loaned_sample_t) -> z_priority_t {
     this_.as_rust_type_ref().priority().into()
 }
 
 /// Returns whether sample qos express flag was set or not.
-#[no_mangle]
-pub extern "C" fn z_sample_express(this_: &z_loaned_sample_t) -> bool {
+#[prebindgen]
+pub fn z_sample_express(this_: &z_loaned_sample_t) -> bool {
     this_.as_rust_type_ref().express()
 }
 
 /// Returns sample qos congestion control value.
-#[no_mangle]
-pub extern "C" fn z_sample_congestion_control(this_: &z_loaned_sample_t) -> z_congestion_control_t {
+#[prebindgen]
+pub fn z_sample_congestion_control(this_: &z_loaned_sample_t) -> z_congestion_control_t {
     this_.as_rust_type_ref().congestion_control().into()
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the reliability setting the sample was delivered with.
-#[no_mangle]
-pub extern "C" fn z_sample_reliability(this_: &z_loaned_sample_t) -> z_reliability_t {
+#[prebindgen]
+pub fn z_sample_reliability(this_: &z_loaned_sample_t) -> z_reliability_t {
     this_.as_rust_type_ref().reliability().into()
 }
 
 /// Returns ``true`` if sample is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_sample_check(this_: &z_owned_sample_t) -> bool {
+#[prebindgen]
+pub fn z_internal_sample_check(this_: &z_owned_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows sample.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sample_t {
+pub unsafe fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sample_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -221,9 +222,9 @@ pub unsafe extern "C" fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sa
 }
 
 /// Mutably borrows sample.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
+pub unsafe fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut z_loaned_sample_t {
     this_
         .as_rust_type_mut()
         .as_mut()
@@ -232,9 +233,9 @@ pub unsafe extern "C" fn z_sample_loan_mut(this_: &mut z_owned_sample_t) -> &mut
 }
 
 /// Takes ownership of the mutably borrowed sample.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_sample_take_from_loaned(
+pub unsafe fn z_sample_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_sample_t>,
     src: &mut z_loaned_sample_t,
 ) {
@@ -245,14 +246,14 @@ pub unsafe extern "C" fn z_sample_take_from_loaned(
 }
 
 /// Frees the memory and invalidates the sample, resetting it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_sample_drop(this_: &mut z_moved_sample_t) {
+#[prebindgen]
+pub fn z_sample_drop(this_: &mut z_moved_sample_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Constructs sample in its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
+#[prebindgen]
+pub fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -293,8 +294,8 @@ impl From<zc_locality_t> for Locality {
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns default value of `zc_locality_t`
-#[no_mangle]
-pub extern "C" fn zc_locality_default() -> zc_locality_t {
+#[prebindgen]
+pub fn zc_locality_default() -> zc_locality_t {
     Locality::default().into()
 }
 
@@ -327,8 +328,8 @@ impl From<Reliability> for z_reliability_t {
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the default value for `reliability`.
-#[no_mangle]
-pub extern "C" fn z_reliability_default() -> z_reliability_t {
+#[prebindgen]
+pub fn z_reliability_default() -> z_reliability_t {
     Reliability::default().into()
 }
 
@@ -378,8 +379,8 @@ impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the default value of #zc_reply_keyexpr_t.
-#[no_mangle]
-pub extern "C" fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
+#[prebindgen]
+pub fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }
 
@@ -419,8 +420,8 @@ impl From<z_query_target_t> for QueryTarget {
 }
 
 /// Create a default `z_query_target_t`.
-#[no_mangle]
-pub extern "C" fn z_query_target_default() -> z_query_target_t {
+#[prebindgen]
+pub fn z_query_target_default() -> z_query_target_t {
     QueryTarget::default().into()
 }
 
@@ -519,8 +520,8 @@ impl From<z_priority_t> for Priority {
 }
 
 /// Returns the default value of #z_priority_t.
-#[no_mangle]
-pub extern "C" fn z_priority_default() -> z_priority_t {
+#[prebindgen]
+pub fn z_priority_default() -> z_priority_t {
     Priority::default().into()
 }
 
@@ -535,20 +536,20 @@ pub enum z_congestion_control_t {
 }
 
 /// Returns the default congestion control value of zenoh push network messages, typically used for put operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_push() -> z_congestion_control_t {
+#[prebindgen]
+pub fn z_internal_congestion_control_default_push() -> z_congestion_control_t {
     CongestionControl::DEFAULT_PUSH.into()
 }
 
 /// Returns the default congestion control value of zenoh request network messages, typically used for get operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_request() -> z_congestion_control_t {
+#[prebindgen]
+pub fn z_internal_congestion_control_default_request() -> z_congestion_control_t {
     CongestionControl::DEFAULT_REQUEST.into()
 }
 
 /// Returns the default congestion control value of zenoh response network messages, typically used for reply operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_response() -> z_congestion_control_t {
+#[prebindgen]
+pub fn z_internal_congestion_control_default_response() -> z_congestion_control_t {
     CongestionControl::DEFAULT_RESPONSE.into()
 }
 
@@ -578,15 +579,15 @@ decl_c_type!(copy(z_entity_global_id_t, EntityGlobalId));
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the zenoh id of entity global id.
-#[no_mangle]
-pub extern "C" fn z_entity_global_id_zid(this_: &z_entity_global_id_t) -> z_id_t {
+#[prebindgen]
+pub fn z_entity_global_id_zid(this_: &z_entity_global_id_t) -> z_id_t {
     this_.as_rust_type_ref().zid().into_c_type()
 }
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the entity id of the entity global id.
-#[no_mangle]
-pub extern "C" fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
+#[prebindgen]
+pub fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
     this_.as_rust_type_ref().eid()
 }
 #[cfg(feature = "unstable")]
@@ -610,8 +611,8 @@ impl Gravestone for SourceInfo {
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates source info.
-#[no_mangle]
-pub extern "C" fn z_source_info_new(
+#[prebindgen]
+pub fn z_source_info_new(
     this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
     source_sn: u32,
@@ -625,8 +626,8 @@ pub extern "C" fn z_source_info_new(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the source_id of the source info.
-#[no_mangle]
-pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
+#[prebindgen]
+pub fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
     match this_.as_rust_type_ref().source_id() {
         Some(source_id) => *source_id,
         None => EntityGlobalId::default(),
@@ -637,39 +638,39 @@ pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_g
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the source_sn of the source info.
-#[no_mangle]
-pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u32 {
+#[prebindgen]
+pub fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u32 {
     this_.as_rust_type_ref().source_sn().unwrap_or_default()
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
+#[prebindgen]
+pub fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
     this_.as_rust_type_ref().source_id().is_some() || this_.as_rust_type_ref().source_sn().is_some()
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows source info.
-#[no_mangle]
-pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
+#[prebindgen]
+pub fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Frees the memory and invalidates the source info, resetting it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
+#[prebindgen]
+pub fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
     let _ = this_.take_rust_type();
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs source info in its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
+#[prebindgen]
+pub fn z_internal_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
     this_.as_rust_type_mut_uninit().write(SourceInfo::default());
 }

@@ -28,6 +28,7 @@ use crate::{zc_locality_default, zc_locality_t};
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Options passed to the `ze_declare_publication_cache()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_publication_cache_options_t {
     /// The suffix used for queryable.
@@ -45,8 +46,8 @@ pub struct ze_publication_cache_options_t {
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Constructs the default value for `ze_publication_cache_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_publication_cache_options_default(
+#[prebindgen]
+pub fn ze_publication_cache_options_default(
     this: &mut MaybeUninit<ze_publication_cache_options_t>,
 ) {
     this.write(ze_publication_cache_options_t {
@@ -105,8 +106,8 @@ fn _declare_publication_cache_inner<'a, 'b, 'c>(
 /// @param options: Additional options for the publication cache.
 ///
 /// @returns 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_declare_publication_cache(
+#[prebindgen]
+pub fn ze_declare_publication_cache(
     session: &z_loaned_session_t,
     pub_cache: &mut MaybeUninit<ze_owned_publication_cache_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -135,8 +136,8 @@ pub extern "C" fn ze_declare_publication_cache(
 /// @param options: Additional options for the publication cache.
 ///
 /// @returns 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_declare_background_publication_cache(
+#[prebindgen]
+pub fn ze_declare_background_publication_cache(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut ze_publication_cache_options_t>,
@@ -153,9 +154,9 @@ pub extern "C" fn ze_declare_background_publication_cache(
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Constructs a publication cache in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_internal_publication_cache_null(
+pub fn ze_internal_publication_cache_null(
     this_: &mut MaybeUninit<ze_owned_publication_cache_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
@@ -163,9 +164,9 @@ pub extern "C" fn ze_internal_publication_cache_null(
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_internal_publication_cache_check(
+pub fn ze_internal_publication_cache_check(
     this_: &ze_owned_publication_cache_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -174,16 +175,16 @@ pub extern "C" fn ze_internal_publication_cache_check(
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Drops publication cache and resets it to its gravestone state.
 /// This is equivalent to calling `ze_undeclare_publication_cache()` and discarding its return value.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_publication_cache_drop(this: &mut ze_moved_publication_cache_t) {
+pub fn ze_publication_cache_drop(this: &mut ze_moved_publication_cache_t) {
     std::mem::drop(this.take_rust_type())
 }
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Returns the key expression of the publication cache.
-#[no_mangle]
-pub extern "C" fn ze_publication_cache_keyexpr(
+#[prebindgen]
+pub fn ze_publication_cache_keyexpr(
     this_: &ze_loaned_publication_cache_t,
 ) -> &z_loaned_keyexpr_t {
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
@@ -191,9 +192,9 @@ pub extern "C" fn ze_publication_cache_keyexpr(
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Borrows publication cache.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_publication_cache_loan(
+pub unsafe fn ze_publication_cache_loan(
     this_: &ze_owned_publication_cache_t,
 ) -> &ze_loaned_publication_cache_t {
     this_
@@ -206,8 +207,8 @@ pub unsafe extern "C" fn ze_publication_cache_loan(
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Undeclares publication cache.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_undeclare_publication_cache(
+#[prebindgen]
+pub fn ze_undeclare_publication_cache(
     this: &mut ze_moved_publication_cache_t,
 ) -> result::z_result_t {
     if let Some(p) = this.take_rust_type() {

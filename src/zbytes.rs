@@ -22,6 +22,7 @@ use std::{
     slice::{from_raw_parts, from_raw_parts_mut},
 };
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     bytes::{ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     internal::buffers::{ZBuf, ZSliceBuffer},
@@ -54,58 +55,58 @@ impl Gravestone for ZBytes {
 }
 
 /// The gravestone value for `z_owned_bytes_t`.
-#[no_mangle]
-extern "C" fn z_internal_bytes_null(this: &mut MaybeUninit<z_owned_bytes_t>) {
+#[prebindgen]
+pub fn z_internal_bytes_null(this: &mut MaybeUninit<z_owned_bytes_t>) {
     this.as_rust_type_mut_uninit().write(ZBytes::default());
 }
 
 /// Constructs an empty instance of `z_owned_bytes_t`.
-#[no_mangle]
-extern "C" fn z_bytes_empty(this: &mut MaybeUninit<z_owned_bytes_t>) {
+#[prebindgen]
+pub fn z_bytes_empty(this: &mut MaybeUninit<z_owned_bytes_t>) {
     this.as_rust_type_mut_uninit().write(ZBytes::default());
 }
 
 /// Drops `this_`, resetting it to gravestone value. If there are any shallow copies
 /// created by `z_bytes_clone()`, they would still stay valid.
-#[no_mangle]
-extern "C" fn z_bytes_drop(this_: &mut z_moved_bytes_t) {
+#[prebindgen]
+pub fn z_bytes_drop(this_: &mut z_moved_bytes_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
-#[no_mangle]
-extern "C" fn z_internal_bytes_check(this: &z_owned_bytes_t) -> bool {
+#[prebindgen]
+pub fn z_internal_bytes_check(this: &z_owned_bytes_t) -> bool {
     !this.as_rust_type_ref().is_empty()
 }
 
 /// Borrows data.
-#[no_mangle]
-unsafe extern "C" fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
+#[prebindgen]
+pub fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
 /// Muatably borrows data.
-#[no_mangle]
-extern "C" fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
+#[prebindgen]
+pub fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
     this.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
 /// Returns ``true`` if `this_` is empty, ``false`` otherwise.
-#[no_mangle]
-extern "C" fn z_bytes_is_empty(this: &z_loaned_bytes_t) -> bool {
+#[prebindgen]
+pub fn z_bytes_is_empty(this: &z_loaned_bytes_t) -> bool {
     this.as_rust_type_ref().is_empty()
 }
 
 /// Constructs an owned shallow copy of data in provided uninitialized memory location.
-#[no_mangle]
-extern "C" fn z_bytes_clone(dst: &mut MaybeUninit<z_owned_bytes_t>, this: &z_loaned_bytes_t) {
+#[prebindgen]
+pub fn z_bytes_clone(dst: &mut MaybeUninit<z_owned_bytes_t>, this: &z_loaned_bytes_t) {
     dst.as_rust_type_mut_uninit()
         .write(this.as_rust_type_ref().clone());
 }
 
 /// Returns total number of bytes in the payload.
-#[no_mangle]
-extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
+#[prebindgen]
+pub fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
     this.as_rust_type_ref().len()
 }
 
@@ -113,9 +114,9 @@ extern "C" fn z_bytes_len(this: &z_loaned_bytes_t) -> usize {
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct a string.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_string(
+pub unsafe fn z_bytes_to_string(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_string_t>,
 ) -> z_result_t {
@@ -138,9 +139,9 @@ pub unsafe extern "C" fn z_bytes_to_string(
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct a slice.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_slice(
+pub unsafe fn z_bytes_to_slice(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_slice_t>,
 ) -> z_result_t {
@@ -156,9 +157,9 @@ pub unsafe extern "C" fn z_bytes_to_slice(
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_to_owned_shm(
+pub unsafe fn z_bytes_to_owned_shm(
     this: &z_loaned_bytes_t,
     dst: &mut MaybeUninit<z_owned_shm_t>,
 ) -> z_result_t {
@@ -182,9 +183,9 @@ pub unsafe extern "C" fn z_bytes_to_owned_shm(
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_as_loaned_shm(
+pub unsafe fn z_bytes_as_loaned_shm(
     this: &'static z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<*const z_loaned_shm_t>,
 ) -> z_result_t {
@@ -207,9 +208,9 @@ pub unsafe extern "C" fn z_bytes_as_loaned_shm(
 ///
 /// @param this_: Data to convert.
 /// @param dst: An uninitialized memory location where to construct an SHM buffer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_as_mut_loaned_shm(
+pub unsafe fn z_bytes_as_mut_loaned_shm(
     this: &'static mut z_loaned_bytes_t,
     dst: &'static mut MaybeUninit<*mut z_loaned_shm_t>,
 ) -> z_result_t {
@@ -276,9 +277,9 @@ impl From<CStringOwned> for ZBytes {
 
 /// Converts a slice into `z_owned_bytes_t`.
 /// The slice is consumed upon function return.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_slice(
+pub unsafe fn z_bytes_from_slice(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     slice: &mut z_moved_slice_t,
 ) {
@@ -288,9 +289,9 @@ pub unsafe extern "C" fn z_bytes_from_slice(
 }
 
 /// Converts a slice into `z_owned_bytes_t` by copying.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_copy_from_slice(
+pub unsafe fn z_bytes_copy_from_slice(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     slice: &z_loaned_slice_t,
 ) {
@@ -306,9 +307,9 @@ pub unsafe extern "C" fn z_bytes_copy_from_slice(
 /// @param deleter: A thread-safe function, that will be called on `data` when `this_` is dropped. Can be `NULL` if `data` is located in static memory and does not require a drop.
 /// @param context: An optional context to be passed to `deleter`.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_buf(
+pub unsafe fn z_bytes_from_buf(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     data: *mut u8,
     len: usize,
@@ -329,9 +330,9 @@ pub unsafe extern "C" fn z_bytes_from_buf(
 /// @param data: A pointer to the statically allocated constant data.
 /// @param len: A length of the buffer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_static_buf(
+pub unsafe fn z_bytes_from_static_buf(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     data: *mut u8,
     len: usize,
@@ -350,9 +351,9 @@ pub unsafe extern "C" fn z_bytes_from_static_buf(
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_copy_from_buf(
+pub unsafe fn z_bytes_copy_from_buf(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     data: *const u8,
     len: usize,
@@ -368,9 +369,9 @@ pub unsafe extern "C" fn z_bytes_copy_from_buf(
 
 /// Converts a string into `z_owned_bytes_t`.
 /// The string is consumed upon function return.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_string(
+pub unsafe fn z_bytes_from_string(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     s: &mut z_moved_string_t,
 ) {
@@ -381,9 +382,9 @@ pub unsafe extern "C" fn z_bytes_from_string(
 }
 
 /// Converts a string into `z_owned_bytes_t` by copying.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_copy_from_string(
+pub unsafe fn z_bytes_copy_from_string(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: &z_loaned_string_t,
 ) {
@@ -398,9 +399,9 @@ pub unsafe extern "C" fn z_bytes_copy_from_string(
 /// @param deleter: A thread-safe function, that will be called on `str` when `this_` is dropped. Can be `NULL` if `str` is located in static memory and does not require a drop.
 /// @param context: An optional context to be passed to `deleter`.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_str(
+pub unsafe fn z_bytes_from_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *mut libc::c_char,
     deleter: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
@@ -419,9 +420,9 @@ pub unsafe extern "C" fn z_bytes_from_str(
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param str: a pointer to the statically allocated constant string.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_static_str(
+pub unsafe fn z_bytes_from_static_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
@@ -438,9 +439,9 @@ pub unsafe extern "C" fn z_bytes_from_static_str(
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param str: a pointer to the null-terminated string.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_copy_from_str(
+pub unsafe fn z_bytes_copy_from_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
@@ -453,7 +454,7 @@ pub unsafe extern "C" fn z_bytes_copy_from_str(
     }
 }
 
-pub use crate::z_bytes_slice_iterator_t;
+use crate::z_bytes_slice_iterator_t;
 decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 
 /// Returns an iterator on raw bytes slices contained in the `z_loaned_bytes_t`.
@@ -462,8 +463,8 @@ decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 /// then allows to access raw data directly without any attempt of deserializing it.
 /// Please note that no guarantee is provided on the internal memory layout.
 /// The only provided guarantee is on the bytes order that is preserved.
-#[no_mangle]
-pub extern "C" fn z_bytes_get_slice_iterator(
+#[prebindgen]
+pub fn z_bytes_get_slice_iterator(
     this: &'static z_loaned_bytes_t,
 ) -> z_bytes_slice_iterator_t {
     *this.as_rust_type_ref().slices().as_loaned_c_type_ref()
@@ -473,8 +474,8 @@ pub extern "C" fn z_bytes_get_slice_iterator(
 /// @param this_: Slice iterator.
 /// @param slice: An unitialized memory location where the view for the next slice will be constructed.
 /// @return `false` if there are no more slices (in this case slice will stay unchanged), `true` otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_slice_iterator_next(
+#[prebindgen]
+pub fn z_bytes_slice_iterator_next(
     this: &mut z_bytes_slice_iterator_t,
     slice: &mut MaybeUninit<z_view_slice_t>,
 ) -> bool {
@@ -498,8 +499,8 @@ pub extern "C" fn z_bytes_slice_iterator_next(
 /// @param this_: An instance of Zenoh data.
 /// @param view: An uninitialized memory location where a contiguous view on data will be constructed.
 /// @return  ​0​ upon success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_bytes_get_contiguous_view(
+#[prebindgen]
+pub fn z_bytes_get_contiguous_view(
     this: &'static z_loaned_bytes_t,
     view: &mut MaybeUninit<z_view_slice_t>,
 ) -> result::z_result_t {
@@ -517,9 +518,9 @@ pub extern "C" fn z_bytes_get_contiguous_view(
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Converts from an immutable SHM buffer consuming it.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_shm(
+pub unsafe fn z_bytes_from_shm(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     shm: &mut z_moved_shm_t,
 ) -> z_result_t {
@@ -534,9 +535,9 @@ pub unsafe extern "C" fn z_bytes_from_shm(
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Converts a mutable SHM buffer consuming it.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_from_shm_mut(
+pub unsafe fn z_bytes_from_shm_mut(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     shm: &mut z_moved_shm_mut_t,
 ) -> z_result_t {
@@ -548,14 +549,14 @@ pub unsafe extern "C" fn z_bytes_from_shm_mut(
     Z_OK
 }
 
-pub use crate::z_bytes_reader_t;
+use crate::z_bytes_reader_t;
 decl_c_type!(loaned(z_bytes_reader_t, ZBytesReader<'static>));
 
 /// Returns a reader for the data.
 ///
 /// The `data` should outlive the reader.
-#[no_mangle]
-pub extern "C" fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
+#[prebindgen]
+pub fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
     *data.as_rust_type_ref().reader().as_loaned_c_type_ref()
 }
 
@@ -565,9 +566,9 @@ pub extern "C" fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes
 /// @param dst: Buffer where the read data is written.
 /// @param len: Maximum number of bytes to read.
 /// @return number of bytes read. If return value is smaller than `len`, it means that  theend of the data was reached.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_read(
+pub unsafe fn z_bytes_reader_read(
     this: &mut z_bytes_reader_t,
     dst: *mut u8,
     len: usize,
@@ -581,9 +582,9 @@ pub unsafe extern "C" fn z_bytes_reader_read(
 /// The new position is exactly `offset` bytes measured from the beginning of the payload if origin is `SEEK_SET`,
 /// from the current reader position if origin is `SEEK_CUR`, and from the end of the payload if origin is `SEEK_END`.
 /// @return ​0​ upon success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_seek(
+pub unsafe fn z_bytes_reader_seek(
     this: &mut z_bytes_reader_t,
     offset: i64,
     origin: libc::c_int,
@@ -611,17 +612,17 @@ pub unsafe extern "C" fn z_bytes_reader_seek(
 
 /// Gets the read position indicator.
 /// @return read position indicator on success or -1L if failure occurs.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_tell(this_: &mut z_bytes_reader_t) -> i64 {
+pub unsafe fn z_bytes_reader_tell(this_: &mut z_bytes_reader_t) -> i64 {
     let reader = this_.as_rust_type_mut();
     reader.stream_position().map(|p| p as i64).unwrap_or(-1)
 }
 
 /// Gets the number of bytes that can still be read.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_reader_remaining(this_: &z_bytes_reader_t) -> usize {
+pub unsafe fn z_bytes_reader_remaining(this_: &z_bytes_reader_t) -> usize {
     let reader = this_.as_rust_type_ref();
     reader.remaining()
 }
@@ -638,28 +639,28 @@ decl_c_type! {
 /// @brief Constructs a data writer with empty payload.
 /// @param this_: An uninitialized memory location where writer is to be constructed.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-extern "C" fn z_bytes_writer_empty(this: &mut MaybeUninit<z_owned_bytes_writer_t>) -> z_result_t {
+#[prebindgen]
+pub fn z_bytes_writer_empty(this: &mut MaybeUninit<z_owned_bytes_writer_t>) -> z_result_t {
     this.as_rust_type_mut_uninit().write(Some(ZBytes::writer()));
     result::Z_OK
 }
 
 /// Drops `this_`, resetting it to gravestone value.
-#[no_mangle]
-extern "C" fn z_bytes_writer_drop(this_: &mut z_moved_bytes_writer_t) {
+#[prebindgen]
+pub fn z_bytes_writer_drop(this_: &mut z_moved_bytes_writer_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
-#[no_mangle]
-extern "C" fn z_internal_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
+#[prebindgen]
+pub fn z_internal_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
     this.as_rust_type_ref().is_some()
 }
 
 /// Borrows writer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_writer_loan(
+pub unsafe fn z_bytes_writer_loan(
     this: &z_owned_bytes_writer_t,
 ) -> &z_loaned_bytes_writer_t {
     this.as_rust_type_ref()
@@ -669,9 +670,9 @@ pub unsafe extern "C" fn z_bytes_writer_loan(
 }
 
 /// Muatably borrows writer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_bytes_writer_loan_mut(
+pub unsafe fn z_bytes_writer_loan_mut(
     this: &mut z_owned_bytes_writer_t,
 ) -> &mut z_loaned_bytes_writer_t {
     this.as_rust_type_mut()
@@ -681,8 +682,8 @@ pub unsafe extern "C" fn z_bytes_writer_loan_mut(
 }
 
 /// Constructs a writer in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_bytes_writer_null(this_: &mut MaybeUninit<z_owned_bytes_writer_t>) {
+#[prebindgen]
+pub fn z_internal_bytes_writer_null(this_: &mut MaybeUninit<z_owned_bytes_writer_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -690,8 +691,8 @@ pub extern "C" fn z_internal_bytes_writer_null(this_: &mut MaybeUninit<z_owned_b
 /// @param this_: A writer instance.
 /// @param bytes: An uninitialized memory location where `bytes` object` will be written to.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_bytes_writer_finish(
+#[prebindgen]
+pub unsafe fn z_bytes_writer_finish(
     this: &mut z_moved_bytes_writer_t,
     bytes: &mut MaybeUninit<z_owned_bytes_t>,
 ) {
@@ -704,8 +705,8 @@ pub unsafe extern "C" fn z_bytes_writer_finish(
 ///
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-unsafe extern "C" fn z_bytes_writer_write_all(
+#[prebindgen]
+pub unsafe fn z_bytes_writer_write_all(
     this: &mut z_loaned_bytes_writer_t,
     src: *const u8,
     len: usize,
@@ -721,8 +722,8 @@ unsafe extern "C" fn z_bytes_writer_write_all(
 /// Said in other terms, it allows to create a linear view on different memory regions without copy.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-extern "C" fn z_bytes_writer_append(
+#[prebindgen]
+pub fn z_bytes_writer_append(
     this: &mut z_loaned_bytes_writer_t,
     bytes: &mut z_moved_bytes_t,
 ) -> z_result_t {

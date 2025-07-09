@@ -11,29 +11,32 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-
 #![allow(non_camel_case_types)]
+
+pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!();
 
 use std::{cmp::min, slice};
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::transmute::{LoanedCTypeRef, TakeRustType};
 #[macro_use]
 mod transmute;
-pub mod opaque_types;
+mod opaque_types;
 pub use crate::opaque_types::*;
 
 mod collections;
-pub mod result;
 pub use crate::collections::*;
+mod result;
+pub use crate::result::*;
 mod config;
 pub use crate::config::*;
 #[cfg(feature = "unstable")]
 mod close;
 #[cfg(feature = "unstable")]
 pub use crate::close::*;
-pub mod encoding;
+mod encoding;
 pub use crate::encoding::*;
 mod commons;
 pub use crate::commons::*;
@@ -63,7 +66,7 @@ mod publisher;
 pub use crate::publisher::*;
 mod closures;
 pub use closures::*;
-pub mod platform;
+mod platform;
 pub use platform::*;
 mod liveliness;
 pub use liveliness::*;
@@ -94,6 +97,7 @@ pub mod context;
 pub mod shm;
 
 mod serialization;
+pub use serialization::*;
 
 // This is the entry point for zenoh-c
 // When compiling normal Rust executable, it includes rusty entry point `lang_start` that internally
@@ -120,9 +124,9 @@ fn alternative_rusty_entry_point() {
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
 /// Note that if the environment variable is not set, then logging will not be enabled.
-/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
-#[no_mangle]
-pub extern "C" fn zc_try_init_log_from_env() {
+/// See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
+#[prebindgen]
+pub fn zc_try_init_log_from_env() {
     zenoh::try_init_log_from_env();
 }
 
@@ -130,12 +134,12 @@ pub extern "C" fn zc_try_init_log_from_env() {
 /// E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
 ///
 /// Note that if the environment variable is not set, then fallback filter will be used instead.
-/// See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+/// See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
 ///
 /// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_init_log_from_env_or(
+pub unsafe fn zc_init_log_from_env_or(
     fallback_filter: *const libc::c_char,
 ) -> result::z_result_t {
     match std::ffi::CStr::from_ptr(fallback_filter).to_str() {
@@ -152,8 +156,8 @@ pub unsafe extern "C" fn zc_init_log_from_env_or(
 /// @param min_severity: Minimum severity level of log message to be be passed to the `callback`.
 /// Messages with lower severity levels will be ignored.
 /// @param callback: A closure that will be called with each log message severity level and content.
-#[no_mangle]
-pub extern "C" fn zc_init_log_with_callback(
+#[prebindgen]
+pub fn zc_init_log_with_callback(
     min_severity: zc_log_severity_t,
     callback: &mut zc_moved_closure_log_t,
 ) {
@@ -227,7 +231,7 @@ impl CopyableToCArray for &str {
 /// All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
 /// None of Zenoh functionality can be used after this call.
 /// Useful to suppress memory leaks messages due to Zenoh static variables (since they are never destroyed due to Rust language design).
-#[no_mangle]
-pub extern "C" fn zc_stop_z_runtime() {
+#[prebindgen]
+pub fn zc_stop_z_runtime() {
     let _z = zenoh_runtime::ZRuntimePoolGuard;
 }

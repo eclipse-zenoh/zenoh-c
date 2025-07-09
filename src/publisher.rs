@@ -14,6 +14,7 @@
 
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 #[cfg(feature = "unstable")]
 use zenoh::{handlers::Callback, matching::MatchingStatus};
 use zenoh::{
@@ -41,6 +42,7 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{z_matching_status_t, z_moved_source_info_t, z_owned_matching_listener_t};
 /// Options passed to the `z_declare_publisher()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct z_publisher_options_t {
     /// Default encoding for messages put by this publisher.
@@ -79,8 +81,8 @@ impl Default for z_publisher_options_t {
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
-#[no_mangle]
-pub extern "C" fn z_publisher_options_default(this_: &mut MaybeUninit<z_publisher_options_t>) {
+#[prebindgen]
+pub fn z_publisher_options_default(this_: &mut MaybeUninit<z_publisher_options_t>) {
     this_.write(z_publisher_options_t::default());
 }
 
@@ -127,8 +129,8 @@ pub(crate) fn _declare_publisher_inner(
 /// @param options: Additional options for the publisher.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_declare_publisher(
+#[prebindgen]
+pub fn z_declare_publisher(
     session: &'static z_loaned_session_t,
     publisher: &'static mut MaybeUninit<z_owned_publisher_t>,
     key_expr: &'static z_loaned_keyexpr_t,
@@ -150,21 +152,21 @@ pub extern "C" fn z_declare_publisher(
 }
 
 /// Constructs a publisher in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_publisher_null(this_: &mut MaybeUninit<z_owned_publisher_t>) {
+#[prebindgen]
+pub fn z_internal_publisher_null(this_: &mut MaybeUninit<z_owned_publisher_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if publisher is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_publisher_check(this_: &z_owned_publisher_t) -> bool {
+#[prebindgen]
+pub fn z_internal_publisher_check(this_: &z_owned_publisher_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Borrows publisher.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loaned_publisher_t {
+pub unsafe fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loaned_publisher_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -173,9 +175,9 @@ pub unsafe extern "C" fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loa
 }
 
 /// Mutably borrows publisher.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_publisher_loan_mut(
+pub unsafe fn z_publisher_loan_mut(
     this: &mut z_owned_publisher_t,
 ) -> &mut z_loaned_publisher_t {
     this.as_rust_type_mut()
@@ -185,6 +187,7 @@ pub unsafe extern "C" fn z_publisher_loan_mut(
 }
 
 /// Options passed to the `z_publisher_put()` function.
+#[prebindgen]
 #[repr(C)]
 #[derive(Default)]
 pub struct z_publisher_put_options_t {
@@ -202,9 +205,9 @@ pub struct z_publisher_put_options_t {
 }
 
 /// Constructs the default value for `z_publisher_put_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_put_options_default(
+pub fn z_publisher_put_options_default(
     this: &mut MaybeUninit<z_publisher_put_options_t>,
 ) {
     this.write(z_publisher_put_options_t {
@@ -249,9 +252,9 @@ pub(crate) fn _apply_pubisher_put_options<
 /// @param options: The publisher put options. All owned fields will be consumed.
 ///
 /// @return 0 in case of success, negative error values in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_publisher_put(
+pub unsafe fn z_publisher_put(
     this: &z_loaned_publisher_t,
     payload: &mut z_moved_bytes_t,
     options: Option<&mut z_publisher_put_options_t>,
@@ -275,6 +278,7 @@ pub unsafe extern "C" fn z_publisher_put(
 
 /// Represents the set of options that can be applied to the delete operation by a previously declared publisher,
 /// whenever issued via `z_publisher_delete()`.
+#[prebindgen]
 #[repr(C)]
 #[derive(Default)]
 pub struct z_publisher_delete_options_t {
@@ -283,9 +287,9 @@ pub struct z_publisher_delete_options_t {
 }
 
 /// Constructs the default values for the delete operation via a publisher entity.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_delete_options_default(
+pub fn z_publisher_delete_options_default(
     this: &mut MaybeUninit<z_publisher_delete_options_t>,
 ) {
     this.write(z_publisher_delete_options_t::default());
@@ -305,9 +309,9 @@ pub(crate) fn _apply_pubisher_delete_options<T: TimestampBuilderTrait>(
 /// Sends a `DELETE` message onto the publisher's key expression.
 ///
 /// @return 0 in case of success, negative error code in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_delete(
+pub fn z_publisher_delete(
     publisher: &z_loaned_publisher_t,
     options: Option<&mut z_publisher_delete_options_t>,
 ) -> result::z_result_t {
@@ -326,14 +330,14 @@ pub extern "C" fn z_publisher_delete(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the publisher.
-#[no_mangle]
-pub extern "C" fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
+#[prebindgen]
+pub fn z_publisher_id(publisher: &z_loaned_publisher_t) -> z_entity_global_id_t {
     publisher.as_rust_type_ref().id().into_c_type()
 }
 
 /// Returns the key expression of the publisher.
-#[no_mangle]
-pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
+#[prebindgen]
+pub fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_loaned_keyexpr_t {
     publisher
         .as_rust_type_ref()
         .key_expr()
@@ -367,8 +371,8 @@ fn _publisher_matching_listener_declare_inner<'a>(
 /// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_publisher_declare_matching_listener(
+#[prebindgen]
+pub fn z_publisher_declare_matching_listener(
     publisher: &'static z_loaned_publisher_t,
     matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
     callback: &mut z_moved_closure_matching_status_t,
@@ -397,8 +401,8 @@ pub extern "C" fn z_publisher_declare_matching_listener(
 /// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_publisher_declare_background_matching_listener(
+#[prebindgen]
+pub fn z_publisher_declare_background_matching_listener(
     publisher: &'static z_loaned_publisher_t,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
@@ -417,9 +421,9 @@ pub extern "C" fn z_publisher_declare_background_matching_listener(
 /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_get_matching_status(
+pub fn z_publisher_get_matching_status(
     this: &'static z_loaned_publisher_t,
     matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
@@ -439,17 +443,17 @@ pub extern "C" fn z_publisher_get_matching_status(
 
 /// Frees memory and resets publisher to its gravestone state.
 /// This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
+pub fn z_publisher_drop(this: &mut z_moved_publisher_t) {
     std::mem::drop(this.take_rust_type())
 }
 
-#[no_mangle]
+#[prebindgen]
 /// @brief Undeclares the given publisher.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
+pub fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
             tracing::error!("{}", e);

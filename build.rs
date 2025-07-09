@@ -42,22 +42,9 @@ pub fn dump_rust_sources(out_path: &std::path::Path) {
 
 fn main() {
     buildrs::opaque_types_generator::generate_opaque_types();
-    buildrs::cbindgen_generator::generate_c_headers();
-    if let Some(out_path) = env::var_os("ZENOHC_DUMP_SRC_DIR") {
-        let out_path = std::path::Path::new(&out_path);
-        dump_rust_sources(out_path);
-    }
+    prebindgen::init_prebindgen_out_dir();
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=buildrs");
     println!("cargo:rerun-if-changed=src");
-    println!("cargo:rerun-if-changed=splitguide.yaml");
-    println!("cargo:rerun-if-changed=cbindgen.toml");
     println!("cargo:rerun-if-changed=build-resources");
-    println!("cargo:rerun-if-changed=include");
-    if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
-        let name = std::env::var("CARGO_PKG_NAME").unwrap();
-        // Create the shared library name by removing hyphens from the pkg_name
-        let soname = format!("lib{}.so", name.replace('-', ""));
-        println!("cargo:rustc-cdylib-link-arg=-Wl,-soname,{}", soname);
-    }
 }

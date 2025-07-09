@@ -15,6 +15,7 @@
 use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     sample::Sample,
@@ -34,22 +35,22 @@ decl_c_type!(
 );
 
 /// Drops the handler and resets it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_drop(this_: &mut z_moved_fifo_handler_sample_t) {
+#[prebindgen]
+pub fn z_fifo_handler_sample_drop(this_: &mut z_moved_fifo_handler_sample_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Constructs a handler in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_fifo_handler_sample_null(
+#[prebindgen]
+pub fn z_internal_fifo_handler_sample_null(
     this: &mut MaybeUninit<z_owned_fifo_handler_sample_t>,
 ) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_fifo_handler_sample_check(
+#[prebindgen]
+pub fn z_internal_fifo_handler_sample_check(
     this_: &z_owned_fifo_handler_sample_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -73,9 +74,9 @@ extern "C" fn __z_handler_sample_drop(context: *mut c_void) {
 }
 
 /// Constructs send and recieve ends of the fifo channel
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_fifo_channel_sample_new(
+pub unsafe fn z_fifo_channel_sample_new(
     callback: &mut MaybeUninit<z_owned_closure_sample_t>,
     handler: &mut MaybeUninit<z_owned_fifo_handler_sample_t>,
     capacity: usize,
@@ -92,9 +93,9 @@ pub unsafe extern "C" fn z_fifo_channel_sample_new(
 }
 
 /// Borrows handler.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_fifo_handler_sample_loan(
+pub unsafe fn z_fifo_handler_sample_loan(
     this: &z_owned_fifo_handler_sample_t,
 ) -> &z_loaned_fifo_handler_sample_t {
     this.as_rust_type_ref()
@@ -106,8 +107,8 @@ pub unsafe extern "C" fn z_fifo_handler_sample_loan(
 /// Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
 /// the channel is dropped (normally when there are no more samples to receive).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_recv(
+#[prebindgen]
+pub fn z_fifo_handler_sample_recv(
     this: &z_loaned_fifo_handler_sample_t,
     sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> z_result_t {
@@ -127,8 +128,8 @@ pub extern "C" fn z_fifo_handler_sample_recv(
 /// If there are no more pending replies will return immediately (with sample set to its gravestone state).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state),
 /// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the sample will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_fifo_handler_sample_try_recv(
+#[prebindgen]
+pub fn z_fifo_handler_sample_try_recv(
     this: &z_loaned_fifo_handler_sample_t,
     sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> z_result_t {
@@ -160,31 +161,31 @@ decl_c_type!(
 );
 
 /// Drops the handler and resets it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_ring_handler_sample_drop(this_: &mut z_moved_ring_handler_sample_t) {
+#[prebindgen]
+pub fn z_ring_handler_sample_drop(this_: &mut z_moved_ring_handler_sample_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Constructs a handler in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_ring_handler_sample_null(
+#[prebindgen]
+pub fn z_internal_ring_handler_sample_null(
     this: &mut MaybeUninit<z_owned_ring_handler_sample_t>,
 ) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_ring_handler_sample_check(
+#[prebindgen]
+pub fn z_internal_ring_handler_sample_check(
     this_: &z_owned_ring_handler_sample_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs send and recieve ends of the ring channel
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_ring_channel_sample_new(
+pub unsafe fn z_ring_channel_sample_new(
     callback: &mut MaybeUninit<z_owned_closure_sample_t>,
     handler: &mut MaybeUninit<z_owned_ring_handler_sample_t>,
     capacity: usize,
@@ -201,9 +202,9 @@ pub unsafe extern "C" fn z_ring_channel_sample_new(
 }
 
 /// Borrows handler.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_ring_handler_sample_loan(
+pub unsafe fn z_ring_handler_sample_loan(
     this: &z_owned_ring_handler_sample_t,
 ) -> &z_loaned_ring_handler_sample_t {
     this.as_rust_type_ref()
@@ -215,8 +216,8 @@ pub unsafe extern "C" fn z_ring_handler_sample_loan(
 /// Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until
 /// the channel is dropped (normally when there are no more replies to receive).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_ring_handler_sample_recv(
+#[prebindgen]
+pub fn z_ring_handler_sample_recv(
     this: &z_loaned_ring_handler_sample_t,
     sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> z_result_t {
@@ -235,8 +236,8 @@ pub extern "C" fn z_ring_handler_sample_recv(
 /// Returns sample from the ring buffer. If there are no more pending replies will return immediately (with sample set to its gravestone state).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state),
 /// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the sample will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_ring_handler_sample_try_recv(
+#[prebindgen]
+pub fn z_ring_handler_sample_try_recv(
     this: &z_loaned_ring_handler_sample_t,
     sample: &mut MaybeUninit<z_owned_sample_t>,
 ) -> z_result_t {

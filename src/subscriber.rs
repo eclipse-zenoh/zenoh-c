@@ -14,6 +14,7 @@
 
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     handlers::Callback,
     pubsub::{Subscriber, SubscriberBuilder},
@@ -37,15 +38,15 @@ decl_c_type!(
 );
 
 /// Constructs a subscriber in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t>) {
+#[prebindgen]
+pub fn z_internal_subscriber_null(this_: &mut MaybeUninit<z_owned_subscriber_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Borrows subscriber.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
+pub unsafe fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subscriber_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -54,6 +55,7 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 }
 
 /// Options passed to the `z_declare_subscriber()` function.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
@@ -67,6 +69,7 @@ pub struct z_subscriber_options_t {
     pub allowed_origin: zc_locality_t,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for z_subscriber_options_t {
     fn default() -> Self {
         Self {
@@ -79,8 +82,8 @@ impl Default for z_subscriber_options_t {
 }
 
 /// Constructs the default value for `z_subscriber_options_t`.
-#[no_mangle]
-pub extern "C" fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
+#[prebindgen]
+pub fn z_subscriber_options_default(this_: &mut MaybeUninit<z_subscriber_options_t>) {
     this_.write(z_subscriber_options_t::default());
 }
 
@@ -121,8 +124,8 @@ pub(crate) fn _declare_subscriber_inner<'a, 'b>(
 /// @param options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
-#[no_mangle]
-pub extern "C" fn z_declare_subscriber(
+#[prebindgen]
+pub fn z_declare_subscriber(
     session: &z_loaned_session_t,
     subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -153,8 +156,8 @@ pub extern "C" fn z_declare_subscriber(
 /// @param options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_declare_background_subscriber(
+#[prebindgen]
+pub fn z_declare_background_subscriber(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
@@ -171,9 +174,9 @@ pub extern "C" fn z_declare_background_subscriber(
 }
 
 /// Returns the key expression of the subscriber.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z_loaned_keyexpr_t {
+pub fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z_loaned_keyexpr_t {
     subscriber
         .as_rust_type_ref()
         .key_expr()
@@ -182,22 +185,22 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 
 /// Undeclares subscriber callback and resets it to its gravestone state.
 /// This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
-#[no_mangle]
-pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
+#[prebindgen]
+pub fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
+#[prebindgen]
+pub fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Undeclares the subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
+#[prebindgen]
+pub fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.undeclare().wait() {
             tracing::error!("{}", e);
@@ -210,7 +213,7 @@ pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> re
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the subscriber.
-#[no_mangle]
-pub extern "C" fn z_subscriber_id(subscriber: &z_loaned_subscriber_t) -> z_entity_global_id_t {
+#[prebindgen]
+pub fn z_subscriber_id(subscriber: &z_loaned_subscriber_t) -> z_entity_global_id_t {
     subscriber.as_rust_type_ref().id().into_c_type()
 }
