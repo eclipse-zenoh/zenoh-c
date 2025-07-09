@@ -133,6 +133,7 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_constants.h
+			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_def.h
 			DESTINATION ${cargo_toml_dir}/include/)
 	endif()
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
