@@ -1640,9 +1640,25 @@ dependencies = [
 
 [[package]]
 name = "prebindgen"
-version = "0.1.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#bc40e59b3095d885a061485db2764dcdc67257bd"
+version = "0.2.0"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#711a39aa9801df96d4c69e2f3ede5521ca320c00"
 dependencies = [
+ "prettyplease",
+ "proc-macro2",
+ "quote",
+ "regex",
+ "roxygen",
+ "serde",
+ "serde_json",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "prebindgen-proc-macro"
+version = "0.2.0"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#711a39aa9801df96d4c69e2f3ede5521ca320c00"
+dependencies = [
+ "prebindgen",
  "proc-macro2",
  "quote",
  "serde",
@@ -1651,15 +1667,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "prebindgen-proc-macro"
-version = "0.1.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#bc40e59b3095d885a061485db2764dcdc67257bd"
+name = "prettyplease"
+version = "0.2.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "64d1ec885c64d0457d564db4ec299b2dae3f9c02808b8ad9c3a089c591b18033"
 dependencies = [
- "prebindgen",
  "proc-macro2",
- "quote",
- "serde",
- "serde_json",
  "syn 2.0.87",
 ]
 
@@ -1922,6 +1935,17 @@ dependencies = [
  "bitflags 2.6.0",
  "serde",
  "serde_derive",
+]
+
+[[package]]
+name = "roxygen"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa650dd372f29f0a6be64b2896707f9536962ba28915e3b39bcafd5a6221873b"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.87",
 ]
 
 [[package]]

@@ -75,7 +75,7 @@ zenoh-ext = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.g
 zenoh-runtime = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
-prebindgen-proc-macro = { version = "0.1.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+prebindgen-proc-macro = { version = "0.2.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
