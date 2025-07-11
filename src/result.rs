@@ -55,7 +55,7 @@ impl<const N: usize> Default for Buffer<N> {
 impl<const N: usize> Buffer<N> {
     pub fn update(&mut self, error: &str) {
         self.len = error.len().min(N);
-        self.buffer.copy_from_slice(&error.as_bytes()[0..self.len]);
+        (self.buffer[0..self.len]).copy_from_slice(&error.as_bytes()[0..self.len]);
     }
 }
 
