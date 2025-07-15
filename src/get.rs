@@ -13,12 +13,11 @@
 //
 
 use std::{
-    ffi::CStr,
     mem::MaybeUninit,
     ptr::{null, null_mut},
 };
 
-use libc::c_char;
+use libc::{c_char, strlen};
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
@@ -28,12 +27,12 @@ use zenoh::{
 
 pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
-    result,
+    result::{self, Z_EINVAL},
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
-    z_query_target_t,
+    z_query_target_t, CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -244,6 +243,24 @@ pub struct z_get_options_t {
     pub timeout_ms: u64,
 }
 
+impl z_get_options_t {
+    fn clear(&mut self) {
+        if let Some(p) = self.payload.take() {
+            p.take_rust_type();
+        }
+        if let Some(e) = self.encoding.take() {
+            e.take_rust_type();
+        }
+        if let Some(a) = self.attachment.take() {
+            a.take_rust_type();
+        }
+        #[cfg(feature = "unstable")]
+        if let Some(si) = self.source_info.take() {
+            si.take_rust_type();
+        }
+    }
+}
+
 /// Constructs default `z_get_options_t`
 #[no_mangle]
 pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
@@ -271,7 +288,7 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
 ///
 /// @param session: The zenoh session.
 /// @param key_expr: The key expression matching resources to query.
-/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
 /// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
 /// @param options: Additional options for the get. All owned fields will be consumed.
 ///
@@ -285,12 +302,55 @@ pub unsafe extern "C" fn z_get(
     callback: &mut z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
+    z_get_with_parameters_substring(
+        session,
+        key_expr,
+        parameters,
+        strlen(parameters),
+        callback,
+        options,
+    )
+}
+
+/// Query data from the matching queryables in the system.
+/// Replies are provided through a callback function.
+///
+/// @param session: The zenoh session.
+/// @param key_expr: The key expression matching resources to query.
+/// @param parameters: The query's parameters string, similar to a url's query segment.
+/// @param parameters_len: The parameters substring length.
+/// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+/// @param options: Additional options for the get. All owned fields will be consumed.
+///
+/// @return 0 in case of success, a negative error value upon failure.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_get_with_parameters_substring(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    parameters: *const c_char,
+    parameters_len: usize,
+    callback: &mut z_moved_closure_reply_t,
+    options: Option<&mut z_get_options_t>,
+) -> result::z_result_t {
     let callback = callback.take_rust_type();
-    let p = if parameters.is_null() {
-        ""
-    } else {
-        CStr::from_ptr(parameters).to_str().unwrap()
+    let pcs = match CStringView::new_borrowed(parameters as *const c_char, parameters_len) {
+        Ok(cs) => cs,
+        Err(r) => {
+            options.map(|o| o.clear());
+            return r;
+        }
     };
+
+    let p: &str = match (&pcs).try_into() {
+        Ok(s) => s,
+        Err(e) => {
+            options.map(|o| o.clear());
+            crate::report_error!("Parameters is not a valid utf-8 string: {e}");
+            return Z_EINVAL;
+        }
+    };
+
     let session = session.as_rust_type_ref();
     let key_expr = key_expr.as_rust_type_ref();
     let mut get = session.get(Selector::from((key_expr, p)));

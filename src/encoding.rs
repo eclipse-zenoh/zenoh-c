@@ -88,6 +88,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
         *encoding = std::mem::take(encoding).with_schema(String::new());
         return result::Z_OK;
     } else if s.is_null() {
+        crate::report_error!("Non-zero length string should not be null");
         return result::Z_EINVAL;
     }
     #[allow(clippy::unnecessary_cast)]

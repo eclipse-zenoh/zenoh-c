@@ -2800,7 +2800,7 @@ z_result_t z_fifo_handler_sample_try_recv(const struct z_loaned_fifo_handler_sam
  *
  * @param session: The zenoh session.
  * @param key_expr: The key expression matching resources to query.
- * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
  * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
  * @param options: Additional options for the get. All owned fields will be consumed.
  *
@@ -2816,6 +2816,26 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  * Constructs default `z_get_options_t`
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
+/**
+ * Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression matching resources to query.
+ * @param parameters: The query's parameters string, similar to a url's query segment.
+ * @param parameters_len: The parameters substring length.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, a negative error value upon failure.
+ */
+ZENOHC_API
+z_result_t z_get_with_parameters_substring(const struct z_loaned_session_t *session,
+                                           const struct z_loaned_keyexpr_t *key_expr,
+                                           const char *parameters,
+                                           size_t parameters_len,
+                                           struct z_moved_closure_reply_t *callback,
+                                           struct z_get_options_t *options);
 /**
  * Constructs an owned copy of hello message.
  */

@@ -19,7 +19,7 @@ use zenoh::config::{Config, WhatAmI};
 use crate::{
     result::{self, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
+    z_internal_string_null, z_owned_string_t, z_string_copy_from_substr, CStringView,
 };
 
 #[no_mangle]
@@ -102,6 +102,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
     let config = this.as_rust_type_ref();
     if key.is_null() {
         z_internal_string_null(out_value_string);
+        crate::report_error!("Key should not be null");
         return result::Z_EINVAL;
     }
 
@@ -157,14 +158,22 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     value_len: usize,
 ) -> result::z_result_t {
     let config = this.as_rust_type_mut();
-    let key = match from_utf8(from_raw_parts(key as _, key_len)) {
+    let csk = match CStringView::new_borrowed(key, key_len) {
+        Ok(cs) => cs,
+        Err(r) => return r,
+    };
+    let key = match (&csk).try_into() {
         Ok(s) => s,
         Err(e) => {
             crate::report_error!("Config key is not a valid utf-8 string: {}", e);
             return result::Z_EINVAL;
         }
     };
-    let value = match from_utf8(from_raw_parts(value as _, value_len)) {
+    let csv = match CStringView::new_borrowed(value, value_len) {
+        Ok(cs) => cs,
+        Err(r) => return r,
+    };
+    let value = match (&csv).try_into() {
         Ok(s) => s,
         Err(e) => {
             crate::report_error!("Config value is not a valid utf-8 string: {}", e);
@@ -222,14 +231,14 @@ pub unsafe extern "C" fn zc_config_from_substr(
 ) -> result::z_result_t {
     z_internal_config_null(this);
     if s.is_null() {
-        crate::report_error!("String can not be null");
+        crate::report_error!("String should not be NULL");
         result::Z_EINVAL
     } else {
         let slice = std::slice::from_raw_parts(s as _, len);
         let conf_str = match std::str::from_utf8(slice) {
             Ok(cs) => cs,
             Err(e) => {
-                crate::report_error!("Config should be a valid UTF-8 string {}", e);
+                crate::report_error!("Config should be a valid utf-8 string {}", e);
                 return result::Z_EINVAL;
             }
         };
@@ -306,7 +315,7 @@ pub unsafe extern "C" fn zc_config_from_file_substr(
     let path_str = match std::str::from_utf8(slice) {
         Ok(cs) => cs,
         Err(e) => {
-            crate::report_error!("Path should be a valid UTF-8 string {}", e);
+            crate::report_error!("Path should be a valid utf-8 string {}", e);
             return result::Z_EINVAL;
         }
     };
