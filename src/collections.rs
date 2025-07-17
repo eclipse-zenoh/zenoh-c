@@ -155,7 +155,7 @@ impl CSlice {
         context: *mut c_void,
     ) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            crate::report_error!("Non zero-length array size should not be NULL");
+            crate::report_error!("Non zero-length array should not be NULL");
             Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_unchecked(data, len, drop, context))
@@ -164,7 +164,7 @@ impl CSlice {
 
     pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            crate::report_error!("Non zero-length array size should not be NULL");
+            crate::report_error!("Non zero-length arra should not be NULL");
             Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_borrowed_unchecked(data, len))
@@ -192,7 +192,7 @@ impl CSlice {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
-            crate::report_error!("Non zero-length array size should not be NULL");
+            crate::report_error!("Non zero-length array should not be NULL");
             Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_owned_unchecked(data, len))
