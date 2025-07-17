@@ -302,7 +302,7 @@ pub unsafe extern "C" fn z_get(
     callback: &mut z_moved_closure_reply_t,
     options: Option<&mut z_get_options_t>,
 ) -> result::z_result_t {
-    z_get_with_parameters_substring(
+    z_get_with_parameters_substr(
         session,
         key_expr,
         parameters,
@@ -325,7 +325,7 @@ pub unsafe extern "C" fn z_get(
 /// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_get_with_parameters_substring(
+pub unsafe extern "C" fn z_get_with_parameters_substr(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,

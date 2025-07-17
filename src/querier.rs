@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{ffi::CStr, mem::MaybeUninit};
+use std::mem::MaybeUninit;
 
 use libc::c_char;
 #[cfg(feature = "unstable")]
@@ -202,6 +202,24 @@ pub struct z_querier_get_options_t {
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
+impl z_querier_get_options_t {
+    fn clear(&mut self) {
+        if let Some(p) = self.payload.take() {
+            p.take_rust_type();
+        }
+        if let Some(e) = self.encoding.take() {
+            e.take_rust_type();
+        }
+        if let Some(a) = self.attachment.take() {
+            a.take_rust_type();
+        }
+        #[cfg(feature = "unstable")]
+        if let Some(si) = self.source_info.take() {
+            si.take_rust_type();
+        }
+    }
+}
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `z_querier_get_options_t`.
 #[no_mangle]
@@ -221,7 +239,7 @@ pub extern "C" fn z_querier_get_options_default(this: &mut MaybeUninit<z_querier
 /// Replies are provided through a callback function.
 ///
 /// @param querier: The querier to make query from.
-/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
 /// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
 /// @param options: Additional options for the get. All owned fields will be consumed.
 ///
@@ -234,8 +252,55 @@ pub unsafe extern "C" fn z_querier_get(
     callback: &mut z_moved_closure_reply_t,
     options: Option<&mut z_querier_get_options_t>,
 ) -> result::z_result_t {
+    z_querier_get_with_parameters_substr(
+        querier,
+        parameters,
+        libc::strlen(parameters),
+        callback,
+        options,
+    )
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Query data from the matching queryables in the system.
+/// Replies are provided through a callback function.
+///
+/// @param querier: The querier to make query from.
+/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param parameters_len: The length of the query's parameters substring.
+/// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+/// @param options: Additional options for the get. All owned fields will be consumed.
+///
+/// @return 0 in case of success, a negative error value upon failure.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_querier_get_with_parameters_substr(
+    querier: &z_loaned_querier_t,
+    parameters: *const c_char,
+    parameters_len: usize,
+    callback: &mut z_moved_closure_reply_t,
+    options: Option<&mut z_querier_get_options_t>,
+) -> result::z_result_t {
     let querier = querier.as_rust_type_ref();
     let callback = callback.take_rust_type();
+
+    let pcs = match crate::CStringView::new_borrowed(parameters as *const c_char, parameters_len) {
+        Ok(cs) => cs,
+        Err(r) => {
+            options.map(|o| o.clear());
+            return r;
+        }
+    };
+
+    let p: &str = match (&pcs).try_into() {
+        Ok(s) => s,
+        Err(e) => {
+            options.map(|o| o.clear());
+            crate::report_error!("Parameters is not a valid utf-8 string: {e}");
+            return result::Z_EINVAL;
+        }
+    };
+
     let mut get = querier.get();
     if let Some(options) = options {
         if let Some(payload) = options.payload.take() {
@@ -252,8 +317,8 @@ pub unsafe extern "C" fn z_querier_get(
             get = get.attachment(attachment.take_rust_type());
         }
     }
-    if !parameters.is_null() {
-        get = get.parameters(CStr::from_ptr(parameters).to_str().unwrap());
+    if !p.is_empty() {
+        get = get.parameters(p);
     }
     match get
         .callback(move |response| {

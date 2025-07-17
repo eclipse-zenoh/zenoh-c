@@ -2830,12 +2830,12 @@ ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
  * @return 0 in case of success, a negative error value upon failure.
  */
 ZENOHC_API
-z_result_t z_get_with_parameters_substring(const struct z_loaned_session_t *session,
-                                           const struct z_loaned_keyexpr_t *key_expr,
-                                           const char *parameters,
-                                           size_t parameters_len,
-                                           struct z_moved_closure_reply_t *callback,
-                                           struct z_get_options_t *options);
+z_result_t z_get_with_parameters_substr(const struct z_loaned_session_t *session,
+                                        const struct z_loaned_keyexpr_t *key_expr,
+                                        const char *parameters,
+                                        size_t parameters_len,
+                                        struct z_moved_closure_reply_t *callback,
+                                        struct z_get_options_t *options);
 /**
  * Constructs an owned copy of hello message.
  */
@@ -3948,7 +3948,7 @@ void z_querier_drop(struct z_moved_querier_t *this_);
  * Replies are provided through a callback function.
  *
  * @param querier: The querier to make query from.
- * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
  * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
  * @param options: Additional options for the get. All owned fields will be consumed.
  *
@@ -3979,6 +3979,27 @@ z_result_t z_querier_get_matching_status(const struct z_loaned_querier_t *this_,
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_querier_get_options_default(struct z_querier_get_options_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * @param querier: The querier to make query from.
+ * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters_len: The length of the query's parameters substring.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, a negative error value upon failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_querier_get_with_parameters_substr(const struct z_loaned_querier_t *querier,
+                                                const char *parameters,
+                                                size_t parameters_len,
+                                                struct z_moved_closure_reply_t *callback,
+                                                struct z_querier_get_options_t *options);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5635,10 +5656,14 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
- * @brief Construct a view string on last error message.
- * The view string only remains valid until next faillable zenoh API call.
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a view string on last error message.
+ * The view string only remains valid until next faillable zenoh API call from the same thread.
  */
-ZENOHC_API void zc_get_last_error(struct z_view_string_t *out);
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void zc_get_last_error(struct z_view_string_t *out);
+#endif
 /**
  * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
