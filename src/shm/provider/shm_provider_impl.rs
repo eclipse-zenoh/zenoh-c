@@ -145,7 +145,7 @@ pub(crate) fn map(
             Z_OK
         }
         Err(e) => {
-            tracing::error!("{:?}", e);
+            crate::report_error!("{:?}", e);
             Z_EINVAL
         }
     }

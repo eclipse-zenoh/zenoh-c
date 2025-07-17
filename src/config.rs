@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::{ffi::CStr, mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
+use std::{mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
 use libc::{c_char, c_uint};
 use zenoh::config::{Config, WhatAmI};
@@ -19,7 +19,7 @@ use zenoh::config::{Config, WhatAmI};
 use crate::{
     result::{self, Z_OK},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_internal_string_null, z_owned_string_t, z_string_copy_from_substr,
+    z_internal_string_null, z_owned_string_t, z_string_copy_from_substr, CStringView,
 };
 
 #[no_mangle]
@@ -102,13 +102,14 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
     let config = this.as_rust_type_ref();
     if key.is_null() {
         z_internal_string_null(out_value_string);
+        crate::report_error!("Key should not be null");
         return result::Z_EINVAL;
     }
 
     let key = match from_utf8(from_raw_parts(key as _, key_len)) {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Config key is not a valid utf-8 string: {}", e);
+            crate::report_error!("Config key is not a valid utf-8 string: {}", e);
             z_internal_string_null(out_value_string);
             return result::Z_EINVAL;
         }
@@ -124,7 +125,7 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
             result::Z_OK
         }
         None => {
-            tracing::error!("No value was found in the config for key: '{}'", key);
+            crate::report_error!("No value was found in the config for key: '{}'", key);
             z_internal_string_null(out_value_string);
             result::Z_EUNAVAILABLE
         }
@@ -157,24 +158,32 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
     value_len: usize,
 ) -> result::z_result_t {
     let config = this.as_rust_type_mut();
-    let key = match from_utf8(from_raw_parts(key as _, key_len)) {
+    let csk = match CStringView::new_borrowed(key, key_len) {
+        Ok(cs) => cs,
+        Err(r) => return r,
+    };
+    let key = match (&csk).try_into() {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Config key is not a valid utf-8 string: {}", e);
+            crate::report_error!("Config key is not a valid utf-8 string: {}", e);
             return result::Z_EINVAL;
         }
     };
-    let value = match from_utf8(from_raw_parts(value as _, value_len)) {
+    let csv = match CStringView::new_borrowed(value, value_len) {
+        Ok(cs) => cs,
+        Err(r) => return r,
+    };
+    let value = match (&csv).try_into() {
         Ok(s) => s,
         Err(e) => {
-            tracing::error!("Config value is not a valid utf-8 string: {}", e);
+            crate::report_error!("Config value is not a valid utf-8 string: {}", e);
             return result::Z_EINVAL;
         }
     };
     match config.insert_json5(key, value) {
         Ok(_) => 0,
         Err(e) => {
-            tracing::error!(
+            crate::report_error!(
                 "Failed to insert value '{}' for key '{}' into config: {}",
                 value,
                 key,
@@ -207,19 +216,43 @@ pub unsafe extern "C" fn zc_config_from_str(
     this: &mut MaybeUninit<z_owned_config_t>,
     s: *const c_char,
 ) -> result::z_result_t {
-    let mut res = result::Z_OK;
+    zc_config_from_substr(this, s, libc::strlen(s))
+}
+
+/// Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+///
+/// Returns 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_config_from_substr(
+    this: &mut MaybeUninit<z_owned_config_t>,
+    s: *const c_char,
+    len: usize,
+) -> result::z_result_t {
+    z_internal_config_null(this);
     if s.is_null() {
-        z_internal_config_null(this);
-        res = result::Z_EINVAL;
+        crate::report_error!("String should not be NULL");
+        result::Z_EINVAL
     } else {
-        let conf_str = CStr::from_ptr(s);
-        let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
-        if props.is_none() {
-            res = result::Z_EPARSE;
+        let slice = std::slice::from_raw_parts(s as _, len);
+        let conf_str = match std::str::from_utf8(slice) {
+            Ok(cs) => cs,
+            Err(e) => {
+                crate::report_error!("Config should be a valid utf-8 string {}", e);
+                return result::Z_EINVAL;
+            }
+        };
+        match json5::from_str(conf_str) {
+            Ok(props) => {
+                this.as_rust_type_mut_uninit().write(Some(props));
+                result::Z_OK
+            }
+            Err(e) => {
+                crate::report_error!("Invalid config string: {}", e);
+                result::Z_EPARSE
+            }
         }
-        this.as_rust_type_mut_uninit().write(props);
     }
-    res
 }
 
 /// Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
@@ -244,14 +277,14 @@ pub unsafe extern "C" fn zc_config_to_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Config is not a valid json5: {}", e);
+            crate::report_error!("Config is not a valid json5: {}", e);
             z_internal_string_null(out_config_string);
             result::Z_EPARSE
         }
     }
 }
 
-/// Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+/// Constructs a configuration by parsing a file at `path` null-terminated string. Currently supported format is JSON5, a superset of JSON.
 ///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
@@ -260,25 +293,42 @@ pub unsafe extern "C" fn zc_config_from_file(
     this: &mut MaybeUninit<z_owned_config_t>,
     path: *const c_char,
 ) -> result::z_result_t {
-    let path_str = CStr::from_ptr(path);
-    let mut res = result::Z_OK;
-    let config = match path_str.to_str() {
-        Ok(path) => match zenoh::config::Config::from_file(path) {
-            Ok(c) => Some(c),
-            Err(e) => {
-                tracing::error!("Failed to read config from {}: {}", path, e);
-                res = result::Z_EPARSE;
-                None
-            }
-        },
+    zc_config_from_file_substr(this, path, libc::strlen(path))
+}
+
+/// Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.
+///
+/// Returns 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_config_from_file_substr(
+    this: &mut MaybeUninit<z_owned_config_t>,
+    path: *const c_char,
+    len: usize,
+) -> result::z_result_t {
+    z_internal_config_null(this);
+    if path.is_null() {
+        crate::report_error!("Path should be NULL");
+        return result::Z_EINVAL;
+    }
+    let slice = std::slice::from_raw_parts(path as _, len);
+    let path_str = match std::str::from_utf8(slice) {
+        Ok(cs) => cs,
         Err(e) => {
-            tracing::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
-            res = result::Z_EIO;
-            None
+            crate::report_error!("Path should be a valid utf-8 string {}", e);
+            return result::Z_EINVAL;
         }
     };
-    this.as_rust_type_mut_uninit().write(config);
-    res
+    match zenoh::config::Config::from_file(path_str) {
+        Ok(c) => {
+            this.as_rust_type_mut_uninit().write(Some(c));
+            result::Z_OK
+        }
+        Err(e) => {
+            crate::report_error!("Failed to read config from {}: {}", path_str, e);
+            result::Z_EPARSE
+        }
+    }
 }
 
 /// Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
@@ -295,7 +345,7 @@ pub unsafe extern "C" fn zc_config_from_env(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("Close error: {}", e);
             result::Z_EIO
         }
     }

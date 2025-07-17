@@ -120,7 +120,7 @@ pub extern "C" fn ze_declare_publication_cache(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -145,7 +145,7 @@ pub extern "C" fn ze_declare_background_publication_cache(
     match p.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -212,7 +212,7 @@ pub extern "C" fn ze_undeclare_publication_cache(
 ) -> result::z_result_t {
     if let Some(p) = this.take_rust_type() {
         if let Err(e) = p.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }

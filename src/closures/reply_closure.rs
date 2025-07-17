@@ -101,7 +101,7 @@ pub extern "C" fn z_closure_reply_call(
     match closure._call {
         Some(call) => call(reply, closure._context),
         None => {
-            tracing::error!("Attempted to call an uninitialized closure!");
+            crate::report_error!("Attempted to call an uninitialized closure!");
         }
     }
 }

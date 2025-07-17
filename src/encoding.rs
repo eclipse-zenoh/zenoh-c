@@ -66,7 +66,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
                 result::Z_OK
             }
             Err(e) => {
-                tracing::error!("Can not create encoding from non UTF-8 string: {}", e);
+                crate::report_error!("Can not create encoding from non UTF-8 string: {}", e);
                 encoding.write(Encoding::default());
                 result::Z_EINVAL
             }
@@ -88,6 +88,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
         *encoding = std::mem::take(encoding).with_schema(String::new());
         return result::Z_OK;
     } else if s.is_null() {
+        crate::report_error!("Non-zero length string should not be null");
         return result::Z_EINVAL;
     }
     #[allow(clippy::unnecessary_cast)]
@@ -98,7 +99,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EINVAL
         }
     }

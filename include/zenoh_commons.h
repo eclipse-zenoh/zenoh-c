@@ -2800,7 +2800,7 @@ z_result_t z_fifo_handler_sample_try_recv(const struct z_loaned_fifo_handler_sam
  *
  * @param session: The zenoh session.
  * @param key_expr: The key expression matching resources to query.
- * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
  * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
  * @param options: Additional options for the get. All owned fields will be consumed.
  *
@@ -2816,6 +2816,26 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  * Constructs default `z_get_options_t`
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
+/**
+ * Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression matching resources to query.
+ * @param parameters: The query's parameters string, similar to a url's query segment.
+ * @param parameters_len: The parameters substring length.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, a negative error value upon failure.
+ */
+ZENOHC_API
+z_result_t z_get_with_parameters_substr(const struct z_loaned_session_t *session,
+                                        const struct z_loaned_keyexpr_t *key_expr,
+                                        const char *parameters,
+                                        size_t parameters_len,
+                                        struct z_moved_closure_reply_t *callback,
+                                        struct z_get_options_t *options);
 /**
  * Constructs an owned copy of hello message.
  */
@@ -3928,7 +3948,7 @@ void z_querier_drop(struct z_moved_querier_t *this_);
  * Replies are provided through a callback function.
  *
  * @param querier: The querier to make query from.
- * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
  * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
  * @param options: Additional options for the get. All owned fields will be consumed.
  *
@@ -3959,6 +3979,27 @@ z_result_t z_querier_get_matching_status(const struct z_loaned_querier_t *this_,
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_querier_get_options_default(struct z_querier_get_options_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * @param querier: The querier to make query from.
+ * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters_len: The length of the query's parameters substring.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, a negative error value upon failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_querier_get_with_parameters_substr(const struct z_loaned_querier_t *querier,
+                                                const char *parameters,
+                                                size_t parameters_len,
+                                                struct z_moved_closure_reply_t *callback,
+                                                struct z_querier_get_options_t *options);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5538,13 +5579,22 @@ z_result_t zc_concurrent_close_handle_wait(struct zc_moved_concurrent_close_hand
  */
 ZENOHC_API z_result_t zc_config_from_env(struct z_owned_config_t *this_);
 /**
- * Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
+ * Constructs a configuration by parsing a file at `path` null-terminated string. Currently supported format is JSON5, a superset of JSON.
  *
  * Returns 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API
 z_result_t zc_config_from_file(struct z_owned_config_t *this_,
                                const char *path);
+/**
+ * Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_from_file_substr(struct z_owned_config_t *this_,
+                                      const char *path,
+                                      size_t len);
 /**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
@@ -5553,6 +5603,15 @@ z_result_t zc_config_from_file(struct z_owned_config_t *this_,
 ZENOHC_API
 z_result_t zc_config_from_str(struct z_owned_config_t *this_,
                               const char *s);
+/**
+ * Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_from_substr(struct z_owned_config_t *this_,
+                                 const char *s,
+                                 size_t len);
 /**
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
@@ -5596,6 +5655,15 @@ z_result_t zc_config_insert_json5_from_substr(struct z_loaned_config_t *this_,
 ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a view string on last error message.
+ * The view string only remains valid until next faillable zenoh API call from the same thread.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void zc_get_last_error(struct z_view_string_t *out);
+#endif
 /**
  * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.

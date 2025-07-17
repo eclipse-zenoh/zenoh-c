@@ -299,7 +299,7 @@ pub extern "C" fn z_declare_queryable(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -326,7 +326,7 @@ pub extern "C" fn z_declare_background_queryable(
     match queryable.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -399,7 +399,7 @@ pub extern "C" fn z_query_reply(
     }
 
     if let Err(e) = reply.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         return result::Z_EGENERIC;
     }
     result::Z_OK
@@ -434,7 +434,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     );
 
     if let Err(e) = reply.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         return result::Z_EGENERIC;
     }
     result::Z_OK
@@ -480,7 +480,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     }
 
     if let Err(e) = reply.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         return result::Z_EGENERIC;
     }
     result::Z_OK
@@ -570,7 +570,7 @@ pub extern "C" fn z_query_attachment_mut(
 pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
     if let Some(qable) = this_.take_rust_type() {
         if let Err(e) = qable.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }

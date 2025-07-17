@@ -99,7 +99,7 @@ pub extern "C" fn z_closure_sample_call(
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(sample, closure._context),
-        None => tracing::error!("Attempted to call an uninitialized closure!"),
+        None => crate::report_error!("Attempted to call an uninitialized closure!"),
     }
 }
 

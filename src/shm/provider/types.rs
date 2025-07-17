@@ -135,7 +135,7 @@ pub extern "C" fn z_memory_layout_new(
             Z_OK
         }
         Err(e) => {
-            tracing::error!("{:?}", e);
+            crate::report_error!("{:?}", e);
             Z_EINVAL
         }
     }

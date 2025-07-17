@@ -19,6 +19,7 @@ use std::{
     ops::{Deref, DerefMut},
     ptr::{null, null_mut, slice_from_raw_parts},
     slice::from_raw_parts,
+    str::{from_utf8, Utf8Error},
 };
 
 use libc::strlen;
@@ -154,6 +155,7 @@ impl CSlice {
         context: *mut c_void,
     ) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
+            crate::report_error!("Non zero-length array should not be NULL");
             Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_unchecked(data, len, drop, context))
@@ -162,6 +164,7 @@ impl CSlice {
 
     pub fn new_borrowed(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
+            crate::report_error!("Non zero-length arra should not be NULL");
             Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_borrowed_unchecked(data, len))
@@ -189,6 +192,7 @@ impl CSlice {
     #[allow(clippy::missing_safety_doc)]
     pub unsafe fn new_owned(data: *const u8, len: usize) -> Result<Self, z_result_t> {
         if data.is_null() && len > 0 {
+            crate::report_error!("Non zero-length array should not be NULL");
             Err(result::Z_EINVAL)
         } else {
             Ok(Self::new_owned_unchecked(data, len))
@@ -573,6 +577,27 @@ impl From<String> for CStringOwned {
 impl From<CStringInner> for CSlice {
     fn from(value: CStringInner) -> Self {
         value.0
+    }
+}
+
+impl TryFrom<&CStringInner> for &str {
+    type Error = Utf8Error;
+
+    fn try_from(value: &CStringInner) -> Result<Self, Self::Error> {
+        if value.0.data.is_null() {
+            Ok("")
+        } else {
+            let s = unsafe { from_raw_parts(value.0.data, value.len) };
+            from_utf8(s)
+        }
+    }
+}
+
+impl TryFrom<&CStringView> for &str {
+    type Error = Utf8Error;
+
+    fn try_from(value: &CStringView) -> Result<Self, Self::Error> {
+        (&value.0).try_into()
     }
 }
 

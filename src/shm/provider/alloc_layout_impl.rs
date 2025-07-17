@@ -44,7 +44,7 @@ pub(crate) fn alloc_layout_new(
             match provider.alloc(size).into_layout() {
                 Ok(layout) => CSHMLayout::Posix(layout),
                 Err(e) => {
-                    tracing::error!("{:?}", e);
+                    crate::report_error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -53,7 +53,7 @@ pub(crate) fn alloc_layout_new(
             match provider.alloc(size).into_layout() {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
                 Err(e) => {
-                    tracing::error!("{:?}", e);
+                    crate::report_error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -62,7 +62,7 @@ pub(crate) fn alloc_layout_new(
             match provider.alloc(size).into_layout() {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
                 Err(e) => {
-                    tracing::error!("{:?}", e);
+                    crate::report_error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -87,7 +87,7 @@ pub(crate) fn alloc_layout_with_alignment_new(
             {
                 Ok(layout) => CSHMLayout::Posix(layout),
                 Err(e) => {
-                    tracing::error!("{:?}", e);
+                    crate::report_error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -100,7 +100,7 @@ pub(crate) fn alloc_layout_with_alignment_new(
             {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
                 Err(e) => {
-                    tracing::error!("{:?}", e);
+                    crate::report_error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }
@@ -113,7 +113,7 @@ pub(crate) fn alloc_layout_with_alignment_new(
             {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
                 Err(e) => {
-                    tracing::error!("{:?}", e);
+                    crate::report_error!("{:?}", e);
                     return Z_EINVAL;
                 }
             }

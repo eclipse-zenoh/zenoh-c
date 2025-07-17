@@ -192,14 +192,14 @@ pub extern "C" fn z_scout(
     let options = options.cloned().unwrap_or_default();
 
     let Ok(what) = WhatAmIMatcher::try_from(options.what as u8) else {
-        tracing::error!("Invalid WhatAmIMatcher value: {:?}", options.what);
+        crate::report_error!("Invalid WhatAmIMatcher value: {:?}", options.what);
         return result::Z_EINVAL;
     };
 
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
     let Some(config) = config.take_rust_type() else {
-        tracing::error!("Config not provided");
+        crate::report_error!("Config not provided");
         return result::Z_EINVAL;
     };
 
@@ -219,7 +219,7 @@ pub extern "C" fn z_scout(
                 result::Z_OK
             }
             Err(e) => {
-                tracing::error!("{}", e);
+                crate::report_error!("{}", e);
                 result::Z_EGENERIC
             }
         }

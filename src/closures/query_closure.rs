@@ -98,7 +98,7 @@ pub extern "C" fn z_closure_query_call(
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(query, closure._context),
-        None => tracing::error!("Attempted to call an uninitialized closure!"),
+        None => crate::report_error!("Attempted to call an uninitialized closure!"),
     }
 }
 /// Drops the closure, resetting it to its gravestone state.

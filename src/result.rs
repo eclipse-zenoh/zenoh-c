@@ -12,6 +12,12 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
+#[cfg(feature = "unstable")]
+use std::{cell::RefCell, mem::MaybeUninit, str};
+
+#[cfg(feature = "unstable")]
+use crate::{z_view_string_from_substr, z_view_string_t};
+
 #[allow(non_camel_case_types)]
 pub type z_result_t = i8;
 
@@ -33,3 +39,54 @@ pub const Z_EINVAL_MUTEX: z_result_t = -22;
 pub const Z_EAGAIN_MUTEX: z_result_t = -11;
 pub const Z_EPOISON_MUTEX: z_result_t = -22; // same as Z_EINVAL_MUTEX
 pub const Z_EGENERIC: z_result_t = i8::MIN;
+
+#[cfg(feature = "unstable")]
+pub struct Buffer<const N: usize> {
+    buffer: [u8; N],
+    len: usize,
+}
+
+#[cfg(feature = "unstable")]
+impl<const N: usize> Default for Buffer<N> {
+    fn default() -> Self {
+        Self {
+            buffer: [0; N],
+            len: Default::default(),
+        }
+    }
+}
+
+#[cfg(feature = "unstable")]
+impl<const N: usize> Buffer<N> {
+    pub fn update(&mut self, error: &str) {
+        self.len = error.len().min(N);
+        (self.buffer[0..self.len]).copy_from_slice(&error.as_bytes()[0..self.len]);
+    }
+}
+
+#[cfg(feature = "unstable")]
+thread_local! {
+    pub static ERROR_DESCRIPTION: RefCell<Buffer<1024>> = RefCell::default();
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs a view string on last error message.
+/// The view string only remains valid until next faillable zenoh API call from the same thread.
+#[no_mangle]
+extern "C" fn zc_get_last_error(out: &mut MaybeUninit<z_view_string_t>) {
+    ERROR_DESCRIPTION.with_borrow(|b| unsafe {
+        z_view_string_from_substr(out, b.buffer.as_ptr() as *const libc::c_char, b.len)
+    });
+}
+
+#[macro_export]
+macro_rules! report_error{
+    ($($t: tt)*) => {
+        {
+            tracing::error!($($t)*);
+            #[cfg(feature = "unstable")]
+            $crate::result::ERROR_DESCRIPTION.with_borrow_mut(|b| b.update(&format!($($t)*)));
+        }
+    };
+}

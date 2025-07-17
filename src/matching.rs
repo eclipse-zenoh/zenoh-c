@@ -68,7 +68,7 @@ pub extern "C" fn z_undeclare_matching_listener(
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
         if let Err(e) = m.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }

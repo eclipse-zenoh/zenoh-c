@@ -126,7 +126,7 @@ pub unsafe extern "C" fn z_bytes_to_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to convert the payload: {}", e);
+            crate::report_error!("Failed to convert the payload: {}", e);
             dst.as_rust_type_mut_uninit()
                 .write(CStringOwned::gravestone());
             result::Z_EINVAL
@@ -169,7 +169,7 @@ pub unsafe extern "C" fn z_bytes_to_owned_shm(
             result::Z_OK
         }
         None => {
-            tracing::error!("Failed to convert the payload");
+            crate::report_error!("Failed to convert the payload");
             dst.as_rust_type_mut_uninit().write(None);
             result::Z_EINVAL
         }
@@ -195,7 +195,7 @@ pub unsafe extern "C" fn z_bytes_as_loaned_shm(
             result::Z_OK
         }
         None => {
-            tracing::error!("Failed to convert the payload");
+            crate::report_error!("Failed to convert the payload");
             result::Z_EINVAL
         }
     }
@@ -220,7 +220,7 @@ pub unsafe extern "C" fn z_bytes_as_mut_loaned_shm(
             result::Z_OK
         }
         None => {
-            tracing::error!("Failed to convert the payload");
+            crate::report_error!("Failed to convert the payload");
             result::Z_EINVAL
         }
     }

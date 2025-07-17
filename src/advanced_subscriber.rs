@@ -304,7 +304,7 @@ pub extern "C" fn ze_declare_advanced_subscriber(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -331,7 +331,7 @@ pub extern "C" fn ze_declare_background_advanced_subscriber(
     match subscriber.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -347,7 +347,7 @@ pub extern "C" fn ze_undeclare_advanced_subscriber(
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }
@@ -404,7 +404,7 @@ pub extern "C" fn ze_undeclare_sample_miss_listener(
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
         if let Err(e) = m.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }
@@ -450,7 +450,7 @@ pub extern "C" fn ze_advanced_subscriber_declare_sample_miss_listener(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -473,7 +473,7 @@ pub extern "C" fn ze_advanced_subscriber_declare_background_sample_miss_listener
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -525,7 +525,7 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to subscribe to liveliness: {e}");
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
             liveliness_subscriber.write(None);
             result::Z_EGENERIC
         }
@@ -550,7 +550,7 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers_background(
     match builder.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("Failed to subscribe to liveliness: {e}");
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
             result::Z_EGENERIC
         }
     }
