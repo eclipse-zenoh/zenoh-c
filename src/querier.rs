@@ -287,7 +287,9 @@ pub unsafe extern "C" fn z_querier_get_with_parameters_substr(
     let pcs = match crate::CStringView::new_borrowed(parameters as *const c_char, parameters_len) {
         Ok(cs) => cs,
         Err(r) => {
-            options.map(|o| o.clear());
+            if let Some(o) = options {
+                o.clear();
+            }
             return r;
         }
     };
@@ -295,7 +297,9 @@ pub unsafe extern "C" fn z_querier_get_with_parameters_substr(
     let p: &str = match (&pcs).try_into() {
         Ok(s) => s,
         Err(e) => {
-            options.map(|o| o.clear());
+            if let Some(o) = options {
+                o.clear();
+            }
             crate::report_error!("Parameters is not a valid utf-8 string: {e}");
             return result::Z_EINVAL;
         }
