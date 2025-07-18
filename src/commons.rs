@@ -532,6 +532,9 @@ pub enum z_congestion_control_t {
     BLOCK = 0,
     /// Messages are dropped in case of congestion.
     DROP = 1,
+    #[cfg(feature = "unstable")]
+    /// Messages except the first one are dropped in case of congestion.
+    BLOCK_FIRST = 2,
 }
 
 /// Returns the default congestion control value of zenoh push network messages, typically used for put operations.
@@ -557,6 +560,8 @@ impl From<CongestionControl> for z_congestion_control_t {
         match cc {
             CongestionControl::Block => z_congestion_control_t::BLOCK,
             CongestionControl::Drop => z_congestion_control_t::DROP,
+            #[cfg(feature = "unstable")]
+            CongestionControl::BlockFirst => z_congestion_control_t::BLOCK_FIRST,
         }
     }
 }
@@ -566,6 +571,8 @@ impl From<z_congestion_control_t> for CongestionControl {
         match cc {
             z_congestion_control_t::BLOCK => CongestionControl::Block,
             z_congestion_control_t::DROP => CongestionControl::Drop,
+            #[cfg(feature = "unstable")]
+            z_congestion_control_t::BLOCK_FIRST => CongestionControl::BlockFirst,
         }
     }
 }
