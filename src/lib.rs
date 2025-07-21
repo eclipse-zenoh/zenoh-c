@@ -232,9 +232,10 @@ pub extern "C" fn zc_stop_z_runtime() {
     let _z = zenoh_runtime::ZRuntimePoolGuard;
 }
 
-pub fn strlen_or_zero(ptr: *const libc::c_char) -> usize {
+#[allow(clippy::missing_safety_doc)]
+pub(crate) unsafe fn strlen_or_zero(ptr: *const libc::c_char) -> usize {
     match ptr.is_null() {
         true => 0,
-        false => unsafe { libc::strlen(ptr) },
+        false => libc::strlen(ptr),
     }
 }

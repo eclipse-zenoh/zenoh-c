@@ -807,7 +807,7 @@ pub extern "C" fn ze_serializer_serialize_str(
     this: &mut ze_loaned_serializer_t,
     str: *const libc::c_char,
 ) -> z_result_t {
-    ze_serializer_serialize_substr(this, str, strlen_or_zero(str))
+    ze_serializer_serialize_substr(this, str, unsafe { strlen_or_zero(str) })
 }
 
 /// @brief Deserializes into a string.
