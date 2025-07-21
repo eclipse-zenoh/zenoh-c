@@ -26,6 +26,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t, Z_OK},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
 };
@@ -107,12 +108,7 @@ pub unsafe extern "C" fn z_keyexpr_from_str(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> result::z_result_t {
-    let len = if expr.is_null() {
-        0
-    } else {
-        libc::strlen(expr)
-    };
-    z_keyexpr_from_substr(this, expr, len)
+    z_keyexpr_from_substr(this, expr, strlen_or_zero(expr))
 }
 
 /// Constructs `z_owned_keyexpr_t` from a string, copying the passed string. The copied string is canonized.
@@ -124,11 +120,7 @@ pub unsafe extern "C" fn z_keyexpr_from_str_autocanonize(
     this: &mut MaybeUninit<z_owned_keyexpr_t>,
     expr: *const c_char,
 ) -> z_result_t {
-    let mut len = if expr.is_null() {
-        0
-    } else {
-        libc::strlen(expr)
-    };
+    let mut len = strlen_or_zero(expr);
     z_keyexpr_from_substr_autocanonize(this, expr, &mut len)
 }
 
@@ -184,11 +176,7 @@ pub unsafe extern "C" fn z_keyexpr_is_canon(start: *const c_char, len: usize) ->
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_canonize_null_terminated(start: *mut c_char) -> z_result_t {
-    let mut len = if start.is_null() {
-        0
-    } else {
-        libc::strlen(start)
-    };
+    let mut len = strlen_or_zero(start);
     match z_keyexpr_canonize(start, &mut len) {
         Z_OK => {
             *start.add(len) = 0;
@@ -365,12 +353,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str(
         this.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
         result::Z_EINVAL
     } else {
-        let len = if expr.is_null() {
-            0
-        } else {
-            libc::strlen(expr)
-        };
-        z_view_keyexpr_from_substr(this, expr, len)
+        z_view_keyexpr_from_substr(this, expr, strlen_or_zero(expr))
     }
 }
 
@@ -384,17 +367,12 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str_autocanonize(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     expr: *mut c_char,
 ) -> z_result_t {
-    if expr.is_null() {
-        this.as_rust_type_mut_uninit().write(KeyExpr::gravestone());
-        result::Z_EINVAL
-    } else {
-        let mut len = libc::strlen(expr);
-        let res = z_view_keyexpr_from_substr_autocanonize(this, expr, &mut len);
-        if res == result::Z_OK {
-            *expr.add(len) = 0;
-        }
-        res
+    let mut len = strlen_or_zero(expr);
+    let res = z_view_keyexpr_from_substr_autocanonize(this, expr, &mut len);
+    if res == result::Z_OK {
+        *expr.add(len) = 0;
     }
+    res
 }
 
 /// Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
@@ -438,8 +416,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str_unchecked(
     this: &mut MaybeUninit<z_view_keyexpr_t>,
     s: *const c_char,
 ) {
-    let len = if s.is_null() { 0 } else { libc::strlen(s) };
-    z_view_keyexpr_from_substr_unchecked(this, s, len)
+    z_view_keyexpr_from_substr_unchecked(this, s, strlen_or_zero(s))
 }
 
 /// Constructs a non-owned non-null-terminated string from key expression.

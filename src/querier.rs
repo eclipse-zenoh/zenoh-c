@@ -25,7 +25,7 @@ use zenoh::{
 };
 
 use crate::{
-    result,
+    result, strlen_or_zero,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_loaned_keyexpr_t,
     z_loaned_querier_t, z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t,
@@ -255,7 +255,7 @@ pub unsafe extern "C" fn z_querier_get(
     z_querier_get_with_parameters_substr(
         querier,
         parameters,
-        libc::strlen(parameters),
+        strlen_or_zero(parameters),
         callback,
         options,
     )

@@ -17,7 +17,7 @@ use std::{
     ptr::{null, null_mut},
 };
 
-use libc::{c_char, strlen};
+use libc::c_char;
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryConsolidation, QueryTarget, Reply, ReplyError, Selector},
@@ -28,6 +28,7 @@ use zenoh::{
 pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result::{self, Z_EINVAL},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
@@ -306,7 +307,7 @@ pub unsafe extern "C" fn z_get(
         session,
         key_expr,
         parameters,
-        strlen(parameters),
+        strlen_or_zero(parameters),
         callback,
         options,
     )

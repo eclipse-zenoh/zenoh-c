@@ -32,6 +32,7 @@ pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView,
@@ -406,7 +407,7 @@ pub unsafe extern "C" fn z_bytes_from_str(
     deleter: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,
     context: *mut c_void,
 ) -> z_result_t {
-    if let Ok(s) = CStringOwned::wrap(str, libc::strlen(str), deleter, context) {
+    if let Ok(s) = CStringOwned::wrap(str, strlen_or_zero(str), deleter, context) {
         this.as_rust_type_mut_uninit().write(ZBytes::from(s));
         Z_OK
     } else {
@@ -425,7 +426,7 @@ pub unsafe extern "C" fn z_bytes_from_static_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    if let Ok(s) = CStringOwned::wrap(str as _, libc::strlen(str), None, null_mut()) {
+    if let Ok(s) = CStringOwned::wrap(str as _, strlen_or_zero(str), None, null_mut()) {
         this.as_rust_type_mut_uninit().write(ZBytes::from(s));
         Z_OK
     } else {
@@ -444,7 +445,7 @@ pub unsafe extern "C" fn z_bytes_copy_from_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    if let Ok(s) = CStringOwned::new(str, libc::strlen(str)) {
+    if let Ok(s) = CStringOwned::new(str, strlen_or_zero(str)) {
         this.as_rust_type_mut_uninit().write(ZBytes::from(s));
         Z_OK
     } else {

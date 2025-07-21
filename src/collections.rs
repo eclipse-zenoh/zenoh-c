@@ -22,10 +22,9 @@ use std::{
     str::{from_utf8, Utf8Error},
 };
 
-use libc::strlen;
-
 use crate::{
     result::{self, z_result_t},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
@@ -679,7 +678,7 @@ pub unsafe extern "C" fn z_string_copy_from_str(
     this_: &mut MaybeUninit<z_owned_string_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    z_string_copy_from_substr(this_, str, strlen(str))
+    z_string_copy_from_substr(this_, str, strlen_or_zero(str))
 }
 
 /// Constructs an owned string by copying a `str` substring of length `len`.
@@ -720,7 +719,7 @@ pub unsafe extern "C" fn z_string_from_str(
     context: *mut c_void,
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    match CStringOwned::wrap(str, libc::strlen(str), drop, context) {
+    match CStringOwned::wrap(str, strlen_or_zero(str), drop, context) {
         Ok(slice) => {
             this.write(slice);
             result::Z_OK
@@ -742,7 +741,7 @@ pub unsafe extern "C" fn z_view_string_from_str(
     str: *const libc::c_char,
 ) -> z_result_t {
     let this = this.as_rust_type_mut_uninit();
-    match CStringView::new_borrowed(str, strlen(str)) {
+    match CStringView::new_borrowed(str, strlen_or_zero(str)) {
         Ok(slice) => {
             this.write(slice);
             result::Z_OK
