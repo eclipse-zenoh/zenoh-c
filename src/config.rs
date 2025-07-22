@@ -18,6 +18,7 @@ use zenoh::config::{Config, WhatAmI};
 
 use crate::{
     result::{self, Z_OK},
+    strlen_or_zero,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr, CStringView,
 };
@@ -87,7 +88,7 @@ pub unsafe extern "C" fn zc_config_get_from_str(
     key: *const c_char,
     out_value_string: &mut MaybeUninit<z_owned_string_t>,
 ) -> result::z_result_t {
-    zc_config_get_from_substr(this, key, libc::strlen(key), out_value_string)
+    zc_config_get_from_substr(this, key, strlen_or_zero(key), out_value_string)
 }
 
 /// Gets the property with the given path key from the configuration, and constructs and owned string from it.
@@ -142,7 +143,7 @@ pub unsafe extern "C" fn zc_config_insert_json5(
     key: *const c_char,
     value: *const c_char,
 ) -> result::z_result_t {
-    zc_config_insert_json5_from_substr(this, key, libc::strlen(key), value, libc::strlen(value))
+    zc_config_insert_json5_from_substr(this, key, strlen_or_zero(key), value, strlen_or_zero(value))
 }
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
@@ -216,7 +217,7 @@ pub unsafe extern "C" fn zc_config_from_str(
     this: &mut MaybeUninit<z_owned_config_t>,
     s: *const c_char,
 ) -> result::z_result_t {
-    zc_config_from_substr(this, s, libc::strlen(s))
+    zc_config_from_substr(this, s, strlen_or_zero(s))
 }
 
 /// Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
@@ -293,7 +294,7 @@ pub unsafe extern "C" fn zc_config_from_file(
     this: &mut MaybeUninit<z_owned_config_t>,
     path: *const c_char,
 ) -> result::z_result_t {
-    zc_config_from_file_substr(this, path, libc::strlen(path))
+    zc_config_from_file_substr(this, path, strlen_or_zero(path))
 }
 
 /// Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.

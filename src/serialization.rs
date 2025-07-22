@@ -15,7 +15,6 @@
 use core::str;
 use std::{mem::MaybeUninit, slice::from_raw_parts};
 
-use libc::strlen;
 use zenoh::bytes::ZBytes;
 use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
@@ -26,6 +25,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
@@ -424,7 +424,7 @@ pub unsafe extern "C" fn ze_serialize_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    unsafe { ze_serialize_substr(this, str, strlen(str)) }
+    unsafe { ze_serialize_substr(this, str, strlen_or_zero(str)) }
 }
 
 /// @brief Deserializes into a UTF-8 string.
@@ -807,7 +807,7 @@ pub extern "C" fn ze_serializer_serialize_str(
     this: &mut ze_loaned_serializer_t,
     str: *const libc::c_char,
 ) -> z_result_t {
-    ze_serializer_serialize_substr(this, str, unsafe { strlen(str) })
+    ze_serializer_serialize_substr(this, str, unsafe { strlen_or_zero(str) })
 }
 
 /// @brief Deserializes into a string.

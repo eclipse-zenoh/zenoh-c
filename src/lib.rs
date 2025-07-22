@@ -231,3 +231,11 @@ impl CopyableToCArray for &str {
 pub extern "C" fn zc_stop_z_runtime() {
     let _z = zenoh_runtime::ZRuntimePoolGuard;
 }
+
+#[allow(clippy::missing_safety_doc)]
+pub(crate) unsafe fn strlen_or_zero(ptr: *const libc::c_char) -> usize {
+    match ptr.is_null() {
+        true => 0,
+        false => libc::strlen(ptr),
+    }
+}
