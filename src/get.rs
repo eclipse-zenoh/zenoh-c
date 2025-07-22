@@ -37,8 +37,8 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_locality_default, zc_locality_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_locality_default,
+    zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyError),
@@ -183,7 +183,7 @@ pub unsafe extern "C" fn z_reply_err_mut(
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_reply_replier_id(
     this: &z_loaned_reply_t,
-    out_id: &mut MaybeUninit<z_id_t>,
+    out_id: &mut MaybeUninit<z_entity_global_id_t>,
 ) -> bool {
     match this.as_rust_type_ref().replier_id() {
         Some(val) => {
