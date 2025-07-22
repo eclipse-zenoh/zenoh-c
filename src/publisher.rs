@@ -14,32 +14,29 @@
 
 use std::mem::MaybeUninit;
 
-#[cfg(feature = "unstable")]
-use zenoh::{handlers::Callback, matching::MatchingStatus};
 use zenoh::{
+    handlers::Callback,
     internal::traits::{EncodingBuilderTrait, SampleBuilderTrait, TimestampBuilderTrait},
+    matching::MatchingStatus,
     pubsub::{Publisher, PublisherBuilder},
     qos::{CongestionControl, Priority},
     session::SessionClosedError,
     Wait,
 };
 
-#[cfg(feature = "unstable")]
-use crate::z_moved_closure_matching_status_t;
 use crate::{
     result::{self},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
-    z_moved_encoding_t, z_priority_t, z_timestamp_t,
+    z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_matching_status_t, z_moved_bytes_t,
+    z_moved_closure_matching_status_t, z_moved_encoding_t, z_owned_matching_listener_t,
+    z_priority_t, z_timestamp_t, zc_locality_default, zc_locality_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_closure_matching_status_call, z_closure_matching_status_loan,
-    z_entity_global_id_t, z_reliability_default, z_reliability_t, zc_locality_default,
-    zc_locality_t,
+    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, z_reliability_default,
+    z_reliability_t,
 };
-#[cfg(feature = "unstable")]
-use crate::{z_matching_status_t, z_moved_source_info_t, z_owned_matching_listener_t};
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
 pub struct z_publisher_options_t {
@@ -56,9 +53,6 @@ pub struct z_publisher_options_t {
     ///
     /// The publisher reliability.
     pub reliability: z_reliability_t,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The allowed destination for this publisher.
     pub allowed_destination: zc_locality_t,
 }
@@ -72,7 +66,6 @@ impl Default for z_publisher_options_t {
             is_express: false,
             #[cfg(feature = "unstable")]
             reliability: z_reliability_default(),
-            #[cfg(feature = "unstable")]
             allowed_destination: zc_locality_default(),
         }
     }
@@ -102,12 +95,11 @@ pub(crate) fn _declare_publisher_inner(
         p = p
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express);
+            .express(options.is_express)
+            .allowed_destination(options.allowed_destination.into());
         #[cfg(feature = "unstable")]
         {
-            p = p
-                .reliability(options.reliability.into())
-                .allowed_destination(options.allowed_destination.into());
+            p = p.reliability(options.reliability.into());
         }
         if let Some(encoding) = options.encoding.take() {
             p = p.encoding(encoding.take_rust_type());
@@ -340,7 +332,6 @@ pub extern "C" fn z_publisher_keyexpr(publisher: &z_loaned_publisher_t) -> &z_lo
         .as_loaned_c_type_ref()
 }
 
-#[cfg(feature = "unstable")]
 fn _publisher_matching_listener_declare_inner<'a>(
     publisher: &'a z_loaned_publisher_t,
     callback: &mut z_moved_closure_matching_status_t,
@@ -358,8 +349,6 @@ fn _publisher_matching_listener_declare_inner<'a>(
     listener
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given publisher.
 ///
 /// @param publisher: A publisher to associate with matching listener.
@@ -388,8 +377,6 @@ pub extern "C" fn z_publisher_declare_matching_listener(
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given publisher.
 /// The callback will be run in the background until the corresponding publisher is dropped.
 ///
@@ -412,8 +399,6 @@ pub extern "C" fn z_publisher_declare_background_matching_listener(
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
