@@ -33,12 +33,12 @@ use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
-    z_query_target_t, CStringView,
+    z_query_target_t, zc_locality_default, zc_locality_t, CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_locality_default, zc_locality_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    transmute::IntoCType, z_id_t, z_moved_source_info_t, zc_reply_keyexpr_default,
+    zc_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyError),
@@ -221,9 +221,6 @@ pub struct z_get_options_t {
     pub congestion_control: z_congestion_control_t,
     /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The allowed destination for the query.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
@@ -269,7 +266,6 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
-        #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),

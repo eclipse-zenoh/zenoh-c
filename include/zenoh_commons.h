@@ -579,14 +579,10 @@ typedef struct z_delete_options_t {
    */
   enum z_reliability_t reliability;
 #endif
-#if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
    * The allowed destination of this message.
    */
   enum zc_locality_t allowed_destination;
-#endif
 } z_delete_options_t;
 typedef struct z_moved_fifo_handler_query_t {
   struct z_owned_fifo_handler_query_t _this;
@@ -628,14 +624,10 @@ typedef struct z_get_options_t {
    * If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
-#if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
    * The allowed destination for the query.
    */
   enum zc_locality_t allowed_destination;
-#endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -783,14 +775,10 @@ typedef struct z_put_options_t {
    */
   enum z_reliability_t reliability;
 #endif
-#if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
    * The allowed destination of this message.
    */
   enum zc_locality_t allowed_destination;
-#endif
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
