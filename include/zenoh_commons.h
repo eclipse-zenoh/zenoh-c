@@ -4234,7 +4234,7 @@ ZENOHC_API struct z_loaned_sample_t *z_reply_ok_mut(struct z_loaned_reply_t *thi
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 bool z_reply_replier_id(const struct z_loaned_reply_t *this_,
-                        struct z_id_t *out_id);
+                        struct z_entity_global_id_t *out_id);
 #endif
 /**
  * Takes ownership of the mutably borrowed reply
