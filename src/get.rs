@@ -177,7 +177,7 @@ pub unsafe extern "C" fn z_reply_err_mut(
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Gets the id of the zenoh instance that answered this Reply.
+/// @brief Gets the global id of the zenoh entity that answered this Reply.
 /// @return `true` if id is present.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
