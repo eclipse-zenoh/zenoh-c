@@ -26,7 +26,6 @@ foreach(file ${files})
         if(
             (${target} MATCHES "^.*_advanced_sub.*$")
             OR (${target} MATCHES "^.*_advanced_pub.*$") 
-            OR (${target} MATCHES "^.*_querier.*$")
         )
             continue()
         endif()

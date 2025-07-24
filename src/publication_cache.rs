@@ -21,10 +21,8 @@ use zenoh_ext::{PublicationCacheBuilder, SessionExt};
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_loaned_keyexpr_t, z_loaned_session_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, zc_locality_default, zc_locality_t,
 };
-#[cfg(feature = "unstable")]
-use crate::{zc_locality_default, zc_locality_t};
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Options passed to the `ze_declare_publication_cache()` function.
@@ -33,7 +31,6 @@ pub struct ze_publication_cache_options_t {
     /// The suffix used for queryable.
     pub queryable_suffix: *const z_loaned_keyexpr_t,
     /// The restriction for the matching queries that will be receive by this publication cache.
-    #[cfg(feature = "unstable")]
     pub queryable_origin: zc_locality_t,
     /// The `complete` option for the queryable.
     pub queryable_complete: bool,
@@ -51,7 +48,6 @@ pub extern "C" fn ze_publication_cache_options_default(
 ) {
     this.write(ze_publication_cache_options_t {
         queryable_suffix: null(),
-        #[cfg(feature = "unstable")]
         queryable_origin: zc_locality_default(),
         queryable_complete: false,
         history: 1,
@@ -79,11 +75,9 @@ fn _declare_publication_cache_inner<'a, 'b, 'c>(
     let key_expr = key_expr.as_rust_type_ref();
     let mut p = session.declare_publication_cache(key_expr);
     if let Some(options) = options {
-        p = p.history(options.history);
-        #[cfg(feature = "unstable")]
-        {
-            p = p.queryable_allowed_origin(options.queryable_origin.into());
-        }
+        p = p
+            .history(options.history)
+            .queryable_allowed_origin(options.queryable_origin.into());
         p = p.queryable_complete(options.queryable_complete);
         if options.resources_limit != 0 {
             p = p.resources_limit(options.resources_limit)

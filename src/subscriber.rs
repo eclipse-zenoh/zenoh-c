@@ -27,9 +27,10 @@ use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
+    zc_locality_default, zc_locality_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{transmute::IntoCType, z_entity_global_id_t, zc_locality_default, zc_locality_t};
+use crate::{transmute::IntoCType, z_entity_global_id_t};
 
 decl_c_type!(
     owned(z_owned_subscriber_t, option Subscriber<()>),
@@ -57,11 +58,6 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_subscriber_options_t {
-    #[cfg(not(feature = "unstable"))]
-    /// Dummy field to avoid having fieldless struct
-    pub _dummy: u8,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     /// Restricts the matching publications that will be received by this Subscriber to the ones
     /// that have the compatible allowed_destination.
     pub allowed_origin: zc_locality_t,
@@ -70,9 +66,6 @@ pub struct z_subscriber_options_t {
 impl Default for z_subscriber_options_t {
     fn default() -> Self {
         Self {
-            #[cfg(not(feature = "unstable"))]
-            _dummy: Default::default(),
-            #[cfg(feature = "unstable")]
             allowed_origin: zc_locality_default(),
         }
     }
@@ -105,7 +98,6 @@ pub(crate) fn _declare_subscriber_inner<'a, 'b>(
                     .as_loaned_c_type_mut()
             })
         });
-    #[cfg(feature = "unstable")]
     if let Some(options) = options {
         subscriber = subscriber.allowed_origin(options.allowed_origin.into());
     }

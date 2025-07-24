@@ -29,7 +29,6 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-#if defined(Z_FEATURE_UNSTABLE_API)
 void matching_status_handler(const z_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Publisher has matching subscribers.\n");
@@ -37,7 +36,6 @@ void matching_status_handler(const z_matching_status_t* matching_status, void* a
         printf("Publisher has NO MORE matching subscribers.\n");
     }
 }
-#endif
 
 int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
@@ -61,7 +59,6 @@ int main(int argc, char** argv) {
         exit(-1);
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     if (args.add_matching_listener) {
         z_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
@@ -70,7 +67,6 @@ int main(int argc, char** argv) {
             exit(-1);
         }
     }
-#endif
 
     printf("Press CTRL-C to quit...\n");
     char buf[256] = {};
@@ -108,11 +104,8 @@ void print_help() {
     Options:\n\
         -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
         -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n\
-        -a, --attach <ATTACHMENT> (optional, string, default=NULL): The attachment to add to each put\n"
-#if defined(Z_FEATURE_UNSTABLE_API)
-        "       --add-matching-listener (optional): Add matching listener\n"
-#endif
-        ,
+        -a, --attach <ATTACHMENT> (optional, string, default=NULL): The attachment to add to each put\n\
+        --add-matching-listener (optional): Add matching listener\n",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
 }
@@ -123,9 +116,8 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
     _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
     _Z_PARSE_ARG(args.attachment, "a", "attach", (char*), (char*)DEFAULT_ATTACHMENT);
-#if defined(Z_FEATURE_UNSTABLE_API)
     args.add_matching_listener = _Z_CHECK_FLAG("add-matching-listener");
-#endif
+
     parse_zenoh_common_args(argc, argv, config);
     const char* unknown_arg = check_unknown_opts(argc, argv);
     if (unknown_arg) {

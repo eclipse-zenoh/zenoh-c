@@ -16,16 +16,11 @@ use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
 #[cfg(feature = "unstable")]
-use zenoh::{
-    qos::Reliability,
-    query::ReplyKeyExpr,
-    sample::{Locality, SourceInfo},
-    session::EntityGlobalId,
-};
+use zenoh::{qos::Reliability, query::ReplyKeyExpr, sample::SourceInfo, session::EntityGlobalId};
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::{ConsolidationMode, QueryTarget},
-    sample::{Sample, SampleKind},
+    sample::{Locality, Sample, SampleKind},
     time::Timestamp,
 };
 
@@ -268,7 +263,6 @@ pub enum zc_locality_t {
     REMOTE = 2,
 }
 
-#[cfg(feature = "unstable")]
 impl From<Locality> for zc_locality_t {
     fn from(k: Locality) -> Self {
         match k {
@@ -279,7 +273,6 @@ impl From<Locality> for zc_locality_t {
     }
 }
 
-#[cfg(feature = "unstable")]
 impl From<zc_locality_t> for Locality {
     fn from(k: zc_locality_t) -> Self {
         match k {
@@ -290,8 +283,6 @@ impl From<zc_locality_t> for Locality {
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns default value of `zc_locality_t`
 #[no_mangle]
 pub extern "C" fn zc_locality_default() -> zc_locality_t {
@@ -532,6 +523,9 @@ pub enum z_congestion_control_t {
     BLOCK = 0,
     /// Messages are dropped in case of congestion.
     DROP = 1,
+    #[cfg(feature = "unstable")]
+    /// Messages except the first one are dropped in case of congestion.
+    BLOCK_FIRST = 2,
 }
 
 /// Returns the default congestion control value of zenoh push network messages, typically used for put operations.
@@ -557,6 +551,8 @@ impl From<CongestionControl> for z_congestion_control_t {
         match cc {
             CongestionControl::Block => z_congestion_control_t::BLOCK,
             CongestionControl::Drop => z_congestion_control_t::DROP,
+            #[cfg(feature = "unstable")]
+            CongestionControl::BlockFirst => z_congestion_control_t::BLOCK_FIRST,
         }
     }
 }
@@ -566,6 +562,8 @@ impl From<z_congestion_control_t> for CongestionControl {
         match cc {
             z_congestion_control_t::BLOCK => CongestionControl::Block,
             z_congestion_control_t::DROP => CongestionControl::Drop,
+            #[cfg(feature = "unstable")]
+            z_congestion_control_t::BLOCK_FIRST => CongestionControl::BlockFirst,
         }
     }
 }
