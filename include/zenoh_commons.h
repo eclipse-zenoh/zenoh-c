@@ -4228,7 +4228,7 @@ ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_repl
 ZENOHC_API struct z_loaned_sample_t *z_reply_ok_mut(struct z_loaned_reply_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets the id of the zenoh instance that answered this Reply.
+ * @brief Gets the global id of the zenoh entity that answered this Reply.
  * @return `true` if id is present.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
