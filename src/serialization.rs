@@ -15,7 +15,6 @@
 use core::str;
 use std::{mem::MaybeUninit, slice::from_raw_parts};
 
-use libc::strlen;
 use prebindgen_proc_macro::prebindgen;
 use zenoh::bytes::ZBytes;
 use zenoh_ext::{

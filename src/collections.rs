@@ -22,7 +22,6 @@ use std::{
     str::{from_utf8, Utf8Error},
 };
 
-use libc::strlen;
 use prebindgen_proc_macro::prebindgen;
 
 use crate::{

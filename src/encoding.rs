@@ -20,7 +20,7 @@ use std::{
     str::{from_utf8, FromStr},
 };
 
-use libc::{c_char, strlen};
+use libc::c_char;
 use prebindgen_proc_macro::prebindgen;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::bytes::Encoding;
