@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 ZettaScale Technology
+# Copyright (c) 2025 ZettaScale Technology
 #
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
@@ -12,20 +12,17 @@
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 [package]
-name = "zenoh-c"
+name = "zenoh-ffi"
 version = "1.4.0"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
-    "kydos <angelo@icorsaro.net>",
-    "Julien Enoch <julien@enoch.fr>",
-    "Olivier Hécart <olivier.hecart@adlinktech.com>",
-    "Luca Cominardi <luca.cominardi@gmail.com>",
+    "ZettaScale Zenoh Team, <zenoh@zettascale.tech>"
 ]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
-description = "The Zenoh C API"
+description = "The Zenoh-FFI crate provides a Foreign Function Interface (FFI) for the Zenoh library, allowind to easily implement bindings to other languages"
 readme = "README.md"
 build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -78,41 +75,21 @@ zenoh-ext = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.g
 zenoh-runtime = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
+prebindgen-proc-macro = { version = "0.2.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
 
 [build-dependencies]
 zenoh = { version = "1.4.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-cbindgen = "0.28.0"
-fs2 = "0.4.3"
 regex = "1.7.1"
-serde_yaml = "0.9.19"
-fs_extra = "1.3.0"
-evalexpr = "11.3.0" # Bumping to 12.x.x will cause 1.75 check fails
-phf = { version = "0.11.2", features = ["macros"] }
+prebindgen = { version = "0.2.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 
 [lib]
 path = "src/lib.rs"
-name = "zenohc"
-crate-type = ["cdylib", "staticlib"]
+name = "zenohffi"
+crate-type = ["lib"]
 doctest = false
-
-[package.metadata.deb.variants.libzenohc]
-name = "libzenohc"
-maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology"
-section = "net"
-license-file = ["LICENSE", "0"]
-
-[package.metadata.deb.variants.libzenohc-dev]
-name = "libzenohc-dev"
-maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology"
-section = "net"
-license-file = ["LICENSE", "0"]
-depends = "libzenohc (=1.4.0)"
-assets = [["include/*", "usr/include/", "755"]]
 
 [profile.dev]
 debug = true

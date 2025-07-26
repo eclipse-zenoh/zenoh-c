@@ -38,9 +38,9 @@ decl_c_type!(
 );
 
 /// Constructs a querying subscriber in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_internal_querying_subscriber_null(
+pub fn ze_internal_querying_subscriber_null(
     this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
 ) {
     this.as_rust_type_mut_uninit().write(None);
@@ -50,6 +50,7 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 /// @brief A set of options that can be applied to a querying subscriber,
 /// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
+#[prebindgen]
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
@@ -70,8 +71,8 @@ pub struct ze_querying_subscriber_options_t {
 
 /// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Constructs the default value for `ze_querying_subscriber_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_querying_subscriber_options_default(
+#[prebindgen]
+pub fn ze_querying_subscriber_options_default(
     this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
 ) {
     this.write(ze_querying_subscriber_options_t {
@@ -135,9 +136,9 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
 /// @param options: Additional options for the querying subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_declare_querying_subscriber(
+pub unsafe fn ze_declare_querying_subscriber(
     session: &'static z_loaned_session_t,
     querying_subscriber: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
     key_expr: &z_loaned_keyexpr_t,
@@ -170,9 +171,9 @@ pub unsafe extern "C" fn ze_declare_querying_subscriber(
 /// @param options: Additional options for the querying subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_declare_background_querying_subscriber(
+pub unsafe fn ze_declare_background_querying_subscriber(
     session: &'static z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     callback: &mut z_moved_closure_sample_t,
@@ -193,8 +194,8 @@ pub unsafe extern "C" fn ze_declare_background_querying_subscriber(
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
 /// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn ze_querying_subscriber_get(
+#[prebindgen]
+pub unsafe fn ze_querying_subscriber_get(
     this: &ze_loaned_querying_subscriber_t,
     selector: &z_loaned_keyexpr_t,
     options: Option<&mut z_get_options_t>,
@@ -255,15 +256,15 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 /// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Undeclares querying subscriber callback and resets it to its gravestone state.
 /// This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
-#[no_mangle]
-pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
+#[prebindgen]
+pub fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
 }
 
 /// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn ze_internal_querying_subscriber_check(
+#[prebindgen]
+pub fn ze_internal_querying_subscriber_check(
     this_: &ze_owned_querying_subscriber_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -271,9 +272,9 @@ pub extern "C" fn ze_internal_querying_subscriber_check(
 
 /// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Borrows querying subscriber.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_querying_subscriber_loan(
+pub unsafe fn ze_querying_subscriber_loan(
     this: &ze_owned_querying_subscriber_t,
 ) -> &ze_loaned_querying_subscriber_t {
     this.as_rust_type_ref()
@@ -286,8 +287,8 @@ pub unsafe extern "C" fn ze_querying_subscriber_loan(
 /// @brief Undeclares the given querying subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_undeclare_querying_subscriber(
+#[prebindgen]
+pub fn ze_undeclare_querying_subscriber(
     this_: &mut ze_moved_querying_subscriber_t,
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {

@@ -15,6 +15,8 @@
 use core::str;
 use std::{mem::MaybeUninit, slice::from_raw_parts};
 
+use libc::strlen;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::bytes::ZBytes;
 use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
@@ -39,29 +41,29 @@ decl_c_type! {
 /// @brief Constructs a serializer with empty payload.
 /// @param this_: An uninitialized memory location where serializer is to be constructed.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-extern "C" fn ze_serializer_empty(this: &mut MaybeUninit<ze_owned_serializer_t>) -> z_result_t {
+#[prebindgen]
+pub fn ze_serializer_empty(this: &mut MaybeUninit<ze_owned_serializer_t>) -> z_result_t {
     this.as_rust_type_mut_uninit()
         .write(Some(ZSerializer::new()));
     result::Z_OK
 }
 
 /// @brief Drops `this_`, resetting it to gravestone value.
-#[no_mangle]
-extern "C" fn ze_serializer_drop(this_: &mut ze_moved_serializer_t) {
+#[prebindgen]
+pub fn ze_serializer_drop(this_: &mut ze_moved_serializer_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @brief Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
-#[no_mangle]
-extern "C" fn ze_internal_serializer_check(this: &ze_owned_serializer_t) -> bool {
+#[prebindgen]
+pub fn ze_internal_serializer_check(this: &ze_owned_serializer_t) -> bool {
     this.as_rust_type_ref().is_some()
 }
 
 /// @brief Borrows serializer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_serializer_loan(
+pub unsafe fn ze_serializer_loan(
     this: &ze_owned_serializer_t,
 ) -> &ze_loaned_serializer_t {
     this.as_rust_type_ref()
@@ -71,9 +73,9 @@ pub unsafe extern "C" fn ze_serializer_loan(
 }
 
 /// @brief Muatably borrows serializer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_serializer_loan_mut(
+pub unsafe fn ze_serializer_loan_mut(
     this: &mut ze_owned_serializer_t,
 ) -> &mut ze_loaned_serializer_t {
     this.as_rust_type_mut()
@@ -83,8 +85,8 @@ pub unsafe extern "C" fn ze_serializer_loan_mut(
 }
 
 /// @brief Constructs a serializer in a gravestone state.
-#[no_mangle]
-pub extern "C" fn ze_internal_serializer_null(this_: &mut MaybeUninit<ze_owned_serializer_t>) {
+#[prebindgen]
+pub fn ze_internal_serializer_null(this_: &mut MaybeUninit<ze_owned_serializer_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -92,8 +94,8 @@ pub extern "C" fn ze_internal_serializer_null(this_: &mut MaybeUninit<ze_owned_s
 /// @param this_: A serializer instance.
 /// @param bytes: An uninitialized memory location where `bytes` object` will be written to.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn ze_serializer_finish(
+#[prebindgen]
+pub unsafe fn ze_serializer_finish(
     this: &mut ze_moved_serializer_t,
     bytes: &mut MaybeUninit<z_owned_bytes_t>,
 ) {
@@ -128,8 +130,8 @@ where
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_uint8(
+#[prebindgen]
+pub fn ze_serialize_uint8(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: u8,
 ) -> z_result_t {
@@ -138,8 +140,8 @@ pub extern "C" fn ze_serialize_uint8(
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_uint16(
+#[prebindgen]
+pub fn ze_serialize_uint16(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: u16,
 ) -> z_result_t {
@@ -148,8 +150,8 @@ pub extern "C" fn ze_serialize_uint16(
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_uint32(
+#[prebindgen]
+pub fn ze_serialize_uint32(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: u32,
 ) -> z_result_t {
@@ -158,8 +160,8 @@ pub extern "C" fn ze_serialize_uint32(
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_uint64(
+#[prebindgen]
+pub fn ze_serialize_uint64(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: u64,
 ) -> z_result_t {
@@ -168,8 +170,8 @@ pub extern "C" fn ze_serialize_uint64(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_int8(
+#[prebindgen]
+pub fn ze_serialize_int8(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: i8,
 ) -> z_result_t {
@@ -178,8 +180,8 @@ pub extern "C" fn ze_serialize_int8(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_int16(
+#[prebindgen]
+pub fn ze_serialize_int16(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: i16,
 ) -> z_result_t {
@@ -188,8 +190,8 @@ pub extern "C" fn ze_serialize_int16(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_int32(
+#[prebindgen]
+pub fn ze_serialize_int32(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: i32,
 ) -> z_result_t {
@@ -198,8 +200,8 @@ pub extern "C" fn ze_serialize_int32(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serialize_int64(
+#[prebindgen]
+pub fn ze_serialize_int64(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: i64,
 ) -> z_result_t {
@@ -208,8 +210,8 @@ pub extern "C" fn ze_serialize_int64(
 }
 
 /// @brief Serializes a float.
-#[no_mangle]
-pub extern "C" fn ze_serialize_float(
+#[prebindgen]
+pub fn ze_serialize_float(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: f32,
 ) -> z_result_t {
@@ -218,8 +220,8 @@ pub extern "C" fn ze_serialize_float(
 }
 
 /// @brief Serializes a double.
-#[no_mangle]
-pub extern "C" fn ze_serialize_double(
+#[prebindgen]
+pub fn ze_serialize_double(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: f64,
 ) -> z_result_t {
@@ -228,8 +230,8 @@ pub extern "C" fn ze_serialize_double(
 }
 
 /// @brief Serializes a bool.
-#[no_mangle]
-pub extern "C" fn ze_serialize_bool(
+#[prebindgen]
+pub fn ze_serialize_bool(
     this_: &mut MaybeUninit<z_owned_bytes_t>,
     val: bool,
 ) -> z_result_t {
@@ -239,85 +241,85 @@ pub extern "C" fn ze_serialize_bool(
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_uint8(this: &z_loaned_bytes_t, dst: &mut u8) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_uint8(this: &z_loaned_bytes_t, dst: &mut u8) -> z_result_t {
     ze_deserialize_arithmetic::<u8>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_uint16(this: &z_loaned_bytes_t, dst: &mut u16) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_uint16(this: &z_loaned_bytes_t, dst: &mut u16) -> z_result_t {
     ze_deserialize_arithmetic::<u16>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_uint32(this: &z_loaned_bytes_t, dst: &mut u32) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_uint32(this: &z_loaned_bytes_t, dst: &mut u32) -> z_result_t {
     ze_deserialize_arithmetic::<u32>(this, dst)
 }
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_uint64(this: &z_loaned_bytes_t, dst: &mut u64) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_uint64(this: &z_loaned_bytes_t, dst: &mut u64) -> z_result_t {
     ze_deserialize_arithmetic::<u64>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_int8(this: &z_loaned_bytes_t, dst: &mut i8) -> z_result_t {
     ze_deserialize_arithmetic::<i8>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_int16(this: &z_loaned_bytes_t, dst: &mut i16) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_int16(this: &z_loaned_bytes_t, dst: &mut i16) -> z_result_t {
     ze_deserialize_arithmetic::<i16>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_int32(this: &z_loaned_bytes_t, dst: &mut i32) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_int32(this: &z_loaned_bytes_t, dst: &mut i32) -> z_result_t {
     ze_deserialize_arithmetic::<i32>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_int64(this: &z_loaned_bytes_t, dst: &mut i64) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_int64(this: &z_loaned_bytes_t, dst: &mut i64) -> z_result_t {
     ze_deserialize_arithmetic::<i64>(this, dst)
 }
 
 /// @brief Deserializes into a float.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_float(this: &z_loaned_bytes_t, dst: &mut f32) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_float(this: &z_loaned_bytes_t, dst: &mut f32) -> z_result_t {
     ze_deserialize_arithmetic::<f32>(this, dst)
 }
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_double(this: &z_loaned_bytes_t, dst: &mut f64) -> z_result_t {
     ze_deserialize_arithmetic::<f64>(this, dst)
 }
 
 /// @brief Deserializes into a bool.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserialize_bool(this: &z_loaned_bytes_t, dst: &mut bool) -> z_result_t {
+#[prebindgen]
+pub fn ze_deserialize_bool(this: &z_loaned_bytes_t, dst: &mut bool) -> z_result_t {
     ze_deserialize_arithmetic::<bool>(this, dst)
 }
 
 /// @brief Serializes a slice.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_serialize_slice(
+pub fn ze_serialize_slice(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     slice: &z_loaned_slice_t,
 ) -> z_result_t {
@@ -330,9 +332,9 @@ pub extern "C" fn ze_serialize_slice(
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_serialize_buf(
+pub unsafe fn ze_serialize_buf(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     data: *const u8,
     len: usize,
@@ -343,9 +345,9 @@ pub extern "C" fn ze_serialize_buf(
 }
 
 /// @brief Deserializes into a slice.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_deserialize_slice(
+pub fn ze_deserialize_slice(
     this: &z_loaned_bytes_t,
     slice: &mut MaybeUninit<z_owned_slice_t>,
 ) -> z_result_t {
@@ -369,9 +371,9 @@ pub extern "C" fn ze_deserialize_slice(
 /// The string should be a valid UTF-8.
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param str: a string to serialize.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_serialize_string(
+pub fn ze_serialize_string(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: &z_loaned_string_t,
 ) -> z_result_t {
@@ -393,9 +395,9 @@ pub extern "C" fn ze_serialize_string(
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param start: a pointer to the the start of the substring.
 /// @param len: the length of the substring.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_serialize_substr(
+pub unsafe fn ze_serialize_substr(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     start: *const libc::c_char,
     len: usize,
@@ -418,9 +420,9 @@ pub unsafe extern "C" fn ze_serialize_substr(
 /// The string should be a valid UTF-8.
 /// @param this_: An uninitialized location in memory where `z_owned_bytes_t` is to be constructed.
 /// @param str: a pointer to the null-terminated string.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_serialize_str(
+pub unsafe fn ze_serialize_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
@@ -428,9 +430,9 @@ pub unsafe extern "C" fn ze_serialize_str(
 }
 
 /// @brief Deserializes into a UTF-8 string.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_deserialize_string(
+pub unsafe fn ze_deserialize_string(
     this: &z_loaned_bytes_t,
     str: &mut MaybeUninit<z_owned_string_t>,
 ) -> z_result_t {
@@ -450,16 +452,16 @@ pub unsafe extern "C" fn ze_deserialize_string(
 }
 
 /// @brief Gets deserializer for`this_`.
-#[no_mangle]
-extern "C" fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
+#[prebindgen]
+pub fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
     *ZDeserializer::new(this.as_rust_type_ref()).as_loaned_c_type_ref()
 }
 
 /// @brief Checks if deserializer parsed all of its data.
 /// @return `true` if there is no more data to parse, `false` otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_deserializer_is_done(this_: &ze_deserializer_t) -> bool {
+pub unsafe fn ze_deserializer_is_done(this_: &ze_deserializer_t) -> bool {
     let deserializer = this_.as_rust_type_ref();
     deserializer.done()
 }
@@ -491,8 +493,8 @@ where
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint8(
+#[prebindgen]
+pub fn ze_serializer_serialize_uint8(
     this_: &mut ze_loaned_serializer_t,
     val: u8,
 ) -> z_result_t {
@@ -501,8 +503,8 @@ pub extern "C" fn ze_serializer_serialize_uint8(
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint16(
+#[prebindgen]
+pub fn ze_serializer_serialize_uint16(
     this_: &mut ze_loaned_serializer_t,
     val: u16,
 ) -> z_result_t {
@@ -511,8 +513,8 @@ pub extern "C" fn ze_serializer_serialize_uint16(
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint32(
+#[prebindgen]
+pub fn ze_serializer_serialize_uint32(
     this_: &mut ze_loaned_serializer_t,
     val: u32,
 ) -> z_result_t {
@@ -521,8 +523,8 @@ pub extern "C" fn ze_serializer_serialize_uint32(
 }
 
 /// @brief Serializes an unsigned integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_uint64(
+#[prebindgen]
+pub fn ze_serializer_serialize_uint64(
     this_: &mut ze_loaned_serializer_t,
     val: u64,
 ) -> z_result_t {
@@ -531,8 +533,8 @@ pub extern "C" fn ze_serializer_serialize_uint64(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int8(
+#[prebindgen]
+pub fn ze_serializer_serialize_int8(
     this_: &mut ze_loaned_serializer_t,
     val: i8,
 ) -> z_result_t {
@@ -541,8 +543,8 @@ pub extern "C" fn ze_serializer_serialize_int8(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int16(
+#[prebindgen]
+pub fn ze_serializer_serialize_int16(
     this_: &mut ze_loaned_serializer_t,
     val: i16,
 ) -> z_result_t {
@@ -551,8 +553,8 @@ pub extern "C" fn ze_serializer_serialize_int16(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int32(
+#[prebindgen]
+pub fn ze_serializer_serialize_int32(
     this_: &mut ze_loaned_serializer_t,
     val: i32,
 ) -> z_result_t {
@@ -561,8 +563,8 @@ pub extern "C" fn ze_serializer_serialize_int32(
 }
 
 /// @brief Serializes a signed integer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_int64(
+#[prebindgen]
+pub fn ze_serializer_serialize_int64(
     this_: &mut ze_loaned_serializer_t,
     val: i64,
 ) -> z_result_t {
@@ -571,8 +573,8 @@ pub extern "C" fn ze_serializer_serialize_int64(
 }
 
 /// @brief Serializes a float.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_float(
+#[prebindgen]
+pub fn ze_serializer_serialize_float(
     this_: &mut ze_loaned_serializer_t,
     val: f32,
 ) -> z_result_t {
@@ -581,8 +583,8 @@ pub extern "C" fn ze_serializer_serialize_float(
 }
 
 /// @brief Serializes a double.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_double(
+#[prebindgen]
+pub fn ze_serializer_serialize_double(
     this_: &mut ze_loaned_serializer_t,
     val: f64,
 ) -> z_result_t {
@@ -591,8 +593,8 @@ pub extern "C" fn ze_serializer_serialize_double(
 }
 
 /// @brief Serializes a bool.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_bool(
+#[prebindgen]
+pub fn ze_serializer_serialize_bool(
     this_: &mut ze_loaned_serializer_t,
     val: bool,
 ) -> z_result_t {
@@ -602,8 +604,8 @@ pub extern "C" fn ze_serializer_serialize_bool(
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_uint8(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_uint8(
     this: &mut ze_deserializer_t,
     dst: &mut u8,
 ) -> z_result_t {
@@ -612,8 +614,8 @@ pub extern "C" fn ze_deserializer_deserialize_uint8(
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_uint16(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_uint16(
     this: &mut ze_deserializer_t,
     dst: &mut u16,
 ) -> z_result_t {
@@ -622,8 +624,8 @@ pub extern "C" fn ze_deserializer_deserialize_uint16(
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_uint32(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_uint32(
     this: &mut ze_deserializer_t,
     dst: &mut u32,
 ) -> z_result_t {
@@ -632,8 +634,8 @@ pub extern "C" fn ze_deserializer_deserialize_uint32(
 
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_uint64(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_uint64(
     this: &mut ze_deserializer_t,
     dst: &mut u64,
 ) -> z_result_t {
@@ -642,8 +644,8 @@ pub extern "C" fn ze_deserializer_deserialize_uint64(
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_int8(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_int8(
     this: &mut ze_deserializer_t,
     dst: &mut i8,
 ) -> z_result_t {
@@ -652,8 +654,8 @@ pub extern "C" fn ze_deserializer_deserialize_int8(
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_int16(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_int16(
     this: &mut ze_deserializer_t,
     dst: &mut i16,
 ) -> z_result_t {
@@ -662,8 +664,8 @@ pub extern "C" fn ze_deserializer_deserialize_int16(
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_int32(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_int32(
     this: &mut ze_deserializer_t,
     dst: &mut i32,
 ) -> z_result_t {
@@ -672,8 +674,8 @@ pub extern "C" fn ze_deserializer_deserialize_int32(
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_int64(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_int64(
     this: &mut ze_deserializer_t,
     dst: &mut i64,
 ) -> z_result_t {
@@ -682,8 +684,8 @@ pub extern "C" fn ze_deserializer_deserialize_int64(
 
 /// @brief Deserializes into a float.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_float(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_float(
     this: &mut ze_deserializer_t,
     dst: &mut f32,
 ) -> z_result_t {
@@ -692,8 +694,8 @@ pub extern "C" fn ze_deserializer_deserialize_float(
 
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_double(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_double(
     this: &mut ze_deserializer_t,
     dst: &mut f64,
 ) -> z_result_t {
@@ -702,8 +704,8 @@ pub extern "C" fn ze_deserializer_deserialize_double(
 
 /// @brief Deserializes into a bool.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_bool(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_bool(
     this: &mut ze_deserializer_t,
     dst: &mut bool,
 ) -> z_result_t {
@@ -711,8 +713,8 @@ pub extern "C" fn ze_deserializer_deserialize_bool(
 }
 
 /// @brief Serializes a slice.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_slice(
+#[prebindgen]
+pub fn ze_serializer_serialize_slice(
     this: &mut ze_loaned_serializer_t,
     slice: &z_loaned_slice_t,
 ) -> z_result_t {
@@ -725,8 +727,9 @@ pub extern "C" fn ze_serializer_serialize_slice(
 /// @param this_: A serializer instance.
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_buf(
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)] 
+pub unsafe fn ze_serializer_serialize_buf(
     this: &mut ze_loaned_serializer_t,
     data: *const u8,
     len: usize,
@@ -737,8 +740,8 @@ pub extern "C" fn ze_serializer_serialize_buf(
 }
 
 /// @brief Deserializes into a slice.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_slice(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_slice(
     this: &mut ze_deserializer_t,
     slice: &mut MaybeUninit<z_owned_slice_t>,
 ) -> z_result_t {
@@ -760,8 +763,8 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
 /// @brief Serializes a string.
 /// The string should be a valid UTF-8.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_string(
+#[prebindgen]
+pub fn ze_serializer_serialize_string(
     this: &mut ze_loaned_serializer_t,
     str: &z_loaned_string_t,
 ) -> z_result_t {
@@ -780,8 +783,8 @@ pub extern "C" fn ze_serializer_serialize_string(
 /// @brief Serializes a substring of specified length.
 /// The subsstring should be a valid UTF-8.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_substr(
+#[prebindgen]
+pub fn ze_serializer_serialize_substr(
     this: &mut ze_loaned_serializer_t,
     start: *const libc::c_char,
     len: usize,
@@ -802,8 +805,9 @@ pub extern "C" fn ze_serializer_serialize_substr(
 /// @brief Serializes a null-terminated string.
 /// The string should be a valid UTF-8.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_str(
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_serializer_serialize_str(
     this: &mut ze_loaned_serializer_t,
     str: *const libc::c_char,
 ) -> z_result_t {
@@ -811,8 +815,8 @@ pub extern "C" fn ze_serializer_serialize_str(
 }
 
 /// @brief Deserializes into a string.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_string(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_string(
     this: &mut ze_deserializer_t,
     str: &mut MaybeUninit<z_owned_string_t>,
 ) -> z_result_t {
@@ -833,8 +837,8 @@ pub extern "C" fn ze_deserializer_deserialize_string(
 /// @brief Initiates serialization of a sequence of multiple elements.
 /// @param this_: A serializer instance.
 /// @param len: Length of the sequence. Could be read during deserialization using `ze_deserializer_deserialize_sequence_length`.
-#[no_mangle]
-pub extern "C" fn ze_serializer_serialize_sequence_length(
+#[prebindgen]
+pub fn ze_serializer_serialize_sequence_length(
     this: &mut ze_loaned_serializer_t,
     len: usize,
 ) -> z_result_t {
@@ -846,8 +850,8 @@ pub extern "C" fn ze_serializer_serialize_sequence_length(
 /// @param this_: A serializer instance.
 /// @param len:  pointer where the length of the sequence (previously passed via `z_bytes_writer_serialize_sequence_begin`) will be written.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_deserializer_deserialize_sequence_length(
+#[prebindgen]
+pub fn ze_deserializer_deserialize_sequence_length(
     this: &mut ze_deserializer_t,
     len: &mut usize,
 ) -> z_result_t {

@@ -15,6 +15,7 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
@@ -74,16 +75,16 @@ impl Drop for z_owned_closure_hello_t {
     }
 }
 /// Constructs a closure in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_internal_closure_hello_null(
+pub unsafe fn z_internal_closure_hello_null(
     this_: &mut MaybeUninit<z_owned_closure_hello_t>,
 ) {
     this_.write(z_owned_closure_hello_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_hello_call(
+#[prebindgen]
+pub fn z_closure_hello_call(
     closure: &z_loaned_closure_hello_t,
     hello: &mut z_loaned_hello_t,
 ) {
@@ -96,8 +97,8 @@ pub extern "C" fn z_closure_hello_call(
     }
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_hello_drop(this_: &mut z_moved_closure_hello_t) {
+#[prebindgen]
+pub fn z_closure_hello_drop(this_: &mut z_moved_closure_hello_t) {
     let _ = this_.take_rust_type();
 }
 
@@ -123,22 +124,22 @@ impl<F: Fn(&mut z_loaned_hello_t)> From<F> for z_owned_closure_hello_t {
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_closure_hello_check(this_: &z_owned_closure_hello_t) -> bool {
+#[prebindgen]
+pub fn z_internal_closure_hello_check(this_: &z_owned_closure_hello_t) -> bool {
     !this_.is_empty()
 }
 
 /// Borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_hello_loan(
+#[prebindgen]
+pub fn z_closure_hello_loan(
     closure: &z_owned_closure_hello_t,
 ) -> &z_loaned_closure_hello_t {
     closure.as_loaned_c_type_ref()
 }
 
 /// Mutably norrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_hello_loan_mut(
+#[prebindgen]
+pub fn z_closure_hello_loan_mut(
     closure: &mut z_owned_closure_hello_t,
 ) -> &mut z_loaned_closure_hello_t {
     closure.as_loaned_c_type_mut()
@@ -159,8 +160,8 @@ pub extern "C" fn z_closure_hello_loan_mut(
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
-#[no_mangle]
-pub extern "C" fn z_closure_hello(
+#[prebindgen]
+pub fn z_closure_hello(
     this: &mut MaybeUninit<z_owned_closure_hello_t>,
     call: Option<extern "C" fn(hello: &mut z_loaned_hello_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(context: *mut c_void)>,

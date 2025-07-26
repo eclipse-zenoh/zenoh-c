@@ -25,17 +25,17 @@ decl_c_type!(
     owned(z_owned_matching_listener_t, option MatchingListener<()>),
 );
 
-#[no_mangle]
+#[prebindgen]
 /// @brief Constructs an empty matching listener.
-pub extern "C" fn z_internal_matching_listener_null(
+pub fn z_internal_matching_listener_null(
     this_: &mut MaybeUninit<z_owned_matching_listener_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-#[no_mangle]
+#[prebindgen]
 /// @brief Checks the matching listener is for the gravestone state
-pub extern "C" fn z_internal_matching_listener_check(this_: &z_owned_matching_listener_t) -> bool {
+pub fn z_internal_matching_listener_check(this_: &z_owned_matching_listener_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -48,17 +48,17 @@ pub struct z_matching_status_t {
 }
 
 /// @brief Undeclares the given matching listener, droping and invalidating it.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_matching_listener_drop(this: &mut z_moved_matching_listener_t) {
+pub fn z_matching_listener_drop(this: &mut z_moved_matching_listener_t) {
     std::mem::drop(this.take_rust_type())
 }
 
 /// @brief Undeclares the given matching listener, droping and invalidating it.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_undeclare_matching_listener(
+pub fn z_undeclare_matching_listener(
     this: &mut z_moved_matching_listener_t,
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {

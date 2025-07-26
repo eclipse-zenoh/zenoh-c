@@ -30,6 +30,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for retrievieng historical data for Advanced Subscriber.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_subscriber_history_options_t {
     /// Must be set to ``true``, to enable the history data recovery.
@@ -57,8 +58,8 @@ impl Default for ze_advanced_subscriber_history_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_subscriber_history_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_history_options_default(
+#[prebindgen]
+pub fn ze_advanced_subscriber_history_options_default(
     this: &mut MaybeUninit<ze_advanced_subscriber_history_options_t>,
 ) {
     this.write(ze_advanced_subscriber_history_options_t::default());
@@ -80,9 +81,10 @@ impl From<&ze_advanced_subscriber_history_options_t> for HistoryConfig {
     }
 }
 
-#[repr(C)]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for detection of the last sample(s) miss by Advanced Subscriber.
+#[prebindgen]
+#[repr(C)]
 pub struct ze_advanced_subscriber_last_sample_miss_detection_options_t {
     /// Must be set to ``true``, to enable the last sample(s) miss detection.
     pub is_enabled: bool,
@@ -106,8 +108,8 @@ impl Default for ze_advanced_subscriber_last_sample_miss_detection_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_subscriber_last_sample_miss_detection_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_last_sample_miss_detection_options_default(
+#[prebindgen]
+pub fn ze_advanced_subscriber_last_sample_miss_detection_options_default(
     this: &mut MaybeUninit<ze_advanced_subscriber_last_sample_miss_detection_options_t>,
 ) {
     this.write(ze_advanced_subscriber_last_sample_miss_detection_options_t::default());
@@ -115,6 +117,7 @@ pub extern "C" fn ze_advanced_subscriber_last_sample_miss_detection_options_defa
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for recovering lost messages for Advanced Subscriber.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_subscriber_recovery_options_t {
     /// Must be set to ``true``, to enable the lost sample recovery.
@@ -140,8 +143,8 @@ impl Default for ze_advanced_subscriber_recovery_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_subscriber_recovery_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_recovery_options_default(
+#[prebindgen]
+pub fn ze_advanced_subscriber_recovery_options_default(
     this: &mut MaybeUninit<ze_advanced_subscriber_recovery_options_t>,
 ) {
     this.write(ze_advanced_subscriber_recovery_options_t::default());
@@ -149,6 +152,7 @@ pub extern "C" fn ze_advanced_subscriber_recovery_options_default(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `ze_declare_advanced_subscriber()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_subscriber_options_t {
     /// Base subscriber options.
@@ -170,8 +174,8 @@ pub struct ze_advanced_subscriber_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_subscriber_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_options_default(
+#[prebindgen]
+pub fn ze_advanced_subscriber_options_default(
     this: &mut MaybeUninit<ze_advanced_subscriber_options_t>,
 ) {
     let history = ze_advanced_subscriber_history_options_t {
@@ -244,17 +248,17 @@ decl_c_type!(
 );
 
 /// Constructs a subscriber in a gravestone state.
-#[no_mangle]
-pub extern "C" fn ze_internal_advanced_subscriber_null(
+#[prebindgen]
+pub fn ze_internal_advanced_subscriber_null(
     this_: &mut MaybeUninit<ze_owned_advanced_subscriber_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Borrows subscriber.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_advanced_subscriber_loan(
+pub unsafe fn ze_advanced_subscriber_loan(
     this_: &ze_owned_advanced_subscriber_t,
 ) -> &ze_loaned_advanced_subscriber_t {
     this_
@@ -266,14 +270,14 @@ pub unsafe extern "C" fn ze_advanced_subscriber_loan(
 
 /// Undeclares advanced subscriber callback and resets it to its gravestone state.
 /// This is equivalent to calling `ze_undeclare_advanced_subscriber()` and discarding its return value.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_drop(this_: &mut ze_moved_advanced_subscriber_t) {
+#[prebindgen]
+pub fn ze_advanced_subscriber_drop(this_: &mut ze_moved_advanced_subscriber_t) {
     std::mem::drop(this_.take_rust_type())
 }
 
 /// Returns ``true`` if advanced subscriber is valid, ``false`` otherwise.
-#[no_mangle]
-pub extern "C" fn ze_internal_advanced_subscriber_check(
+#[prebindgen]
+pub fn ze_internal_advanced_subscriber_check(
     this_: &ze_owned_advanced_subscriber_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -288,8 +292,8 @@ pub extern "C" fn ze_internal_advanced_subscriber_check(
 /// @param options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
-#[no_mangle]
-pub extern "C" fn ze_declare_advanced_subscriber(
+#[prebindgen]
+pub fn ze_declare_advanced_subscriber(
     session: &'static z_loaned_session_t,
     subscriber: &'static mut MaybeUninit<ze_owned_advanced_subscriber_t>,
     key_expr: &'static z_loaned_keyexpr_t,
@@ -320,8 +324,8 @@ pub extern "C" fn ze_declare_advanced_subscriber(
 /// @param options: The options to be passed to the subscriber declaration.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_declare_background_advanced_subscriber(
+#[prebindgen]
+pub fn ze_declare_background_advanced_subscriber(
     session: &'static z_loaned_session_t,
     key_expr: &'static z_loaned_keyexpr_t,
     callback: &'static mut z_moved_closure_sample_t,
@@ -341,8 +345,8 @@ pub extern "C" fn ze_declare_background_advanced_subscriber(
 /// Undeclares the advanced subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_undeclare_advanced_subscriber(
+#[prebindgen]
+pub fn ze_undeclare_advanced_subscriber(
     this_: &mut ze_moved_advanced_subscriber_t,
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
@@ -368,19 +372,19 @@ decl_c_type!(
     owned(ze_owned_sample_miss_listener_t, option SampleMissListener<()>),
 );
 
-#[no_mangle]
+#[prebindgen]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs an empty sample miss listener.
-pub extern "C" fn ze_internal_sample_miss_listener_null(
+pub fn ze_internal_sample_miss_listener_null(
     this_: &mut MaybeUninit<ze_owned_sample_miss_listener_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-#[no_mangle]
+#[prebindgen]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Checks the sample_miss listener is for the gravestone state
-pub extern "C" fn ze_internal_sample_miss_listener_check(
+pub fn ze_internal_sample_miss_listener_check(
     this_: &ze_owned_sample_miss_listener_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -388,18 +392,18 @@ pub extern "C" fn ze_internal_sample_miss_listener_check(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given sample miss listener, droping and invalidating it.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_sample_miss_listener_drop(this: &mut ze_moved_sample_miss_listener_t) {
+pub fn ze_sample_miss_listener_drop(this: &mut ze_moved_sample_miss_listener_t) {
     std::mem::drop(this.take_rust_type())
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given sample miss listener, droping and invalidating it.
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_undeclare_sample_miss_listener(
+pub fn ze_undeclare_sample_miss_listener(
     this: &mut ze_moved_sample_miss_listener_t,
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
@@ -435,8 +439,8 @@ fn _advanced_subscriber_sample_miss_listener_declare_inner<'a>(
 /// @param callback: A closure that will be called every time the sample miss is detected.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_declare_sample_miss_listener(
+#[prebindgen]
+pub fn ze_advanced_subscriber_declare_sample_miss_listener(
     subscriber: &'static ze_loaned_advanced_subscriber_t,
     sample_miss_listener: &mut MaybeUninit<ze_owned_sample_miss_listener_t>,
     callback: &mut ze_moved_closure_miss_t,
@@ -464,8 +468,8 @@ pub extern "C" fn ze_advanced_subscriber_declare_sample_miss_listener(
 /// @param callback: A closure that will be called every time the sample miss is detected.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_declare_background_sample_miss_listener(
+#[prebindgen]
+pub fn ze_advanced_subscriber_declare_background_sample_miss_listener(
     subscriber: &'static ze_loaned_advanced_subscriber_t,
     callback: &mut ze_moved_closure_miss_t,
 ) -> result::z_result_t {
@@ -510,8 +514,8 @@ fn _advanced_subscriber_detect_publishers_inner(
 /// @param options: The options to be passed to the liveliness subscriber declaration.
 ///
 /// @return 0 in case of success, negative error values otherwise.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_detect_publishers(
+#[prebindgen]
+pub fn ze_advanced_subscriber_detect_publishers(
     subscriber: &'static ze_loaned_advanced_subscriber_t,
     liveliness_subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
     callback: &'static mut z_moved_closure_sample_t,
@@ -540,8 +544,8 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers(
 /// @param options: The options to be passed to the liveliness subscriber declaration.
 ///
 /// @return 0 in case of success, negative error values otherwise.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_detect_publishers_background(
+#[prebindgen]
+pub fn ze_advanced_subscriber_detect_publishers_background(
     subscriber: &'static ze_loaned_advanced_subscriber_t,
     callback: &'static mut z_moved_closure_sample_t,
     options: Option<&'static mut z_liveliness_subscriber_options_t>,
@@ -558,8 +562,8 @@ pub extern "C" fn ze_advanced_subscriber_detect_publishers_background(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns the key expression of the advanced subscriber.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_keyexpr(
+#[prebindgen]
+pub fn ze_advanced_subscriber_keyexpr(
     subscriber: &ze_loaned_advanced_subscriber_t,
 ) -> &z_loaned_keyexpr_t {
     subscriber
@@ -571,8 +575,8 @@ pub extern "C" fn ze_advanced_subscriber_keyexpr(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the advanced subscriber.
-#[no_mangle]
-pub extern "C" fn ze_advanced_subscriber_id(
+#[prebindgen]
+pub fn ze_advanced_subscriber_id(
     subscriber: &ze_loaned_advanced_subscriber_t,
 ) -> z_entity_global_id_t {
     subscriber.as_rust_type_ref().id().into_c_type()
