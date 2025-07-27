@@ -583,6 +583,7 @@ pub fn z_encoding_video_vp9() -> &'static z_loaned_encoding_t {
     Encoding::VIDEO_VP9.as_loaned_c_type_ref()
 }
 
+#[prebindgen]
 #[repr(C)]
 pub struct zc_internal_encoding_data_t {
     id: u16,

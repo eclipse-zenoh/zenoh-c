@@ -74,6 +74,7 @@ impl From<tracing::Level> for zc_log_severity_t {
 /// @brief A log-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[prebindgen]
 #[repr(C)]
 pub struct zc_owned_closure_log_t {
     _context: *mut libc::c_void,
@@ -88,6 +89,7 @@ pub struct zc_owned_closure_log_t {
 }
 
 /// Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct zc_loaned_closure_log_t {
     _0: usize,
@@ -96,6 +98,7 @@ pub struct zc_loaned_closure_log_t {
 }
 
 /// Moved closure.
+#[prebindgen]
 #[repr(C)]
 pub struct zc_moved_closure_log_t {
     _this: zc_owned_closure_log_t,

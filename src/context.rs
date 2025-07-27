@@ -39,6 +39,7 @@ pub trait DroppableContext: Debug {
 /// callback call returns.
 /// NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
 /// be executed.
+#[prebindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_context_t {
@@ -81,6 +82,7 @@ impl Drop for Context {
 /// callback call returns.
 /// NOTE: if user doesn't pass the instance of this context to zenoh-c, the delete_fn callback won't
 /// be executed.
+#[prebindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_threadsafe_context_t {
@@ -94,6 +96,7 @@ impl From<zc_threadsafe_context_t> for ThreadsafeContext {
     }
 }
 
+#[prebindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_threadsafe_context_data_t {
