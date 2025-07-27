@@ -25,6 +25,7 @@ use crate::{
 /// @brief A reply-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[prebindgen]
 #[repr(C)]
 pub struct z_owned_closure_reply_t {
     pub _context: *mut c_void,
@@ -33,6 +34,7 @@ pub struct z_owned_closure_reply_t {
 }
 
 /// Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_loaned_closure_reply_t {
     _0: usize,
@@ -41,6 +43,7 @@ pub struct z_loaned_closure_reply_t {
 }
 
 /// Moved closure.
+#[prebindgen]
 #[repr(C)]
 #[derive(Default)]
 pub struct z_moved_closure_reply_t {

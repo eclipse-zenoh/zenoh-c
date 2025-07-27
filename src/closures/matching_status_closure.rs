@@ -23,6 +23,7 @@ use crate::{
 /// @brief A matching status-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[prebindgen]
 #[repr(C)]
 pub struct z_owned_closure_matching_status_t {
     _context: *mut c_void,
@@ -32,6 +33,7 @@ pub struct z_owned_closure_matching_status_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_loaned_closure_matching_status_t {
     _0: usize,
@@ -41,6 +43,7 @@ pub struct z_loaned_closure_matching_status_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moved closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_moved_closure_matching_status_t {
     _this: z_owned_closure_matching_status_t,

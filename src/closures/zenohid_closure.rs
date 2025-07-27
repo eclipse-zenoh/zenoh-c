@@ -24,6 +24,7 @@ use crate::{
 /// @brief A zenoh id-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+#[prebindgen]
 #[repr(C)]
 pub struct z_owned_closure_zid_t {
     _context: *mut c_void,
@@ -32,6 +33,7 @@ pub struct z_owned_closure_zid_t {
 }
 
 /// @brief Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_loaned_closure_zid_t {
     _0: usize,
@@ -40,6 +42,7 @@ pub struct z_loaned_closure_zid_t {
 }
 
 /// @brief Moved closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_moved_closure_zid_t {
     pub _this: z_owned_closure_zid_t,
