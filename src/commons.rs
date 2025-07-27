@@ -517,6 +517,7 @@ pub fn z_priority_default() -> z_priority_t {
 }
 
 #[allow(non_camel_case_types)]
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_congestion_control_t {
