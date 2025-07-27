@@ -84,6 +84,7 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
     }
 }
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]

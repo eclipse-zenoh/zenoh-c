@@ -22,6 +22,7 @@ use crate::{
     z_loaned_string_t,
 };
 
+#[prebindgen]
 #[repr(C)]
 #[derive(PartialOrd, PartialEq)]
 /// Severity level of Zenoh log message.

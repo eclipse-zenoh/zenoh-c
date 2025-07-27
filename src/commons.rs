@@ -254,6 +254,7 @@ pub fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
 }
 
 /// The locality of samples to be received by subscribers or targeted by publishers.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_locality_t {
@@ -337,6 +338,7 @@ impl From<z_reliability_t> for Reliability {
     }
 }
 
+#[prebindgen]
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Key expressions types to which Queryable should reply to.

@@ -249,6 +249,7 @@ pub fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Status of SHM buffer allocation operation.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_buf_alloc_status_t {
@@ -296,6 +297,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Status of SHM buffer layouting + allocation operation.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_buf_layout_alloc_status_t {
