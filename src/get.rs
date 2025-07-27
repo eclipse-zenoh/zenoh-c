@@ -459,6 +459,7 @@ pub unsafe fn z_reply_take_from_loaned(
 }
 
 /// The replies consolidation strategy to apply on replies to a `z_get()`.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_query_consolidation_t {
