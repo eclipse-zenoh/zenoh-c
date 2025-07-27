@@ -19,6 +19,7 @@ lazy_static! {
 }
 
 /// Monotonic clock
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_clock_t {
@@ -73,6 +74,7 @@ pub unsafe fn z_clock_elapsed_us(time: *const z_clock_t) -> u64 {
 }
 
 /// Returns system clock time point corresponding to the current time instant.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_time_t {

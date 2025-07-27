@@ -41,6 +41,7 @@ pub fn z_internal_matching_listener_check(this_: &z_owned_matching_listener_t) -
 }
 
 /// @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
+#[prebindgen]
 #[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub struct z_matching_status_t {

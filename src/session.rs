@@ -30,7 +30,7 @@ decl_c_type!(
 );
 
 /// Borrows session.
-#[prebindgen("ready")]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
     this_
@@ -41,7 +41,7 @@ pub unsafe fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
 }
 
 // Mutably borrows session.
-#[prebindgen("ready")]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_session_loan_mut(
     this_: &mut z_owned_session_t,
@@ -61,14 +61,14 @@ pub fn z_internal_session_null(this_: &mut std::mem::MaybeUninit<z_owned_session
 }
 
 /// Options passed to the `z_open()` function.
-#[prebindgen("types")]
+#[prebindgen]
 #[repr(C)]
 pub struct z_open_options_t {
     _dummy: u8,
 }
 
 /// Constructs the default value for `z_open_options_t`.
-#[prebindgen("ready")]
+#[prebindgen]
 pub fn z_open_options_default(this_: &mut std::mem::MaybeUninit<z_open_options_t>) {
     this_.write(z_open_options_t { _dummy: 0 });
 }
@@ -77,7 +77,7 @@ pub fn z_open_options_default(this_: &mut std::mem::MaybeUninit<z_open_options_t
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
 #[allow(clippy::missing_safety_doc)]
-#[prebindgen("ready")]
+#[prebindgen]
 pub fn z_open(
     this: &mut std::mem::MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
@@ -144,7 +144,7 @@ pub fn z_internal_session_check(this_: &z_owned_session_t) -> bool {
 }
 
 /// Options passed to the `z_close()` function.
-#[prebindgen("types")]
+#[prebindgen]
 #[repr(C)]
 pub struct z_close_options_t {
     #[cfg(feature = "unstable")]
@@ -164,7 +164,7 @@ pub struct z_close_options_t {
 }
 
 /// Constructs the default value for `z_close_options_t`.
-#[prebindgen("ready")]
+#[prebindgen]
 #[allow(unused)]
 pub fn z_close_options_default(this_: &mut std::mem::MaybeUninit<z_close_options_t>) {
     this_.write(z_close_options_t {
@@ -181,7 +181,7 @@ pub fn z_close_options_default(this_: &mut std::mem::MaybeUninit<z_close_options
 /// After this operation, all calls for network operations for entites declared on this session will return a error.
 ///
 /// @return `0` in case of success, a negative value if an error occured while closing the session.
-#[prebindgen("ready")]
+#[prebindgen]
 pub fn z_close(
     session: &mut z_loaned_session_t,
     #[allow(unused)] options: Option<&mut z_close_options_t>,
@@ -216,14 +216,14 @@ pub fn z_close(
 /// Checks if zenoh session is closed.
 ///
 /// @return `true` if session is closed, `false` otherwise.
-#[prebindgen("ready")]
+#[prebindgen]
 pub fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
     let s = session.as_rust_type_ref();
     s.is_closed()
 }
 
 /// Closes and invalidates the session.
-#[prebindgen("ready")]
+#[prebindgen]
 pub fn z_session_drop(this_: &mut z_moved_session_t) {
     let _ = this_.take_rust_type();
 }

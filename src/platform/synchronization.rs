@@ -202,6 +202,7 @@ decl_c_type!(
     owned(z_owned_task_t, option JoinHandle<()>),
 );
 
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_task_attr_t(usize);

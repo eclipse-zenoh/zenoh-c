@@ -24,6 +24,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A ChunkDescriptor.
+#[prebindgen]
 #[repr(C)]
 pub struct z_chunk_descriptor_t {
     segment: z_segment_id_t,
@@ -50,6 +51,7 @@ impl From<&ChunkDescriptor> for z_chunk_descriptor_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocatedChunk.
+#[prebindgen]
 #[repr(C)]
 pub struct z_allocated_chunk_t {
     descriptpr: z_chunk_descriptor_t,

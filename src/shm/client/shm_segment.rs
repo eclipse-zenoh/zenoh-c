@@ -35,6 +35,7 @@ pub struct zc_shm_segment_callbacks_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An ShmSegment.
+#[prebindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub struct z_shm_segment_t {

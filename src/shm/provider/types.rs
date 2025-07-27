@@ -100,6 +100,7 @@ impl From<z_layout_error_t> for ZLayoutError {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocAlignment.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
@@ -257,6 +258,7 @@ pub enum zc_buf_alloc_status_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A result of SHM buffer allocation operation.
+#[prebindgen]
 #[repr(C)]
 pub struct z_buf_alloc_result_t {
     status: zc_buf_alloc_status_t,
@@ -305,6 +307,7 @@ pub enum zc_buf_layout_alloc_status_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A result of SHM buffer layouting + allocation operation.
+#[prebindgen]
 #[repr(C)]
 pub struct z_buf_layout_alloc_result_t {
     status: zc_buf_layout_alloc_status_t,
