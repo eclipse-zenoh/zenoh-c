@@ -41,6 +41,7 @@ use crate::{
 #[allow(non_camel_case_types)]
 pub type z_zint_t = c_ulong;
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -294,6 +295,7 @@ pub fn zc_locality_default() -> zc_locality_t {
 /// @brief The publisher reliability.
 /// @note Currently `reliability` does not trigger any data retransmission on the wire.
 /// It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
+#[prebindgen]
 #[cfg(feature = "unstable")]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
@@ -376,6 +378,7 @@ pub fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
 }
 
 /// The Queryables that should be target of a `z_get()`.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -417,6 +420,7 @@ pub fn z_query_target_default() -> z_query_target_t {
 }
 
 /// Consolidation mode values.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Default)]
 pub enum z_consolidation_mode_t {
@@ -462,6 +466,7 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
 }
 
 /// The priority of zenoh messages.
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
@@ -516,8 +521,8 @@ pub fn z_priority_default() -> z_priority_t {
     Priority::default().into()
 }
 
-#[allow(non_camel_case_types)]
 #[prebindgen]
+#[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_congestion_control_t {

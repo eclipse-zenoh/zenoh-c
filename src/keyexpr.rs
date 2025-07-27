@@ -581,6 +581,7 @@ pub fn z_keyexpr_join(
         }
     }
 }
+#[prebindgen]
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Intersection level of 2 key expressions.

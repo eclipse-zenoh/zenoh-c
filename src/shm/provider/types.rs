@@ -30,6 +30,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Allocation errors
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_alloc_error_t {
@@ -65,6 +66,7 @@ impl From<z_alloc_error_t> for ZAllocError {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Layouting errors
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_layout_error_t {
