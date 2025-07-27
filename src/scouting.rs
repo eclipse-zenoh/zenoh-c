@@ -145,6 +145,7 @@ impl Default for z_scout_options_t {
     }
 }
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -154,6 +155,7 @@ pub enum z_whatami_t {
     CLIENT = 0x04,
 }
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -167,7 +169,9 @@ pub enum z_what_t {
     ROUTER_PEER_CLIENT = 0x07, // 0x01 | 0x02 | 0x04,
 }
 
+#[prebindgen]
 pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
+#[prebindgen]
 pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
