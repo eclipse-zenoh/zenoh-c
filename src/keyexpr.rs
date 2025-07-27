@@ -79,7 +79,6 @@ fn keyexpr_create_inner(
 }
 
 #[allow(clippy::missing_safety_doc)]
-#[prebindgen]
 unsafe fn keyexpr_create(
     name: &'static mut [u8],
     should_auto_canonize: bool,
