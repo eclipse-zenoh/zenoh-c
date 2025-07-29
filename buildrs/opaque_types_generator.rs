@@ -90,7 +90,13 @@ impl Drop for {type_name} {{
         );
     }
 
-    std::fs::write(path_out, data_out).unwrap();
+    use std::io::Write;
+    let mut file = std::fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path_out)
+        .unwrap();
+    file.write_all(data_out.as_bytes()).unwrap();
 }
 
 fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
