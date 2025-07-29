@@ -30,6 +30,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Callbacks for ShmProviderBackend.
+#[prebindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_provider_backend_callbacks_t {

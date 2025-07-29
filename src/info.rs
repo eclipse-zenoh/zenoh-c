@@ -13,6 +13,7 @@
 //
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{session::ZenohId, Wait};
 
 pub use crate::opaque_types::z_id_t;
@@ -31,8 +32,8 @@ impl From<[u8; 16]> for z_id_t {
 }
 
 /// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
-#[no_mangle]
-pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_string_t>) {
+#[prebindgen]
+pub fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_string_t>) {
     let zid = zid.as_rust_type_ref();
     dst.as_rust_type_mut_uninit().write(zid.to_string().into());
 }
@@ -43,8 +44,8 @@ pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_str
 /// In other words, this function returning an array of 16 zeros means you failed
 /// to pass it a valid session.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
+#[prebindgen]
+pub unsafe fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
     let session = session.as_rust_type_ref();
     session.info().zid().wait().into_c_type()
 }
@@ -56,8 +57,8 @@ pub unsafe extern "C" fn z_info_zid(session: &z_loaned_session_t) -> z_id_t {
 ///
 /// Retuns 0 on success, negative values on failure
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_info_peers_zid(
+#[prebindgen]
+pub unsafe fn z_info_peers_zid(
     session: &z_loaned_session_t,
     callback: &mut z_moved_closure_zid_t,
 ) -> result::z_result_t {
@@ -76,8 +77,8 @@ pub unsafe extern "C" fn z_info_peers_zid(
 ///
 /// Retuns 0 on success, negative values on failure.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_info_routers_zid(
+#[prebindgen]
+pub unsafe fn z_info_routers_zid(
     session: &z_loaned_session_t,
     callback: &mut z_moved_closure_zid_t,
 ) -> result::z_result_t {

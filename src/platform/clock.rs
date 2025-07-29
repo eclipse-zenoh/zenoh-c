@@ -6,6 +6,7 @@ use std::{
 use chrono::{DateTime, Local};
 use lazy_static::lazy_static;
 use libc::c_char;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::CopyableToCArray;
 
@@ -18,6 +19,7 @@ lazy_static! {
 }
 
 /// Monotonic clock
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_clock_t {
@@ -26,8 +28,8 @@ pub struct z_clock_t {
 }
 
 /// Returns monotonic clock time point corresponding to the current time instant.
-#[no_mangle]
-pub extern "C" fn z_clock_now() -> z_clock_t {
+#[prebindgen]
+pub fn z_clock_now() -> z_clock_t {
     z_clock_t {
         t: CLOCK_BASE.elapsed().as_nanos() as u64,
         t_base: &CLOCK_BASE as *const CLOCK_BASE as *const c_void,
@@ -51,27 +53,28 @@ unsafe fn get_elapsed_nanos(time: *const z_clock_t) -> u64 {
 }
 
 /// Get number of seconds passed since creation of `time`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_clock_elapsed_s(time: *const z_clock_t) -> u64 {
+pub unsafe fn z_clock_elapsed_s(time: *const z_clock_t) -> u64 {
     get_elapsed_nanos(time) / 1_000_000_000
 }
 
 /// Get number of milliseconds passed since creation of `time`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_clock_elapsed_ms(time: *const z_clock_t) -> u64 {
+pub unsafe fn z_clock_elapsed_ms(time: *const z_clock_t) -> u64 {
     get_elapsed_nanos(time) / 1_000_000
 }
 
 /// Get number of microseconds passed since creation of `time`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_clock_elapsed_us(time: *const z_clock_t) -> u64 {
+pub unsafe fn z_clock_elapsed_us(time: *const z_clock_t) -> u64 {
     get_elapsed_nanos(time) / 1_000
 }
 
 /// Returns system clock time point corresponding to the current time instant.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_time_t {
@@ -83,9 +86,9 @@ pub struct z_time_t {
 /// @param buf: A buffer where the string will be writtent
 /// @param len: Maximum number of characters to write (including terminating 0). The string will be truncated
 /// if it is longer than `len`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_time_now_as_str(buf: *const c_char, len: usize) -> *const c_char {
+pub unsafe fn z_time_now_as_str(buf: *const c_char, len: usize) -> *const c_char {
     if len == 0 || buf.is_null() {
         return buf;
     }
@@ -97,8 +100,8 @@ pub unsafe extern "C" fn z_time_now_as_str(buf: *const c_char, len: usize) -> *c
 }
 
 /// Initialize clock with current time instant.
-#[no_mangle]
-pub extern "C" fn z_time_now() -> z_time_t {
+#[prebindgen]
+pub fn z_time_now() -> z_time_t {
     z_time_t {
         t: SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -122,22 +125,22 @@ unsafe fn get_elapsed_nanos_system_clock(time: *const z_time_t) -> u64 {
 }
 
 /// Get number of seconds passed since creation of `time`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_time_elapsed_s(time: *const z_time_t) -> u64 {
+pub unsafe fn z_time_elapsed_s(time: *const z_time_t) -> u64 {
     get_elapsed_nanos_system_clock(time) / 1_000_000_000
 }
 
 /// Get number of milliseconds passed since creation of `time`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_time_elapsed_ms(time: *const z_time_t) -> u64 {
+pub unsafe fn z_time_elapsed_ms(time: *const z_time_t) -> u64 {
     get_elapsed_nanos_system_clock(time) / 1_000_000
 }
 
 /// Get number of microseconds passed since creation of `time`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_time_elapsed_us(time: *const z_time_t) -> u64 {
+pub unsafe fn z_time_elapsed_us(time: *const z_time_t) -> u64 {
     get_elapsed_nanos_system_clock(time) / 1_000
 }

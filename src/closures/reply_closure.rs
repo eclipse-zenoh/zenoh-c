@@ -15,6 +15,7 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
@@ -24,6 +25,7 @@ use crate::{
 /// @brief A reply-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[prebindgen]
 #[repr(C)]
 pub struct z_owned_closure_reply_t {
     pub _context: *mut c_void,
@@ -32,6 +34,7 @@ pub struct z_owned_closure_reply_t {
 }
 
 /// Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_loaned_closure_reply_t {
     _0: usize,
@@ -40,6 +43,7 @@ pub struct z_loaned_closure_reply_t {
 }
 
 /// Moved closure.
+#[prebindgen]
 #[repr(C)]
 #[derive(Default)]
 pub struct z_moved_closure_reply_t {
@@ -77,23 +81,23 @@ impl Drop for z_owned_closure_reply_t {
     }
 }
 /// Constructs a closure int its gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_internal_closure_reply_null(
+pub unsafe fn z_internal_closure_reply_null(
     this_: &mut MaybeUninit<z_owned_closure_reply_t>,
 ) {
     this_.write(z_owned_closure_reply_t::default());
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_closure_reply_check(this_: &z_owned_closure_reply_t) -> bool {
+#[prebindgen]
+pub fn z_internal_closure_reply_check(this_: &z_owned_closure_reply_t) -> bool {
     !this_.is_empty()
 }
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_reply_call(
+#[prebindgen]
+pub fn z_closure_reply_call(
     closure: &z_loaned_closure_reply_t,
     reply: &mut z_loaned_reply_t,
 ) {
@@ -106,8 +110,8 @@ pub extern "C" fn z_closure_reply_call(
     }
 }
 /// Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_reply_drop(closure_: &mut z_moved_closure_reply_t) {
+#[prebindgen]
+pub fn z_closure_reply_drop(closure_: &mut z_moved_closure_reply_t) {
     let _ = closure_.take_rust_type();
 }
 
@@ -133,16 +137,16 @@ impl<F: Fn(&mut z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
 }
 
 /// Borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_reply_loan(
+#[prebindgen]
+pub fn z_closure_reply_loan(
     closure: &z_owned_closure_reply_t,
 ) -> &z_loaned_closure_reply_t {
     closure.as_loaned_c_type_ref()
 }
 
 /// Mutably borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_reply_loan_mut(
+#[prebindgen]
+pub fn z_closure_reply_loan_mut(
     closure: &mut z_owned_closure_reply_t,
 ) -> &mut z_loaned_closure_reply_t {
     closure.as_loaned_c_type_mut()
@@ -161,8 +165,8 @@ pub extern "C" fn z_closure_reply_loan_mut(
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
-#[no_mangle]
-pub extern "C" fn z_closure_reply(
+#[prebindgen]
+pub fn z_closure_reply(
     this: &mut MaybeUninit<z_owned_closure_reply_t>,
     call: Option<extern "C" fn(reply: &mut z_loaned_reply_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(context: *mut c_void)>,

@@ -15,12 +15,14 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_string_t,
 };
 
+#[prebindgen]
 #[repr(C)]
 #[derive(PartialOrd, PartialEq)]
 /// Severity level of Zenoh log message.
@@ -73,6 +75,7 @@ impl From<tracing::Level> for zc_log_severity_t {
 /// @brief A log-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[prebindgen]
 #[repr(C)]
 pub struct zc_owned_closure_log_t {
     _context: *mut libc::c_void,
@@ -87,6 +90,7 @@ pub struct zc_owned_closure_log_t {
 }
 
 /// Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct zc_loaned_closure_log_t {
     _0: usize,
@@ -95,6 +99,7 @@ pub struct zc_loaned_closure_log_t {
 }
 
 /// Moved closure.
+#[prebindgen]
 #[repr(C)]
 pub struct zc_moved_closure_log_t {
     _this: zc_owned_closure_log_t,
@@ -139,16 +144,16 @@ impl Drop for zc_owned_closure_log_t {
     }
 }
 /// Constructs a closure in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_internal_closure_log_null(
+pub unsafe fn zc_internal_closure_log_null(
     this_: &mut MaybeUninit<zc_owned_closure_log_t>,
 ) {
     this_.write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn zc_closure_log_call(
+#[prebindgen]
+pub fn zc_closure_log_call(
     closure: &zc_loaned_closure_log_t,
     severity: zc_log_severity_t,
     msg: &z_loaned_string_t,
@@ -162,20 +167,20 @@ pub extern "C" fn zc_closure_log_call(
     }
 }
 /// Drops the closure. Droping an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn zc_closure_log_drop(closure_: &mut zc_moved_closure_log_t) {
+#[prebindgen]
+pub fn zc_closure_log_drop(closure_: &mut zc_moved_closure_log_t) {
     let _ = closure_.take_rust_type();
 }
 
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn zc_internal_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
+#[prebindgen]
+pub fn zc_internal_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
     !this_.is_empty()
 }
 
 /// Borrows closure.
-#[no_mangle]
-pub extern "C" fn zc_closure_log_loan(
+#[prebindgen]
+pub fn zc_closure_log_loan(
     closure: &zc_owned_closure_log_t,
 ) -> &zc_loaned_closure_log_t {
     closure.as_loaned_c_type_ref()
@@ -194,8 +199,8 @@ pub extern "C" fn zc_closure_log_loan(
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
-#[no_mangle]
-pub extern "C" fn zc_closure_log(
+#[prebindgen]
+pub fn zc_closure_log(
     this: &mut MaybeUninit<zc_owned_closure_log_t>,
     call: Option<
         extern "C" fn(

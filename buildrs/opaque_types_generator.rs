@@ -1,15 +1,13 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::{collections::HashMap, path::{Path, PathBuf}};
 
 use regex::Regex;
 
 use super::common_helpers::{features, split_type_name};
 use crate::{get_build_rs_path, get_out_rs_path};
 
-pub fn generate_opaque_types() {
+pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<bool>) {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let current_folder = get_out_rs_path();
-    let (command, path_in) = produce_opaque_types_data();
-    let path_out = current_folder.join("./opaque_types.rs");
+    let (command, path_in) = produce_opaque_types_data(target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     let mut data_out = String::new();
@@ -28,7 +26,11 @@ pub fn generate_opaque_types() {
         good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
-        let mut s = String::new();
+        let mut s = if let Some(skip) = prebindgen {
+            format!("#[prebindgen(\"types\", skip = {skip})]\n")
+        } else {
+            String::new()
+        };
         if category != Some("owned") {
             s += "#[derive(Copy, Clone)]\n";
         };
@@ -44,7 +46,8 @@ pub struct {type_name} {{
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
             s += format!(
-                "#[repr(C)]
+                "#[prebindgen(\"types\")]
+#[repr(C)]
 #[rustfmt::skip]
 pub struct {moved_type_name} {{
     _this: {type_name},
@@ -83,22 +86,18 @@ impl Drop for {type_name} {{
 
     if good_error_count != total_error_count {
         panic!(
-            "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\n\nCommand executed:\n\n{}\n\nCompiler output:\n\n{}",
-            total_error_count,
-            good_error_count,
-            command,
-            data_in
+            "Failed to generate opaque types: there are {total_error_count} errors in the input data, but only {good_error_count} of them were processed as information about opaque types\n\nCommand executed:\n\n{command}\n\nCompiler output:\n\n{data_in}"
         );
     }
 
     std::fs::write(path_out, data_out).unwrap();
 }
 
-fn produce_opaque_types_data() -> (String, PathBuf) {
-    let target = std::env::var("TARGET").unwrap();
+fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = get_out_rs_path().join("./.build_resources_opaque_types.txt");
+    let output_file_path = get_out_rs_path().join(target).join(".build_resources_opaque_types.txt");
+    std::fs::create_dir_all(output_file_path.parent().unwrap()).unwrap();
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = std::process::Stdio::from(out_file);
 
@@ -124,8 +123,8 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--manifest-path")
         .arg(manifest_path)
         .arg("--target-dir")
-        .arg(get_out_rs_path().join("./build_resources/opaque_types"));
-    let command_str = format!("{:?}", command);
+        .arg(get_out_rs_path().join(target).join(".build_resources/opaque_types"));
+    let command_str = format!("{command:?}");
     let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
 }
