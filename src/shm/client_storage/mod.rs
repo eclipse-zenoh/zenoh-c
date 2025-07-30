@@ -73,6 +73,16 @@ pub unsafe fn zc_shm_client_list_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves list of SHM Clients.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn zc_shm_client_list_move(
+    this: &mut zc_owned_shm_client_list_t,
+) -> &mut zc_moved_shm_client_list_t {
+    std::mem::transmute(this)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Mutably borrows list of SHM Clients.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
@@ -198,4 +208,14 @@ pub unsafe fn z_shm_client_storage_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves SHM Client Storage.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_shm_client_storage_move(
+    this: &mut z_owned_shm_client_storage_t,
+) -> &mut z_moved_shm_client_storage_t {
+    std::mem::transmute(this)
 }

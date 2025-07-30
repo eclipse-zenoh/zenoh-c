@@ -140,7 +140,16 @@ pub fn z_closure_hello_loan(
     closure.as_loaned_c_type_ref()
 }
 
-/// Mutably norrows closure.
+/// Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_closure_hello_move(
+    closure: &mut z_owned_closure_hello_t,
+) -> &mut z_moved_closure_hello_t {
+    std::mem::transmute(closure)
+}
+
+/// Mutably borrows closure.
 #[prebindgen]
 pub fn z_closure_hello_loan_mut(
     closure: &mut z_owned_closure_hello_t,

@@ -55,6 +55,13 @@ pub unsafe fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subsc
         .as_loaned_c_type_ref()
 }
 
+/// Moves subscriber.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_subscriber_move(this_: &mut z_owned_subscriber_t) -> &mut z_moved_subscriber_t {
+    std::mem::transmute(this_)
+}
+
 /// Options passed to the `z_declare_subscriber()` function.
 #[prebindgen]
 #[allow(non_camel_case_types)]

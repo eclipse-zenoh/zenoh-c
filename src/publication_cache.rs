@@ -150,9 +150,7 @@ pub fn ze_declare_background_publication_cache(
 /// @brief Constructs a publication cache in a gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn ze_internal_publication_cache_null(
-    this_: &mut MaybeUninit<ze_owned_publication_cache_t>,
-) {
+pub fn ze_internal_publication_cache_null(this_: &mut MaybeUninit<ze_owned_publication_cache_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -160,9 +158,7 @@ pub fn ze_internal_publication_cache_null(
 /// @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn ze_internal_publication_cache_check(
-    this_: &ze_owned_publication_cache_t,
-) -> bool {
+pub fn ze_internal_publication_cache_check(this_: &ze_owned_publication_cache_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -178,9 +174,7 @@ pub fn ze_publication_cache_drop(this: &mut ze_moved_publication_cache_t) {
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Returns the key expression of the publication cache.
 #[prebindgen]
-pub fn ze_publication_cache_keyexpr(
-    this_: &ze_loaned_publication_cache_t,
-) -> &z_loaned_keyexpr_t {
+pub fn ze_publication_cache_keyexpr(this_: &ze_loaned_publication_cache_t) -> &z_loaned_keyexpr_t {
     this_.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
@@ -196,6 +190,16 @@ pub unsafe fn ze_publication_cache_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_publisher.
+/// @brief Moves publication cache.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_publication_cache_move(
+    this_: &mut ze_owned_publication_cache_t,
+) -> &mut ze_moved_publication_cache_t {
+    std::mem::transmute(this_)
 }
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.

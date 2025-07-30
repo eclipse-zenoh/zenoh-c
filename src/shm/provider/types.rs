@@ -163,12 +163,22 @@ pub fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_memory_layout_loan(
-    this: &z_owned_memory_layout_t,
+    this_: &z_owned_memory_layout_t,
 ) -> &z_loaned_memory_layout_t {
-    this.as_rust_type_ref()
+    this_.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves Memory Layout.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_memory_layout_move(
+    this_: &mut z_owned_memory_layout_t,
+) -> &mut z_moved_memory_layout_t {
+    std::mem::transmute(this_)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

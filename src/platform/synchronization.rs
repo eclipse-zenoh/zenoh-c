@@ -150,6 +150,15 @@ pub unsafe fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_condvar_t {
         .as_loaned_c_type_ref()
 }
 
+/// Moves conditional variable.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_condvar_move(
+    this_: &mut z_owned_condvar_t,
+) -> &mut z_moved_condvar_t {
+    std::mem::transmute(this_)
+}
+
 /// Mutably borrows conditional variable.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]

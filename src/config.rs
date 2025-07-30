@@ -42,6 +42,13 @@ pub fn z_config_loan(this_: &'static z_owned_config_t) -> &'static z_loaned_conf
     this.as_loaned_c_type_ref()
 }
 
+// Moves config.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_config_move(this_: &mut z_owned_config_t) -> &mut z_moved_config_t {
+    std::mem::transmute(this_)
+}
+
 /// Mutably borrows config.
 #[prebindgen]
 pub fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {

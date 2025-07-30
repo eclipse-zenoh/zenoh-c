@@ -268,6 +268,15 @@ pub unsafe fn ze_advanced_subscriber_loan(
         .as_loaned_c_type_ref()
 }
 
+/// Moves subscriber.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_advanced_subscriber_move(
+    this_: &mut ze_owned_advanced_subscriber_t,
+) -> &mut ze_moved_advanced_subscriber_t {
+    std::mem::transmute(this_)
+}
+
 /// Undeclares advanced subscriber callback and resets it to its gravestone state.
 /// This is equivalent to calling `ze_undeclare_advanced_subscriber()` and discarding its return value.
 #[prebindgen]

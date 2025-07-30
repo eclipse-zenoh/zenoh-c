@@ -104,6 +104,15 @@ pub unsafe fn z_fifo_handler_sample_loan(
         .as_loaned_c_type_ref()
 }
 
+/// Moves handler.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_fifo_handler_sample_move(
+    this: &mut z_owned_fifo_handler_sample_t,
+) -> &mut z_moved_fifo_handler_sample_t {
+    std::mem::transmute(this)
+}
+
 /// Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
 /// the channel is dropped (normally when there are no more samples to receive).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the sample will be in the gravestone state).
@@ -211,6 +220,15 @@ pub unsafe fn z_ring_handler_sample_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// Moves handler.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_ring_handler_sample_move(
+    this: &mut z_owned_ring_handler_sample_t,
+) -> &mut z_moved_ring_handler_sample_t {
+    std::mem::transmute(this)
 }
 
 /// Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until

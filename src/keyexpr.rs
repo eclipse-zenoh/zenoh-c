@@ -131,6 +131,13 @@ pub unsafe fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Moves `z_owned_keyexpr_t`.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_keyexpr_move(this_: &mut z_owned_keyexpr_t) -> &mut z_moved_keyexpr_t {
+    std::mem::transmute(this_)
+}
+
 /// Borrows `z_view_keyexpr_t`.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]

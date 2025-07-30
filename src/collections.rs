@@ -367,6 +367,13 @@ pub fn z_slice_loan(this_: &z_owned_slice_t) -> &z_loaned_slice_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Moves slice.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_slice_move(this_: &mut z_owned_slice_t) -> &mut z_moved_slice_t {
+    std::mem::transmute(this_)
+}
+
 /// Constructs an owned copy of a slice.
 #[prebindgen]
 pub fn z_slice_clone(dst: &mut MaybeUninit<z_owned_slice_t>, this_: &z_loaned_slice_t) {
@@ -666,6 +673,12 @@ pub fn z_string_loan(this_: &z_owned_string_t) -> &z_loaned_string_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Moves string.
+#[prebindgen]
+pub unsafe fn z_string_move(this_: &mut z_owned_string_t) -> &mut z_moved_string_t {
+    std::mem::transmute(this_)
+}
+
 /// Borrows view string.
 #[prebindgen]
 pub fn z_view_string_loan(this_: &z_view_string_t) -> &z_loaned_string_t {
@@ -858,11 +871,18 @@ pub fn z_string_array_drop(this_: &mut z_moved_string_array_t) {
 
 /// Borrows string array.
 #[prebindgen]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_string_array_loan(
+pub fn z_string_array_loan(
     this: &z_owned_string_array_t,
 ) -> &z_loaned_string_array_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
+}
+
+/// Moves string array.
+#[prebindgen]
+pub unsafe fn z_string_array_move(
+    this_: &mut z_owned_string_array_t,
+) -> &mut z_moved_string_array_t {
+    std::mem::transmute(this_)
 }
 
 /// Mutably borrows string array.

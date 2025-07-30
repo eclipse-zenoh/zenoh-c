@@ -144,6 +144,16 @@ pub fn ze_closure_miss_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_closure_miss_move(
+    closure: &mut ze_owned_closure_miss_t,
+) -> &mut ze_moved_closure_miss_t {
+    std::mem::transmute(closure)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 ///
 /// Closures are not guaranteed not to be called concurrently.
 ///

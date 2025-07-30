@@ -186,6 +186,15 @@ pub fn zc_closure_log_loan(
     closure.as_loaned_c_type_ref()
 }
 
+/// Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn zc_closure_log_move(
+    closure: &mut zc_owned_closure_log_t,
+) -> &mut zc_moved_closure_log_t {
+    std::mem::transmute(closure)
+}
+
 /// @brief Constructs closure.
 ///
 /// Closures are not guaranteed not to be called concurrently.

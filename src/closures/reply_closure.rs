@@ -144,6 +144,15 @@ pub fn z_closure_reply_loan(
     closure.as_loaned_c_type_ref()
 }
 
+/// Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_closure_reply_move(
+    closure: &mut z_owned_closure_reply_t,
+) -> &mut z_moved_closure_reply_t {
+    std::mem::transmute(closure)
+}
+
 /// Mutably borrows closure.
 #[prebindgen]
 pub fn z_closure_reply_loan_mut(

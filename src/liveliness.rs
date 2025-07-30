@@ -37,9 +37,7 @@ decl_c_type!(
 
 /// @brief Constructs liveliness token in its gravestone state.
 #[prebindgen]
-pub fn z_internal_liveliness_token_null(
-    this_: &mut MaybeUninit<z_owned_liveliness_token_t>,
-) {
+pub fn z_internal_liveliness_token_null(this_: &mut MaybeUninit<z_owned_liveliness_token_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -64,9 +62,7 @@ pub struct z_liveliness_token_options_t {
 
 /// @brief Constructs default value for `z_liveliness_token_options_t`.
 #[prebindgen]
-pub fn z_liveliness_token_options_default(
-    this: &mut MaybeUninit<z_liveliness_token_options_t>,
-) {
+pub fn z_liveliness_token_options_default(this: &mut MaybeUninit<z_liveliness_token_options_t>) {
     this.write(z_liveliness_token_options_t { _dummy: 0 });
 }
 
@@ -80,6 +76,15 @@ pub unsafe fn z_liveliness_token_loan(
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @brief Moves token.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_liveliness_token_move(
+    this_: &mut z_owned_liveliness_token_t,
+) -> &mut z_moved_liveliness_token_t {
+    std::mem::transmute(this_)
 }
 
 /// @brief Constructs and declares a liveliness token on the network.
@@ -116,9 +121,7 @@ pub fn z_liveliness_declare_token(
 
 /// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[prebindgen]
-pub fn z_liveliness_undeclare_token(
-    this: &mut z_moved_liveliness_token_t,
-) -> result::z_result_t {
+pub fn z_liveliness_undeclare_token(this: &mut z_moved_liveliness_token_t) -> result::z_result_t {
     if let Some(token) = this.take_rust_type() {
         if let Err(e) = token.undeclare().wait() {
             crate::report_error!("Failed to undeclare token: {e}");
@@ -235,9 +238,7 @@ pub struct z_liveliness_get_options_t {
 
 /// @brief Constructs default value `z_liveliness_get_options_t`.
 #[prebindgen]
-pub fn z_liveliness_get_options_default(
-    this: &mut MaybeUninit<z_liveliness_get_options_t>,
-) {
+pub fn z_liveliness_get_options_default(this: &mut MaybeUninit<z_liveliness_get_options_t>) {
     this.write(z_liveliness_get_options_t { timeout_ms: 10000 });
 }
 

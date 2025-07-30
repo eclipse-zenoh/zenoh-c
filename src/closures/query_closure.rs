@@ -140,6 +140,15 @@ pub fn z_closure_query_loan(
     closure.as_loaned_c_type_ref()
 }
 
+/// Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_closure_query_move(
+    closure: &mut z_owned_closure_query_t,
+) -> &mut z_moved_closure_query_t {
+    std::mem::transmute(closure)
+}
+
 /// Mutably borrows closure.
 #[prebindgen]
 pub fn z_closure_query_loan_mut(

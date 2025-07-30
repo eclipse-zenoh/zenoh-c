@@ -152,6 +152,16 @@ pub fn z_closure_matching_status_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_closure_matching_status_move(
+    closure: &mut z_owned_closure_matching_status_t,
+) -> &mut z_moved_closure_matching_status_t {
+    std::mem::transmute(closure)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 ///
 /// Closures are not guaranteed not to be called concurrently.
 ///

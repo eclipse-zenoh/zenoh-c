@@ -55,6 +55,13 @@ pub unsafe fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryab
         .as_loaned_c_type_ref()
 }
 
+/// Moves Queryable
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_queryable_move(this_: &mut z_owned_queryable_t) -> &mut z_moved_queryable_t {
+    std::mem::transmute(this_)
+}
+
 pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
     owned(z_owned_query_t, option Query),
@@ -83,6 +90,14 @@ pub unsafe fn z_query_loan(
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
+
+/// Moves the query.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_query_move(this_: &mut z_owned_query_t) -> &mut z_moved_query_t {
+    std::mem::transmute(this_)
+}
+
 /// Mutably borrows the query.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]

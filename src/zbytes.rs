@@ -86,6 +86,13 @@ pub fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Moves data.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_bytes_move(this: &mut z_owned_bytes_t) -> &mut z_moved_bytes_t {
+    std::mem::transmute(this)
+}
+
 /// Muatably borrows data.
 #[prebindgen]
 pub fn z_bytes_loan_mut(this: &mut z_owned_bytes_t) -> &mut z_loaned_bytes_t {
@@ -670,7 +677,16 @@ pub unsafe fn z_bytes_writer_loan(
         .as_loaned_c_type_ref()
 }
 
-/// Muatably borrows writer.
+/// Moves writer.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_bytes_writer_move(
+    this: &mut z_owned_bytes_writer_t,
+) -> &mut z_moved_bytes_writer_t {
+    std::mem::transmute(this)
+}
+
+/// Mutably borrows writer.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_bytes_writer_loan_mut(

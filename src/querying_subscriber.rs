@@ -284,6 +284,16 @@ pub unsafe fn ze_querying_subscriber_loan(
 }
 
 /// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Moves querying subscriber.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_querying_subscriber_move(
+    this_: &mut ze_owned_querying_subscriber_t,
+) -> &mut ze_moved_querying_subscriber_t {
+    std::mem::transmute(this_)
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Undeclares the given querying subscriber.
 ///
 /// @return 0 in case of success, negative error code otherwise.

@@ -137,6 +137,15 @@ pub fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_
     closure.as_loaned_c_type_ref()
 }
 
+/// @brief Moves closure.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_closure_zid_move(
+    closure: &mut z_owned_closure_zid_t,
+) -> &mut z_moved_closure_zid_t {
+    std::mem::transmute(closure)
+}
+
 /// @brief Mutably borrows closure.
 #[prebindgen]
 pub fn z_closure_zid_loan_mut(

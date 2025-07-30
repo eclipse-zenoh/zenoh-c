@@ -173,6 +173,13 @@ pub fn z_encoding_loan(this_: &z_owned_encoding_t) -> &z_loaned_encoding_t {
     this_.as_rust_type_ref().as_loaned_c_type_ref()
 }
 
+/// Moves encoding.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_encoding_move(this_: &mut z_owned_encoding_t) -> &mut z_moved_encoding_t {
+    std::mem::transmute(this_)
+}
+
 /// Mutably borrows encoding.
 #[prebindgen]
 pub fn z_encoding_loan_mut(this_: &mut z_owned_encoding_t) -> &mut z_loaned_encoding_t {
@@ -181,20 +188,14 @@ pub fn z_encoding_loan_mut(this_: &mut z_owned_encoding_t) -> &mut z_loaned_enco
 
 /// Constructs an owned copy of the encoding in provided uninitilized memory location.
 #[prebindgen]
-pub fn z_encoding_clone(
-    dst: &mut MaybeUninit<z_owned_encoding_t>,
-    this: &z_loaned_encoding_t,
-) {
+pub fn z_encoding_clone(dst: &mut MaybeUninit<z_owned_encoding_t>, this: &z_loaned_encoding_t) {
     dst.as_rust_type_mut_uninit()
         .write(this.as_rust_type_ref().clone());
 }
 
 /// Returns ``true`` if `this_` equals to `other`, ``false`` otherwise.
 #[prebindgen]
-pub fn z_encoding_equals(
-    this_: &z_loaned_encoding_t,
-    other: &z_loaned_encoding_t,
-) -> bool {
+pub fn z_encoding_equals(this_: &z_loaned_encoding_t, other: &z_loaned_encoding_t) -> bool {
     this_.as_rust_type_ref() == other.as_rust_type_ref()
 }
 
@@ -298,8 +299,7 @@ pub fn z_encoding_text_json5() -> &'static z_loaned_encoding_t {
 ///
 /// Constant alias for string: `"application/python-serialized-object"`.
 #[prebindgen]
-pub fn z_encoding_application_python_serialized_object() -> &'static z_loaned_encoding_t
-{
+pub fn z_encoding_application_python_serialized_object() -> &'static z_loaned_encoding_t {
     Encoding::APPLICATION_PYTHON_SERIALIZED_OBJECT.as_loaned_c_type_ref()
 }
 /// An application-specific protobuf-encoded data.

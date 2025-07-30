@@ -285,6 +285,15 @@ pub unsafe fn ze_advanced_publisher_loan(
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// Moves advanced publisher.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_advanced_publisher_move(
+    this_: &mut ze_owned_advanced_publisher_t,
+) -> &mut ze_moved_advanced_publisher_t {
+    std::mem::transmute(this_)
+}
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Mutably borrows advanced publisher.

@@ -50,6 +50,13 @@ pub unsafe fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
         .as_loaned_c_type_ref()
 }
 
+/// Moves hello message.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_hello_move(this_: &mut z_owned_hello_t) -> &mut z_moved_hello_t {
+    std::mem::transmute(this_)
+}
+
 /// Mutably borrows hello message.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]

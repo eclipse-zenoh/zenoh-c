@@ -132,6 +132,16 @@ pub unsafe fn z_shm_provider_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves SHM Provider.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_shm_provider_move(
+    this: &mut z_owned_shm_provider_t,
+) -> &mut z_moved_shm_provider_t {
+    std::mem::transmute(this)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes SHM Provider.
 #[prebindgen]
 pub fn z_shm_provider_drop(this_: &mut z_moved_shm_provider_t) {

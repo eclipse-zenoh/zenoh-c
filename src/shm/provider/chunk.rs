@@ -114,6 +114,16 @@ pub unsafe fn z_ptr_in_segment_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves data pointer in SHM Segment.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_ptr_in_segment_move(
+    this: &mut z_owned_ptr_in_segment_t,
+) -> &mut z_moved_ptr_in_segment_t {
+    std::mem::transmute(this)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes data pointer in SHM Segment.
 #[prebindgen]
 pub fn z_ptr_in_segment_drop(this_: &mut z_moved_ptr_in_segment_t) {

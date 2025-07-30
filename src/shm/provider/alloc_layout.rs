@@ -98,6 +98,16 @@ pub unsafe fn z_alloc_layout_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves Alloc Layout.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_alloc_layout_move(
+    this: &mut z_owned_alloc_layout_t,
+) -> &mut z_moved_alloc_layout_t {
+    std::mem::transmute(this)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Alloc Layout.
 #[prebindgen]
 pub fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {

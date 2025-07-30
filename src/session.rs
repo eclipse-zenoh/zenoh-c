@@ -40,6 +40,13 @@ pub unsafe fn z_session_loan(this_: &z_owned_session_t) -> &z_loaned_session_t {
         .as_loaned_c_type_ref()
 }
 
+/// Moves session.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_session_move(this_: &mut z_owned_session_t) -> &mut z_moved_session_t {
+    std::mem::transmute(this_)
+}
+
 // Mutably borrows session.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
