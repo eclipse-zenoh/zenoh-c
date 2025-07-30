@@ -1,4 +1,7 @@
-use std::{collections::HashMap, path::{Path, PathBuf}};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
 
 use regex::Regex;
 
@@ -26,11 +29,11 @@ pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<b
         good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
-        // - If Option<false> is passed, the type is passed to both the compiler 
+        // - If Option<false> is passed, the type is passed to both the compiler
         // and prebindgen (#[prebindgen(skip = false)])
         // - If Option<true> is passed, attribute is `#[prebindgen(skip = true)]`
         // which means that the type is not passed to the compiler, but prebindgen data is generated.
-        // In this case, only type itself is needed, the traits should be skipped to avoid 
+        // In this case, only type itself is needed, the traits should be skipped to avoid
         // conflicts with second generation with "None" option.
         // - If None is passed, the prebindgen attribute is not generated
         let skip_traits = prebindgen.unwrap_or(false);
@@ -61,8 +64,13 @@ pub struct {type_name} {{
 pub struct {moved_type_name} {{
     _this: {type_name},
 }}
+"
+            )
+            .as_str();
 
-#[rustfmt::skip]
+            if !skip_traits {
+                s += format!(
+                    "#[rustfmt::skip]
 impl crate::transmute::TakeCType for {moved_type_name} {{
     type CType = {type_name};
     fn take_c_type(&mut self) -> Self::CType {{
@@ -79,8 +87,9 @@ impl Drop for {type_name} {{
     }}
 }}
 "
-            )
-            .as_str();
+                )
+                .as_str();
+            }
         }
 
         let doc = docs
@@ -111,7 +120,9 @@ impl Drop for {type_name} {{
 fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = get_out_rs_path().join(target).join(".build_resources_opaque_types.txt");
+    let output_file_path = get_out_rs_path()
+        .join(target)
+        .join(".build_resources_opaque_types.txt");
     std::fs::create_dir_all(output_file_path.parent().unwrap()).unwrap();
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = std::process::Stdio::from(out_file);
@@ -138,7 +149,11 @@ fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
         .arg("--manifest-path")
         .arg(manifest_path)
         .arg("--target-dir")
-        .arg(get_out_rs_path().join(target).join(".build_resources/opaque_types"));
+        .arg(
+            get_out_rs_path()
+                .join(target)
+                .join(".build_resources/opaque_types"),
+        );
     let command_str = format!("{command:?}");
     let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
