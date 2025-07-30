@@ -26,6 +26,14 @@ pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<b
         good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
+        // - If Option<false> is passed, the type is passed to both the compiler 
+        // and prebindgen (#[prebindgen(skip = false)])
+        // - If Option<true> is passed, attribute is `#[prebindgen(skip = true)]`
+        // which means that the type is not passed to the compiler, but prebindgen data is generated.
+        // In this case, only type itself is needed, the traits should be skipped to avoid 
+        // conflicts with second generation with "None" option.
+        // - If None is passed, the prebindgen attribute is not generated
+        let skip_traits = prebindgen.unwrap_or(false);
         let prebindgen_attr = if let Some(skip) = prebindgen {
             format!("#[prebindgen(\"types\", skip = {skip})]\n")
         } else {
