@@ -122,7 +122,6 @@ pub(crate) fn available(provider: &z_loaned_shm_provider_t) -> usize {
     }
 }
 
-#[prebindgen]
 pub(crate) fn map(
     out_result: &mut MaybeUninit<z_owned_shm_mut_t>,
     provider: &z_loaned_shm_provider_t,
