@@ -12,6 +12,7 @@ pub fn generate_source() -> PathBuf {
         .replace_type("MaybeUninit", "std::mem::MaybeUninit")
         .replace_type("c_char", "libc::c_char")
         .replace_type("c_void", "libc::c_void")
+        .replace_type("c_uint", "libc::c_uint")
         .replace_type("result::z_result_t", "z_result_t")
         .build();
 

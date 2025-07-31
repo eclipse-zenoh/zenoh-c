@@ -4265,7 +4265,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#c8aa35801de39d772857c63b41525c771462aa08"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#5fc011736e08c84f83b81799d1ac5779297d7540"
 dependencies = [
  "chrono",
  "const_format",
