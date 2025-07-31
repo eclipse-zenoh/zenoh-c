@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 use std::{mem::MaybeUninit, num::TryFromIntError, sync::Arc};
+use prebindgen_proc_macro::prebindgen;
 
 use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
 

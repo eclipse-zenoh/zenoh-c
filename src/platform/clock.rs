@@ -45,6 +45,7 @@ unsafe fn get_elapsed_nanos(time: *const z_clock_t) -> u64 {
     let now_t = (*((*time).t_base as *const CLOCK_BASE))
         .elapsed()
         .as_nanos() as u64;
+    #[allow(clippy::implicit_saturating_sub)]
     if now_t > (*time).t {
         now_t - (*time).t
     } else {
@@ -117,6 +118,7 @@ unsafe fn get_elapsed_nanos_system_clock(time: *const z_time_t) -> u64 {
         return 0;
     }
     let now_t = z_time_now().t;
+    #[allow(clippy::implicit_saturating_sub)]
     if now_t > (*time).t {
         now_t - (*time).t
     } else {

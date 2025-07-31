@@ -17,6 +17,7 @@ use std::{
     mem::MaybeUninit,
 };
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{

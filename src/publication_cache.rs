@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 #![allow(deprecated)]
+use prebindgen_proc_macro::prebindgen;
 
 use std::{mem::MaybeUninit, ptr::null};
 

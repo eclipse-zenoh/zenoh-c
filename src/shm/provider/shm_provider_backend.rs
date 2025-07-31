@@ -13,6 +13,7 @@
 //
 
 use std::fmt::Debug;
+use prebindgen_proc_macro::prebindgen;
 
 use libc::c_void;
 use zenoh::shm::{

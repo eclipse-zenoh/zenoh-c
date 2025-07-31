@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use prebindgen_proc_macro::prebindgen;
 
 use std::mem::MaybeUninit;
 

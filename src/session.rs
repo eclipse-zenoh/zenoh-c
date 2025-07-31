@@ -117,7 +117,7 @@ pub fn z_open(
 #[allow(clippy::missing_safety_doc)]
 #[prebindgen]
 pub fn z_open_with_custom_shm_clients(
-    this: &mut MaybeUninit<z_owned_session_t>,
+    this: &mut std::mem::MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
     shm_clients: &z_loaned_shm_client_storage_t,
 ) -> z_result_t {

@@ -14,6 +14,7 @@
 #![allow(deprecated)]
 
 use std::mem::MaybeUninit;
+use prebindgen_proc_macro::prebindgen;
 
 use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;

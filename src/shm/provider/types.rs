@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use prebindgen_proc_macro::prebindgen;
 use std::mem::MaybeUninit;
 
 use zenoh::shm::{
