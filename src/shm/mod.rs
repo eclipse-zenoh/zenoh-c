@@ -13,9 +13,16 @@
 //
 
 pub mod buffer;
+pub use buffer::*;
 pub mod cleanup;
+pub use cleanup::*;
 pub mod client;
+pub use client::*;
 pub mod client_storage;
+pub use client_storage::*;
 pub mod common;
+pub use common::*;
 pub mod protocol_implementations;
+pub use protocol_implementations::*;
 pub mod provider;
+pub use provider::*;

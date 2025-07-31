@@ -93,9 +93,12 @@ mod advanced_publisher;
 pub use advanced_publisher::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
-
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+pub use context::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod shm;
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+pub use shm::*;
 
 mod serialization;
 pub use serialization::*;
