@@ -174,7 +174,7 @@ pub fn z_encoding_loan(this_: &z_owned_encoding_t) -> &z_loaned_encoding_t {
 }
 
 /// Moves encoding.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_encoding_move(this_: &mut z_owned_encoding_t) -> &mut z_moved_encoding_t {
     std::mem::transmute(this_)

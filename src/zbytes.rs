@@ -87,7 +87,7 @@ pub fn z_bytes_loan(this: &z_owned_bytes_t) -> &z_loaned_bytes_t {
 }
 
 /// Moves data.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_bytes_move(this: &mut z_owned_bytes_t) -> &mut z_moved_bytes_t {
     std::mem::transmute(this)
@@ -678,7 +678,7 @@ pub unsafe fn z_bytes_writer_loan(
 }
 
 /// Moves writer.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_bytes_writer_move(
     this: &mut z_owned_bytes_writer_t,

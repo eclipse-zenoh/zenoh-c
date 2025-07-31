@@ -269,7 +269,7 @@ pub unsafe fn ze_advanced_subscriber_loan(
 }
 
 /// Moves subscriber.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn ze_advanced_subscriber_move(
     this_: &mut ze_owned_advanced_subscriber_t,

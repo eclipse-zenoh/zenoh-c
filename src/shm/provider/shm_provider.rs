@@ -133,7 +133,7 @@ pub unsafe fn z_shm_provider_loan(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves SHM Provider.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_shm_provider_move(
     this: &mut z_owned_shm_provider_t,

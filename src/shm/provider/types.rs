@@ -173,7 +173,7 @@ pub unsafe fn z_memory_layout_loan(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves Memory Layout.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_memory_layout_move(
     this_: &mut z_owned_memory_layout_t,

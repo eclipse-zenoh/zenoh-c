@@ -194,7 +194,7 @@ pub unsafe fn ze_publication_cache_loan(
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
 /// @brief Moves publication cache.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn ze_publication_cache_move(
     this_: &mut ze_owned_publication_cache_t,

@@ -78,7 +78,7 @@ pub unsafe fn z_shm_loan(this_: &z_owned_shm_t) -> &z_loaned_shm_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves ZShm slice.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_shm_move(this_: &mut z_owned_shm_t) -> &mut z_moved_shm_t {
     std::mem::transmute(this_)

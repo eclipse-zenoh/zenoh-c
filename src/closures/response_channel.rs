@@ -105,7 +105,7 @@ pub unsafe fn z_fifo_handler_reply_loan(
 }
 
 /// Moves handler.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_fifo_handler_reply_move(
     this: &mut z_owned_fifo_handler_reply_t,
@@ -219,7 +219,7 @@ pub unsafe fn z_ring_handler_reply_loan(
 }
 
 /// Moves handler.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_ring_handler_reply_move(
     this: &mut z_owned_ring_handler_reply_t,

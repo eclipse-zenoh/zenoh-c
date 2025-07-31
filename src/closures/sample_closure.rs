@@ -143,7 +143,7 @@ pub fn z_closure_sample_loan(
 }
 
 /// Moves closure.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_closure_sample_move(
     closure: &mut z_owned_closure_sample_t,

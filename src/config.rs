@@ -43,7 +43,7 @@ pub fn z_config_loan(this_: &'static z_owned_config_t) -> &'static z_loaned_conf
 }
 
 // Moves config.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_config_move(this_: &mut z_owned_config_t) -> &mut z_moved_config_t {
     std::mem::transmute(this_)

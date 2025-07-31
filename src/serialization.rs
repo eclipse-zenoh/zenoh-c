@@ -72,7 +72,7 @@ pub unsafe fn ze_serializer_loan(
 }
 
 /// @brief Moves serializer.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn ze_serializer_move(this_: &mut ze_owned_serializer_t) -> &mut ze_moved_serializer_t {
     std::mem::transmute(this_)

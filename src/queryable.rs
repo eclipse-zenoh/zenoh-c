@@ -56,7 +56,7 @@ pub unsafe fn z_queryable_loan(this_: &z_owned_queryable_t) -> &z_loaned_queryab
 }
 
 /// Moves Queryable
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_queryable_move(this_: &mut z_owned_queryable_t) -> &mut z_moved_queryable_t {
     std::mem::transmute(this_)
@@ -92,7 +92,7 @@ pub unsafe fn z_query_loan(
 }
 
 /// Moves the query.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_query_move(this_: &mut z_owned_query_t) -> &mut z_moved_query_t {
     std::mem::transmute(this_)

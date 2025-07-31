@@ -368,7 +368,7 @@ pub fn z_slice_loan(this_: &z_owned_slice_t) -> &z_loaned_slice_t {
 }
 
 /// Moves slice.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_slice_move(this_: &mut z_owned_slice_t) -> &mut z_moved_slice_t {
     std::mem::transmute(this_)
@@ -674,7 +674,8 @@ pub fn z_string_loan(this_: &z_owned_string_t) -> &z_loaned_string_t {
 }
 
 /// Moves string.
-#[prebindgen]
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_string_move(this_: &mut z_owned_string_t) -> &mut z_moved_string_t {
     std::mem::transmute(this_)
 }
@@ -878,7 +879,8 @@ pub fn z_string_array_loan(
 }
 
 /// Moves string array.
-#[prebindgen]
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_string_array_move(
     this_: &mut z_owned_string_array_t,
 ) -> &mut z_moved_string_array_t {

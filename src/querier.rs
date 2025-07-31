@@ -164,7 +164,7 @@ pub unsafe fn z_querier_loan(this_: &z_owned_querier_t) -> &z_loaned_querier_t {
 }
 
 /// @brief Moves querier.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_querier_move(this_: &mut z_owned_querier_t) -> &mut z_moved_querier_t {
     std::mem::transmute(this_)

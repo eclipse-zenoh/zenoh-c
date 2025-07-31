@@ -74,7 +74,7 @@ pub unsafe fn zc_shm_client_list_loan(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves list of SHM Clients.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn zc_shm_client_list_move(
     this: &mut zc_owned_shm_client_list_t,
@@ -212,7 +212,7 @@ pub unsafe fn z_shm_client_storage_loan(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves SHM Client Storage.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_shm_client_storage_move(
     this: &mut z_owned_shm_client_storage_t,

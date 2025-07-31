@@ -153,7 +153,7 @@ pub fn z_closure_matching_status_loan(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves closure.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_closure_matching_status_move(
     closure: &mut z_owned_closure_matching_status_t,

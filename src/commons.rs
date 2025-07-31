@@ -218,7 +218,7 @@ pub unsafe fn z_sample_loan(this_: &z_owned_sample_t) -> &z_loaned_sample_t {
 }
 
 /// Moves sample.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_sample_move(this_: &mut z_owned_sample_t) -> &mut z_moved_sample_t {
     std::mem::transmute(this_)
@@ -675,7 +675,7 @@ pub fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_inf
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moves source info.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_source_info_move(
     this_: &mut z_owned_source_info_t,

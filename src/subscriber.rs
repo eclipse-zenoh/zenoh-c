@@ -56,7 +56,7 @@ pub unsafe fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_loaned_subsc
 }
 
 /// Moves subscriber.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_subscriber_move(this_: &mut z_owned_subscriber_t) -> &mut z_moved_subscriber_t {
     std::mem::transmute(this_)

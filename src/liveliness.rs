@@ -79,7 +79,7 @@ pub unsafe fn z_liveliness_token_loan(
 }
 
 /// @brief Moves token.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_liveliness_token_move(
     this_: &mut z_owned_liveliness_token_t,

@@ -151,7 +151,7 @@ pub unsafe fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_condvar_t {
 }
 
 /// Moves conditional variable.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_condvar_move(
     this_: &mut z_owned_condvar_t,

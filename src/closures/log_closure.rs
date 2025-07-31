@@ -187,7 +187,7 @@ pub fn zc_closure_log_loan(
 }
 
 /// Moves closure.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn zc_closure_log_move(
     closure: &mut zc_owned_closure_log_t,

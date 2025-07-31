@@ -100,7 +100,7 @@ pub fn z_reply_err_loan(this_: &z_owned_reply_err_t) -> &z_loaned_reply_err_t {
 }
 
 /// Moves reply error.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_reply_err_move(this_: &mut z_owned_reply_err_t) -> &mut z_moved_reply_err_t {
     std::mem::transmute(this_)
@@ -442,7 +442,7 @@ pub unsafe fn z_reply_loan(this_: &z_owned_reply_t) -> &z_loaned_reply_t {
 }
 
 /// Moves reply.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_reply_move(this_: &mut z_owned_reply_t) -> &mut z_moved_reply_t {
     std::mem::transmute(this_)

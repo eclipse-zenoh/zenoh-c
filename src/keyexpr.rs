@@ -132,7 +132,7 @@ pub unsafe fn z_keyexpr_loan(this_: &z_owned_keyexpr_t) -> &z_loaned_keyexpr_t {
 }
 
 /// Moves `z_owned_keyexpr_t`.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_keyexpr_move(this_: &mut z_owned_keyexpr_t) -> &mut z_moved_keyexpr_t {
     std::mem::transmute(this_)

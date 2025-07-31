@@ -167,7 +167,7 @@ pub unsafe fn z_publisher_loan(this_: &z_owned_publisher_t) -> &z_loaned_publish
 }
 
 /// Moves publisher.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_publisher_move(this_: &mut z_owned_publisher_t) -> &mut z_moved_publisher_t {
     std::mem::transmute(this_)

@@ -141,7 +141,7 @@ pub fn z_closure_hello_loan(
 }
 
 /// Moves closure.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn z_closure_hello_move(
     closure: &mut z_owned_closure_hello_t,

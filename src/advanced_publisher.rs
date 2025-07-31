@@ -287,7 +287,7 @@ pub unsafe fn ze_advanced_publisher_loan(
 }
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Moves advanced publisher.
-#[prebindgen]
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe fn ze_advanced_publisher_move(
     this_: &mut ze_owned_advanced_publisher_t,
