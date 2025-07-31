@@ -1408,6 +1408,7 @@ checksum = "391290121bad3d37fbddad76d8f5d1c1c314cfc646d143d7e07a3086ddff0ce3"
 dependencies = [
  "bitflags 2.9.1",
  "libc",
+ "redox_syscall",
 ]
 
 [[package]]
@@ -2161,9 +2162,9 @@ dependencies = [
 
 [[package]]
 name = "redox_users"
-version = "0.5.2"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4e608c6638b9c18977b00b475ac1f28d14e84b27d8d42f70e0bf1e3dec127ac"
+checksum = "78eaea1f52c56d57821be178b2d47e09ff26481a6042e8e042fcb0ced068b470"
 dependencies = [
  "getrandom 0.2.16",
  "libredox",
@@ -4265,7 +4266,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#5fc011736e08c84f83b81799d1ac5779297d7540"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#86abbfa719d82c572923646bf145bad6d6d9f04f"
 dependencies = [
  "chrono",
  "const_format",
