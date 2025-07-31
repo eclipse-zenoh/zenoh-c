@@ -30,7 +30,7 @@ pub fn generate_source() -> PathBuf {
         .build();
 
     source
-        .items_all()
+        .items_except_groups(&["move"]) // the move operations are generated in the header
         .map(strip_derives.into_closure())
         .map(strip_macros.into_closure())
         .map(replace_types.into_closure())
