@@ -19,12 +19,13 @@ pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     (prefix, category, semantic, postfix)
 }
 
+#[allow(dead_code)]
 pub fn features() -> BTreeSet<&'static str> {
-    zenoh::FEATURES.split(" zenoh/").collect()
+    zenohffi::ZENOH_FEATURES.split(" zenoh/").collect()
 }
 
 pub fn test_feature(feature: &str) -> bool {
-    zenoh::FEATURES.contains(format!(" zenoh/{feature}").as_str())
+    zenohffi::ZENOH_FEATURES.contains(format!(" zenoh/{feature}").as_str())
 }
 
 // See: https://github.com/rust-lang/cargo/issues/9661

@@ -597,8 +597,7 @@ pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
     for id in split_guide.requested_ids() {
         if !records.iter().any(|r| r.contains_id(id)) {
             return Err(format!(
-                "{} not found (requested explicitly by splitguide.yaml)",
-                id,
+                "{id} not found (requested explicitly by splitguide.yaml)",
             ));
         }
     }

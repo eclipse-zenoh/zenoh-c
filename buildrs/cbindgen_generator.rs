@@ -13,7 +13,6 @@ use super::{
     common_helpers::{cargo_target_dir, split_type_name, test_feature},
     splitguide::{split_bindings, FuncArg, FunctionSignature},
 };
-use crate::get_out_rs_path;
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
@@ -35,13 +34,13 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
     "transport_vsock" => "Z_FEATURE_VSOCK"
 };
 
-pub fn generate_c_headers() {
+pub fn generate_c_headers(source: &Path) {
     let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
     let config = cbindgen::Config::from_root_or_default(crate_dir.clone());
     cbindgen::Builder::new()
         .with_config(config)
         .with_crate(crate_dir)
-        .with_src(get_out_rs_path().join("./opaque_types.rs"))
+        .with_src(source)
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(BUGGY_GENERATION_PATH);
@@ -327,7 +326,7 @@ fn configure() {
     let version = version.trim();
     let version_parts: Vec<&str> = version.split('.').collect();
     if version_parts.len() < 3 {
-        panic!("Invalid version format: \"{}\" in file version.txt. Major.Minor.Patch parts are required", version);
+        panic!("Invalid version format: \"{version}\" in file version.txt. Major.Minor.Patch parts are required");
     }
     let major = version_parts[0];
     let minor = version_parts[1];
@@ -362,7 +361,7 @@ fn configure() {
 
     for (rust_feature, c_feature) in RUST_TO_C_FEATURES.entries() {
         if test_feature(rust_feature) {
-            file.write_all(format!("#define {}\n", c_feature).as_bytes())
+            file.write_all(format!("#define {c_feature}\n").as_bytes())
                 .unwrap();
         }
     }
@@ -443,7 +442,7 @@ fn evaluate_c_defines_line(line: &str) -> bool {
     let mut s = line.to_string();
     for (rust_feature, c_feature) in RUST_TO_C_FEATURES.entries() {
         s = s.replace(
-            &format!("defined({})", c_feature),
+            &format!("defined({c_feature})"),
             match test_feature(rust_feature) {
                 true => "true",
                 false => "false",
@@ -889,7 +888,7 @@ fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
             .typename
             .replace(" (*call)", &format!("(*{})", &callback_typename));
 
-        out += &format!("typedef {};\n", prototype);
+        out += &format!("typedef {prototype};\n");
     }
     out += "\n";
     out += &generate_generic_c(macro_func, "z_closure", false);
@@ -1062,8 +1061,7 @@ fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
             .replace(&format!(" (*{})", &processed_f.args[1].name), "");
         let callback_typename = f.func_name.clone() + "_callback_t";
         out += &format!(
-            "extern \"C\" using {} = {};\n",
-            callback_typename, prototype
+            "extern \"C\" using {callback_typename} = {prototype};\n"
         );
         processed_f.args[1].typename.typename = callback_typename + "*";
         processed_f.args[2].typename.typename = "z_closure_drop_callback_t*".to_string();
