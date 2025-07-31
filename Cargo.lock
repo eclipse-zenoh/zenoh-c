@@ -1791,7 +1791,8 @@ dependencies = [
 [[package]]
 name = "prebindgen"
 version = "0.2.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#1155e9c108f8ed0b91c9867b648d24632381b57d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "41dc47eacb643578f8099b3eb3471a1c6df97af5a08fe4b32f576cb044f56085"
 dependencies = [
  "prettyplease",
  "proc-macro2",
@@ -1806,7 +1807,8 @@ dependencies = [
 [[package]]
 name = "prebindgen-proc-macro"
 version = "0.2.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#1155e9c108f8ed0b91c9867b648d24632381b57d"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c9f3bc8f20bb6a2aa0a1d42280e56a2ace9feeb8cffea7920b5323019c94004"
 dependencies = [
  "prebindgen",
  "proc-macro2",
