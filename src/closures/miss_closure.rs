@@ -24,6 +24,7 @@ use crate::{
 /// @brief A sample miss-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_owned_closure_miss_t {
     _context: *mut c_void,
@@ -33,6 +34,7 @@ pub struct ze_owned_closure_miss_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_loaned_closure_miss_t {
     _0: usize,
@@ -42,6 +44,7 @@ pub struct ze_loaned_closure_miss_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moved closure.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_moved_closure_miss_t {
     _this: ze_owned_closure_miss_t,
