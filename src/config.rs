@@ -25,13 +25,16 @@ use crate::{
 };
 
 #[prebindgen]
-pub const Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
+pub const Z_ROUTER: c_uint = 0b0001;
+const _: () = assert!(Z_ROUTER == WhatAmI::Router as c_uint);
 
 #[prebindgen]
-pub const Z_PEER: c_uint = WhatAmI::Peer as c_uint;
+pub const Z_PEER: c_uint = 0b0010;
+const _: () = assert!(Z_PEER == WhatAmI::Peer as c_uint);
 
 #[prebindgen]
-pub const Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
+pub const Z_CLIENT: c_uint = 0b0100;
+const _: () = assert!(Z_CLIENT == WhatAmI::Client as c_uint);
 
 pub use crate::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
 decl_c_type!(
