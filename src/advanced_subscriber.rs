@@ -370,6 +370,7 @@ pub fn ze_undeclare_advanced_subscriber(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A struct that represents missed samples.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_miss_t {
     /// The source of missed samples.
