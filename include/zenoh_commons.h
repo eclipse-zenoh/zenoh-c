@@ -25,12 +25,6 @@ typedef enum z_congestion_control_t {
    * Messages are dropped in case of congestion.
    */
   Z_CONGESTION_CONTROL_DROP = 1,
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * Messages except the first one are dropped in case of congestion.
-   */
-  Z_CONGESTION_CONTROL_BLOCK_FIRST = 2,
-#endif
 } z_congestion_control_t;
 /**
  * Consolidation mode values.
@@ -59,30 +53,6 @@ typedef enum z_consolidation_mode_t {
    */
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Intersection level of 2 key expressions.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum z_keyexpr_intersection_level_t {
-  /**
-   * 2 key expressions do not intersect.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
-  /**
-   * 2 key expressions intersect, i.e. there exists at least one key expression that is included by both.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
-  /**
-   * First key expression is the superset of second one.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
-  /**
-   * 2 key expressions are equal.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
-} z_keyexpr_intersection_level_t;
-#endif
 /**
  * The priority of zenoh messages.
  */
@@ -133,24 +103,6 @@ typedef enum z_query_target_t {
    */
   Z_QUERY_TARGET_ALL_COMPLETE = 2,
 } z_query_target_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief The publisher reliability.
- * @note Currently `reliability` does not trigger any data retransmission on the wire.
- * It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum z_reliability_t {
-  /**
-   * Defines reliability as ``BEST_EFFORT``
-   */
-  Z_RELIABILITY_BEST_EFFORT = 0,
-  /**
-   * Defines reliability as ``RELIABLE``
-   */
-  Z_RELIABILITY_RELIABLE = 1,
-} z_reliability_t;
-#endif
 typedef enum z_sample_kind_t {
   /**
    * The Sample was issued by a ``put`` operation.
@@ -227,60 +179,10 @@ typedef enum zc_log_severity_t {
    */
   ZC_LOG_SEVERITY_ERROR = 4,
 } zc_log_severity_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Key expressions types to which Queryable should reply to.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum zc_reply_keyexpr_t {
-  /**
-   * Replies to any key expression queries.
-   */
-  ZC_REPLY_KEYEXPR_ANY = 0,
-  /**
-   * Replies only to queries with intersecting key expressions.
-   */
-  ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
-} zc_reply_keyexpr_t;
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum ze_advanced_publisher_heartbeat_mode_t {
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * Disable heartbeat-based last sample miss detection.
-   */
-  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_NONE = 0,
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * Allow last sample miss detection through periodic heartbeat.
-   * Periodically send the last published Sample's sequence number to allow last sample recovery.
-   */
-  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_PERIODIC = 1,
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * Allow last sample miss detection through sporadic heartbeat.
-   * Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
-   * but only if it changed since last period.
-   */
-  ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC = 2,
-#endif
-} ze_advanced_publisher_heartbeat_mode_t;
-#endif
-typedef struct z_moved_alloc_layout_t {
-  struct z_owned_alloc_layout_t _this;
-} z_moved_alloc_layout_t;
 typedef int8_t z_result_t;
 typedef struct z_moved_bytes_t {
   struct z_owned_bytes_t _this;
 } z_moved_bytes_t;
-typedef struct z_moved_shm_t {
-  struct z_owned_shm_t _this;
-} z_moved_shm_t;
-typedef struct z_moved_shm_mut_t {
-  struct z_owned_shm_mut_t _this;
-} z_moved_shm_mut_t;
 typedef struct z_moved_slice_t {
   struct z_owned_slice_t _this;
 } z_moved_slice_t;
@@ -296,12 +198,6 @@ typedef struct ALIGN(8) z_bytes_slice_iterator_t {
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t _this;
 } z_moved_bytes_writer_t;
-typedef struct z_moved_chunk_alloc_result_t {
-  struct z_owned_chunk_alloc_result_t _this;
-} z_moved_chunk_alloc_result_t;
-typedef struct z_moved_ptr_in_segment_t {
-  struct z_owned_ptr_in_segment_t _this;
-} z_moved_ptr_in_segment_t;
 /**
  * Monotonic clock
  */
@@ -313,23 +209,7 @@ typedef struct z_clock_t {
  * Options passed to the `z_close()` function.
  */
 typedef struct z_close_options_t {
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * The timeout for close operation in milliseconds. 0 means default close timeout which is 10 seconds.
-   */
-  uint32_t internal_timeout_ms;
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * An optional uninitialized concurrent close handle. If set, the close operation will be executed
-   * concurrently in separate task, and this handle will be initialized to be used for controlling
-   * it's execution.
-   */
-  struct zc_owned_concurrent_close_handle_t *internal_out_concurrent;
-#endif
-#if !defined(Z_FEATURE_UNSTABLE_API)
   uint8_t _dummy;
-#endif
 } z_close_options_t;
 /**
  * @brief A hello message-processing closure.
@@ -367,6 +247,15 @@ typedef struct z_owned_closure_matching_status_t {
   void (*_call)(const struct z_matching_status_t *matching_status, void *context);
   void (*_drop)(void *context);
 } z_owned_closure_matching_status_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Loaned closure.
+ */
+typedef struct z_loaned_closure_matching_status_t {
+  size_t _0;
+  size_t _1;
+  size_t _2;
+} z_loaned_closure_matching_status_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Moved closure.
@@ -491,19 +380,19 @@ typedef struct z_publisher_options_t {
    * If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
    */
   bool is_express;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The publisher reliability.
-   */
-  enum z_reliability_t reliability;
-#endif
   /**
    * The allowed destination for this publisher.
    */
   enum zc_locality_t allowed_destination;
 } z_publisher_options_t;
+/**
+ * An owned Zenoh querier.
+ *
+ * Sends queries to matching queryables.
+ */
+typedef struct ALIGN(8) z_owned_querier_t {
+  uint8_t _0[80];
+} z_owned_querier_t;
 /**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
  */
@@ -534,14 +423,6 @@ typedef struct z_querier_options_t {
    * The allowed destination for the querier queries.
    */
   enum zc_locality_t allowed_destination;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The accepted replies for the querier queries.
-   */
-  enum zc_reply_keyexpr_t accept_replies;
-#endif
   /**
    * The priority of the querier queries.
    */
@@ -571,14 +452,6 @@ typedef struct z_delete_options_t {
    * The timestamp of this message.
    */
   struct z_timestamp_t *timestamp;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The delete operation reliability.
-   */
-  enum z_reliability_t reliability;
-#endif
   /**
    * The allowed destination of this message.
    */
@@ -593,9 +466,6 @@ typedef struct z_moved_fifo_handler_reply_t {
 typedef struct z_moved_fifo_handler_sample_t {
   struct z_owned_fifo_handler_sample_t _this;
 } z_moved_fifo_handler_sample_t;
-typedef struct z_moved_source_info_t {
-  struct z_owned_source_info_t _this;
-} z_moved_source_info_t;
 /**
  * Options passed to the `z_get()` function.
  */
@@ -628,26 +498,10 @@ typedef struct z_get_options_t {
    * The allowed destination for the query.
    */
   enum zc_locality_t allowed_destination;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The accepted replies for the query.
-   */
-  enum zc_reply_keyexpr_t accept_replies;
-#endif
   /**
    * The priority of the query.
    */
   enum z_priority_t priority;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The source info for the query.
-   */
-  struct z_moved_source_info_t *source_info;
-#endif
   /**
    * An optional attachment to attach to the query.
    */
@@ -660,6 +514,15 @@ typedef struct z_get_options_t {
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
+/**
+ * @brief An owned Zenoh matching listener.
+ *
+ * A listener that sends notifications when the [`MatchingStatus`] of a publisher or querier changes.
+ * Dropping the corresponding publisher, also drops matching listener.
+ */
+typedef struct ALIGN(8) z_owned_matching_listener_t {
+  uint8_t _0[24];
+} z_owned_matching_listener_t;
 typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t _this;
 } z_moved_keyexpr_t;
@@ -693,9 +556,6 @@ typedef struct z_moved_liveliness_token_t {
 typedef struct z_moved_matching_listener_t {
   struct z_owned_matching_listener_t _this;
 } z_moved_matching_listener_t;
-typedef struct z_moved_memory_layout_t {
-  struct z_owned_memory_layout_t _this;
-} z_moved_memory_layout_t;
 typedef struct z_moved_mutex_t {
   struct z_owned_mutex_t _this;
 } z_moved_mutex_t;
@@ -730,14 +590,6 @@ typedef struct z_publisher_put_options_t {
    * The timestamp of the publication.
    */
   const struct z_timestamp_t *timestamp;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The source info for the publication.
-   */
-  struct z_moved_source_info_t *source_info;
-#endif
   /**
    * The attachment to attach to the publication.
    */
@@ -767,31 +619,21 @@ typedef struct z_put_options_t {
    * The timestamp of this message.
    */
   struct z_timestamp_t *timestamp;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The put operation reliability.
-   */
-  enum z_reliability_t reliability;
-#endif
   /**
    * The allowed destination of this message.
    */
   enum zc_locality_t allowed_destination;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The source info for the message.
-   */
-  struct z_moved_source_info_t *source_info;
-#endif
   /**
    * The attachment to this message.
    */
   struct z_moved_bytes_t *attachment;
 } z_put_options_t;
+/**
+ * A loaned Zenoh queryable.
+ */
+typedef struct ALIGN(8) z_loaned_querier_t {
+  uint8_t _0[80];
+} z_loaned_querier_t;
 typedef struct z_moved_querier_t {
   struct z_owned_querier_t _this;
 } z_moved_querier_t;
@@ -807,14 +649,6 @@ typedef struct z_querier_get_options_t {
    * An optional encoding of the query payload and or attachment.
    */
   struct z_moved_encoding_t *encoding;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The source info for the query.
-   */
-  struct z_moved_source_info_t *source_info;
-#endif
   /**
    * An optional attachment to attach to the query.
    */
@@ -848,14 +682,6 @@ typedef struct z_query_reply_options_t {
    * The timestamp of the reply.
    */
   struct z_timestamp_t *timestamp;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The source info for the reply.
-   */
-  struct z_moved_source_info_t *source_info;
-#endif
   /**
    * The attachment to this reply.
    */
@@ -882,14 +708,6 @@ typedef struct z_query_reply_del_options_t {
    * The timestamp of the reply.
    */
   struct z_timestamp_t *timestamp;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * The source info for the reply.
-   */
-  struct z_moved_source_info_t *source_info;
-#endif
   /**
    * The attachment to this reply.
    */
@@ -942,15 +760,6 @@ typedef struct z_scout_options_t {
 typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
-typedef struct z_moved_shm_client_t {
-  struct z_owned_shm_client_t _this;
-} z_moved_shm_client_t;
-typedef struct z_moved_shm_client_storage_t {
-  struct z_owned_shm_client_storage_t _this;
-} z_moved_shm_client_storage_t;
-typedef struct z_moved_shm_provider_t {
-  struct z_owned_shm_provider_t _this;
-} z_moved_shm_provider_t;
 typedef struct z_moved_string_array_t {
   struct z_owned_string_array_t _this;
 } z_moved_string_array_t;
@@ -985,485 +794,14 @@ typedef struct zc_owned_closure_log_t {
 typedef struct zc_moved_closure_log_t {
   struct zc_owned_closure_log_t _this;
 } zc_moved_closure_log_t;
-typedef struct zc_moved_concurrent_close_handle_t {
-  struct zc_owned_concurrent_close_handle_t _this;
-} zc_moved_concurrent_close_handle_t;
 typedef struct zc_internal_encoding_data_t {
   uint16_t id;
   const uint8_t *schema_ptr;
   size_t schema_len;
 } zc_internal_encoding_data_t;
-typedef struct zc_moved_shm_client_list_t {
-  struct zc_owned_shm_client_list_t _this;
-} zc_moved_shm_client_list_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_publisher_cache_options_t {
-  /**
-   * Must be set to ``true``, to enable the cache.
-   */
-  bool is_enabled;
-  /**
-   * Number of samples to keep for each resource.
-   */
-  size_t max_samples;
-  /**
-   * The congestion control to apply to replies.
-   */
-  enum z_congestion_control_t congestion_control;
-  /**
-   * The priority of replies.
-   */
-  enum z_priority_t priority;
-  /**
-   * If set to ``true``, this cache replies will not be batched. This usually has a positive impact on latency but negative impact on throughput.
-   */
-  bool is_express;
-} ze_advanced_publisher_cache_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Represents the set of options that can be applied to the delete operation by a previously declared advanced publisher,
- * whenever issued via `ze_advanced_publisher_delete()`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_publisher_delete_options_t {
-  /**
-   * Base delete options.
-   */
-  struct z_publisher_delete_options_t delete_options;
-} ze_advanced_publisher_delete_options_t;
-#endif
-typedef struct ze_moved_advanced_publisher_t {
-  struct ze_owned_advanced_publisher_t _this;
-} ze_moved_advanced_publisher_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Settings for sample miss detection on Advanced Publisher.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_publisher_sample_miss_detection_options_t {
-  /**
-   * Must be set to ``true``, to enable sample miss detection by adding sequence numbers.
-   */
-  bool is_enabled;
-  /**
-   * Allow last sample miss detection through sporadic or periodic heartbeat.
-   */
-  enum ze_advanced_publisher_heartbeat_mode_t heartbeat_mode;
-  /**
-   * If heartbeat_mode is not NONE, the publisher will send heartbeats with the specified period, which
-   * can be used by Advanced Subscribers for last sample(s) miss detection (if last sample miss detection with zero query period is enabled).
-   */
-  uint64_t heartbeat_period_ms;
-} ze_advanced_publisher_sample_miss_detection_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Options passed to the `ze_declare_advanced_publisher()` function.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_publisher_options_t {
-  /**
-   * Base publisher options.
-   */
-  struct z_publisher_options_t publisher_options;
-  /**
-   * Publisher cache settings.
-   */
-  struct ze_advanced_publisher_cache_options_t cache;
-  /**
-   * Settings to allow matching Subscribers to detect lost samples and optionally ask for retransimission.
-   *
-   * Retransmission can only be done if cache is enabled.
-   */
-  struct ze_advanced_publisher_sample_miss_detection_options_t sample_miss_detection;
-  /**
-   * Allow this publisher to be detected through liveliness.
-   */
-  bool publisher_detection;
-  /**
-   * An optional key expression to be added to the liveliness token key expression.
-   * It can be used to convey meta data.
-   */
-  const struct z_loaned_keyexpr_t *publisher_detection_metadata;
-} ze_advanced_publisher_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Options passed to the `ze_advanced_publisher_put()` function.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_publisher_put_options_t {
-  /**
-   * Base put options.
-   */
-  struct z_publisher_put_options_t put_options;
-} ze_advanced_publisher_put_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A struct that represents missed samples.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_miss_t {
-  /**
-   * The source of missed samples.
-   */
-  struct z_entity_global_id_t source;
-  /**
-   * The number of missed samples.
-   */
-  uint32_t nb;
-} ze_miss_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief A sample miss-processing closure.
- *
- * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_owned_closure_miss_t {
-  void *_context;
-  void (*_call)(const struct ze_miss_t *matching_status, void *context);
-  void (*_drop)(void *context);
-} ze_owned_closure_miss_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Moved closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_moved_closure_miss_t {
-  struct ze_owned_closure_miss_t _this;
-} ze_moved_closure_miss_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
- *
- * A listener that sends notification when the advanced subscriber misses a sample .
- * Dropping the corresponding subscriber, also drops the listener.
- */
-typedef struct ALIGN(8) ze_owned_sample_miss_listener_t {
-  uint8_t _0[24];
-} ze_owned_sample_miss_listener_t;
-typedef struct ze_moved_advanced_subscriber_t {
-  struct ze_owned_advanced_subscriber_t _this;
-} ze_moved_advanced_subscriber_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Settings for retrievieng historical data for Advanced Subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_subscriber_history_options_t {
-  /**
-   * Must be set to ``true``, to enable the history data recovery.
-   */
-  bool is_enabled;
-  /**
-   * Enable detection of late joiner publishers and query for their historical data.
-   * Late joiner detection can only be achieved for Publishers that enable publisher_detection.
-   * History can only be retransmitted by Publishers that enable caching.
-   */
-  bool detect_late_publishers;
-  /**
-   * Number of samples to query for each resource. ``0`` corresponds to no limit on number of samples.
-   */
-  size_t max_samples;
-  /**
-   * Maximum age of samples to query. ``0`` corresponds to no limit on samples' age.
-   */
-  uint64_t max_age_ms;
-} ze_advanced_subscriber_history_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Settings for detection of the last sample(s) miss by Advanced Subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_subscriber_last_sample_miss_detection_options_t {
-  /**
-   * Must be set to ``true``, to enable the last sample(s) miss detection.
-   */
-  bool is_enabled;
-  /**
-   * Period for queries for not yet received Samples.
-   *
-   * These queries allow to retrieve the last Sample(s) if the last Sample(s) is/are lost.
-   * So it is useful for sporadic publications but useless for periodic publications
-   * with a period smaller or equal to this period. If set to 0, the last sample(s) miss detection will be performed
-   * based on publisher's heartbeat if the latter is enabled.
-   */
-  uint64_t periodic_queries_period_ms;
-} ze_advanced_subscriber_last_sample_miss_detection_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Settings for recovering lost messages for Advanced Subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_subscriber_recovery_options_t {
-  /**
-   * Must be set to ``true``, to enable the lost sample recovery.
-   */
-  bool is_enabled;
-  /**
-   * Setting for detecting last sample(s) miss.
-   * Note that it does not affect intermediate sample miss detection/retrieval (which is performed automatically as long as recovery is enabled).
-   * If this option is disabled, subscriber will be unable to detect/request retransmission of missed sample until it receives a more recent one from the same publisher.
-   */
-  struct ze_advanced_subscriber_last_sample_miss_detection_options_t last_sample_miss_detection;
-} ze_advanced_subscriber_recovery_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Options passed to the `ze_declare_advanced_subscriber()` function.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_advanced_subscriber_options_t {
-  /**
-   * Base subscriber options.
-   */
-  struct z_subscriber_options_t subscriber_options;
-  /**
-   * Settings for querying historical data. History can only be retransmitted by Publishers that enable caching.
-   */
-  struct ze_advanced_subscriber_history_options_t history;
-  /**
-   * Settings for retransmission of detected lost Samples. Retransmission of lost samples can only be done by Publishers that enable
-   * caching and sample_miss_detection.
-   */
-  struct ze_advanced_subscriber_recovery_options_t recovery;
-  /**
-   * Timeout to be used for history and recovery queries.
-   * Default value will be used if set to ``0``.
-   */
-  uint64_t query_timeout_ms;
-  /**
-   * Allow this subscriber to be detected through liveliness.
-   */
-  bool subscriber_detection;
-  /**
-   * An optional key expression to be added to the liveliness token key expression.
-   * It can be used to convey meta data.
-   */
-  const struct z_loaned_keyexpr_t *subscriber_detection_metadata;
-} ze_advanced_subscriber_options_t;
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Loaned closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_loaned_closure_miss_t {
-  size_t _0;
-  size_t _1;
-  size_t _2;
-} ze_loaned_closure_miss_t;
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Options passed to the `ze_declare_publication_cache()` function.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_publication_cache_options_t {
-  /**
-   * The suffix used for queryable.
-   */
-  const struct z_loaned_keyexpr_t *queryable_suffix;
-  /**
-   * The restriction for the matching queries that will be receive by this publication cache.
-   */
-  enum zc_locality_t queryable_origin;
-  /**
-   * The `complete` option for the queryable.
-   */
-  bool queryable_complete;
-  /**
-   * The the history size (i.e. maximum number of messages to store).
-   */
-  size_t history;
-  /**
-   * The limit number of cached resources.
-   */
-  size_t resources_limit;
-} ze_publication_cache_options_t;
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief A set of options that can be applied to a querying subscriber,
- * upon its declaration via `ze_declare_querying_subscriber()`.
- *
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct ze_querying_subscriber_options_t {
-  /**
-   * The restriction for the matching publications that will be receive by this subscriber.
-   */
-  enum zc_locality_t allowed_origin;
-  /**
-   * The selector to be used for queries.
-   */
-  const struct z_loaned_keyexpr_t *query_selector;
-  /**
-   * The target to be used for queries.
-   */
-  enum z_query_target_t query_target;
-  /**
-   * The consolidation mode to be used for queries.
-   */
-  struct z_query_consolidation_t query_consolidation;
-#if defined(Z_FEATURE_UNSTABLE_API)
-  /**
-   * The accepted replies for queries.
-   */
-  enum zc_reply_keyexpr_t query_accept_replies;
-#endif
-  /**
-   * The timeout to be used for queries.
-   */
-  uint64_t query_timeout_ms;
-} ze_querying_subscriber_options_t;
-#endif
-typedef struct ze_moved_publication_cache_t {
-  struct ze_owned_publication_cache_t _this;
-} ze_moved_publication_cache_t;
-typedef struct ze_moved_querying_subscriber_t {
-  struct ze_owned_querying_subscriber_t _this;
-} ze_moved_querying_subscriber_t;
-typedef struct ze_moved_sample_miss_listener_t {
-  struct ze_owned_sample_miss_listener_t _this;
-} ze_moved_sample_miss_listener_t;
 typedef struct ze_moved_serializer_t {
   struct ze_owned_serializer_t _this;
 } ze_moved_serializer_t;
-ZENOHC_API extern const unsigned int Z_ROUTER;
-ZENOHC_API extern const unsigned int Z_PEER;
-ZENOHC_API extern const unsigned int Z_CLIENT;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation without any additional actions.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_alloc_layout_alloc(struct z_buf_alloc_result_t *out_result,
-                          const struct z_loaned_alloc_layout_t *layout);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_alloc_layout_alloc_gc(struct z_buf_alloc_result_t *out_result,
-                             const struct z_loaned_alloc_layout_t *layout);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_alloc_layout_alloc_gc_defrag(struct z_buf_alloc_result_t *out_result,
-                                    const struct z_loaned_alloc_layout_t *layout);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_alloc_layout_alloc_gc_defrag_blocking(struct z_buf_alloc_result_t *out_result,
-                                             const struct z_loaned_alloc_layout_t *layout);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_alloc_layout_alloc_gc_defrag_dealloc(struct z_buf_alloc_result_t *out_result,
-                                            const struct z_loaned_alloc_layout_t *layout);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes Alloc Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_alloc_layout_drop(struct z_moved_alloc_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows Alloc Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_alloc_layout_t *z_alloc_layout_loan(const struct z_owned_alloc_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new Alloc Layout for SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_alloc_layout_new(struct z_owned_alloc_layout_t *this_,
-                              const struct z_loaned_shm_provider_t *provider,
-                              size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
- * if used with non-threadsafe SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_buf_alloc_result_t *out_result,
-                                                           const struct z_loaned_alloc_layout_t *layout,
-                                                           struct zc_threadsafe_context_t result_context,
-                                                           void (*result_callback)(void*,
-                                                                                   struct z_buf_alloc_result_t*));
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new Alloc Layout for SHM Provider specifying the exact alignment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_alloc_layout_with_alignment_new(struct z_owned_alloc_layout_t *this_,
-                                             const struct z_loaned_shm_provider_t *provider,
-                                             size_t size,
-                                             struct z_alloc_alignment_t alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts data into a loaned SHM buffer.
- *
- * @param this_: Data to convert.
- * @param dst: An uninitialized memory location where to construct an SHM buffer.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_as_loaned_shm(const struct z_loaned_bytes_t *this_,
-                                 const struct z_loaned_shm_t **dst);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts data into a mutably loaned SHM buffer.
- *
- * @param this_: Data to convert.
- * @param dst: An uninitialized memory location where to construct an SHM buffer.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_as_mut_loaned_shm(struct z_loaned_bytes_t *this_,
-                                     struct z_loaned_shm_t **dst);
-#endif
 /**
  * Constructs an owned shallow copy of data in provided uninitialized memory location.
  */
@@ -1523,24 +861,6 @@ z_result_t z_bytes_from_buf(struct z_owned_bytes_t *this_,
                             void (*deleter)(void *data, void *context),
                             void *context);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts from an immutable SHM buffer consuming it.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_from_shm(struct z_owned_bytes_t *this_,
-                            struct z_moved_shm_t *shm);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts a mutable SHM buffer consuming it.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_from_shm_mut(struct z_owned_bytes_t *this_,
-                                struct z_moved_shm_mut_t *shm);
-#endif
-/**
  * Converts a slice into `z_owned_bytes_t`.
  * The slice is consumed upon function return.
  */
@@ -1584,21 +904,6 @@ z_result_t z_bytes_from_str(struct z_owned_bytes_t *this_,
  */
 ZENOHC_API void z_bytes_from_string(struct z_owned_bytes_t *this_, struct z_moved_string_t *s);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Attempts to get a contiguous view to the underlying bytes.
- * This is only possible if data is not fragmented, otherwise the function will fail.
- * In case of fragmented data, consider using `z_bytes_get_slice_iterator()`.
- *
- * @param this_: An instance of Zenoh data.
- * @param view: An uninitialized memory location where a contiguous view on data will be constructed.
- * @return  ​0​ upon success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t z_bytes_get_contiguous_view(const struct z_loaned_bytes_t *this_,
-                                       struct z_view_slice_t *view);
-#endif
-/**
  * Returns a reader for the data.
  *
  * The `data` should outlive the reader.
@@ -1630,6 +935,10 @@ ZENOHC_API const struct z_loaned_bytes_t *z_bytes_loan(const struct z_owned_byte
  * Muatably borrows data.
  */
 ZENOHC_API struct z_loaned_bytes_t *z_bytes_loan_mut(struct z_owned_bytes_t *this_);
+/**
+ * Moves data.
+ */
+ZENOHC_API struct z_moved_bytes_t *z_bytes_move(struct z_owned_bytes_t *this_);
 /**
  * Reads data into specified destination.
  *
@@ -1670,18 +979,6 @@ ZENOHC_API int64_t z_bytes_reader_tell(struct z_bytes_reader_t *this_);
 ZENOHC_API
 bool z_bytes_slice_iterator_next(struct z_bytes_slice_iterator_t *this_,
                                  struct z_view_slice_t *slice);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts data into an owned SHM buffer by copying it's shared reference.
- *
- * @param this_: Data to convert.
- * @param dst: An uninitialized memory location where to construct an SHM buffer.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_bytes_to_owned_shm(const struct z_loaned_bytes_t *this_,
-                                struct z_owned_shm_t *dst);
-#endif
 /**
  * Converts data into an owned slice.
  *
@@ -1734,10 +1031,14 @@ void z_bytes_writer_finish(struct z_moved_bytes_writer_t *this_,
 ZENOHC_API
 const struct z_loaned_bytes_writer_t *z_bytes_writer_loan(const struct z_owned_bytes_writer_t *this_);
 /**
- * Muatably borrows writer.
+ * Mutably borrows writer.
  */
 ZENOHC_API
 struct z_loaned_bytes_writer_t *z_bytes_writer_loan_mut(struct z_owned_bytes_writer_t *this_);
+/**
+ * Moves writer.
+ */
+ZENOHC_API struct z_moved_bytes_writer_t *z_bytes_writer_move(struct z_owned_bytes_writer_t *this_);
 /**
  * Writes `len` bytes from `src` into underlying data.
  *
@@ -1747,32 +1048,6 @@ ZENOHC_API
 z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes Chunk Alloc Result.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_chunk_alloc_result_drop(struct z_moved_chunk_alloc_result_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new Chunk Alloc Result with Error value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_chunk_alloc_result_new_error(struct z_owned_chunk_alloc_result_t *this_,
-                                    enum z_alloc_error_t alloc_error);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new Chunk Alloc Result with Ok value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_chunk_alloc_result_new_ok(struct z_owned_chunk_alloc_result_t *this_,
-                                       struct z_allocated_chunk_t allocated_chunk);
-#endif
 /**
  * Get number of milliseconds passed since creation of `time`.
  */
@@ -1840,10 +1115,15 @@ ZENOHC_API void z_closure_hello_drop(struct z_moved_closure_hello_t *this_);
 ZENOHC_API
 const struct z_loaned_closure_hello_t *z_closure_hello_loan(const struct z_owned_closure_hello_t *closure);
 /**
- * Mutably norrows closure.
+ * Mutably borrows closure.
  */
 ZENOHC_API
 struct z_loaned_closure_hello_t *z_closure_hello_loan_mut(struct z_owned_closure_hello_t *closure);
+/**
+ * Moves closure.
+ */
+ZENOHC_API
+struct z_moved_closure_hello_t *z_closure_hello_move(struct z_owned_closure_hello_t *closure);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  *
@@ -1886,6 +1166,12 @@ void z_closure_matching_status_drop(struct z_moved_closure_matching_status_t *cl
 ZENOHC_API
 const struct z_loaned_closure_matching_status_t *z_closure_matching_status_loan(const struct z_owned_closure_matching_status_t *closure);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Moves closure.
+ */
+ZENOHC_API
+struct z_moved_closure_matching_status_t *z_closure_matching_status_move(struct z_owned_closure_matching_status_t *closure);
+/**
  * @brief Constructs closure.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -1925,6 +1211,11 @@ const struct z_loaned_closure_query_t *z_closure_query_loan(const struct z_owned
  */
 ZENOHC_API
 struct z_loaned_closure_query_t *z_closure_query_loan_mut(struct z_owned_closure_query_t *closure);
+/**
+ * Moves closure.
+ */
+ZENOHC_API
+struct z_moved_closure_query_t *z_closure_query_move(struct z_owned_closure_query_t *closure);
 /**
  * @brief Constructs closure.
  *
@@ -1967,6 +1258,11 @@ const struct z_loaned_closure_reply_t *z_closure_reply_loan(const struct z_owned
 ZENOHC_API
 struct z_loaned_closure_reply_t *z_closure_reply_loan_mut(struct z_owned_closure_reply_t *closure);
 /**
+ * Moves closure.
+ */
+ZENOHC_API
+struct z_moved_closure_reply_t *z_closure_reply_move(struct z_owned_closure_reply_t *closure);
+/**
  * @brief Constructs closure.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -2006,6 +1302,11 @@ const struct z_loaned_closure_sample_t *z_closure_sample_loan(const struct z_own
  */
 ZENOHC_API
 struct z_loaned_closure_sample_t *z_closure_sample_loan_mut(struct z_owned_closure_sample_t *closure);
+/**
+ * Moves closure.
+ */
+ZENOHC_API
+struct z_moved_closure_sample_t *z_closure_sample_move(struct z_owned_closure_sample_t *closure);
 /**
  * @brief Constructs closure.
  *
@@ -2048,6 +1349,10 @@ const struct z_loaned_closure_zid_t *z_closure_zid_loan(const struct z_owned_clo
 ZENOHC_API
 const struct z_loaned_closure_zid_t *z_closure_zid_loan_mut(const struct z_owned_closure_zid_t *closure);
 /**
+ * @brief Moves closure.
+ */
+ZENOHC_API struct z_moved_closure_zid_t *z_closure_zid_move(struct z_owned_closure_zid_t *closure);
+/**
  * Drops conditional variable.
  */
 ZENOHC_API void z_condvar_drop(struct z_moved_condvar_t *this_);
@@ -2063,6 +1368,10 @@ ZENOHC_API const struct z_loaned_condvar_t *z_condvar_loan(const struct z_owned_
  * Mutably borrows conditional variable.
  */
 ZENOHC_API struct z_loaned_condvar_t *z_condvar_loan_mut(struct z_owned_condvar_t *this_);
+/**
+ * Moves conditional variable.
+ */
+ZENOHC_API struct z_moved_condvar_t *z_condvar_move(struct z_owned_condvar_t *this_);
 /**
  * Wakes up one blocked thread waiting on this condiitonal variable.
  * @return 0 in case of success, negative error code in case of failure.
@@ -2098,6 +1407,7 @@ ZENOHC_API const struct z_loaned_config_t *z_config_loan(const struct z_owned_co
  * Mutably borrows config.
  */
 ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *this_);
+ZENOHC_API struct z_moved_config_t *z_config_move(struct z_owned_config_t *this_);
 /**
  * Declares a background queryable for a given keyexpr. The queryable callback will be be called
  * to proccess incoming queries until the corresponding session is closed or dropped.
@@ -2454,6 +1764,10 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_loan_default(void);
  */
 ZENOHC_API struct z_loaned_encoding_t *z_encoding_loan_mut(struct z_owned_encoding_t *this_);
 /**
+ * Moves encoding.
+ */
+ZENOHC_API struct z_moved_encoding_t *z_encoding_move(struct z_owned_encoding_t *this_);
+/**
  * Set a schema to this encoding from a c string. Zenoh does not define what a schema is and its semantichs is left to the implementer.
  * E.g. a common schema for `text/plain` encoding is `utf-8`.
  */
@@ -2627,22 +1941,6 @@ ZENOHC_API const struct z_loaned_encoding_t *z_encoding_zenoh_serialized(void);
 ZENOHC_API
 const struct z_loaned_encoding_t *z_encoding_zenoh_string(void);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the entity id of the entity global id.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-uint32_t z_entity_global_id_eid(const struct z_entity_global_id_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the zenoh id of entity global id.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_entity_global_id_zid(const struct z_entity_global_id_t *this_);
-#endif
-/**
  * Constructs send and recieve ends of the fifo channel
  */
 ZENOHC_API
@@ -2673,6 +1971,11 @@ ZENOHC_API void z_fifo_handler_query_drop(struct z_moved_fifo_handler_query_t *t
 ZENOHC_API
 const struct z_loaned_fifo_handler_query_t *z_fifo_handler_query_loan(const struct z_owned_fifo_handler_query_t *this_);
 /**
+ * Moves handler.
+ */
+ZENOHC_API
+struct z_moved_fifo_handler_query_t *z_fifo_handler_query_move(struct z_owned_fifo_handler_query_t *this_);
+/**
  * Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
  * the channel is dropped (normally when Queryable is dropped).
  * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
@@ -2699,6 +2002,11 @@ ZENOHC_API void z_fifo_handler_reply_drop(struct z_moved_fifo_handler_reply_t *t
 ZENOHC_API
 const struct z_loaned_fifo_handler_reply_t *z_fifo_handler_reply_loan(const struct z_owned_fifo_handler_reply_t *this_);
 /**
+ * Moves handler.
+ */
+ZENOHC_API
+struct z_moved_fifo_handler_reply_t *z_fifo_handler_reply_move(struct z_owned_fifo_handler_reply_t *this_);
+/**
  * Returns reply from the fifo buffer. If there are no more pending replies will block until next reply is received, or until
  * the channel is dropped (normally when all replies are received).
  * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
@@ -2723,6 +2031,11 @@ ZENOHC_API void z_fifo_handler_sample_drop(struct z_moved_fifo_handler_sample_t 
  */
 ZENOHC_API
 const struct z_loaned_fifo_handler_sample_t *z_fifo_handler_sample_loan(const struct z_owned_fifo_handler_sample_t *this_);
+/**
+ * Moves handler.
+ */
+ZENOHC_API
+struct z_moved_fifo_handler_sample_t *z_fifo_handler_sample_move(struct z_owned_fifo_handler_sample_t *this_);
 /**
  * Returns sample from the fifo buffer. If there are no more pending replies will block until next sample is received, or until
  * the channel is dropped (normally when there are no more samples to receive).
@@ -2763,26 +2076,6 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
- * Query data from the matching queryables in the system.
- * Replies are provided through a callback function.
- *
- * @param session: The zenoh session.
- * @param key_expr: The key expression matching resources to query.
- * @param parameters: The query's parameters string, similar to a url's query segment.
- * @param parameters_len: The parameters substring length.
- * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
- * @param options: Additional options for the get. All owned fields will be consumed.
- *
- * @return 0 in case of success, a negative error value upon failure.
- */
-ZENOHC_API
-z_result_t z_get_with_parameters_substr(const struct z_loaned_session_t *session,
-                                        const struct z_loaned_keyexpr_t *key_expr,
-                                        const char *parameters,
-                                        size_t parameters_len,
-                                        struct z_moved_closure_reply_t *callback,
-                                        struct z_get_options_t *options);
-/**
  * Constructs an owned copy of hello message.
  */
 ZENOHC_API void z_hello_clone(struct z_owned_hello_t *dst, const struct z_loaned_hello_t *this_);
@@ -2806,6 +2099,10 @@ ZENOHC_API struct z_loaned_hello_t *z_hello_loan_mut(struct z_owned_hello_t *thi
 ZENOHC_API
 void z_hello_locators(const struct z_loaned_hello_t *this_,
                       struct z_owned_string_array_t *locators_out);
+/**
+ * Moves hello message.
+ */
+ZENOHC_API struct z_moved_hello_t *z_hello_move(struct z_owned_hello_t *this_);
 /**
  * Takes ownership of the mutably borrowed hello
  */
@@ -2853,22 +2150,6 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_alloc_layout_check(const struct z_owned_alloc_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs Alloc Layout in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_alloc_layout_null(struct z_owned_alloc_layout_t *this_);
-#endif
-/**
  * Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_internal_bytes_check(const struct z_owned_bytes_t *this_);
@@ -2884,22 +2165,6 @@ ZENOHC_API bool z_internal_bytes_writer_check(const struct z_owned_bytes_writer_
  * Constructs a writer in a gravestone state.
  */
 ZENOHC_API void z_internal_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_chunk_alloc_result_check(const struct z_owned_chunk_alloc_result_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs Chunk Alloc Result in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_chunk_alloc_result_null(struct z_owned_chunk_alloc_result_t *this_);
-#endif
 /**
  * Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
  */
@@ -3051,22 +2316,6 @@ ZENOHC_API bool z_internal_matching_listener_check(const struct z_owned_matching
  */
 ZENOHC_API void z_internal_matching_listener_null(struct z_owned_matching_listener_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_memory_layout_check(const struct z_owned_memory_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs Memory Layout in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_memory_layout_null(struct z_owned_memory_layout_t *this_);
-#endif
-/**
  * Returns ``true`` if mutex is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_internal_mutex_check(const struct z_owned_mutex_t *this_);
@@ -3074,22 +2323,6 @@ ZENOHC_API bool z_internal_mutex_check(const struct z_owned_mutex_t *this_);
  * Constructs mutex in a gravestone state.
  */
 ZENOHC_API void z_internal_mutex_null(struct z_owned_mutex_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_ptr_in_segment_check(const struct z_owned_ptr_in_segment_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs data pointer in SHM Segment in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_ptr_in_segment_null(struct z_owned_ptr_in_segment_t *this_);
-#endif
 /**
  * Returns ``true`` if publisher is valid, ``false`` otherwise.
  */
@@ -3182,86 +2415,6 @@ ZENOHC_API bool z_internal_session_check(const struct z_owned_session_t *this_);
  */
 ZENOHC_API void z_internal_session_null(struct z_owned_session_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_shm_check(const struct z_owned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return Returns ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_shm_client_check(const struct z_owned_shm_client_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs SHM client in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_shm_client_null(struct z_owned_shm_client_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_shm_client_storage_check(const struct z_owned_shm_client_storage_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs SHM Client Storage in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_shm_client_storage_null(struct z_owned_shm_client_storage_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_shm_mut_check(const struct z_owned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs ZShmMut slice in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_shm_mut_null(struct z_owned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs ZShm slice in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_shm_null(struct z_owned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool z_internal_shm_provider_check(const struct z_owned_shm_provider_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs SHM Provider in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_internal_shm_provider_null(struct z_owned_shm_provider_t *this_);
-#endif
-/**
  * @return ``true`` if slice is not empty, ``false`` otherwise.
  */
 ZENOHC_API bool z_internal_slice_check(const struct z_owned_slice_t *this_);
@@ -3269,22 +2422,6 @@ ZENOHC_API bool z_internal_slice_check(const struct z_owned_slice_t *this_);
  * Constructs an empty `z_owned_slice_t`.
  */
 ZENOHC_API void z_internal_slice_null(struct z_owned_slice_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool z_internal_source_info_check(const struct z_owned_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs source info in its gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_internal_source_info_null(struct z_owned_source_info_t *this_);
-#endif
 /**
  * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
  */
@@ -3444,16 +2581,9 @@ z_result_t z_keyexpr_join(struct z_owned_keyexpr_t *this_,
  */
 ZENOHC_API const struct z_loaned_keyexpr_t *z_keyexpr_loan(const struct z_owned_keyexpr_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the relation between `left` and `right` from `left`'s point of view.
- *
- * @note This is slower than `z_keyexpr_intersects` and `keyexpr_includes`, so you should favor these methods for most applications.
+ * Moves `z_owned_keyexpr_t`.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_keyexpr_t *left,
-                                                          const struct z_loaned_keyexpr_t *right);
-#endif
+ZENOHC_API struct z_moved_keyexpr_t *z_keyexpr_move(struct z_owned_keyexpr_t *this_);
 /**
  * @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
  * until the corresponding session is closed or dropped.
@@ -3534,6 +2664,11 @@ ZENOHC_API void z_liveliness_token_drop(struct z_moved_liveliness_token_t *this_
 ZENOHC_API
 const struct z_loaned_liveliness_token_t *z_liveliness_token_loan(const struct z_owned_liveliness_token_t *this_);
 /**
+ * @brief Moves token.
+ */
+ZENOHC_API
+struct z_moved_liveliness_token_t *z_liveliness_token_move(struct z_owned_liveliness_token_t *this_);
+/**
  * @brief Constructs default value for `z_liveliness_token_options_t`.
  */
 ZENOHC_API void z_liveliness_token_options_default(struct z_liveliness_token_options_t *this_);
@@ -3545,42 +2680,6 @@ ZENOHC_API z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_tok
  * @brief Undeclares the given matching listener, droping and invalidating it.
  */
 ZENOHC_API void z_matching_listener_drop(struct z_moved_matching_listener_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes Memory Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_memory_layout_drop(struct z_moved_memory_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Extract data from Memory Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_memory_layout_get_data(const struct z_loaned_memory_layout_t *this_,
-                              size_t *out_size,
-                              struct z_alloc_alignment_t *out_alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows Memory Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_memory_layout_t *z_memory_layout_loan(const struct z_owned_memory_layout_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new Memory Layout.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_memory_layout_new(struct z_owned_memory_layout_t *this_,
-                               size_t size,
-                               struct z_alloc_alignment_t alignment);
-#endif
 /**
  * Drops mutex and resets it to its gravestone state.
  */
@@ -3624,82 +2723,9 @@ z_result_t z_open(struct z_owned_session_t *this_,
  */
 ZENOHC_API void z_open_options_default(struct z_open_options_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs and opens a new Zenoh session with specified client storage.
- *
- * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_open_with_custom_shm_clients(struct z_owned_session_t *this_,
-                                          struct z_moved_config_t *config,
-                                          const struct z_loaned_shm_client_storage_t *shm_clients);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new POSIX SHM Client.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_posix_shm_client_new(struct z_owned_shm_client_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new POSIX SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
-                                    size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new POSIX SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_posix_shm_provider_with_layout_new(struct z_owned_shm_provider_t *this_,
-                                                const struct z_loaned_memory_layout_t *layout);
-#endif
-/**
  * Returns the default value of #z_priority_t.
  */
 ZENOHC_API enum z_priority_t z_priority_default(void);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Makes a shallow data pointer in SHM Segment copy.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_ptr_in_segment_clone(struct z_owned_ptr_in_segment_t *out,
-                            const struct z_loaned_ptr_in_segment_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes data pointer in SHM Segment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_ptr_in_segment_drop(struct z_moved_ptr_in_segment_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows data pointer in SHM Segment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_ptr_in_segment_t *z_ptr_in_segment_loan(const struct z_owned_ptr_in_segment_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new data pointer in SHM Segment.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_ptr_in_segment_new(struct z_owned_ptr_in_segment_t *this_,
-                          uint8_t *ptr,
-                          struct zc_threadsafe_context_t segment);
-#endif
 /**
  * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given publisher.
  * The callback will be run in the background until the corresponding publisher is dropped.
@@ -3751,14 +2777,6 @@ ZENOHC_API
 z_result_t z_publisher_get_matching_status(const struct z_loaned_publisher_t *this_,
                                            struct z_matching_status_t *matching_status);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the ID of the publisher.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_entity_global_id_t z_publisher_id(const struct z_loaned_publisher_t *publisher);
-#endif
-/**
  * Returns the key expression of the publisher.
  */
 ZENOHC_API
@@ -3772,6 +2790,10 @@ const struct z_loaned_publisher_t *z_publisher_loan(const struct z_owned_publish
  * Mutably borrows publisher.
  */
 ZENOHC_API struct z_loaned_publisher_t *z_publisher_loan_mut(struct z_owned_publisher_t *this_);
+/**
+ * Moves publisher.
+ */
+ZENOHC_API struct z_moved_publisher_t *z_publisher_move(struct z_owned_publisher_t *this_);
 /**
  * Constructs the default value for `z_publisher_options_t`.
  */
@@ -3874,32 +2896,6 @@ z_result_t z_querier_get_matching_status(const struct z_loaned_querier_t *this_,
  */
 ZENOHC_API void z_querier_get_options_default(struct z_querier_get_options_t *this_);
 /**
- * @brief Query data from the matching queryables in the system.
- * Replies are provided through a callback function.
- *
- * @param querier: The querier to make query from.
- * @param parameters: The query's parameters, similar to a url's query segment.
- * @param parameters_len: The length of the query's parameters substring.
- * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
- * @param options: Additional options for the get. All owned fields will be consumed.
- *
- * @return 0 in case of success, a negative error value upon failure.
- */
-ZENOHC_API
-z_result_t z_querier_get_with_parameters_substr(const struct z_loaned_querier_t *querier,
-                                                const char *parameters,
-                                                size_t parameters_len,
-                                                struct z_moved_closure_reply_t *callback,
-                                                struct z_querier_get_options_t *options);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the ID of the querier.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_entity_global_id_t z_querier_id(const struct z_loaned_querier_t *querier);
-#endif
-/**
  * @brief Returns the key expression of the querier.
  */
 ZENOHC_API
@@ -3912,6 +2908,10 @@ ZENOHC_API const struct z_loaned_querier_t *z_querier_loan(const struct z_owned_
  * @brief Mutably borrows querier.
  */
 ZENOHC_API struct z_loaned_querier_t *z_querier_loan_mut(struct z_owned_querier_t *this_);
+/**
+ * @brief Moves querier.
+ */
+ZENOHC_API struct z_moved_querier_t *z_querier_move(struct z_owned_querier_t *this_);
 /**
  * @brief Constructs the default value for `z_querier_options_t`.
  */
@@ -3992,6 +2992,10 @@ ZENOHC_API const struct z_loaned_query_t *z_query_loan(const struct z_owned_quer
  * Mutably borrows the query.
  */
 ZENOHC_API struct z_loaned_query_t *z_query_loan_mut(struct z_owned_query_t *this_);
+/**
+ * Moves the query.
+ */
+ZENOHC_API struct z_moved_query_t *z_query_move(struct z_owned_query_t *this_);
 /**
  * Gets query <a href="https://github.com/eclipse-zenoh/roadmap/tree/main/rfcs/ALL/Selectors">value selector</a>.
  */
@@ -4094,20 +3098,16 @@ ZENOHC_API enum z_query_target_t z_query_target_default(void);
  */
 ZENOHC_API void z_queryable_drop(struct z_moved_queryable_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the ID of the queryable.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_entity_global_id_t z_queryable_id(const struct z_loaned_queryable_t *queryable);
-#endif
-/**
  * @brief Returns the key expression of the queryable.
  */
 ZENOHC_API
 const struct z_loaned_keyexpr_t *z_queryable_keyexpr(const struct z_loaned_queryable_t *queryable);
 ZENOHC_API
 const struct z_loaned_queryable_t *z_queryable_loan(const struct z_owned_queryable_t *this_);
+/**
+ * Moves Queryable
+ */
+ZENOHC_API struct z_moved_queryable_t *z_queryable_move(struct z_owned_queryable_t *this_);
 /**
  * Constructs the default value for `z_query_reply_options_t`.
  */
@@ -4132,22 +3132,6 @@ ZENOHC_API uint64_t z_random_u64(void);
  * Generates random `uint8_t`.
  */
 ZENOHC_API uint8_t z_random_u8(void);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Reference the global client storage.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_ref_shm_client_storage_global(struct z_owned_shm_client_storage_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the default value for `reliability`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-enum z_reliability_t z_reliability_default(void);
-#endif
 /**
  * Constructs an owned shallow copy of reply in provided uninitialized memory location.
  */
@@ -4187,6 +3171,10 @@ const struct z_loaned_reply_err_t *z_reply_err_loan(const struct z_owned_reply_e
  */
 ZENOHC_API struct z_loaned_reply_err_t *z_reply_err_loan_mut(struct z_owned_reply_err_t *this_);
 /**
+ * Moves reply error.
+ */
+ZENOHC_API struct z_moved_reply_err_t *z_reply_err_move(struct z_owned_reply_err_t *this_);
+/**
  * Yields the contents of the reply by asserting it indicates a failure.
  *
  * Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
@@ -4215,6 +3203,10 @@ ZENOHC_API const struct z_loaned_reply_t *z_reply_loan(const struct z_owned_repl
  */
 ZENOHC_API struct z_loaned_reply_t *z_reply_loan_mut(struct z_owned_reply_t *this_);
 /**
+ * Moves reply.
+ */
+ZENOHC_API struct z_moved_reply_t *z_reply_move(struct z_owned_reply_t *this_);
+/**
  * Yields the contents of the reply by asserting it indicates a success.
  *
  * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
@@ -4226,16 +3218,6 @@ ZENOHC_API const struct z_loaned_sample_t *z_reply_ok(const struct z_loaned_repl
  * Returns `NULL` if reply does not contain a sample (i. e. if `z_reply_is_ok` returns ``false``).
  */
 ZENOHC_API struct z_loaned_sample_t *z_reply_ok_mut(struct z_loaned_reply_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets the global id of the zenoh entity that answered this Reply.
- * @return `true` if id is present.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool z_reply_replier_id(const struct z_loaned_reply_t *this_,
-                        struct z_entity_global_id_t *out_id);
-#endif
 /**
  * Takes ownership of the mutably borrowed reply
  */
@@ -4271,6 +3253,11 @@ ZENOHC_API void z_ring_handler_query_drop(struct z_moved_ring_handler_query_t *t
 ZENOHC_API
 const struct z_loaned_ring_handler_query_t *z_ring_handler_query_loan(const struct z_owned_ring_handler_query_t *this_);
 /**
+ * Moves handler.
+ */
+ZENOHC_API
+struct z_moved_ring_handler_query_t *z_ring_handler_query_move(struct z_owned_ring_handler_query_t *this_);
+/**
  * Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
  * the channel is dropped (normally when Queryable is dropped).
  * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state).
@@ -4296,6 +3283,11 @@ ZENOHC_API void z_ring_handler_reply_drop(struct z_moved_ring_handler_reply_t *t
 ZENOHC_API
 const struct z_loaned_ring_handler_reply_t *z_ring_handler_reply_loan(const struct z_owned_ring_handler_reply_t *this_);
 /**
+ * Moves handler.
+ */
+ZENOHC_API
+struct z_moved_ring_handler_reply_t *z_ring_handler_reply_move(struct z_owned_ring_handler_reply_t *this_);
+/**
  * Returns reply from the ring buffer. If there are no more pending replies will block until next reply is received, or until
  * the channel is dropped (normally when all replies are received).
  * @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the reply will be in the gravestone state).
@@ -4320,6 +3312,11 @@ ZENOHC_API void z_ring_handler_sample_drop(struct z_moved_ring_handler_sample_t 
  */
 ZENOHC_API
 const struct z_loaned_ring_handler_sample_t *z_ring_handler_sample_loan(const struct z_owned_ring_handler_sample_t *this_);
+/**
+ * Moves handler.
+ */
+ZENOHC_API
+struct z_moved_ring_handler_sample_t *z_ring_handler_sample_move(struct z_owned_ring_handler_sample_t *this_);
 /**
  * Returns sample from the ring buffer. If there are no more pending replies will block until next sample is received, or until
  * the channel is dropped (normally when there are no more replies to receive).
@@ -4384,6 +3381,10 @@ ZENOHC_API const struct z_loaned_sample_t *z_sample_loan(const struct z_owned_sa
  */
 ZENOHC_API struct z_loaned_sample_t *z_sample_loan_mut(struct z_owned_sample_t *this_);
 /**
+ * Moves sample.
+ */
+ZENOHC_API struct z_moved_sample_t *z_sample_move(struct z_owned_sample_t *this_);
+/**
  * Returns the sample payload data.
  */
 ZENOHC_API const struct z_loaned_bytes_t *z_sample_payload(const struct z_loaned_sample_t *this_);
@@ -4395,22 +3396,6 @@ ZENOHC_API struct z_loaned_bytes_t *z_sample_payload_mut(struct z_loaned_sample_
  * Returns sample qos priority value.
  */
 ZENOHC_API enum z_priority_t z_sample_priority(const struct z_loaned_sample_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the reliability setting the sample was delivered with.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-enum z_reliability_t z_sample_reliability(const struct z_loaned_sample_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the sample source_info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
-#endif
 /**
  * Takes ownership of the mutably borrowed sample.
  */
@@ -4456,420 +3441,9 @@ ZENOHC_API bool z_session_is_closed(const struct z_loaned_session_t *session);
 ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
 ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes SHM Client.
+ * Moves session.
  */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_client_drop(struct z_moved_shm_client_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new SHM Client.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_client_new(struct z_owned_shm_client_t *this_,
-                      struct zc_threadsafe_context_t context,
-                      struct zc_shm_client_callbacks_t callbacks);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Performs a shallow copy of SHM Client Storage.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_client_storage_clone(struct z_owned_shm_client_storage_t *this_,
-                                const struct z_loaned_shm_client_storage_t *from);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Derefs SHM Client Storage.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_client_storage_drop(struct z_moved_shm_client_storage_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows SHM Client Storage.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_shm_client_storage_t *z_shm_client_storage_loan(const struct z_owned_shm_client_storage_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Create a new client storage object.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_shm_client_storage_new(struct z_owned_shm_client_storage_t *this_,
-                                    const struct zc_loaned_shm_client_list_t *clients,
-                                    bool add_default_client_set);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Construct client storage with default client set.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_client_storage_new_default(struct z_owned_shm_client_storage_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Converts borrowed ZShm slice to owned ZShm slice by performing a shallow SHM reference copy.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_clone(struct z_owned_shm_t *out,
-                 const struct z_loaned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return the pointer of the ZShm slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const unsigned char *z_shm_data(const struct z_loaned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes ZShm slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_drop(struct z_moved_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs ZShm slice from ZShmMut slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_from_mut(struct z_owned_shm_t *this_,
-                    struct z_moved_shm_mut_t *that);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return the length of the ZShm slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-size_t z_shm_len(const struct z_loaned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows ZShm slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_shm_t *z_shm_loan(const struct z_owned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Mutably borrows ZShm slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct z_loaned_shm_t *z_shm_loan_mut(struct z_owned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return the immutable pointer to the underlying data.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const unsigned char *z_shm_mut_data(const struct z_loaned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return the mutable pointer to the underlying data.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-unsigned char *z_shm_mut_data_mut(struct z_loaned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes ZShmMut slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_mut_drop(struct z_moved_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @return the length of the ZShmMut slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-size_t z_shm_mut_len(const struct z_loaned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows ZShmMut slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_shm_mut_t *z_shm_mut_loan(const struct z_owned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Mutably borrows ZShmMut slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct z_loaned_shm_mut_t *z_shm_mut_loan_mut(struct z_owned_shm_mut_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Tries to obtain mutable SHM buffer instead of immutable one.
- * @param this_: mutable SHM buffer to be initialized upon success
- * @param that: immutable SHM buffer
- * @param immut: immutable SHM buffer returned back to caller's side
- * ONLY in case of Z_EUNAVAILABLE failure
- * @return Z_OK in case of success, Z_EUNAVAILABLE in case of unsuccessful write access,
- * Z_EINVAL if moved value is incorrect.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_shm_mut_try_from_immut(struct z_owned_shm_mut_t *this_,
-                                    struct z_moved_shm_t *that,
-                                    struct z_owned_shm_t *immut);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation without any additional actions.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc(struct z_buf_layout_alloc_result_t *out_result,
-                          const struct z_loaned_shm_provider_t *provider,
-                          size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make aligned allocation without any additional actions.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_aligned(struct z_buf_layout_alloc_result_t *out_result,
-                                  const struct z_loaned_shm_provider_t *provider,
-                                  size_t size,
-                                  struct z_alloc_alignment_t alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc(struct z_buf_layout_alloc_result_t *out_result,
-                             const struct z_loaned_shm_provider_t *provider,
-                             size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make aligned allocation performing garbage collection if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_aligned(struct z_buf_layout_alloc_result_t *out_result,
-                                     const struct z_loaned_shm_provider_t *provider,
-                                     size_t size,
-                                     struct z_alloc_alignment_t alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_defrag(struct z_buf_layout_alloc_result_t *out_result,
-                                    const struct z_loaned_shm_provider_t *provider,
-                                    size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make aligned allocation performing garbage collection and/or defragmentation if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_defrag_aligned(struct z_buf_layout_alloc_result_t *out_result,
-                                            const struct z_loaned_shm_provider_t *provider,
-                                            size_t size,
-                                            struct z_alloc_alignment_t alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make aligned allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
- * if used with non-threadsafe SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_shm_provider_alloc_gc_defrag_aligned_async(struct z_buf_layout_alloc_result_t *out_result,
-                                                        const struct z_loaned_shm_provider_t *provider,
-                                                        size_t size,
-                                                        struct z_alloc_alignment_t alignment,
-                                                        struct zc_threadsafe_context_t result_context,
-                                                        void (*result_callback)(void*,
-                                                                                struct z_buf_layout_alloc_result_t*));
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
- * if used with non-threadsafe SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_shm_provider_alloc_gc_defrag_async(struct z_buf_layout_alloc_result_t *out_result,
-                                                const struct z_loaned_shm_provider_t *provider,
-                                                size_t size,
-                                                struct zc_threadsafe_context_t result_context,
-                                                void (*result_callback)(void*,
-                                                                        struct z_buf_layout_alloc_result_t*));
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_defrag_blocking(struct z_buf_layout_alloc_result_t *out_result,
-                                             const struct z_loaned_shm_provider_t *provider,
-                                             size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make aligned allocation performing garbage collection and/or defragmentation and/or blocking if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_defrag_blocking_aligned(struct z_buf_layout_alloc_result_t *out_result,
-                                                     const struct z_loaned_shm_provider_t *provider,
-                                                     size_t size,
-                                                     struct z_alloc_alignment_t alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_defrag_dealloc(struct z_buf_layout_alloc_result_t *out_result,
-                                            const struct z_loaned_shm_provider_t *provider,
-                                            size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Make aligned allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_alloc_gc_defrag_dealloc_aligned(struct z_buf_layout_alloc_result_t *out_result,
-                                                    const struct z_loaned_shm_provider_t *provider,
-                                                    size_t size,
-                                                    struct z_alloc_alignment_t alignment);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Return the memory size available in the provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-size_t z_shm_provider_available(const struct z_loaned_shm_provider_t *provider);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new SHM Provider ith default backend.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_shm_provider_default_new(struct z_owned_shm_provider_t *this_,
-                                      size_t size);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Perform memory defragmentation. The real operations taken depend on the provider's backend allocator
- * implementation.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-size_t z_shm_provider_defragment(const struct z_loaned_shm_provider_t *provider);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_drop(struct z_moved_shm_provider_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Perform memory garbage collection and reclaim all dereferenced SHM buffers.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-size_t z_shm_provider_garbage_collect(const struct z_loaned_shm_provider_t *provider);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct z_loaned_shm_provider_t *z_shm_provider_loan(const struct z_owned_shm_provider_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Map the preallocated data chunk into SHM buffer.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_shm_provider_map(struct z_owned_shm_mut_t *out_result,
-                              const struct z_loaned_shm_provider_t *provider,
-                              struct z_allocated_chunk_t allocated_chunk,
-                              size_t len);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_new(struct z_owned_shm_provider_t *this_,
-                        struct zc_context_t context,
-                        struct zc_shm_provider_backend_callbacks_t callbacks);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new threadsafe SHM Provider.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void z_shm_provider_threadsafe_new(struct z_owned_shm_provider_t *this_,
-                                   struct zc_threadsafe_context_t context,
-                                   struct zc_shm_provider_backend_callbacks_t callbacks);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Mutably borrows ZShm slice as borrowed ZShmMut slice.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct z_loaned_shm_mut_t *z_shm_try_mut(struct z_owned_shm_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Tries to reborrow mutably-borrowed ZShm slice as borrowed ZShmMut slice.
- * @return borrowed ZShmMut slice in case of success, NULL otherwise.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct z_loaned_shm_mut_t *z_shm_try_reloan_mut(struct z_loaned_shm_t *this_);
-#endif
+ZENOHC_API struct z_moved_session_t *z_session_move(struct z_owned_session_t *this_);
 /**
  * Puts current thread to sleep for specified amount of milliseconds.
  */
@@ -4936,47 +3510,9 @@ ZENOHC_API size_t z_slice_len(const struct z_loaned_slice_t *this_);
  */
 ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slice_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Frees the memory and invalidates the source info, resetting it to a gravestone state.
+ * Moves slice.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_source_info_drop(struct z_moved_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the source_id of the source info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_entity_global_id_t z_source_info_id(const struct z_loaned_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows source info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct z_loaned_source_info_t *z_source_info_loan(const struct z_owned_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates source info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t z_source_info_new(struct z_owned_source_info_t *this_,
-                             const struct z_entity_global_id_t *source_id,
-                             uint32_t source_sn);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the source_sn of the source info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-uint32_t z_source_info_sn(const struct z_loaned_source_info_t *this_);
-#endif
+ZENOHC_API struct z_moved_slice_t *z_slice_move(struct z_owned_slice_t *this_);
 /**
  * Constructs an owned copy of a string array.
  */
@@ -5013,6 +3549,10 @@ const struct z_loaned_string_array_t *z_string_array_loan(const struct z_owned_s
  */
 ZENOHC_API
 struct z_loaned_string_array_t *z_string_array_loan_mut(struct z_owned_string_array_t *this_);
+/**
+ * Moves string array.
+ */
+ZENOHC_API struct z_moved_string_array_t *z_string_array_move(struct z_owned_string_array_t *this_);
 /**
  * Constructs a new empty string array.
  */
@@ -5093,18 +3633,14 @@ ZENOHC_API size_t z_string_len(const struct z_loaned_string_t *this_);
  */
 ZENOHC_API const struct z_loaned_string_t *z_string_loan(const struct z_owned_string_t *this_);
 /**
+ * Moves string.
+ */
+ZENOHC_API struct z_moved_string_t *z_string_move(struct z_owned_string_t *this_);
+/**
  * Undeclares subscriber callback and resets it to its gravestone state.
  * This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
  */
 ZENOHC_API void z_subscriber_drop(struct z_moved_subscriber_t *this_);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the ID of the subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_entity_global_id_t z_subscriber_id(const struct z_loaned_subscriber_t *subscriber);
-#endif
 /**
  * Returns the key expression of the subscriber.
  */
@@ -5115,6 +3651,10 @@ const struct z_loaned_keyexpr_t *z_subscriber_keyexpr(const struct z_loaned_subs
  */
 ZENOHC_API
 const struct z_loaned_subscriber_t *z_subscriber_loan(const struct z_owned_subscriber_t *this_);
+/**
+ * Moves subscriber.
+ */
+ZENOHC_API struct z_moved_subscriber_t *z_subscriber_move(struct z_owned_subscriber_t *this_);
 /**
  * Constructs the default value for `z_subscriber_options_t`.
  */
@@ -5370,25 +3910,6 @@ ZENOHC_API
 z_result_t z_whatami_to_view_string(enum z_whatami_t whatami,
                                     struct z_view_string_t *str_out);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Linux: Trigger cleanup for orphaned SHM segments
- * If process that created named SHM segment crashes or exits by a signal, the segment persists in the system
- * disregarding if it is used by other Zenoh processes or not. This is the detail of POSIX specification for
- * shared memory that is hard to bypass. To deal with this we developed a cleanup routine that enumerates all
- * segments and tries to find processes that are using it. If no such process found, segment will be removed.
- * There is no ideal signal to trigger this cleanup, so by default, zenoh triggers it in the following moments:
- * - first POSIX SHM segment creation
- * - process exit via exit() call or return from maint function
- *
- * It is OK to additionally trigger this function at any time, but be aware that this can be costly.
- *
- * For non-linux platforms this function currently does nothing
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void zc_cleanup_orphaned_shm_segments(void);
-#endif
-/**
  * @brief Constructs closure.
  *
  * Closures are not guaranteed not to be called concurrently.
@@ -5427,18 +3948,10 @@ ZENOHC_API void zc_closure_log_drop(struct zc_moved_closure_log_t *closure_);
 ZENOHC_API
 const struct zc_loaned_closure_log_t *zc_closure_log_loan(const struct zc_owned_closure_log_t *closure);
 /**
- * @brief Drops the close handle. The concurrent close task will not be interrupted.
+ * Moves closure.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void zc_concurrent_close_handle_drop(struct zc_moved_concurrent_close_handle_t *this_);
-#endif
-/**
- * @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t zc_concurrent_close_handle_wait(struct zc_moved_concurrent_close_handle_t *handle);
-#endif
+struct zc_moved_closure_log_t *zc_closure_log_move(struct zc_owned_closure_log_t *closure);
 /**
  * Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
  *
@@ -5454,15 +3967,6 @@ ZENOHC_API
 z_result_t zc_config_from_file(struct z_owned_config_t *this_,
                                const char *path);
 /**
- * Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.
- *
- * Returns 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_result_t zc_config_from_file_substr(struct z_owned_config_t *this_,
-                                      const char *path,
-                                      size_t len);
-/**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
  * Returns 0 in case of success, negative error code otherwise.
@@ -5470,15 +3974,6 @@ z_result_t zc_config_from_file_substr(struct z_owned_config_t *this_,
 ZENOHC_API
 z_result_t zc_config_from_str(struct z_owned_config_t *this_,
                               const char *s);
-/**
- * Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
- *
- * Returns 0 in case of success, negative error code otherwise.
- */
-ZENOHC_API
-z_result_t zc_config_from_substr(struct z_owned_config_t *this_,
-                                 const char *s,
-                                 size_t len);
 /**
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
@@ -5523,20 +4018,11 @@ ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a view string on last error message.
- * The view string only remains valid until next faillable zenoh API call from the same thread.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_get_last_error(struct z_view_string_t *out);
-#endif
-/**
  * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
  *
  * Note that if the environment variable is not set, then fallback filter will be used instead.
- * See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+ * See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
  *
  * @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
  */
@@ -5560,94 +4046,15 @@ ZENOHC_API bool zc_internal_closure_log_check(const struct zc_owned_closure_log_
  * Constructs a closure in a gravestone state.
  */
 ZENOHC_API void zc_internal_closure_log_null(struct zc_owned_closure_log_t *this_);
-/**
- * @brief Returns ``true`` if concurrent close handle is valid, ``false`` if it is in gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool zc_internal_concurrent_close_handle_check(const struct zc_owned_concurrent_close_handle_t *this_);
-#endif
-/**
- * @brief Constructs concurrent close handle in its gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_handle_t *this_);
-#endif
 ZENOHC_API
 void zc_internal_encoding_from_data(struct z_owned_encoding_t *this_,
                                     struct zc_internal_encoding_data_t data);
 ZENOHC_API
 struct zc_internal_encoding_data_t zc_internal_encoding_get_data(const struct z_loaned_encoding_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if `this` is valid.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-bool zc_internal_shm_client_list_check(const struct zc_owned_shm_client_list_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs SHM client list in its gravestone value.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
-#endif
-/**
  * @brief Returns default value of `zc_locality_t`
  */
 ZENOHC_API enum zc_locality_t zc_locality_default(void);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the default value of #zc_reply_keyexpr_t.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Add client to the list.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t zc_shm_client_list_add_client(struct zc_loaned_shm_client_list_t *this_,
-                                         struct z_moved_shm_client_t *client);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Deletes list of SHM Clients.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void zc_shm_client_list_drop(struct zc_moved_shm_client_list_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows list of SHM Clients.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-const struct zc_loaned_shm_client_list_t *zc_shm_client_list_loan(const struct zc_owned_shm_client_list_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Mutably borrows list of SHM Clients.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct zc_loaned_shm_client_list_t *zc_shm_client_list_loan_mut(struct zc_owned_shm_client_list_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Creates a new empty list of SHM Clients.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-void zc_shm_client_list_new(struct zc_owned_shm_client_list_t *this_);
-#endif
 /**
  * Stops all Zenoh tasks and drops all related static variables.
  * All Zenoh-related structures should be properly dropped/undeclared PRIOR to this call.
@@ -5661,468 +4068,10 @@ void zc_stop_z_runtime(void);
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
  *
  * Note that if the environment variable is not set, then logging will not be enabled.
- * See https://docs.rs/env_logger/latest/env_logger/index.html for accepted filter format.
+ * See <https://docs.rs/env_logger/latest/env_logger/index.html> for accepted filter format.
  */
 ZENOHC_API
 void zc_try_init_log_from_env(void);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_publisher_cache_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_publisher_cache_options_default(struct ze_advanced_publisher_cache_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a matching listener, registering a callback for notifying subscribers matching with a given advanced publisher.
- * The callback will be run in the background until the corresponding publisher is dropped.
- *
- * @param publisher: An advanced publisher to associate with matching listener.
- * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t ze_advanced_publisher_declare_background_matching_listener(const struct ze_loaned_advanced_publisher_t *publisher,
-                                                                      struct z_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs matching listener, registering a callback for notifying subscribers matching with a given advanced publisher.
- *
- * @param publisher: An advanced publisher to associate with matching listener.
- * @param matching_listener: An uninitialized memory location where matching listener will be constructed. The matching listener's callback will be automatically dropped when the publisher is dropped.
- * @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t ze_advanced_publisher_declare_matching_listener(const struct ze_loaned_advanced_publisher_t *publisher,
-                                                           struct z_owned_matching_listener_t *matching_listener,
-                                                           struct z_moved_closure_matching_status_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Sends a `DELETE` message onto the advanced publisher's key expression.
- *
- * @return 0 in case of success, negative error code in case of failure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_advanced_publisher_delete(const struct ze_loaned_advanced_publisher_t *publisher,
-                                        struct ze_advanced_publisher_delete_options_t *options);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs the default values for the delete operation via an advanced publisher entity.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_publisher_delete_options_default(struct ze_advanced_publisher_delete_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Frees memory and resets advanced_publisher to its gravestone state.
- * This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_publisher_drop(struct ze_moved_advanced_publisher_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets advanced publisher matching status - i.e. if there are any subscribers matching its key expression.
- *
- * @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t ze_advanced_publisher_get_matching_status(const struct ze_loaned_advanced_publisher_t *this_,
-                                                     struct z_matching_status_t *matching_status);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the ID of the advanced publisher.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct z_entity_global_id_t ze_advanced_publisher_id(const struct ze_loaned_advanced_publisher_t *publisher);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Returns the key expression of the publisher.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct z_loaned_keyexpr_t *ze_advanced_publisher_keyexpr(const struct ze_loaned_advanced_publisher_t *publisher);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Borrows advanced publisher.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct ze_loaned_advanced_publisher_t *ze_advanced_publisher_loan(const struct ze_owned_advanced_publisher_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Mutably borrows advanced publisher.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct ze_loaned_advanced_publisher_t *ze_advanced_publisher_loan_mut(struct ze_owned_advanced_publisher_t *this_);
-#endif
-/**
- * Constructs the default value for `z_publisher_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_publisher_options_default(struct ze_advanced_publisher_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Sends a `PUT` message onto the advanced publisher's key expression, transfering the payload ownership.
- *
- * The payload and all owned options fields are consumed upon function return.
- *
- * @param this_: The advanced publisher.
- * @param payload: The data to publish. Will be consumed.
- * @param options: The advanced publisher put options. All owned fields will be consumed.
- *
- * @return 0 in case of success, negative error values in case of failure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_advanced_publisher_put(const struct ze_loaned_advanced_publisher_t *this_,
-                                     struct z_moved_bytes_t *payload,
-                                     struct ze_advanced_publisher_put_options_t *options);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs the default value for `ze_advanced_publisher_put_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_publisher_put_options_default(struct ze_advanced_publisher_put_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_publisher_sample_miss_detection_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_publisher_sample_miss_detection_options_default(struct ze_advanced_publisher_sample_miss_detection_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a sample miss listener, registering a callback for notifying subscriber about missed samples.
- * The callback will be run in the background until the corresponding subscriber is dropped.
- *
- * @param subscriber: A subscriber to associate with sample miss listener.
- * @param callback: A closure that will be called every time the sample miss is detected.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_advanced_subscriber_declare_background_sample_miss_listener(const struct ze_loaned_advanced_subscriber_t *subscriber,
-                                                                          struct ze_moved_closure_miss_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs sample miss listener, registering a callback for notifying subscriber about missed samples.
- *
- * @param subscriber: A subscriber to associate with sample miss listener.
- * @param sample_miss_listener: An uninitialized memory location where sample miss listener will be constructed. The sample miss listener's callback will be automatically dropped when the subscriber is dropped.
- * @param callback: A closure that will be called every time the sample miss is detected.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_advanced_subscriber_declare_sample_miss_listener(const struct ze_loaned_advanced_subscriber_t *subscriber,
-                                                               struct ze_owned_sample_miss_listener_t *sample_miss_listener,
-                                                               struct ze_moved_closure_miss_t *callback);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a liveliness token listener for matching publishers detection. Only advanced publishers, enabling publisher detection can be detected.
- *
- * @param subscriber: The advanced subscriber instance.
- * @param liveliness_subscriber: An uninitialized memory location where liveliness subscriber will be constructed.
- * @param callback: The callback function that will be called each time a liveliness token status is changed.
- * @param options: The options to be passed to the liveliness subscriber declaration.
- *
- * @return 0 in case of success, negative error values otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_advanced_subscriber_detect_publishers(const struct ze_loaned_advanced_subscriber_t *subscriber,
-                                                    struct z_owned_subscriber_t *liveliness_subscriber,
-                                                    struct z_moved_closure_sample_t *callback,
-                                                    struct z_liveliness_subscriber_options_t *options);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Declares a background subscriber on liveliness tokens of matching publishers. Subscriber callback will be called to process the messages,
- * until the corresponding session is closed or dropped. Only advanced publishers. enabling publisher detection can be detected.
- * @param subscriber: The advanced subscriber instance.
- * @param callback: The callback function that will be called each time a liveliness token status is changed.
- * @param options: The options to be passed to the liveliness subscriber declaration.
- *
- * @return 0 in case of success, negative error values otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_advanced_subscriber_detect_publishers_background(const struct ze_loaned_advanced_subscriber_t *subscriber,
-                                                               struct z_moved_closure_sample_t *callback,
-                                                               struct z_liveliness_subscriber_options_t *options);
-#endif
-/**
- * Undeclares advanced subscriber callback and resets it to its gravestone state.
- * This is equivalent to calling `ze_undeclare_advanced_subscriber()` and discarding its return value.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_subscriber_drop(struct ze_moved_advanced_subscriber_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_subscriber_history_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_subscriber_history_options_default(struct ze_advanced_subscriber_history_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the ID of the advanced subscriber.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-struct z_entity_global_id_t ze_advanced_subscriber_id(const struct ze_loaned_advanced_subscriber_t *subscriber);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Returns the key expression of the advanced subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct z_loaned_keyexpr_t *ze_advanced_subscriber_keyexpr(const struct ze_loaned_advanced_subscriber_t *subscriber);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_subscriber_last_sample_miss_detection_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_subscriber_last_sample_miss_detection_options_default(struct ze_advanced_subscriber_last_sample_miss_detection_options_t *this_);
-#endif
-/**
- * Borrows subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct ze_loaned_advanced_subscriber_t *ze_advanced_subscriber_loan(const struct ze_owned_advanced_subscriber_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_subscriber_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_subscriber_options_default(struct ze_advanced_subscriber_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `ze_advanced_subscriber_recovery_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_advanced_subscriber_recovery_options_default(struct ze_advanced_subscriber_recovery_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- *
- * Closures are not guaranteed not to be called concurrently.
- *
- * It is guaranteed that:
- *   - `call` will never be called once `drop` has started.
- *   - `drop` will only be called **once**, and **after every** `call` has ended.
- *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
- *
- * @brief Constructs closure.
- * @param this_: uninitialized memory location where new closure will be constructed.
- * @param call: a closure body.
- * @param drop: an optional function to be called once on closure drop.
- * @param context: closure context.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_closure_miss(struct ze_owned_closure_miss_t *this_,
-                     void (*call)(const struct ze_miss_t *matching_status, void *context),
-                     void (*drop)(void *context),
-                     void *context);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Calls the closure. Calling an uninitialized closure is a no-op.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_closure_miss_call(const struct ze_loaned_closure_miss_t *closure,
-                          const struct ze_miss_t *mathing_status);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_closure_miss_drop(struct ze_moved_closure_miss_t *closure_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows closure.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct ze_loaned_closure_miss_t *ze_closure_miss_loan(const struct ze_owned_closure_miss_t *closure);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs and declares an advanced publisher for the given key expression.
- *
- * Data can be put and deleted with this publisher with the help of the
- * `ze_advanced_publisher_put()` and `ze_advanced_publisher_delete()` functions.
- *
- * @param session: The Zenoh session.
- * @param publisher: An uninitialized location in memory where advanced publisher will be constructed.
- * @param key_expr: The key expression to publish to.
- * @param options: Additional options for the advanced publisher.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_advanced_publisher(const struct z_loaned_session_t *session,
-                                         struct ze_owned_advanced_publisher_t *publisher,
-                                         const struct z_loaned_keyexpr_t *key_expr,
-                                         struct ze_advanced_publisher_options_t *options);
-#endif
-/**
- * Constructs and declares an advanced subscriber for a given key expression. Dropping subscriber undeclares its callback.
- *
- * @param session: The zenoh session.
- * @param subscriber: An uninitialized location in memory, where advanced subscriber will be constructed.
- * @param key_expr: The key expression to subscribe.
- * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
- * @param options: The options to be passed to the subscriber declaration.
- *
- * @return 0 in case of success, negative error code otherwise (in this case subscriber will be in its gravestone state).
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_advanced_subscriber(const struct z_loaned_session_t *session,
-                                          struct ze_owned_advanced_subscriber_t *subscriber,
-                                          const struct z_loaned_keyexpr_t *key_expr,
-                                          struct z_moved_closure_sample_t *callback,
-                                          struct ze_advanced_subscriber_options_t *options);
-#endif
-/**
- * Constructs and declares a background advanced subscriber. Subscriber callback will be called to process the messages,
- * until the corresponding session is closed or dropped.
- *
- * @param session: The zenoh session.
- * @param key_expr: The key expression to subscribe.
- * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
- * @param options: The options to be passed to the subscriber declaration.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_background_advanced_subscriber(const struct z_loaned_session_t *session,
-                                                     const struct z_loaned_keyexpr_t *key_expr,
-                                                     struct z_moved_closure_sample_t *callback,
-                                                     struct ze_advanced_subscriber_options_t *options);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Declares a background publication cache. It will function in background until the corresponding session is closed or dropped.
- *
- * @param session: A Zenoh session.
- * @param key_expr: The key expression to publish to.
- * @param options: Additional options for the publication cache.
- *
- * @returns 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_background_publication_cache(const struct z_loaned_session_t *session,
-                                                   const struct z_loaned_keyexpr_t *key_expr,
-                                                   struct ze_publication_cache_options_t *options);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Declares a background querying subscriber for a given key expression. Subscriber callback will be called to process the messages,
- * until the corresponding session is closed or dropped.
- *
- * @param session: A Zenoh session.
- * @param key_expr: A key expression to subscribe to.
- * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
- * @param options: Additional options for the querying subscriber.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_background_querying_subscriber(const struct z_loaned_session_t *session,
-                                                     const struct z_loaned_keyexpr_t *key_expr,
-                                                     struct z_moved_closure_sample_t *callback,
-                                                     struct ze_querying_subscriber_options_t *options);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Constructs and declares a publication cache.
- *
- * @param session: A Zenoh session.
- * @param pub_cache: An uninitialized location in memory where publication cache will be constructed.
- * @param key_expr: The key expression to publish to.
- * @param options: Additional options for the publication cache.
- *
- * @returns 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_publication_cache(const struct z_loaned_session_t *session,
-                                        struct ze_owned_publication_cache_t *pub_cache,
-                                        const struct z_loaned_keyexpr_t *key_expr,
-                                        struct ze_publication_cache_options_t *options);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Constructs and declares a querying subscriber for a given key expression.
- *
- * @param session: A Zenoh session.
- * @param querying_subscriber: An uninitialized memory location where querying subscriber will be constructed.
- * @param key_expr: A key expression to subscribe to.
- * @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
- * @param options: Additional options for the querying subscriber.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_declare_querying_subscriber(const struct z_loaned_session_t *session,
-                                          struct ze_owned_querying_subscriber_t *querying_subscriber,
-                                          const struct z_loaned_keyexpr_t *key_expr,
-                                          struct z_moved_closure_sample_t *callback,
-                                          struct ze_querying_subscriber_options_t *options);
-#endif
 /**
  * @brief Deserializes into a bool.
  * @return 0 in case of success, negative error code otherwise.
@@ -6297,96 +4246,6 @@ struct ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_
  */
 ZENOHC_API bool ze_deserializer_is_done(const struct ze_deserializer_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Returns ``true`` if advanced publisher is valid, ``false`` otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_advanced_publisher_check(const struct ze_owned_advanced_publisher_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Constructs an advanced publisher in a gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_internal_advanced_publisher_null(struct ze_owned_advanced_publisher_t *this_);
-#endif
-/**
- * Returns ``true`` if advanced subscriber is valid, ``false`` otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_advanced_subscriber_check(const struct ze_owned_advanced_subscriber_t *this_);
-#endif
-/**
- * Constructs a subscriber in a gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_internal_advanced_subscriber_null(struct ze_owned_advanced_subscriber_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_closure_miss_check(const struct ze_owned_closure_miss_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a null value of 'ze_owned_closure_miss_t' type
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_internal_closure_miss_null(struct ze_owned_closure_miss_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Returns ``true`` if publication cache is valid, ``false`` otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_publication_cache_check(const struct ze_owned_publication_cache_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Constructs a publication cache in a gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_internal_publication_cache_null(struct ze_owned_publication_cache_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_querying_subscriber_check(const struct ze_owned_querying_subscriber_t *this_);
-#endif
-/**
- * Constructs a querying subscriber in a gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_internal_querying_subscriber_null(struct ze_owned_querying_subscriber_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Checks the sample_miss listener is for the gravestone state
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool ze_internal_sample_miss_listener_check(const struct ze_owned_sample_miss_listener_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs an empty sample miss listener.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_internal_sample_miss_listener_null(struct ze_owned_sample_miss_listener_t *this_);
-#endif
-/**
  * @brief Returns ``true`` if `this_` is in a valid state, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool ze_internal_serializer_check(const struct ze_owned_serializer_t *this_);
@@ -6394,82 +4253,6 @@ ZENOHC_API bool ze_internal_serializer_check(const struct ze_owned_serializer_t 
  * @brief Constructs a serializer in a gravestone state.
  */
 ZENOHC_API void ze_internal_serializer_null(struct ze_owned_serializer_t *this_);
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Drops publication cache and resets it to its gravestone state.
- * This is equivalent to calling `ze_undeclare_publication_cache()` and discarding its return value.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_publication_cache_drop(struct ze_moved_publication_cache_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Returns the key expression of the publication cache.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct z_loaned_keyexpr_t *ze_publication_cache_keyexpr(const struct ze_loaned_publication_cache_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Borrows publication cache.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct ze_loaned_publication_cache_t *ze_publication_cache_loan(const struct ze_owned_publication_cache_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Constructs the default value for `ze_publication_cache_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void ze_publication_cache_options_default(struct ze_publication_cache_options_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Undeclares querying subscriber callback and resets it to its gravestone state.
- * This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_querying_subscriber_drop(struct ze_moved_querying_subscriber_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Make querying subscriber perform an additional query on a specified selector.
- * The queried samples will be merged with the received publications and made available in the subscriber callback.
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_querying_subscriber_get(const struct ze_loaned_querying_subscriber_t *this_,
-                                      const struct z_loaned_keyexpr_t *selector,
-                                      struct z_get_options_t *options);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Borrows querying subscriber.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct ze_loaned_querying_subscriber_t *ze_querying_subscriber_loan(const struct ze_owned_querying_subscriber_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Constructs the default value for `ze_querying_subscriber_options_t`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_querying_subscriber_options_default(struct ze_querying_subscriber_options_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given sample miss listener, droping and invalidating it.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void ze_sample_miss_listener_drop(struct ze_moved_sample_miss_listener_t *this_);
-#endif
 /**
  * @brief Serializes a bool.
  */
@@ -6586,6 +4369,10 @@ const struct ze_loaned_serializer_t *ze_serializer_loan(const struct ze_owned_se
 ZENOHC_API
 struct ze_loaned_serializer_t *ze_serializer_loan_mut(struct ze_owned_serializer_t *this_);
 /**
+ * @brief Moves serializer.
+ */
+ZENOHC_API struct ze_moved_serializer_t *ze_serializer_move(struct ze_owned_serializer_t *this_);
+/**
  * @brief Serializes a bool.
  */
 ZENOHC_API z_result_t ze_serializer_serialize_bool(struct ze_loaned_serializer_t *this_, bool val);
@@ -6698,50 +4485,3 @@ z_result_t ze_serializer_serialize_uint64(struct ze_loaned_serializer_t *this_,
 ZENOHC_API
 z_result_t ze_serializer_serialize_uint8(struct ze_loaned_serializer_t *this_,
                                          uint8_t val);
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given advanced publisher.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_undeclare_advanced_publisher(struct ze_moved_advanced_publisher_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * Undeclares the advanced subscriber.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_undeclare_advanced_subscriber(struct ze_moved_advanced_subscriber_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_publisher.
- * @brief Undeclares publication cache.
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API z_result_t ze_undeclare_publication_cache(struct ze_moved_publication_cache_t *this_);
-#endif
-/**
- * @warning This API is deprecated. Please use ze_advanced_subscriber.
- * @brief Undeclares the given querying subscriber.
- *
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_undeclare_querying_subscriber(struct ze_moved_querying_subscriber_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given sample miss listener, droping and invalidating it.
- * @return 0 in case of success, negative error code otherwise.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-z_result_t ze_undeclare_sample_miss_listener(struct ze_moved_sample_miss_listener_t *this_);
-#endif
