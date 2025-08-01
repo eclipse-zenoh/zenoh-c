@@ -13,7 +13,6 @@
 //
 
 use std::mem::MaybeUninit;
-use prebindgen_proc_macro::prebindgen;
 
 use libc::c_void;
 use zenoh::{
