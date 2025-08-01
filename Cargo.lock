@@ -1791,7 +1791,7 @@ dependencies = [
 [[package]]
 name = "prebindgen"
 version = "0.3.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#ae2b609d229a74b73ffe11115d1ff9b5a1e86065"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#80f4dae58bfe97d8c5fe6536969914fe495964ab"
 dependencies = [
  "prettyplease",
  "proc-macro2",
@@ -1806,7 +1806,7 @@ dependencies = [
 [[package]]
 name = "prebindgen-proc-macro"
 version = "0.3.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#ae2b609d229a74b73ffe11115d1ff9b5a1e86065"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#80f4dae58bfe97d8c5fe6536969914fe495964ab"
 dependencies = [
  "prebindgen",
  "proc-macro2",
