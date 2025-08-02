@@ -1,12 +1,19 @@
-use std::path::PathBuf;
 use itertools::Itertools;
+use std::path::PathBuf;
 
 pub fn generate_source() -> PathBuf {
     let source = prebindgen::Source::new(zenohffi::PREBINDGEN_OUT_DIR);
 
-    let feature_filter = prebindgen::filter_map::FeatureFilter::builder()
-        .disable_feature("unstable")
-        .build();
+    let feature_filter = prebindgen::filter_map::FeatureFilter::builder();
+    #[cfg(feature = "unstable")]
+    let feature_filter = feature_filter.enable_feature("unstable");
+    #[cfg(not(feature = "unstable"))]
+    let feature_filter = feature_filter.disable_feature("unstable");
+    #[cfg(feature = "shared-memory")]
+    let feature_filter = feature_filter.enable_feature("shared-memory");
+    #[cfg(not(feature = "shared-memory"))]
+    let feature_filter = feature_filter.disable_feature("shared-memory");
+    let feature_filter = feature_filter.build();
 
     let replace_types = prebindgen::map::ReplaceTypes::builder()
         .replace_type("MaybeUninit", "std::mem::MaybeUninit")
