@@ -75,7 +75,7 @@ zenoh-ext = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.g
 zenoh-runtime = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
-prebindgen-proc-macro = { version = "0.3.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+prebindgen-proc-macro = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
@@ -83,7 +83,7 @@ ctor = "0.4.1"
 [build-dependencies]
 zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
 regex = "1.7.1"
-prebindgen = { version = "0.3.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 
 [lib]
 path = "src/lib.rs"
