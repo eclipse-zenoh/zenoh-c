@@ -1978,7 +1978,7 @@ dependencies = [
 
 [[package]]
 name = "prebindgen-proc-macro"
-version = "0.3.0"
+version = "0.4.0"
 source = "git+https://github.com/milyin/prebindgen.git?branch=main#f5e7debbe8205e2ec48b86e16c2116c7016b5e8f"
 dependencies = [
  "prebindgen",

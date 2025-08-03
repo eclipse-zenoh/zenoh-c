@@ -82,7 +82,7 @@ ctor = "0.4.1"
 [build-dependencies]
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
 cbindgen = "0.28.0"
-prebindgen = { version = "0.3.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 fs2 = "0.4.3"
 regex = "1.7.1"
 serde_yaml = "0.9.19"
