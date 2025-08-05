@@ -11,11 +11,13 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+
+#pragma once
 // clang-format off
-#ifdef DOCS
-#define ALIGN(n)
-#define ZENOHC_API
-#endif
+#include "zenoh_def.h"
+#include "zenoh_configure.h"
+#include "zenoh_opaque.h"
+#include "zenoh_includes.h"
 typedef enum z_congestion_control_t {
   /**
    * Messages are not dropped in case of congestion.
