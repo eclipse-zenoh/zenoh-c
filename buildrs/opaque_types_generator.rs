@@ -124,37 +124,31 @@ impl Drop for {type_name} {{
     file.write_all(data_out.as_bytes()).unwrap();
 }
 
-// Copy opaque-types directory and Cargo.lock to output directory to avoid build conflicts
+// Copy manifest and lock files to output directory, modify manifest to point to original source
 fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
     let project_root = project_root::get_project_root()
         .expect("Failed to get project root");
     let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
+    let source_manifest = source_dir.join("Cargo.toml");
     let source_lock = project_root.join("Cargo.lock");
     
     let out_dir = get_out_rs_path().join(target).join(".build_resources/opaque_types_manifest");
+    std::fs::create_dir_all(&out_dir).unwrap();
     
-    // Remove existing directory if it exists to ensure clean copy
-    if out_dir.exists() {
-        std::fs::remove_dir_all(&out_dir).unwrap();
-    }
+    let dest_manifest = out_dir.join("Cargo.toml");
     
-    // Copy entire opaque-types directory
-    fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> std::io::Result<()> {
-        std::fs::create_dir_all(&dst)?;
-        for entry in std::fs::read_dir(src)? {
-            let entry = entry?;
-            let ty = entry.file_type()?;
-            if ty.is_dir() {
-                copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
-            } else {
-                std::fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
-            }
-        }
-        Ok(())
-    }
+    // Read original manifest and modify it to use absolute path for source
+    let mut manifest_content = std::fs::read_to_string(&source_manifest)
+        .unwrap_or_else(|_| panic!("Failed to read manifest from {}", source_manifest.display()));
     
-    copy_dir_all(&source_dir, &out_dir)
-        .unwrap_or_else(|_| panic!("Failed to copy opaque-types directory to {}", out_dir.display()));
+    // Add [lib] section with absolute path to original source
+    let lib_path = source_dir.join("src/lib.rs").canonicalize()
+        .unwrap_or_else(|_| panic!("Failed to canonicalize path {}", source_dir.join("src/lib.rs").display()));
+    let lib_section = format!("\n[lib]\npath = \"{}\"\n", lib_path.display());
+    manifest_content.push_str(&lib_section);
+    
+    std::fs::write(&dest_manifest, manifest_content)
+        .unwrap_or_else(|_| panic!("Failed to write manifest to {}", dest_manifest.display()));
     
     // Copy Cargo.lock to the destination
     if source_lock.exists() {
@@ -163,7 +157,7 @@ fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
             .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock.display()));
     }
     
-    out_dir.join("Cargo.toml")
+    dest_manifest
 }
 
 fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
