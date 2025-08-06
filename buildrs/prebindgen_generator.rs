@@ -32,7 +32,7 @@ pub fn generate_source() -> PathBuf {
         .build();
 
     let ffi_converter = prebindgen::batching::FfiConverter::builder("zenohffi")
-        .edition("2021")
+        .edition(prebindgen::RustEdition::Edition2021)
         .strip_transparent_wrapper("std::mem::MaybeUninit")
         .strip_transparent_wrapper("::std::mem::MaybeUninit")
         .strip_transparent_wrapper("Option")
