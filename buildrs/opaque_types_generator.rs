@@ -124,31 +124,51 @@ impl Drop for {type_name} {{
     file.write_all(data_out.as_bytes()).unwrap();
 }
 
-// Take project's Cargo.lock (it can be somethere in the top workspace where this crate is used) 
-// Copy this Cargo.lock to the desniantion: near to the manifest file
-// Uses cargo-lock crate to read the Cargo.lock file
-fn copy_project_cargo_lock(destination_manifest_file: &Path) {
-    // Get the directory of the destination manifest file
-    let destination_dir = destination_manifest_file
-        .parent()
-        .unwrap_or_else(|| panic!("Failed to get parent directory of the destination manifest file {}", destination_manifest_file.display()));
-    // Copy lockfile to the destination directory
+// Copy opaque-types directory and Cargo.lock to output directory to avoid build conflicts
+fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
     let project_root = project_root::get_project_root()
         .expect("Failed to get project root");
-    let cargo_lock_path = project_root.join("Cargo.lock");
-    if !cargo_lock_path.exists() {
-        panic!("Cargo.lock file not found in the project root: {}", cargo_lock_path.display());
+    let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
+    let source_lock = project_root.join("Cargo.lock");
+    
+    let out_dir = get_out_rs_path().join(target).join(".build_resources/opaque_types_manifest");
+    
+    // Remove existing directory if it exists to ensure clean copy
+    if out_dir.exists() {
+        std::fs::remove_dir_all(&out_dir).unwrap();
     }
-    let destination_lock_path = destination_dir.join("Cargo.lock");
-    std::fs::copy(&cargo_lock_path, &destination_lock_path)
-        .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", destination_lock_path.display()));
-    prebindgen::trace!("Copied Cargo.lock to {}", destination_lock_path.display());
+    
+    // Copy entire opaque-types directory
+    fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> std::io::Result<()> {
+        std::fs::create_dir_all(&dst)?;
+        for entry in std::fs::read_dir(src)? {
+            let entry = entry?;
+            let ty = entry.file_type()?;
+            if ty.is_dir() {
+                copy_dir_all(entry.path(), dst.as_ref().join(entry.file_name()))?;
+            } else {
+                std::fs::copy(entry.path(), dst.as_ref().join(entry.file_name()))?;
+            }
+        }
+        Ok(())
+    }
+    
+    copy_dir_all(&source_dir, &out_dir)
+        .unwrap_or_else(|_| panic!("Failed to copy opaque-types directory to {}", out_dir.display()));
+    
+    // Copy Cargo.lock to the destination
+    if source_lock.exists() {
+        let dest_lock = out_dir.join("Cargo.lock");
+        std::fs::copy(&source_lock, &dest_lock)
+            .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock.display()));
+    }
+    
+    out_dir.join("Cargo.toml")
 }
 
 fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
-    copy_project_cargo_lock(&manifest_path);
+    let manifest_path = copy_cargo_files_to_out_dir(target);
     let output_file_path = get_out_rs_path()
         .join(target)
         .join(".build_resources_opaque_types.txt");
