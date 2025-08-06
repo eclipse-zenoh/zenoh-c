@@ -13,6 +13,14 @@ pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<b
     let (command, path_in) = produce_opaque_types_data(target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
+    
+    // Check for cargo-level errors (dependency resolution, manifest parsing, etc.)
+    if data_in.contains("error: failed to") || data_in.contains("Caused by:") {
+        panic!(
+            "Failed to generate opaque types due to cargo error:\n\nCommand executed:\n\n{command}\n\nCargo output:\n\n{data_in}"
+        );
+    }
+    
     let mut data_out = String::new();
     let mut docs = get_opaque_type_docs();
 
