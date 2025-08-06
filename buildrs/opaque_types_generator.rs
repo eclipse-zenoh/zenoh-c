@@ -1,6 +1,5 @@
 use std::{
-    collections::HashMap,
-    path::{Path, PathBuf},
+    collections::HashMap, path::{Path, PathBuf}
 };
 
 use regex::Regex;
@@ -125,9 +124,31 @@ impl Drop for {type_name} {{
     file.write_all(data_out.as_bytes()).unwrap();
 }
 
+// Take project's Cargo.lock (it can be somethere in the top workspace where this crate is used) 
+// Copy this Cargo.lock to the desniantion: near to the manifest file
+// Uses cargo-lock crate to read the Cargo.lock file
+fn copy_project_cargo_lock(destination_manifest_file: &Path) {
+    // Get the directory of the destination manifest file
+    let destination_dir = destination_manifest_file
+        .parent()
+        .unwrap_or_else(|| panic!("Failed to get parent directory of the destination manifest file {}", destination_manifest_file.display()));
+    // Copy lockfile to the destination directory
+    let project_root = project_root::get_project_root()
+        .expect("Failed to get project root");
+    let cargo_lock_path = project_root.join("Cargo.lock");
+    if !cargo_lock_path.exists() {
+        panic!("Cargo.lock file not found in the project root: {}", cargo_lock_path.display());
+    }
+    let destination_lock_path = destination_dir.join("Cargo.lock");
+    std::fs::copy(&cargo_lock_path, &destination_lock_path)
+        .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", destination_lock_path.display()));
+    prebindgen::trace!("Copied Cargo.lock to {}", destination_lock_path.display());
+}
+
 fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
+    copy_project_cargo_lock(&manifest_path);
     let output_file_path = get_out_rs_path()
         .join(target)
         .join(".build_resources_opaque_types.txt");
