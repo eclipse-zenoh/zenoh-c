@@ -396,18 +396,18 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.5.42"
+version = "4.5.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed87a9d530bb41a67537289bafcac159cb3ee28460e0a4571123d2a778a6a882"
+checksum = "50fd97c9dc2399518aa331917ac6f274280ec5eb34e555dd291899745c48ec6f"
 dependencies = [
  "clap_builder",
 ]
 
 [[package]]
 name = "clap_builder"
-version = "4.5.42"
+version = "4.5.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64f4f3f3c77c94aff3c7e9aac9a2ca1974a5adf392a8bb751e827d6d127ab966"
+checksum = "c35b5830294e1fa0462034af85cc95225a4cb07092c088c55bda3147cfcd8f65"
 dependencies = [
  "anstream",
  "anstyle",
@@ -2081,6 +2081,12 @@ checksum = "02b3e5e68a3a1a02aad3ec490a98007cbc13c37cbe84a3cd7b8e406d76e7f778"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "project-root"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8bccbff07d5ed689c4087d20d7307a52ab6141edeedf487c3876a55b86cf63df"
 
 [[package]]
 name = "quinn"
@@ -4229,6 +4235,7 @@ dependencies = [
  "tracing",
  "unwrap-infallible",
  "zenoh-ffi",
+ "zenoh-pinned-deps-1-75",
 ]
 
 [[package]]
@@ -4321,7 +4328,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#da6319d33bdef20d04c71693d8a7a0c87a6ce4cd"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#d1179236e48005b090f7bea0eda904efe3c7a82e"
 dependencies = [
  "chrono",
  "const_format",
@@ -4332,6 +4339,7 @@ dependencies = [
  "libc",
  "prebindgen",
  "prebindgen-proc-macro",
+ "project-root",
  "rand 0.9.2",
  "regex",
  "spin 0.9.8",
@@ -4340,7 +4348,6 @@ dependencies = [
  "unwrap-infallible",
  "zenoh",
  "zenoh-ext",
- "zenoh-pinned-deps",
  "zenoh-runtime",
  "zenoh-util",
 ]
@@ -4613,9 +4620,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "zenoh-pinned-deps"
+name = "zenoh-pinned-deps-1-75"
 version = "1.5.0"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=cargo_lock_175_fix#48fda3ecf4f83765477807eccf32278d5a6c6ece"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=cargo_lock_175_fix#3674cc6de26bfe1ac204720ec9866d00102e10f1"
 dependencies = [
  "base64ct",
  "home",

@@ -74,6 +74,7 @@ tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
+zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "cargo_lock_175_fix" }
 flume = "*"
 
 [target.'cfg(unix)'.dependencies]
@@ -81,6 +82,7 @@ ctor = "0.4.1"
 
 [build-dependencies]
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
+zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "cargo_lock_175_fix" }
 cbindgen = "0.28.0"
 prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 fs2 = "0.4.3"
