@@ -47,7 +47,7 @@ pub fn generate_c_headers() {
         .write_to_file(BUGGY_GENERATION_PATH);
 
     fix_cbindgen(BUGGY_GENERATION_PATH, GENERATION_PATH);
-    std::fs::remove_file(BUGGY_GENERATION_PATH).unwrap();
+    //std::fs::remove_file(BUGGY_GENERATION_PATH).unwrap();
 
     preprocess_header(GENERATION_PATH, PREPROCESS_PATH);
     create_generics_header(PREPROCESS_PATH, "include/zenoh_macros.h");
@@ -747,7 +747,7 @@ fn generate_generic_c(macro_func: &[FunctionSignature], generic_name: &str, deca
         .any(|f| f.args.len() != macro_func[0].args.len());
     let mut args = macro_func
         .first()
-        .unwrap_or_else(|| panic!("no sigatures found for building generic {generic_name}"))
+        .unwrap_or_else(|| panic!("{:?}: no sigatures found for building generic {generic_name}", macro_func))
         .args
         .iter()
         .map(|a| a.name.to_string())
