@@ -95,6 +95,7 @@ derive_lt = false
 derive_lte = false
 derive_gt = false
 derive_gte = false
+include_struct_keyword = true
 
 
 [enum]
