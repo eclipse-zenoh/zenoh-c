@@ -1,6 +1,7 @@
 use std::{collections::BTreeSet, env, path::PathBuf};
 
 pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
+    println!("split_type_name: {type_name}");
     let mut split = type_name.split('_');
     let prefix = split
         .next()
