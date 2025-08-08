@@ -12,8 +12,8 @@ pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<b
     let (command, path_in) = produce_opaque_types_data(target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
-    // Check for cargo-level errors (dependency resolution, manifest parsing, etc.)
-    if data_in.contains("error: failed to") || data_in.contains("Caused by:") {
+    // check if message begins with "error:", excluding spaces
+    if data_in.trim_start().starts_with("error:") {
         panic!(
             "Failed to generate opaque types due to cargo error:\n\nCommand executed:\n\n{command}\n\nCargo output:\n\n{data_in}"
         );
@@ -105,6 +105,12 @@ impl Drop for {type_name} {{
             data_out += "\r\n";
         }
         data_out += &s;
+    }
+
+    if good_error_count == 0 {
+        panic!(
+            "Failed to generate opaque types: no valid type information found in the input data\n\nCommand executed:\n\n{command}\n\nCompiler output:\n\n{data_in}"
+        );
     }
 
     if good_error_count != total_error_count {
