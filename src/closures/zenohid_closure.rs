@@ -15,6 +15,7 @@
 use std::mem::MaybeUninit;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
@@ -23,6 +24,7 @@ use crate::{
 /// @brief A zenoh id-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks:
+#[prebindgen]
 #[repr(C)]
 pub struct z_owned_closure_zid_t {
     _context: *mut c_void,
@@ -31,6 +33,7 @@ pub struct z_owned_closure_zid_t {
 }
 
 /// @brief Loaned closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_loaned_closure_zid_t {
     _0: usize,
@@ -39,6 +42,7 @@ pub struct z_loaned_closure_zid_t {
 }
 
 /// @brief Moved closure.
+#[prebindgen]
 #[repr(C)]
 pub struct z_moved_closure_zid_t {
     pub _this: z_owned_closure_zid_t,
@@ -76,24 +80,24 @@ impl Drop for z_owned_closure_zid_t {
 }
 
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_internal_closure_zid_check(this_: &z_owned_closure_zid_t) -> bool {
+pub unsafe fn z_internal_closure_zid_check(this_: &z_owned_closure_zid_t) -> bool {
     !this_.is_empty()
 }
 
 /// @brief Constructs a null closure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_internal_closure_zid_null(
+pub unsafe fn z_internal_closure_zid_null(
     this_: &mut MaybeUninit<z_owned_closure_zid_t>,
 ) {
     this_.write(z_owned_closure_zid_t::default());
 }
 
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
+#[prebindgen]
+pub fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_id_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(z_id, closure._context),
@@ -104,8 +108,8 @@ pub extern "C" fn z_closure_zid_call(closure: &z_loaned_closure_zid_t, z_id: &z_
 }
 
 /// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized (null) closure is a no-op.
-#[no_mangle]
-pub extern "C" fn z_closure_zid_drop(closure_: &mut z_moved_closure_zid_t) {
+#[prebindgen]
+pub fn z_closure_zid_drop(closure_: &mut z_moved_closure_zid_t) {
     let _ = closure_.take_rust_type();
 }
 
@@ -128,14 +132,23 @@ impl<F: Fn(&z_id_t)> From<F> for z_owned_closure_zid_t {
 }
 
 /// @brief Borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
+#[prebindgen]
+pub fn z_closure_zid_loan(closure: &z_owned_closure_zid_t) -> &z_loaned_closure_zid_t {
     closure.as_loaned_c_type_ref()
 }
 
+/// @brief Moves closure.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_closure_zid_move(
+    closure: &mut z_owned_closure_zid_t,
+) -> &mut z_moved_closure_zid_t {
+    std::mem::transmute(closure)
+}
+
 /// @brief Mutably borrows closure.
-#[no_mangle]
-pub extern "C" fn z_closure_zid_loan_mut(
+#[prebindgen]
+pub fn z_closure_zid_loan_mut(
     closure: &z_owned_closure_zid_t,
 ) -> &z_loaned_closure_zid_t {
     closure.as_loaned_c_type_ref()
@@ -154,8 +167,8 @@ pub extern "C" fn z_closure_zid_loan_mut(
 /// @param call: a closure body.
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
-#[no_mangle]
-pub extern "C" fn z_closure_zid(
+#[prebindgen]
+pub fn z_closure_zid(
     this: &mut MaybeUninit<z_owned_closure_zid_t>,
     call: Option<extern "C" fn(z_id: &z_id_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(context: *mut c_void)>,

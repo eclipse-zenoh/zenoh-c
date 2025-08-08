@@ -57,7 +57,7 @@ get_opaque_type_data!(ZBytes, z_owned_bytes_t);
 /// A loaned Zenoh data.
 get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
 
-pub struct CSlice {
+pub(crate) struct CSlice {
     _data: *const u8,
     _len: usize,
     _drop: Option<extern "C" fn(data: *mut c_void, context: *mut c_void)>,

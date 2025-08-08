@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::cleanup_orphaned_shm_segments;
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -27,7 +28,7 @@ use zenoh::shm::cleanup_orphaned_shm_segments;
 /// It is OK to additionally trigger this function at any time, but be aware that this can be costly.
 ///
 /// For non-linux platforms this function currently does nothing
-#[no_mangle]
-pub extern "C" fn zc_cleanup_orphaned_shm_segments() {
+#[prebindgen]
+pub fn zc_cleanup_orphaned_shm_segments() {
     cleanup_orphaned_shm_segments();
 }

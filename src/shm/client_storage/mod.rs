@@ -13,6 +13,7 @@
 //
 
 use std::{mem::MaybeUninit, sync::Arc};
+use prebindgen_proc_macro::prebindgen;
 
 use zenoh::shm::{ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
@@ -31,15 +32,15 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new empty list of SHM Clients.
-#[no_mangle]
-pub extern "C" fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
+#[prebindgen]
+pub fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
     this_.as_rust_type_mut_uninit().write(Some(Vec::default()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs SHM client list in its gravestone value.
-#[no_mangle]
-pub extern "C" fn zc_internal_shm_client_list_null(
+#[prebindgen]
+pub fn zc_internal_shm_client_list_null(
     this_: &mut MaybeUninit<zc_owned_shm_client_list_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
@@ -47,23 +48,23 @@ pub extern "C" fn zc_internal_shm_client_list_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn zc_internal_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
+#[prebindgen]
+pub fn zc_internal_shm_client_list_check(this_: &zc_owned_shm_client_list_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes list of SHM Clients.
-#[no_mangle]
-pub extern "C" fn zc_shm_client_list_drop(this_: &mut zc_moved_shm_client_list_t) {
+#[prebindgen]
+pub fn zc_shm_client_list_drop(this_: &mut zc_moved_shm_client_list_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows list of SHM Clients.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_shm_client_list_loan(
+pub unsafe fn zc_shm_client_list_loan(
     this: &zc_owned_shm_client_list_t,
 ) -> &zc_loaned_shm_client_list_t {
     this.as_rust_type_ref()
@@ -73,10 +74,20 @@ pub unsafe extern "C" fn zc_shm_client_list_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Mutably borrows list of SHM Clients.
-#[no_mangle]
+/// @brief Moves list of SHM Clients.
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
+pub unsafe fn zc_shm_client_list_move(
+    this: &mut zc_owned_shm_client_list_t,
+) -> &mut zc_moved_shm_client_list_t {
+    std::mem::transmute(this)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Mutably borrows list of SHM Clients.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn zc_shm_client_list_loan_mut(
     this: &mut zc_owned_shm_client_list_t,
 ) -> &mut zc_loaned_shm_client_list_t {
     this.as_rust_type_mut()
@@ -87,8 +98,8 @@ pub unsafe extern "C" fn zc_shm_client_list_loan_mut(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Add client to the list.
-#[no_mangle]
-pub extern "C" fn zc_shm_client_list_add_client(
+#[prebindgen]
+pub fn zc_shm_client_list_add_client(
     this: &mut zc_loaned_shm_client_list_t,
     client: &mut z_moved_shm_client_t,
 ) -> z_result_t {
@@ -106,8 +117,8 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Reference the global client storage.
-#[no_mangle]
-pub extern "C" fn z_ref_shm_client_storage_global(
+#[prebindgen]
+pub fn z_ref_shm_client_storage_global(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
 ) {
     this.as_rust_type_mut_uninit()
@@ -116,8 +127,8 @@ pub extern "C" fn z_ref_shm_client_storage_global(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Construct client storage with default client set.
-#[no_mangle]
-pub extern "C" fn z_shm_client_storage_new_default(
+#[prebindgen]
+pub fn z_shm_client_storage_new_default(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
 ) {
     this.as_rust_type_mut_uninit().write(Some(Arc::new(
@@ -129,8 +140,8 @@ pub extern "C" fn z_shm_client_storage_new_default(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Create a new client storage object.
-#[no_mangle]
-pub extern "C" fn z_shm_client_storage_new(
+#[prebindgen]
+pub fn z_shm_client_storage_new(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
     clients: &zc_loaned_shm_client_list_t,
     add_default_client_set: bool,
@@ -153,8 +164,8 @@ pub extern "C" fn z_shm_client_storage_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Performs a shallow copy of SHM Client Storage.
-#[no_mangle]
-pub extern "C" fn z_shm_client_storage_clone(
+#[prebindgen]
+pub fn z_shm_client_storage_clone(
     this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
     from: &z_loaned_shm_client_storage_t,
 ) {
@@ -164,8 +175,8 @@ pub extern "C" fn z_shm_client_storage_clone(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs SHM Client Storage in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_shm_client_storage_null(
+#[prebindgen]
+pub fn z_internal_shm_client_storage_null(
     this_: &mut MaybeUninit<z_owned_shm_client_storage_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
@@ -173,8 +184,8 @@ pub extern "C" fn z_internal_shm_client_storage_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_shm_client_storage_check(
+#[prebindgen]
+pub fn z_internal_shm_client_storage_check(
     this_: &z_owned_shm_client_storage_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -182,20 +193,30 @@ pub extern "C" fn z_internal_shm_client_storage_check(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Derefs SHM Client Storage.
-#[no_mangle]
-pub extern "C" fn z_shm_client_storage_drop(this_: &mut z_moved_shm_client_storage_t) {
+#[prebindgen]
+pub fn z_shm_client_storage_drop(this_: &mut z_moved_shm_client_storage_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows SHM Client Storage.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_client_storage_loan(
+pub unsafe fn z_shm_client_storage_loan(
     this: &z_owned_shm_client_storage_t,
 ) -> &z_loaned_shm_client_storage_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves SHM Client Storage.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_shm_client_storage_move(
+    this: &mut z_owned_shm_client_storage_t,
+) -> &mut z_moved_shm_client_storage_t {
+    std::mem::transmute(this)
 }

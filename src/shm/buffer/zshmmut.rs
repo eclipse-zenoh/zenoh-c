@@ -17,6 +17,7 @@ use std::{
     mem::MaybeUninit,
 };
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{zshmmut, ZShmMut};
 
 use crate::{
@@ -38,8 +39,8 @@ decl_c_type!(
 /// ONLY in case of Z_EUNAVAILABLE failure
 /// @return Z_OK in case of success, Z_EUNAVAILABLE in case of unsuccessful write access,
 /// Z_EINVAL if moved value is incorrect.
-#[no_mangle]
-pub extern "C" fn z_shm_mut_try_from_immut(
+#[prebindgen]
+pub fn z_shm_mut_try_from_immut(
     this: &mut MaybeUninit<z_owned_shm_mut_t>,
     that: &mut z_moved_shm_t,
     immut: &mut MaybeUninit<z_owned_shm_t>,
@@ -61,23 +62,23 @@ pub extern "C" fn z_shm_mut_try_from_immut(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs ZShmMut slice in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_shm_mut_null(this_: &mut MaybeUninit<z_owned_shm_mut_t>) {
+#[prebindgen]
+pub fn z_internal_shm_mut_null(this_: &mut MaybeUninit<z_owned_shm_mut_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_shm_mut_check(this_: &z_owned_shm_mut_t) -> bool {
+#[prebindgen]
+pub fn z_internal_shm_mut_check(this_: &z_owned_shm_mut_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows ZShmMut slice.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_mut_loan(this_: &z_owned_shm_mut_t) -> &z_loaned_shm_mut_t {
+pub unsafe fn z_shm_mut_loan(this_: &z_owned_shm_mut_t) -> &z_loaned_shm_mut_t {
     let shmmut: &zshmmut = this_
         .as_rust_type_ref()
         .as_ref()
@@ -87,10 +88,18 @@ pub unsafe extern "C" fn z_shm_mut_loan(this_: &z_owned_shm_mut_t) -> &z_loaned_
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Mutably borrows ZShmMut slice.
-#[no_mangle]
+/// @brief Moves ZShmMut slice.
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_shm_mut_loan_mut(
+pub unsafe fn z_shm_mut_move(this_: &mut z_owned_shm_mut_t) -> &mut z_moved_shm_mut_t {
+    std::mem::transmute(this_)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Mutably borrows ZShmMut slice.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_shm_mut_loan_mut(
     this: &mut z_owned_shm_mut_t,
 ) -> &mut z_loaned_shm_mut_t {
     let shmmut: &mut zshmmut = this
@@ -103,29 +112,29 @@ pub unsafe extern "C" fn z_shm_mut_loan_mut(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes ZShmMut slice.
-#[no_mangle]
-pub extern "C" fn z_shm_mut_drop(this_: &mut z_moved_shm_mut_t) {
+#[prebindgen]
+pub fn z_shm_mut_drop(this_: &mut z_moved_shm_mut_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the length of the ZShmMut slice.
-#[no_mangle]
-pub extern "C" fn z_shm_mut_len(this_: &z_loaned_shm_mut_t) -> usize {
+#[prebindgen]
+pub fn z_shm_mut_len(this_: &z_loaned_shm_mut_t) -> usize {
     this_.as_rust_type_ref().len()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the immutable pointer to the underlying data.
-#[no_mangle]
-pub extern "C" fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_uchar {
+#[prebindgen]
+pub fn z_shm_mut_data(this_: &z_loaned_shm_mut_t) -> *const libc::c_uchar {
     let s = this_.as_rust_type_ref();
     s.as_ref().as_ptr()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return the mutable pointer to the underlying data.
-#[no_mangle]
-pub extern "C" fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
+#[prebindgen]
+pub fn z_shm_mut_data_mut(this_: &mut z_loaned_shm_mut_t) -> *mut libc::c_uchar {
     this_.as_rust_type_mut().as_mut().as_mut_ptr()
 }

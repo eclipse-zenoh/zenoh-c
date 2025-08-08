@@ -13,9 +13,14 @@
 //
 
 pub mod alloc_layout;
+pub use alloc_layout::*;
 pub(crate) mod alloc_layout_impl;
 pub mod chunk;
+pub use chunk::*;
 pub mod shm_provider;
+pub use shm_provider::*;
 pub mod shm_provider_backend;
+pub use shm_provider_backend::*;
 pub(crate) mod shm_provider_impl;
-pub mod types;
+pub(crate) mod types;
+pub use types::*;

@@ -13,4 +13,6 @@
 //
 
 pub mod zshm;
+pub use zshm::*;
 pub mod zshmmut;
+pub use zshmmut::*;
