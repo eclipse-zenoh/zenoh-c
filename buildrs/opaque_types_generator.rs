@@ -12,6 +12,14 @@ pub fn generate_opaque_types() {
     let path_out = current_folder.join("./opaque_types.rs");
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
+
+    // Check for cargo-level errors (dependency resolution, manifest parsing, etc.)
+    if data_in.contains("error: failed to") || data_in.contains("Caused by:") {
+        panic!(
+            "Failed to generate opaque types due to cargo error:\n\nCommand executed:\n\n{command}\n\nCargo output:\n\n{data_in}"
+        );
+    }
+
     let mut data_out = String::new();
     let mut docs = get_opaque_type_docs();
 
@@ -98,7 +106,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
     let target = std::env::var("TARGET").unwrap();
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = get_out_rs_path().join("./.build_resources_opaque_types.txt");
+    let output_file_path = get_out_rs_path().join("./build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = std::process::Stdio::from(out_file);
 
