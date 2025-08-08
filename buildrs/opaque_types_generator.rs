@@ -35,7 +35,6 @@ pub fn generate_opaque_types() {
         s += format!(
             "#[repr(C, align({align}))]
 #[rustfmt::skip]
-#[cbindgen::cbindgen(kind = \"struct\")]
 pub struct {type_name} {{
     {inner_field_name}: [u8; {size}],
 }}
@@ -47,7 +46,6 @@ pub struct {type_name} {{
             s += format!(
                 "#[repr(C)]
 #[rustfmt::skip]
-#[cbindgen::cbindgen(kind = \"struct\")]
 pub struct {moved_type_name} {{
     _this: {type_name},
 }}

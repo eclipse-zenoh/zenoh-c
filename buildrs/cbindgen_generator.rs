@@ -460,7 +460,7 @@ fn evaluate_c_defines_line(line: &str) -> bool {
 
 fn make_move_take_signatures(path_in: &str) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)_drop\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut move_funcs = Vec::<FunctionSignature>::new();
     let mut take_funcs = Vec::<FunctionSignature>::new();
 
@@ -493,7 +493,7 @@ fn make_move_take_signatures(path_in: &str) -> (Vec<FunctionSignature>, Vec<Func
 
 fn find_loan_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"const struct (\w+) \*(\w+)_loan\(const struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"const (?:struct\s+)?(\w+) \*(\w+)_loan\(const (?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [return_type, func_name, arg_type, arg_name]) in
@@ -516,7 +516,7 @@ fn find_loan_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"struct (\w+) \*(\w+)_loan_mut\(struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"(?:struct\s+)?(\w+) \*(\w+)_loan_mut\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [return_type, func_name, arg_type, arg_name]) in
@@ -536,7 +536,7 @@ fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"void (\w+)_take_from_loaned\(struct (\w+) \*(\w+)").unwrap();
+    let re = Regex::new(r"void (\w+)_take_from_loaned\((?:struct\s+)?(\w+) \*(\w+)").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
@@ -559,7 +559,7 @@ fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"(.+?) +(\w+_drop)\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [return_type, func_name, arg_type, arg_name]) in
@@ -586,7 +586,7 @@ fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_null_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r" (z.?_internal_\w+_null)\(struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r" (z.?_internal_\w+_null)\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
@@ -604,7 +604,7 @@ fn find_null_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"bool (z.?_internal_\w+_check)\(const struct (\w+) \*(\w+)\);").unwrap();
+    let re = Regex::new(r"bool (z.?_internal_\w+_check)\(const (?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [func_name, arg_type, arg_name]) in re.captures_iter(&bindings).map(|c| c.extract()) {
@@ -626,7 +626,7 @@ fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) (\*?)(\w+)\);",
+        r"(\w+) (\w+)_call\(const (?:struct\s+)?(\w+) \*(\w+),\s+(\w*)\s*(?:struct\s+)?(\w+) (\*?)(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -659,7 +659,7 @@ fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
+        r"(\w+) (\w+)_closure_(\w+)\((?:struct\s+)?(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -694,7 +694,7 @@ fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(r"(\w+)\s+z_(\w+)_handler_(\w+)_recv\(const\s+struct\s+(\w+)\s+\*(\w+),\s+struct\s+(\w+)\s+\*(\w+)\);").unwrap();
+    let re = Regex::new(r"(\w+)\s+z_(\w+)_handler_(\w+)_recv\(const\s+(?:struct\s+)?(\w+)\s+\*(\w+),\s+(?:struct\s+)?(\w+)\s+\*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     for (_, [return_type, handler_type, value_type, arg1_type, arg1_name, arg2_type, arg2_name]) in
@@ -718,7 +718,7 @@ fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+)\s+z_(\w+)_clone\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
+        r"(\w+)\s+z_(\w+)_clone\((?:struct\s+)?(\w+)\s+\*(\w+),\s+const\s+(?:struct\s+)?(\w+)\s+\*(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
