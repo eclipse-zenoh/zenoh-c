@@ -132,6 +132,7 @@ impl Drop for {type_name} {{
 fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
     let project_root = project_root::get_project_root()
         .expect("Failed to get project root");
+    panic!("Project root is located at: {}", project_root.display());
     let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
     let source_manifest = source_dir.join("Cargo.toml");
     let source_lock = project_root.join("Cargo.lock");
