@@ -492,6 +492,8 @@ fn make_move_take_signatures(path_in: &str) -> (Vec<FunctionSignature>, Vec<Func
 }
 
 fn find_loan_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_loan_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"const (?:struct\s+)?(\w+) \*(\w+)_loan\(const (?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -515,6 +517,8 @@ fn find_loan_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_loan_mut_functions");
+
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(?:struct\s+)?(\w+) \*(\w+)_loan_mut\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -535,6 +539,8 @@ fn find_loan_mut_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_take_from_loaned_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"void (\w+)_take_from_loaned\((?:struct\s+)?(\w+) \*(\w+)").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -558,6 +564,8 @@ fn find_take_from_loaned_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_drop_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(.+?) +(\w+_drop)\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -585,6 +593,8 @@ fn find_drop_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_null_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_null_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r" (z.?_internal_\w+_null)\((?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -603,6 +613,8 @@ fn find_null_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_check_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"bool (z.?_internal_\w+_check)\(const (?:struct\s+)?(\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -624,6 +636,8 @@ fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_call_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
         r"(\w+) (\w+)_call\(const (?:struct\s+)?(\w+) \*(\w+),\s+(\w*)\s*(?:struct\s+)?(\w+) (\*?)(\w+)\);",
@@ -657,6 +671,8 @@ fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_closure_constructors");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
         r"(\w+) (\w+)_closure_(\w+)\((?:struct\s+)?(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
@@ -693,6 +709,8 @@ fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_recv_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(r"(\w+)\s+z_(\w+)_handler_(\w+)_recv\(const\s+(?:struct\s+)?(\w+)\s+\*(\w+),\s+(?:struct\s+)?(\w+)\s+\*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -716,6 +734,8 @@ fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
 }
 
 fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
+    println!("find_clone_functions");
+    
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
         r"(\w+)\s+z_(\w+)_clone\((?:struct\s+)?(\w+)\s+\*(\w+),\s+const\s+(?:struct\s+)?(\w+)\s+\*(\w+)\);",
