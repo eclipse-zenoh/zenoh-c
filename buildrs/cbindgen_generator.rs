@@ -640,7 +640,7 @@ fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_call\(const (?:struct\s+)?(\w+) \*(\w+),\s+(\w*)\s*(?:struct\s+)?(\w+) (\*?)(\w+)\);",
+        r"(\w+) (\w+)_call\(const (?:struct\s+)?(\w+) \*(\w+),\s+(\w*)\s+(?:struct\s+)?(\w+) (\*?)(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
