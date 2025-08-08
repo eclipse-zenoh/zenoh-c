@@ -738,7 +738,7 @@ fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
     
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+)\s+z_(\w+)_clone\((?:struct\s+)?(\w+)\s+\*(\w+),\s+const\s+(?:struct\s+)?(\w+)\s+\*(\w+)\);",
+        r"(\w+)\s+z_(\w+)_clone\((?:struct\s+)?(\w+) \*(\w+),\s+const\s+(?:struct\s+)?(\w+)\s+\*(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
