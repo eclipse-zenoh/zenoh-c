@@ -106,7 +106,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
     let target = std::env::var("TARGET").unwrap();
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
     let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = get_out_rs_path().join("./.build_resources_opaque_types.txt");
+    let output_file_path = get_out_rs_path().join("./build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = std::process::Stdio::from(out_file);
 
