@@ -132,7 +132,7 @@ impl Drop for {type_name} {{
 fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
     let project_root = project_root::get_project_root()
         .expect("Failed to get project root");
-    panic!("Project root is located at: {}", project_root.display());
+    // panic!("Project root is located at: {}", project_root.display());
     let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
     let source_manifest = source_dir.join("Cargo.toml");
     let source_lock = project_root.join("Cargo.lock");
@@ -164,7 +164,14 @@ fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
         std::fs::copy(&source_lock, &dest_lock_sav)
             .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock_sav.display()));
     }
-    
+
+    // Generate cargo metadata using cargo_metadata package
+    let metadata = cargo_metadata::MetadataCommand::new()
+        .exec().unwrap();
+    // Save the metadata to a file in the output directory
+    let metadata_path = out_dir.join("metadata.json");
+    std::fs::write(metadata_path, serde_json::to_string(&metadata).unwrap()).unwrap();
+
     dest_manifest
 }
 
