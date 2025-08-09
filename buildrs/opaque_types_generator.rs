@@ -130,12 +130,12 @@ impl Drop for {type_name} {{
 
 // Copy manifest and lock files to output directory, modify manifest to point to original source
 fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
-    let project_root = project_root::get_project_root()
+    // let project_root = project_root::get_project_root()
         .expect("Failed to get project root");
     // panic!("Project root is located at: {}", project_root.display());
     let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
     let source_manifest = source_dir.join("Cargo.toml");
-    let source_lock = project_root.join("Cargo.lock");
+    // let source_lock = project_root.join("Cargo.lock");
     
     let out_dir = get_out_rs_path().join(target).join(".build_resources/opaque_types_manifest");
     std::fs::create_dir_all(&out_dir).unwrap();
@@ -156,14 +156,14 @@ fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
         .unwrap_or_else(|_| panic!("Failed to write manifest to {}", dest_manifest.display()));
     
     // Copy Cargo.lock to the destination
-    if source_lock.exists() {
-        let dest_lock = out_dir.join("Cargo.lock");
-        std::fs::copy(&source_lock, &dest_lock)
-            .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock.display()));
-        let dest_lock_sav = dest_lock.with_extension("sav");
-        std::fs::copy(&source_lock, &dest_lock_sav)
-            .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock_sav.display()));
-    }
+    // if source_lock.exists() {
+    //     let dest_lock = out_dir.join("Cargo.lock");
+    //     std::fs::copy(&source_lock, &dest_lock)
+    //         .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock.display()));
+    //     let dest_lock_sav = dest_lock.with_extension("sav");
+    //     std::fs::copy(&source_lock, &dest_lock_sav)
+    //         .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock_sav.display()));
+    // }
 
     // Generate cargo metadata using cargo_metadata package
     let metadata = cargo_metadata::MetadataCommand::new()
