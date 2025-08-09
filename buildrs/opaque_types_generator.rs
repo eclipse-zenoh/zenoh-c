@@ -60,6 +60,15 @@ fn copy_cargo_files_to_out_dir() -> PathBuf {
         )
     });
 
+    let dest_lock_sav = out_dir.join("Cargo.lock.sav");
+    std::fs::copy(&cargo_lock_path, &dest_lock_sav).unwrap_or_else(|_| {
+        panic!(
+            "Failed to copy Cargo.lock from {} to {}",
+            cargo_lock_path,
+            dest_lock_sav.display()
+        )
+    });
+
     dest_manifest
 }
 
