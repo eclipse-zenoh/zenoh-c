@@ -69,6 +69,11 @@ fn copy_cargo_files_to_out_dir() -> PathBuf {
         )
     });
 
+    // save current directory to file "current_dir.txt"
+    let current_dir = std::env::current_dir().unwrap();
+    let current_dir_file = out_dir.join("current_dir.txt");
+    std::fs::write(&current_dir_file, current_dir.display().to_string()).unwrap();
+
     dest_manifest
 }
 
