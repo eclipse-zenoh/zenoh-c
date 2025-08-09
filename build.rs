@@ -10,7 +10,7 @@ pub fn get_build_rs_path() -> std::path::PathBuf {
     path_buf.parent().unwrap().to_path_buf()
 }
 
-pub fn get_out_rs_path() -> std::path::PathBuf {
+pub fn get_out_dir() -> std::path::PathBuf {
     let out_dir = env::var_os("OUT_DIR").unwrap();
     std::path::Path::new(&out_dir).to_path_buf()
 }
@@ -35,7 +35,7 @@ fn main() {
     //
     // This is solved by generating the types twice, both for host and target platforms and by
     // using `skip` option in the `#[prebindgen]` attribute not pass target-specific types to the compiler
-    let path_out = get_out_rs_path().join("opaque_types.rs");
+    let path_out = get_out_dir().join("opaque_types.rs");
     let current_target = std::env::var("TARGET").unwrap();
     let cross_target = std::env::var("CROSS_TARGET")
         .ok()

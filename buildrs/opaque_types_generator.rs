@@ -1,15 +1,72 @@
 use std::{
-    collections::HashMap, path::{Path, PathBuf}
+    collections::HashMap,
+    path::{Path, PathBuf},
 };
 
 use regex::Regex;
 
 use super::common_helpers::{features, split_type_name};
-use crate::{get_build_rs_path, get_out_rs_path};
+use crate::{get_build_rs_path, get_out_dir};
+
+pub fn get_out_opaque_types() -> std::path::PathBuf {
+    get_out_dir().join("opaque-types")
+}
+
+// Copy manifest and lock files to output directory, modify manifest to point to original source
+fn copy_cargo_files_to_out_dir() -> PathBuf {
+    let out_dir = get_out_opaque_types();
+    let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
+    let source_manifest = source_dir.join("Cargo.toml");
+    std::fs::create_dir_all(&out_dir).unwrap();
+
+    let dest_manifest = out_dir.join("Cargo.toml");
+
+    // Read original manifest and modify it to use absolute path for source
+    let mut manifest_content = std::fs::read_to_string(&source_manifest)
+        .unwrap_or_else(|_| panic!("Failed to read manifest from {}", source_manifest.display()));
+
+    // Add [lib] section with absolute path to original source
+    let lib_path = source_dir
+        .join("src/lib.rs")
+        .canonicalize()
+        .unwrap_or_else(|_| {
+            panic!(
+                "Failed to canonicalize path {}",
+                source_dir.join("src/lib.rs").display()
+            )
+        });
+    let lib_section = format!("\n[lib]\npath = \"{}\"\n", lib_path.display());
+    manifest_content.push_str(&lib_section);
+
+    std::fs::write(&dest_manifest, manifest_content)
+        .unwrap_or_else(|_| panic!("Failed to write manifest to {}", dest_manifest.display()));
+
+    // Copy Cargo.lock from CARGO_LOCK environment variable
+    let cargo_lock_path = std::env::var("CARGO_LOCK").unwrap_or_else(|_| {
+        panic!(
+            "CARGO_LOCK environment variable is not defined. \n\n\
+            zenoh-ffi needs the Cargo.lock file of the project it's built with to guarantee \n\
+            that size and alignment of generated C structures match the original Rust types. \n\n\
+            Please set CARGO_LOCK to the path of your project's Cargo.lock file."
+        )
+    });
+
+    let dest_lock = out_dir.join("Cargo.lock");
+    std::fs::copy(&cargo_lock_path, &dest_lock).unwrap_or_else(|_| {
+        panic!(
+            "Failed to copy Cargo.lock from {} to {}",
+            cargo_lock_path,
+            dest_lock.display()
+        )
+    });
+
+    dest_manifest
+}
 
 pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<bool>) {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let (command, path_in) = produce_opaque_types_data(target);
+    let manifest_path = copy_cargo_files_to_out_dir();
+    let (command, path_in) = produce_opaque_types_data(&manifest_path, target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     // check if message begins with "error:", excluding spaces
@@ -128,57 +185,9 @@ impl Drop for {type_name} {{
     file.write_all(data_out.as_bytes()).unwrap();
 }
 
-// Copy manifest and lock files to output directory, modify manifest to point to original source
-fn copy_cargo_files_to_out_dir(target: &str) -> PathBuf {
-    // let project_root = project_root::get_project_root()
-        // .expect("Failed to get project root");
-    // panic!("Project root is located at: {}", project_root.display());
-    let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
-    let source_manifest = source_dir.join("Cargo.toml");
-    // let source_lock = project_root.join("Cargo.lock");
-    
-    let out_dir = get_out_rs_path().join(target).join(".build_resources/opaque_types_manifest");
-    std::fs::create_dir_all(&out_dir).unwrap();
-    
-    let dest_manifest = out_dir.join("Cargo.toml");
-    
-    // Read original manifest and modify it to use absolute path for source
-    let mut manifest_content = std::fs::read_to_string(&source_manifest)
-        .unwrap_or_else(|_| panic!("Failed to read manifest from {}", source_manifest.display()));
-    
-    // Add [lib] section with absolute path to original source
-    let lib_path = source_dir.join("src/lib.rs").canonicalize()
-        .unwrap_or_else(|_| panic!("Failed to canonicalize path {}", source_dir.join("src/lib.rs").display()));
-    let lib_section = format!("\n[lib]\npath = \"{}\"\n", lib_path.display());
-    manifest_content.push_str(&lib_section);
-    
-    std::fs::write(&dest_manifest, manifest_content)
-        .unwrap_or_else(|_| panic!("Failed to write manifest to {}", dest_manifest.display()));
-    
-    // Copy Cargo.lock to the destination
-    // if source_lock.exists() {
-    //     let dest_lock = out_dir.join("Cargo.lock");
-    //     std::fs::copy(&source_lock, &dest_lock)
-    //         .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock.display()));
-    //     let dest_lock_sav = dest_lock.with_extension("sav");
-    //     std::fs::copy(&source_lock, &dest_lock_sav)
-    //         .unwrap_or_else(|_| panic!("Failed to copy Cargo.lock to {}", dest_lock_sav.display()));
-    // }
-
-    // Generate cargo metadata using cargo_metadata package
-    let metadata = cargo_metadata::MetadataCommand::new()
-        .exec().unwrap();
-    // Save the metadata to a file in the output directory
-    let metadata_path = out_dir.join("metadata.json");
-    std::fs::write(metadata_path, serde_json::to_string(&metadata).unwrap()).unwrap();
-
-    dest_manifest
-}
-
-fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
+fn produce_opaque_types_data(manifest_path: &Path, target: &str) -> (String, PathBuf) {
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let manifest_path = copy_cargo_files_to_out_dir(target);
-    let output_file_path = get_out_rs_path()
+    let output_file_path = get_out_opaque_types()
         .join(target)
         .join("build_resources_opaque_types.txt");
     std::fs::create_dir_all(output_file_path.parent().unwrap()).unwrap();
@@ -207,11 +216,7 @@ fn produce_opaque_types_data(target: &str) -> (String, PathBuf) {
         .arg("--manifest-path")
         .arg(manifest_path)
         .arg("--target-dir")
-        .arg(
-            get_out_rs_path()
-                .join(target)
-                .join(".build_resources/opaque_types"),
-        );
+        .arg(get_out_opaque_types());
     let command_str = format!("{command:?}");
     let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
