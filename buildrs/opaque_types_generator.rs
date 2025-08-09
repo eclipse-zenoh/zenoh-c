@@ -47,9 +47,17 @@ fn copy_cargo_files_to_out_dir() -> PathBuf {
             "CARGO_LOCK environment variable is not defined. \n\n\
             zenoh-ffi needs the Cargo.lock file of the project it's built with to guarantee \n\
             that size and alignment of generated C structures match the original Rust types. \n\n\
-            Please set CARGO_LOCK to the path of your project's Cargo.lock file."
+            Please set CARGO_LOCK to the absolute path of your project's Cargo.lock file."
         )
     });
+    
+    if !Path::new(&cargo_lock_path).is_absolute() {
+        panic!(
+            "CARGO_LOCK must contain an absolute path, but got: {}\n\n\
+            Please provide the absolute path to your project's Cargo.lock file.",
+            cargo_lock_path
+        );
+    }
 
     let dest_lock = out_dir.join("Cargo.lock");
     std::fs::copy(&cargo_lock_path, &dest_lock).unwrap_or_else(|_| {
