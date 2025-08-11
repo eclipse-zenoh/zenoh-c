@@ -132,7 +132,17 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--manifest-path")
         .arg(manifest_path)
         .arg("--target-dir")
-        .arg(get_out_rs_path().join("./build_resources/opaque_types"));
+        .arg(match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
+            Ok(opaque_types_build_dir) => {
+                println!(
+                    "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
+                    opaque_types_build_dir
+                );
+                opaque_types_build_dir.into()
+            }
+            Err(_) => get_out_rs_path().join("./build_resources/opaque_types"),
+        });
+
     let command_str = format!("{:?}", command);
     let _ = command.stderr(stdio).output().unwrap();
     (command_str, output_file_path)
