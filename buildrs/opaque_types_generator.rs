@@ -138,9 +138,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
                     "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
                     opaque_types_build_dir
                 );
-                opaque_types_build_dir
-                    .try_into()
-                    .expect("Failed converting OPAQUE_TYPES_BUILD_DIR into path")
+                opaque_types_build_dir.into()
             }
             Err(_) => get_out_rs_path().join("./build_resources/opaque_types"),
         });
