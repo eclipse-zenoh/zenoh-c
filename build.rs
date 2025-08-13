@@ -29,6 +29,11 @@ fn main() {
         target,
         path_out.display()
     );
+
+    // Pass list of zenoh features enabled to build.rs of dependent crates
+    // in the variable DEP_ZENOH_FFI_FEATURES
+    println!("cargo:FEATURES={}", zenoh::FEATURES);
+
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-changed=buildrs");
     println!("cargo:rerun-if-changed=src");
