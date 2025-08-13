@@ -1,3 +1,0 @@
-[submodule "zenoh-ffi-workspace"]
-	path = zenoh-ffi-workspace
-	url = git@github.com:ZettaScaleLabs/zenoh-ffi-workspace.git
