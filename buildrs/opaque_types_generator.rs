@@ -13,7 +13,7 @@ pub fn get_out_opaque_types() -> std::path::PathBuf {
 }
 
 // Copy manifest and lock files to output directory, modify manifest to point to original source
-fn copy_cargo_files_to_out_dir() -> PathBuf {
+fn copy_cargo_files_to_out_dir(cargo_lock_path: &Path) -> PathBuf {
     let out_dir = get_out_opaque_types();
     let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
     let source_manifest = source_dir.join("Cargo.toml");
@@ -41,53 +41,21 @@ fn copy_cargo_files_to_out_dir() -> PathBuf {
     std::fs::write(&dest_manifest, manifest_content)
         .unwrap_or_else(|_| panic!("Failed to write manifest to {}", dest_manifest.display()));
 
-    // Copy Cargo.lock from CARGO_LOCK environment variable
-    let cargo_lock_path = std::env::var("CARGO_LOCK").unwrap_or_else(|_| {
-        panic!(
-            "CARGO_LOCK environment variable is not defined. \n\n\
-            zenoh-ffi needs the Cargo.lock file of the project it's built with to guarantee \n\
-            that size and alignment of generated C structures match the original Rust types. \n\n\
-            Please set CARGO_LOCK to the absolute path of your project's Cargo.lock file."
-        )
-    });
-    
-    if !Path::new(&cargo_lock_path).is_absolute() {
-        panic!(
-            "CARGO_LOCK must contain an absolute path, but got: {}\n\n\
-            Please provide the absolute path to your project's Cargo.lock file.",
-            cargo_lock_path
-        );
-    }
-
     let dest_lock = out_dir.join("Cargo.lock");
     std::fs::copy(&cargo_lock_path, &dest_lock).unwrap_or_else(|_| {
         panic!(
             "Failed to copy Cargo.lock from {} to {}",
-            cargo_lock_path,
+            cargo_lock_path.display(),
             dest_lock.display()
         )
     });
 
-    let dest_lock_sav = out_dir.join("Cargo.lock.sav");
-    std::fs::copy(&cargo_lock_path, &dest_lock_sav).unwrap_or_else(|_| {
-        panic!(
-            "Failed to copy Cargo.lock from {} to {}",
-            cargo_lock_path,
-            dest_lock_sav.display()
-        )
-    });
-
-    // save current directory to file "current_dir.txt"
-    let current_dir = std::env::current_dir().unwrap();
-    let current_dir_file = out_dir.join("current_dir.txt");
-    std::fs::write(&current_dir_file, current_dir.display().to_string()).unwrap();
-
     dest_manifest
 }
 
-pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<bool>) {
+pub fn generate_opaque_types(path_out: &Path, target: &str, cargo_lock_path: &Path) {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let manifest_path = copy_cargo_files_to_out_dir();
+    let manifest_path = copy_cargo_files_to_out_dir(cargo_lock_path);
     let (command, path_in) = produce_opaque_types_data(&manifest_path, target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
@@ -113,20 +81,8 @@ pub fn generate_opaque_types(target: &str, path_out: &Path, prebindgen: Option<b
         good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
-        // - If Option<false> is passed, the type is passed to both the compiler
-        // and prebindgen (#[prebindgen(skip = false)])
-        // - If Option<true> is passed, attribute is `#[prebindgen(skip = true)]`
-        // which means that the type is not passed to the compiler, but prebindgen data is generated.
-        // In this case, only type itself is needed, the traits should be skipped to avoid
-        // conflicts with second generation with "None" option.
-        // - If None is passed, the prebindgen attribute is not generated
-        let skip_traits = prebindgen.unwrap_or(false);
-        let prebindgen_attr = if let Some(skip) = prebindgen {
-            format!("#[prebindgen(\"types\", skip = {skip})]\n")
-        } else {
-            String::new()
-        };
-        let mut s = prebindgen_attr.clone();
+        let prebindgen_attr = "#[prebindgen(\"types\")]\n";
+        let mut s = prebindgen_attr.to_string();
         if category != Some("owned") {
             s += "#[derive(Copy, Clone)]\n";
         };
@@ -141,7 +97,7 @@ pub struct {type_name} {{
         .as_str();
         if category == Some("owned") {
             let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
-            s += prebindgen_attr.as_str();
+            s += prebindgen_attr;
             s += format!(
                 "#[repr(C)]
 #[rustfmt::skip]
@@ -152,8 +108,7 @@ pub struct {moved_type_name} {{
             )
             .as_str();
 
-            if !skip_traits {
-                s += format!(
+            s += format!(
                     "#[rustfmt::skip]
 impl crate::transmute::TakeCType for {moved_type_name} {{
     type CType = {type_name};
@@ -173,7 +128,6 @@ impl Drop for {type_name} {{
 "
                 )
                 .as_str();
-            }
         }
 
         let doc = docs
@@ -201,7 +155,8 @@ impl Drop for {type_name} {{
     use std::io::Write;
     let mut file = std::fs::OpenOptions::new()
         .create(true)
-        .append(true)
+        .append(false)
+        .write(true)
         .open(path_out)
         .unwrap();
     file.write_all(data_out.as_bytes()).unwrap();

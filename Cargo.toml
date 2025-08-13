@@ -11,20 +11,31 @@
 # Contributors:
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
+[workspace]
+members = [".", "zenoh-ffi-workspace"]
+
+[patch.crates-io]
+"zenoh-ffi-workspace" = { path = "zenoh-ffi-workspace" }
+
+[patch.'https://github.com/eclipse-zenoh/zenoh-ffi-workspace']
+"zenoh-ffi-workspace" = { path = "zenoh-ffi-workspace" }
+
+[patch.'https://github.com/ZettaScaleLabs/zenoh-ffi-workspace']
+"zenoh-ffi-workspace" = { path = "zenoh-ffi-workspace" }
+
 [package]
 name = "zenoh-ffi"
 version = "1.5.0"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
-authors = [
-    "ZettaScale Zenoh Team, <zenoh@zettascale.tech>"
-]
+authors = ["ZettaScale Zenoh Team, <zenoh@zettascale.tech>"]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
 description = "The Zenoh-FFI crate provides a Foreign Function Interface (FFI) for the Zenoh library, allowind to easily implement bindings to other languages"
 readme = "README.md"
 build = "build.rs"
+links = "zenoh_ffi"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
@@ -70,8 +81,12 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
+zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+    "internal",
+] }
+zenoh-ext = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+    "internal",
+] }
 zenoh-runtime = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
@@ -81,26 +96,12 @@ prebindgen-proc-macro = { version = "0.4.0", git = "https://github.com/milyin/pr
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+    "internal",
+] }
 regex = "1.7.1"
 prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 project-root = "0.2.2"
 cargo_metadata = "=0.19.0"
 serde_json = "1.0"
-
-[lib]
-path = "src/lib.rs"
-name = "zenohffi"
-crate-type = ["lib"]
-doctest = false
-
-[profile.dev]
-debug = true
-opt-level = 0
-
-[profile.release]
-debug = false     # If you want debug symbol in release mode, set the env variable: RUSTFLAGS=-g
-lto = "fat"
-codegen-units = 1
-opt-level = 3
-panic = "abort"
+zenoh-ffi-workspace = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi-workspace.git", branch = "main" }
