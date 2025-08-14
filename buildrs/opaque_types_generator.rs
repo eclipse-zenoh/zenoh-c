@@ -9,7 +9,16 @@ use super::common_helpers::{features, split_type_name};
 use crate::{get_build_rs_path, get_out_dir};
 
 pub fn get_out_opaque_types() -> std::path::PathBuf {
-    get_out_dir().join("opaque-types")
+        match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
+            Ok(opaque_types_build_dir) => {
+                println!(
+                    "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
+                    opaque_types_build_dir
+                );
+                opaque_types_build_dir.into()
+            }
+            Err(_) => get_out_dir().join("opaque-types")
+        }
 }
 
 // Copy manifest and lock files to output directory, modify manifest to point to original source
