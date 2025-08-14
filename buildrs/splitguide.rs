@@ -23,11 +23,9 @@ const HEADER: &str = r"//
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+
+#pragma once
 // clang-format off
-#ifdef DOCS
-#define ALIGN(n)
-#define ZENOHC_API
-#endif
 ";
 
 enum SplitRule {
@@ -568,6 +566,21 @@ impl FunctionSignature {
 }
 
 pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>, String> {
+    let headers_by_file = HashMap::from([
+        (
+            "zenoh_commons.h",
+            vec![
+                "zenoh_def.h",
+                "zenoh_configure.h",
+                "zenoh_opaque.h",
+                "zenoh_includes.h",
+            ],
+        ),
+        (
+            "zenoh_opaque.h",
+            vec!["zenoh_def.h", "zenoh_configure.h", "zenoh_includes.h"],
+        ),
+    ]);
     let bindings = std::fs::read_to_string(&genetation_path).unwrap();
     let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
     let mut files = split_guide
@@ -586,9 +599,17 @@ pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
             (path as &Path, BufWriter::new(file))
         })
         .collect::<HashMap<_, _>>();
-    for file in files.values_mut() {
+    for (path, file) in files.iter_mut() {
         file.write_all(HEADER.as_bytes())
             .map_err(|e| e.to_string())?;
+        if let Some(n) = path.file_name().and_then(|p| p.to_str()) {
+            if let Some(headers) = headers_by_file.get(n) {
+                for h in headers {
+                    file.write_all(format!("#include \"{h}\"\n").as_bytes())
+                        .map_err(|e| e.to_string())?;
+                }
+            }
+        }
     }
     let mut records = group_tokens(Tokenizer {
         filename: genetation_path.as_ref(),
