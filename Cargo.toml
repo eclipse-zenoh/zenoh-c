@@ -35,7 +35,6 @@ categories = { workspace = true }
 description = "The Zenoh-FFI crate provides a Foreign Function Interface (FFI) for the Zenoh library, allowind to easily implement bindings to other languages"
 readme = "README.md"
 build = "build.rs"
-links = "zenoh_ffi"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
