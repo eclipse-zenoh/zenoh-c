@@ -86,7 +86,7 @@ mod buildrs;
 //  1.3. panic if no rust errors detected
 //  1.4. panic if total count of errors differs from count of reports collected
 //  1.5. return size/alignment data for the target
-
+//
 //  IIII. generation
 //
 //  For each structure in the size/alignment data write to the output file
@@ -104,12 +104,16 @@ mod buildrs;
 pub fn main() {
     // Step I: probe project preparation
     println!("cargo:rerun-if-env-changed=CARGO_LOCK");
+    println!("cargo:rerun-if-env-changed=CROSS_TARGET");
     println!("cargo:rerun-if-env-changed=OPAQUE_TYPES_BUILD_DIR");
     println!("cargo:rerun-if-changed=src/probe.rs");
     println!("cargo:rerun-if-changed=Cargo.toml");
 
     // Step I
     buildrs::generate_probe_project();
+
+    // Step II: execute cargo build for the probe project and capture outputs into files
+    let _probe_build_outputs = buildrs::build_probe_project();
 }
 
 
