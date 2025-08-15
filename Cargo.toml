@@ -12,26 +12,26 @@
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 [workspace]
-members = [".", "zenoh-ffi-workspace"]
+members = [".", "zenoh-ffi-opaque-types"]
 
-[patch.crates-io]
-"zenoh-ffi-workspace" = { path = "zenoh-ffi-workspace" }
-
-[patch.'https://github.com/eclipse-zenoh/zenoh-ffi-workspace']
-"zenoh-ffi-workspace" = { path = "zenoh-ffi-workspace" }
-
-[patch.'https://github.com/ZettaScaleLabs/zenoh-ffi-workspace']
-"zenoh-ffi-workspace" = { path = "zenoh-ffi-workspace" }
-
-[package]
-name = "zenoh-ffi"
+[workspace.package]
 version = "1.5.0"
-repository = "https://github.com/eclipse-zenoh/zenoh-c"
+repository = "https://github.com/eclipse-zenoh/zenoh-ffi"
 homepage = "http://zenoh.io"
 authors = ["ZettaScale Zenoh Team, <zenoh@zettascale.tech>"]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
+
+[package]
+name = "zenoh-ffi"
+version = { workspace = true }
+repository = { workspace = true}
+homepage = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
 description = "The Zenoh-FFI crate provides a Foreign Function Interface (FFI) for the Zenoh library, allowind to easily implement bindings to other languages"
 readme = "README.md"
 build = "build.rs"
