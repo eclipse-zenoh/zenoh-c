@@ -100,20 +100,97 @@ use regex::Regex;
 //  7. for the owned structure implement Drop trait
 
 pub fn main() {
-    
+    // Step I: probe project preparation
+    println!("cargo:rerun-if-env-changed=CARGO_LOCK");
+    println!("cargo:rerun-if-env-changed=OPAQUE_TYPES_BUILD_DIR");
+    println!("cargo:rerun-if-changed=src/probe.rs");
+    println!("cargo:rerun-if-changed=Cargo.toml");
+
+    prepare_probe_project();
 }
 
 pub fn get_out_opaque_types() -> std::path::PathBuf {
-        match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
-            Ok(opaque_types_build_dir) => {
-                println!(
-                    "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
-                    opaque_types_build_dir
-                );
-                opaque_types_build_dir.into()
-            }
-            Err(_) => get_out_dir().join("opaque-types")
+    match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
+        Ok(opaque_types_build_dir) => {
+            println!(
+                "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
+                opaque_types_build_dir
+            );
+            opaque_types_build_dir.into()
         }
+        Err(_) => get_target_dir().join("opaque-types"),
+    }
+}
+
+fn get_target_dir() -> std::path::PathBuf {
+    // OUT_DIR typically looks like: target/<profile>/build/<crate-hash>/out
+    // We need to go 4 levels up to reach the target directory root
+    let mut p = get_out_dir();
+    for _ in 0..4 {
+        p = p
+            .parent()
+            .unwrap_or_else(|| panic!("Invalid OUT_DIR, cannot get target dir from {}", get_out_dir().display()))
+            .to_path_buf();
+    }
+    p
+}
+
+fn prepare_probe_project() {
+    // Create target/opaque-types/probe structure
+    let opaque_root = get_out_opaque_types();
+    let probe_dir = opaque_root.join("probe");
+    let probe_src_dir = probe_dir.join("src");
+    std::fs::create_dir_all(&probe_src_dir).expect("Failed to create probe/src directory");
+
+    // 1) Workspace Cargo.toml at opaque-types/
+    let workspace_manifest = opaque_root.join("Cargo.toml");
+    let workspace_toml = "[workspace]\nresolver = \"2\"\nmembers = [\n    \"probe\"\n]\n";
+    let _ = write_if_changed(&workspace_manifest, workspace_toml.as_bytes())
+        .expect("Failed to write workspace Cargo.toml");
+
+    // 2) Copy project's Cargo.toml into probe/
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR is not set");
+    let project_manifest = std::path::Path::new(&manifest_dir).join("Cargo.toml");
+    let probe_manifest = probe_dir.join("Cargo.toml");
+    copy_file_if_changed(&project_manifest, &probe_manifest)
+        .unwrap_or_else(|e| panic!("Failed to copy project Cargo.toml: {e}"));
+
+    // 3) Copy src/probe.rs to probe/src/lib.rs
+    let src_probe = std::path::Path::new(&manifest_dir).join("src/probe.rs");
+    let dst_lib = probe_src_dir.join("lib.rs");
+    copy_file_if_changed(&src_probe, &dst_lib)
+        .unwrap_or_else(|e| panic!("Failed to copy src/probe.rs to probe/src/lib.rs: {e}"));
+
+    // 4) Copy Cargo.lock to opaque-types/ from CARGO_LOCK env var
+    let cargo_lock_path = std::env::var("CARGO_LOCK")
+        .unwrap_or_else(|_| panic!("CARGO_LOCK environment variable must be set to the path of Cargo.lock"));
+    let cargo_lock_src = std::path::PathBuf::from(cargo_lock_path);
+    let cargo_lock_dst = opaque_root.join("Cargo.lock");
+    copy_file_if_changed(&cargo_lock_src, &cargo_lock_dst)
+        .unwrap_or_else(|e| panic!("Failed to copy Cargo.lock: {e}"));
+}
+
+fn write_if_changed(path: &Path, content: &[u8]) -> std::io::Result<bool> {
+    use std::io::Read;
+    let mut needs_write = true;
+    if let Ok(mut f) = std::fs::File::open(path) {
+        let mut existing = Vec::new();
+        if f.read_to_end(&mut existing).is_ok() && existing == content {
+            needs_write = false;
+        }
+    }
+    if needs_write {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, content)?;
+    }
+    Ok(needs_write)
+}
+
+fn copy_file_if_changed(src: &Path, dst: &Path) -> std::io::Result<bool> {
+    let content = std::fs::read(src)?;
+    write_if_changed(dst, &content)
 }
 
 // Copy manifest and lock files to output directory, modify manifest to point to original source
