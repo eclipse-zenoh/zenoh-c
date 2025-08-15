@@ -5,6 +5,8 @@ use std::{
 
 use regex::Regex;
 
+mod buildrs;
+
 // This script copies it's own project (with necessary modifications, 
 // e.g. without the build.rs itself) to the root of target directory 
 // (on the same level as debug and release directories)
@@ -106,190 +108,14 @@ pub fn main() {
     println!("cargo:rerun-if-changed=src/probe.rs");
     println!("cargo:rerun-if-changed=Cargo.toml");
 
-    prepare_probe_project();
+    // Step I
+    buildrs::generate_probe_project();
 }
 
-pub fn get_out_opaque_types() -> std::path::PathBuf {
-    match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
-        Ok(opaque_types_build_dir) => {
-            println!(
-                "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
-                opaque_types_build_dir
-            );
-            opaque_types_build_dir.into()
-        }
-        Err(_) => get_target_dir().join("opaque-types"),
-    }
-}
 
-fn get_target_dir() -> std::path::PathBuf {
-    // OUT_DIR typically looks like: target/<profile>/build/<crate-hash>/out
-    // We need to go 4 levels up to reach the target directory root
-    let mut p = get_out_dir();
-    for _ in 0..4 {
-        p = p
-            .parent()
-            .unwrap_or_else(|| panic!("Invalid OUT_DIR, cannot get target dir from {}", get_out_dir().display()))
-            .to_path_buf();
-    }
-    p
-}
 
-fn prepare_probe_project() {
-    // Create target/opaque-types/probe structure
-    let opaque_root = get_out_opaque_types();
-    let probe_dir = opaque_root.join("probe");
-    let probe_src_dir = probe_dir.join("src");
-    std::fs::create_dir_all(&probe_src_dir).expect("Failed to create probe/src directory");
-
-    // 1) Workspace Cargo.toml at opaque-types/
-        let workspace_manifest = opaque_root.join("Cargo.toml");
-        let workspace_toml = build_workspace_manifest_content();
-        let _ = write_if_changed(&workspace_manifest, workspace_toml.as_bytes())
-            .expect("Failed to write workspace Cargo.toml");
-
-    // 2) Copy project's Cargo.toml into probe/
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").expect("CARGO_MANIFEST_DIR is not set");
-    let project_manifest = std::path::Path::new(&manifest_dir).join("Cargo.toml");
-    let probe_manifest = probe_dir.join("Cargo.toml");
-    let filtered = filter_probe_manifest(&project_manifest)
-        .unwrap_or_else(|e| panic!("Failed to read and filter project Cargo.toml: {e}"));
-    let _ = write_if_changed(&probe_manifest, filtered.as_bytes())
-        .unwrap_or_else(|e| panic!("Failed to write filtered probe Cargo.toml: {e}"));
-
-    // 3) Copy src/probe.rs to probe/src/lib.rs
-    let src_probe = std::path::Path::new(&manifest_dir).join("src/probe.rs");
-    let dst_lib = probe_src_dir.join("lib.rs");
-    copy_file_if_changed(&src_probe, &dst_lib)
-        .unwrap_or_else(|e| panic!("Failed to copy src/probe.rs to probe/src/lib.rs: {e}"));
-
-    // 4) Copy Cargo.lock to opaque-types/ from CARGO_LOCK env var
-    let cargo_lock_path = std::env::var("CARGO_LOCK")
-        .unwrap_or_else(|_| panic!("CARGO_LOCK environment variable must be set to the path of Cargo.lock"));
-    let cargo_lock_src = std::path::PathBuf::from(cargo_lock_path);
-    let cargo_lock_dst = opaque_root.join("Cargo.lock");
-    copy_file_if_changed(&cargo_lock_src, &cargo_lock_dst)
-        .unwrap_or_else(|e| panic!("Failed to copy Cargo.lock: {e}"));
-}
-
-fn write_if_changed(path: &Path, content: &[u8]) -> std::io::Result<bool> {
-    use std::io::Read;
-    let mut needs_write = true;
-    if let Ok(mut f) = std::fs::File::open(path) {
-        let mut existing = Vec::new();
-        if f.read_to_end(&mut existing).is_ok() && existing == content {
-            needs_write = false;
-        }
-    }
-    if needs_write {
-        if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        std::fs::write(path, content)?;
-    }
-    Ok(needs_write)
-}
-
-fn copy_file_if_changed(src: &Path, dst: &Path) -> std::io::Result<bool> {
-    let content = std::fs::read(src)?;
-    write_if_changed(dst, &content)
-}
-
-    fn build_workspace_manifest_content() -> String {
-    // dummy workspace replacing the real one for generated `probe` package
-        r#"[workspace]
-    resolver = "2"
-    members = [
-        "probe"
-    ]
-
-    [workspace.package]
-    version = "0.0.1"
-    repository = ""
-    homepage = ""
-    authors = []
-    edition = "2021"
-    license = ""
-    categories = []
-    "#
-        .to_string()
-    }
-
-    fn filter_probe_manifest(src: &Path) -> std::io::Result<String> {
-        let text = std::fs::read_to_string(src)?;
-        let mut out = String::new();
-        let mut skip_build_deps = false;
-        for line in text.lines() {
-            let t = line.trim_start();
-            if t.starts_with("build = ") {
-                // drop build script to avoid recursion and missing file in probe
-                continue;
-            }
-            if t.starts_with("[build-dependencies]") {
-                // Skip the entire build-dependencies section
-                skip_build_deps = true;
-                continue;
-            }
-            if skip_build_deps {
-                if t.starts_with('[') {
-                    skip_build_deps = false; // next section begins
-                    out.push_str(line);
-                    out.push('\n');
-                } else {
-                    continue;
-                }
-            } else {
-                out.push_str(line);
-                out.push('\n');
-            }
-        }
-        Ok(out)
-    }
-
-// Copy manifest and lock files to output directory, modify manifest to point to original source
-fn copy_cargo_files_to_out_dir(cargo_lock_path: &Path) -> PathBuf {
-    let out_dir = get_out_opaque_types();
-    let source_dir = get_build_rs_path().join("./build-resources/opaque-types");
-    let source_manifest = source_dir.join("Cargo.toml");
-    std::fs::create_dir_all(&out_dir).unwrap();
-
-    let dest_manifest = out_dir.join("Cargo.toml");
-
-    // Read original manifest and modify it to use absolute path for source
-    let mut manifest_content = std::fs::read_to_string(&source_manifest)
-        .unwrap_or_else(|_| panic!("Failed to read manifest from {}", source_manifest.display()));
-
-    // Add [lib] section with absolute path to original source
-    let lib_path = source_dir
-        .join("src/lib.rs")
-        .canonicalize()
-        .unwrap_or_else(|_| {
-            panic!(
-                "Failed to canonicalize path {}",
-                source_dir.join("src/lib.rs").display()
-            )
-        });
-    let lib_section = format!("\n[lib]\npath = \"{}\"\n", lib_path.display());
-    manifest_content.push_str(&lib_section);
-
-    std::fs::write(&dest_manifest, manifest_content)
-        .unwrap_or_else(|_| panic!("Failed to write manifest to {}", dest_manifest.display()));
-
-    let dest_lock = out_dir.join("Cargo.lock");
-    std::fs::copy(&cargo_lock_path, &dest_lock).unwrap_or_else(|_| {
-        panic!(
-            "Failed to copy Cargo.lock from {} to {}",
-            cargo_lock_path.display(),
-            dest_lock.display()
-        )
-    });
-
-    dest_manifest
-}
-
-pub fn generate_opaque_types(path_out: &Path, target: &str, cargo_lock_path: &Path) {
+pub fn generate_opaque_types(manifest_path: &Path, path_out: &Path, target: &str) {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let manifest_path = copy_cargo_files_to_out_dir(cargo_lock_path);
     let (command, path_in) = produce_opaque_types_data(&manifest_path, target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
@@ -462,6 +288,8 @@ fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
 
 use std::collections::BTreeSet;
 
+use crate::buildrs::{get_build_rs_path, get_out_opaque_types};
+
 pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let mut split = type_name.split('_');
     let prefix = split
@@ -483,17 +311,5 @@ pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
 
 pub fn features() -> BTreeSet<&'static str> {
     zenoh::FEATURES.split(" zenoh/").collect()
-}
-
-pub fn get_build_rs_path() -> std::path::PathBuf {
-    let file_path = file!();
-    let mut path_buf = std::path::PathBuf::new();
-    path_buf.push(file_path);
-    path_buf.parent().unwrap().to_path_buf()
-}
-
-pub fn get_out_dir() -> std::path::PathBuf {
-    let out_dir = std::env::var_os("OUT_DIR").unwrap();
-    std::path::Path::new(&out_dir).to_path_buf()
 }
 
