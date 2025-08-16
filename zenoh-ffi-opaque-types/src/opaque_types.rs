@@ -11,10 +11,5 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-mod probe;
-pub(crate) mod transmute;
-pub(crate) mod opaque_types;
-
-pub use transmute::TakeCType;
-
-pub use crate::opaque_types::*;
+use prebindgen_proc_macro::prebindgen;
+include!(concat!(env!("OUT_DIR"), "/opaque_types.rs"));

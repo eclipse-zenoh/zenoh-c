@@ -99,6 +99,9 @@ mod buildrs;
 //  7. for the owned structure implement Drop trait
 
 pub fn main() {
+    // Prepare to collect structure definitions for dependent FFI crates
+    prebindgen::init_prebindgen_out_dir();
+
     // Step I: probe project preparation
     println!("cargo:rerun-if-env-changed=CARGO_LOCK");
     println!("cargo:rerun-if-env-changed=CROSS_TARGET");

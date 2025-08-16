@@ -4076,6 +4076,8 @@ version = "1.5.0"
 dependencies = [
  "const_format",
  "flume",
+ "prebindgen",
+ "prebindgen-proc-macro",
  "prettyplease",
  "proc-macro2",
  "quote",
