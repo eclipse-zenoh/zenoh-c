@@ -4076,9 +4076,11 @@ version = "1.5.0"
 dependencies = [
  "const_format",
  "flume",
+ "prettyplease",
  "proc-macro2",
  "quote",
  "regex",
+ "syn 2.0.105",
  "tokio",
  "zenoh",
  "zenoh-ext",

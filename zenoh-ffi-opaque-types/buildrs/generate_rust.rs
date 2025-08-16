@@ -106,8 +106,11 @@ pub fn generate_rust_types(
     let out_path = std::env::var_os("OUT_DIR").expect("OUT_DIR not set");
     let mut path = std::path::PathBuf::from(out_path);
     path.push("opaque_types.rs");
-    let out_string = out_ts.to_string();
-    let _ = write_if_changed(&path, out_string.as_bytes())
+    // Format nicely: parse tokens into a syn::File and pretty print
+    let file_syntax: syn::File = syn::parse2(out_ts)
+        .expect("generated tokens should form a valid Rust file");
+    let formatted = prettyplease::unparse(&file_syntax);
+    let _ = write_if_changed(&path, formatted.as_bytes())
         .unwrap_or_else(|e| panic!("Failed to write {}: {e}", path.display()));
     path
 }
