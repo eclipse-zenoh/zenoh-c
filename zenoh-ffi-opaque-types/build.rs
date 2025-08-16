@@ -106,14 +106,20 @@ pub fn main() {
     println!("cargo:rerun-if-env-changed=CARGO_LOCK");
     println!("cargo:rerun-if-env-changed=CROSS_TARGET");
     println!("cargo:rerun-if-env-changed=OPAQUE_TYPES_BUILD_DIR");
-    println!("cargo:rerun-if-changed=src/probe.rs");
+    println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=Cargo.toml");
+    println!("cargo:rerun-if-changed=build.rs");
 
     // Step I
     buildrs::generate_probe_project();
 
     // Step II: execute cargo build for the probe project and capture outputs into files
-    let _probe_build_outputs = buildrs::build_probe_project();
+    let probe_build_outputs = buildrs::build_probe_project();
+    for (target, output_path) in probe_build_outputs {
+        println!("cargo:warning=Generated probe build output for {}: {}", target, output_path.display());
+    }
+
+    // Step III: analyze the probe build outputs, extract size and alignment data
 }
 
 
