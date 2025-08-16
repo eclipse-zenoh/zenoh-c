@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use crate::buildrs::common_helpers::zenoh_features;
 use crate::buildrs::get_out_opaque_types;
 
 /// Execute `cargo build` for the generated probe project and return a map of
@@ -45,7 +46,7 @@ fn run_cargo_build_for_target(
 ) -> PathBuf {
     // Build feature args: enable `panic` and mirror enabled features from parent build
     let mut feature_args: Vec<String> = vec!["-F".into(), "panic".into()];
-    for f in crate::features().iter().filter(|f| !f.is_empty()) {
+    for f in zenoh_features().iter().filter(|f| !f.is_empty()) {
         feature_args.push("-F".into());
         feature_args.push((*f).to_string());
     }

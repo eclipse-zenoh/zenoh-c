@@ -1,0 +1,144 @@
+use std::collections::{HashMap, HashSet};
+use regex::Regex;
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+
+use crate::buildrs::{get_out_opaque_types, split_type_name, write_if_changed};
+
+/// Generate Rust opaque types code for all targets and write it into OUT_DIR/opaque_types.rs
+///
+/// layouts: HashMap<target_triple, HashMap<type_name, (size, align)>>
+/// docs: name -> Vec<String> (each starts with '///')
+pub fn generate_rust_types(
+    layouts: &HashMap<&str, HashMap<String, (u64, u64)>>,
+) -> std::path::PathBuf {
+    let mut out_ts = TokenStream::new();
+    let mut documented: HashSet<String> = HashSet::new();
+    let docs = read_docs_from_probe_lib();
+
+    for (target, types) in layouts {
+        for (type_name, (size, align)) in types {
+            let is_pub_id = type_name.as_str() == "z_id_t";
+            let (prefix, category, semantic, postfix) = split_type_name(type_name);
+
+            // Docs once per type
+            if !documented.contains(type_name) {
+                let lines = docs.get(type_name).unwrap_or_else(|| panic!(
+                    "Failed to extract docs for opaque type: {type_name}"
+                ));
+                // Convert collected `/// ...` lines into #[doc = "..."] attributes
+                for d in lines {
+                    let doc_txt = d.trim_start().strip_prefix("///").unwrap_or(d).trim_start();
+                    let doc_lit = doc_txt;
+                    out_ts.extend(quote! { #[doc = #doc_lit] });
+                }
+                documented.insert(type_name.clone());
+            }
+
+            // prebindgen with cfg for target
+            let cfg_str = format!("target=\"{target}\"");
+            let type_ident = format_ident!("{}", type_name);
+            let align_val = *align;
+            let size_val = *size;
+            let field_ident = if is_pub_id { format_ident!("id") } else { format_ident!("_0") };
+            let derive_tokens = if category != Some("owned") {
+                quote! { #[derive(Copy, Clone)] }
+            } else {
+                TokenStream::new()
+            };
+
+            let struct_tokens = if is_pub_id {
+                quote! {
+                    #[prebindgen("types", cfg = #cfg_str)]
+                    #derive_tokens
+                    #[repr(C, align(#align_val))]
+                    #[rustfmt::skip]
+                    pub struct #type_ident {
+                        pub #field_ident: [u8; #size_val],
+                    }
+                }
+            } else {
+                quote! {
+                    #[prebindgen("types", cfg = #cfg_str)]
+                    #derive_tokens
+                    #[repr(C, align(#align_val))]
+                    #[rustfmt::skip]
+                    pub struct #type_ident {
+                        #field_ident: [u8; #size_val],
+                    }
+                }
+            };
+            out_ts.extend(struct_tokens);
+
+            if category == Some("owned") {
+                let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
+                let moved_ident = format_ident!("{}", moved_type_name);
+                out_ts.extend(quote! {
+                    #[prebindgen("types", cfg = #cfg_str)]
+                    #[repr(C)]
+                    #[rustfmt::skip]
+                    pub struct #moved_ident {
+                        _this: #type_ident,
+                    }
+
+                    #[rustfmt::skip]
+                    impl crate::transmute::TakeCType for #moved_ident {
+                        type CType = #type_ident;
+                        fn take_c_type(&mut self) -> Self::CType {
+                            use crate::transmute::Gravestone;
+                            std::mem::replace(&mut self._this, #type_ident::gravestone())
+                        }
+                    }
+
+                    #[rustfmt::skip]
+                    impl Drop for #type_ident {
+                        fn drop(&mut self) {
+                            use crate::transmute::{RustTypeRef, Gravestone, IntoRustType};
+                            let _ = std::mem::replace(self.as_rust_type_mut(), #type_ident::gravestone().into_rust_type());
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    // Write to OUT_DIR/opaque_types.rs
+    let out_path = std::env::var_os("OUT_DIR").expect("OUT_DIR not set");
+    let mut path = std::path::PathBuf::from(out_path);
+    path.push("opaque_types.rs");
+    let out_string = out_ts.to_string();
+    let _ = write_if_changed(&path, out_string.as_bytes())
+        .unwrap_or_else(|e| panic!("Failed to write {}: {e}", path.display()));
+    path
+}
+
+fn read_docs_from_probe_lib() -> HashMap<String, Vec<String>> {
+    // Probe project is generated under <opaque_root>/probe/src/lib.rs
+    let probe_lib = get_out_opaque_types().join("probe").join("src").join("lib.rs");
+    let text = std::fs::read_to_string(&probe_lib).unwrap_or_else(|e| {
+        panic!(
+            "Failed to read probe lib.rs at {}: {e}",
+            probe_lib.display()
+        )
+    });
+    let re = Regex::new(r"(?m)^get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\s*(,)?\s*\);").expect("valid regex");
+    let mut comments: Vec<String> = Vec::new();
+    let mut opaque_lines: Vec<&str> = Vec::new();
+    let mut res: HashMap<String, Vec<String>> = HashMap::new();
+    for line in text.lines() {
+        if line.starts_with("///") {
+            comments.push(line.to_string());
+            continue;
+        }
+        if line.starts_with("get_opaque_type_data!(") || !opaque_lines.is_empty() {
+            opaque_lines.push(line);
+        }
+        if !opaque_lines.is_empty() && line.trim_end().ends_with(");") {
+            let joined = opaque_lines.join("");
+            opaque_lines.clear();
+            let cap = re.captures(&joined).expect("invalid opaque type macro line");
+            res.insert(cap[2].to_string(), std::mem::take(&mut comments));
+        }
+    }
+    res
+}
