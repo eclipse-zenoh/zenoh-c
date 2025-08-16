@@ -7,8 +7,8 @@ use regex::Regex;
 
 mod buildrs;
 
-// This script copies it's own project (with necessary modifications, 
-// e.g. without the build.rs itself) to the root of target directory 
+// This script copies it's own project (with necessary modifications,
+// e.g. without the build.rs itself) to the root of target directory
 // (on the same level as debug and release directories)
 // and builds it with separate cargo session unrelated to the current one.
 //
@@ -60,7 +60,7 @@ mod buildrs;
 //  The variable CROSS_RUSTC_LINKER must be set manually also in this case.
 //
 //  Steps:
-// 
+//
 //  1. get target from TARGET variable
 //  2. get linker from RUSTC_LINKER variable if present
 //  3. Do the cargo build, store output for TARGET
@@ -115,18 +115,31 @@ pub fn main() {
 
     // Step II: execute cargo build for the probe project and capture outputs into files
     let probe_build_outputs = buildrs::build_probe_project();
-    for (target, output_path) in probe_build_outputs {
-        println!("cargo:warning=Generated probe build output for {}: {}", target, output_path.display());
+    for (target, output_path) in &probe_build_outputs {
+        println!(
+            "cargo:warning=Generated probe build output for {}: {}",
+            target,
+            output_path.display()
+        );
     }
 
     // Step III: analyze the probe build outputs, extract size and alignment data
+    let parsed = buildrs::parse_probe_resutls(&probe_build_outputs);
+    // Minimal signal: print counts per target so we can see it worked during the build
+    let mut counts: HashMap<&str, usize> = HashMap::new();
+    for per_target in parsed.values() {
+        for target in per_target.keys() {
+            *counts.entry(target.as_str()).or_default() += 1;
+        }
+    }
+    for (target, count) in counts {
+        println!("cargo:warning=Parsed {count} type layout records for target {target}");
+    }
 }
-
-
 
 pub fn generate_opaque_types(manifest_path: &Path, path_out: &Path, target: &str) {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let (command, path_in) = produce_opaque_types_data(&manifest_path, target);
+    let (command, path_in) = produce_opaque_types_data(manifest_path, target);
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     // check if message begins with "error:", excluding spaces
@@ -225,8 +238,8 @@ impl Drop for {type_name} {{
     use std::io::Write;
     let mut file = std::fs::OpenOptions::new()
         .create(true)
-        .append(false)
         .write(true)
+        .truncate(true)
         .open(path_out)
         .unwrap();
     file.write_all(data_out.as_bytes()).unwrap();
@@ -322,4 +335,3 @@ pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
 pub fn features() -> BTreeSet<&'static str> {
     zenoh::FEATURES.split(" zenoh/").collect()
 }
-
