@@ -123,17 +123,16 @@ pub fn main() {
         );
     }
 
-    // Step III: analyze the probe build outputs, extract size and alignment data
-    let parsed = buildrs::parse_probe_resutls(&probe_build_outputs);
-    // Minimal signal: print counts per target so we can see it worked during the build
-    let mut counts: HashMap<&str, usize> = HashMap::new();
-    for per_target in parsed.values() {
-        for target in per_target.keys() {
-            *counts.entry(target.as_str()).or_default() += 1;
-        }
-    }
-    for (target, count) in counts {
-        println!("cargo:warning=Parsed {count} type layout records for target {target}");
+    // Step III: analyze each probe build output, extract size and alignment data
+    let mut layouts = HashMap::new();
+    for (target, path) in &probe_build_outputs {
+        let parsed = buildrs::parse_probe_result(path);
+        println!(
+            "cargo:warning=Parsed for target {}: {} type layout records",
+            target,
+            parsed.len()
+        );
+        layouts.insert(target.as_str(), parsed);
     }
 }
 
