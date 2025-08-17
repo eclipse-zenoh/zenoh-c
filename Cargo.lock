@@ -1621,6 +1621,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "parse_cfg"
+version = "4.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "905787a434a2c721408e7c9a252e85f3d93ca0f118a5283022636c0e05a7ea49"
+dependencies = [
+ "nom",
+]
+
+[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4076,6 +4085,7 @@ version = "1.5.0"
 dependencies = [
  "const_format",
  "flume",
+ "parse_cfg",
  "prebindgen",
  "prebindgen-proc-macro",
  "prettyplease",

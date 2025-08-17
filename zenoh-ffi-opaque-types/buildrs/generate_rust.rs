@@ -4,6 +4,7 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
 use crate::buildrs::{get_out_opaque_types, split_type_name, write_if_changed};
+use parse_cfg::Target as CfgTarget;
 
 /// Generate Rust opaque types code for all targets and write it into OUT_DIR/opaque_types.rs
 ///
@@ -35,8 +36,8 @@ pub fn generate_rust_types(
                 documented.insert(type_name.clone());
             }
 
-            // prebindgen with cfg for target
-            let cfg_str = format!("target=\"{target}\"");
+            // Build a correct cfg expression for the target triple using parse_cfg
+            let cfg_str = cfg_from_target_triple(target);
             let type_ident = format_ident!("{}", type_name);
             let align_val = *align;
             let size_val = *size;
@@ -144,4 +145,37 @@ fn read_docs_from_probe_lib() -> HashMap<String, Vec<String>> {
         }
     }
     res
+}
+
+/// Convert a Rust target triple string (e.g., "aarch64-apple-darwin") into a cfg expression string
+/// like: all(target_arch = "aarch64", target_vendor = "apple", target_os = "darwin") and
+/// include target_env when present.
+fn cfg_from_target_triple(target: &str) -> String {
+    match target.parse::<CfgTarget>() {
+        Ok(CfgTarget::Triple { arch, vendor, os, env }) => {
+            let mut parts = Vec::with_capacity(4);
+            parts.push(format!("target_arch = \"{}\"", arch));
+            parts.push(format!("target_vendor = \"{}\"", vendor));
+            parts.push(format!("target_os = \"{}\"", os));
+            if let Some(env) = env {
+                if !env.is_empty() {
+                    parts.push(format!("target_env = \"{}\"", env));
+                }
+            }
+            if parts.len() == 1 {
+                parts.remove(0)
+            } else {
+                format!("all({})", parts.join(", "))
+            }
+        }
+        // We don't expect complex cfgs here; fall back to a safe, always-false predicate to avoid mis-gating
+        // and make the issue visible if it ever happens.
+        Ok(CfgTarget::Cfg(_)) => {
+            // Fallback to arch/os/env extraction is not straightforward from Cfg AST; be conservative.
+            panic!("Unexpected cfg() expression for target spec: {target}")
+        }
+        Err(e) => {
+            panic!("Failed to parse target triple '{target}': {e}")
+        }
+    }
 }
