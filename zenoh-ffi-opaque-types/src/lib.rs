@@ -15,6 +15,4 @@ mod probe;
 pub mod transmute;
 pub(crate) mod opaque_types;
 
-pub use transmute::TakeCType;
-
-pub use crate::opaque_types::*;
+pub use opaque_types::*;

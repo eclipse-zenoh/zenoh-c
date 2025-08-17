@@ -23,11 +23,7 @@ use std::{cmp::min, slice};
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 
-use crate::transmute::{LoanedCTypeRef, TakeRustType};
-#[macro_use]
-mod transmute;
-mod opaque_types;
-pub use crate::opaque_types::*;
+pub use opaque_types::*;
 
 mod collections;
 pub use crate::collections::*;
