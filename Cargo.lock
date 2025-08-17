@@ -1666,15 +1666,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "parse_cfg"
-version = "4.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "905787a434a2c721408e7c9a252e85f3d93ca0f118a5283022636c0e05a7ea49"
-dependencies = [
- "nom",
-]
-
-[[package]]
 name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2848,6 +2839,12 @@ dependencies = [
  "quote",
  "syn 2.0.106",
 ]
+
+[[package]]
+name = "target-lexicon"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e502f78cdbb8ba4718f566c418c52bc729126ffd16baee5baa718cf25dd5a69a"
 
 [[package]]
 name = "thiserror"
@@ -4147,7 +4144,6 @@ version = "1.5.0"
 dependencies = [
  "const_format",
  "flume",
- "parse_cfg",
  "prebindgen",
  "prebindgen-proc-macro",
  "prettyplease",
@@ -4155,6 +4151,7 @@ dependencies = [
  "quote",
  "regex",
  "syn 2.0.106",
+ "target-lexicon",
  "tokio",
  "zenoh",
  "zenoh-ext",

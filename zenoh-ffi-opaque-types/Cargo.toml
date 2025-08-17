@@ -67,4 +67,4 @@ proc-macro2 = "1"
 syn = { version = "2", features = ["full"] }
 prettyplease = "0.2"
 prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
-parse_cfg = "4"
+target-lexicon = "0.13"

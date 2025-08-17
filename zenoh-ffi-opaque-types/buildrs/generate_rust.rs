@@ -1,10 +1,10 @@
-use std::collections::{HashMap, HashSet};
-use regex::Regex;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
+use regex::Regex;
+use std::collections::{HashMap, HashSet};
 
 use crate::buildrs::{get_out_opaque_types, split_type_name, write_if_changed};
-use parse_cfg::Target as CfgTarget;
+use target_lexicon::{OperatingSystem, Triple};
 
 /// Generate Rust opaque types code for all targets and write it into OUT_DIR/opaque_types.rs
 ///
@@ -24,9 +24,9 @@ pub fn generate_rust_types(
 
             // Docs once per type
             if !documented.contains(type_name) {
-                let lines = docs.get(type_name).unwrap_or_else(|| panic!(
-                    "Failed to extract docs for opaque type: {type_name}"
-                ));
+                let lines = docs.get(type_name).unwrap_or_else(|| {
+                    panic!("Failed to extract docs for opaque type: {type_name}")
+                });
                 // Convert collected `/// ...` lines into #[doc = "..."] attributes
                 for d in lines {
                     let doc_txt = d.trim_start().strip_prefix("///").unwrap_or(d).trim_start();
@@ -40,8 +40,13 @@ pub fn generate_rust_types(
             let cfg_str = cfg_from_target_triple(target);
             let type_ident = format_ident!("{}", type_name);
             let align_val = *align;
+            let align_lit = syn::LitInt::new(&align_val.to_string(), Span::call_site());
             let size_val = *size;
-            let field_ident = if is_pub_id { format_ident!("id") } else { format_ident!("_0") };
+            let field_ident = if is_pub_id {
+                format_ident!("id")
+            } else {
+                format_ident!("_0")
+            };
             let derive_tokens = if category != Some("owned") {
                 quote! { #[derive(Copy, Clone)] }
             } else {
@@ -52,20 +57,20 @@ pub fn generate_rust_types(
                 quote! {
                     #[prebindgen("types", cfg = #cfg_str)]
                     #derive_tokens
-                    #[repr(C, align(#align_val))]
+                    #[repr(C, align(#align_lit))]
                     #[rustfmt::skip]
                     pub struct #type_ident {
-                        pub #field_ident: [u8; #size_val],
+                        pub #field_ident: [u8; #size_val as usize],
                     }
                 }
             } else {
                 quote! {
                     #[prebindgen("types", cfg = #cfg_str)]
                     #derive_tokens
-                    #[repr(C, align(#align_val))]
+                    #[repr(C, align(#align_lit))]
                     #[rustfmt::skip]
                     pub struct #type_ident {
-                        #field_ident: [u8; #size_val],
+                        #field_ident: [u8; #size_val as usize],
                     }
                 }
             };
@@ -83,19 +88,12 @@ pub fn generate_rust_types(
                     }
 
                     #[rustfmt::skip]
-                    impl crate::transmute::TakeCType for #moved_ident {
+            impl crate::transmute::TakeCType for #moved_ident {
                         type CType = #type_ident;
                         fn take_c_type(&mut self) -> Self::CType {
-                            use crate::transmute::Gravestone;
-                            std::mem::replace(&mut self._this, #type_ident::gravestone())
-                        }
-                    }
-
-                    #[rustfmt::skip]
-                    impl Drop for #type_ident {
-                        fn drop(&mut self) {
-                            use crate::transmute::{RustTypeRef, Gravestone, IntoRustType};
-                            let _ = std::mem::replace(self.as_rust_type_mut(), #type_ident::gravestone().into_rust_type());
+                            // Replace with a zeroed-bytes instance; safe because the type is repr(C) of [u8; N]
+                            let replacement = #type_ident { #field_ident: [0u8; #size_val as usize] };
+                            std::mem::replace(&mut self._this, replacement)
                         }
                     }
                 });
@@ -108,8 +106,8 @@ pub fn generate_rust_types(
     let mut path = std::path::PathBuf::from(out_path);
     path.push("opaque_types.rs");
     // Format nicely: parse tokens into a syn::File and pretty print
-    let file_syntax: syn::File = syn::parse2(out_ts)
-        .expect("generated tokens should form a valid Rust file");
+    let file_syntax: syn::File =
+        syn::parse2(out_ts).expect("generated tokens should form a valid Rust file");
     let formatted = prettyplease::unparse(&file_syntax);
     let _ = write_if_changed(&path, formatted.as_bytes())
         .unwrap_or_else(|e| panic!("Failed to write {}: {e}", path.display()));
@@ -118,14 +116,18 @@ pub fn generate_rust_types(
 
 fn read_docs_from_probe_lib() -> HashMap<String, Vec<String>> {
     // Probe project is generated under <opaque_root>/probe/src/lib.rs
-    let probe_lib = get_out_opaque_types().join("probe").join("src").join("lib.rs");
+    let probe_lib = get_out_opaque_types()
+        .join("probe")
+        .join("src")
+        .join("lib.rs");
     let text = std::fs::read_to_string(&probe_lib).unwrap_or_else(|e| {
         panic!(
             "Failed to read probe lib.rs at {}: {e}",
             probe_lib.display()
         )
     });
-    let re = Regex::new(r"(?m)^get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\s*(,)?\s*\);").expect("valid regex");
+    let re = Regex::new(r"(?m)^get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\s*(,)?\s*\);")
+        .expect("valid regex");
     let mut comments: Vec<String> = Vec::new();
     let mut opaque_lines: Vec<&str> = Vec::new();
     let mut res: HashMap<String, Vec<String>> = HashMap::new();
@@ -140,7 +142,9 @@ fn read_docs_from_probe_lib() -> HashMap<String, Vec<String>> {
         if !opaque_lines.is_empty() && line.trim_end().ends_with(");") {
             let joined = opaque_lines.join("");
             opaque_lines.clear();
-            let cap = re.captures(&joined).expect("invalid opaque type macro line");
+            let cap = re
+                .captures(&joined)
+                .expect("invalid opaque type macro line");
             res.insert(cap[2].to_string(), std::mem::take(&mut comments));
         }
     }
@@ -151,31 +155,33 @@ fn read_docs_from_probe_lib() -> HashMap<String, Vec<String>> {
 /// like: all(target_arch = "aarch64", target_vendor = "apple", target_os = "darwin") and
 /// include target_env when present.
 fn cfg_from_target_triple(target: &str) -> String {
-    match target.parse::<CfgTarget>() {
-        Ok(CfgTarget::Triple { arch, vendor, os, env }) => {
-            let mut parts = Vec::with_capacity(4);
-            parts.push(format!("target_arch = \"{}\"", arch));
-            parts.push(format!("target_vendor = \"{}\"", vendor));
-            parts.push(format!("target_os = \"{}\"", os));
-            if let Some(env) = env {
-                if !env.is_empty() {
-                    parts.push(format!("target_env = \"{}\"", env));
-                }
-            }
-            if parts.len() == 1 {
-                parts.remove(0)
-            } else {
-                format!("all({})", parts.join(", "))
-            }
-        }
-        // We don't expect complex cfgs here; fall back to a safe, always-false predicate to avoid mis-gating
-        // and make the issue visible if it ever happens.
-        Ok(CfgTarget::Cfg(_)) => {
-            // Fallback to arch/os/env extraction is not straightforward from Cfg AST; be conservative.
-            panic!("Unexpected cfg() expression for target spec: {target}")
-        }
-        Err(e) => {
-            panic!("Failed to parse target triple '{target}': {e}")
-        }
+    // Use target-lexicon (standard Rust ecosystem crate) to parse triples reliably
+    let triple: Triple = target
+        .parse()
+        .unwrap_or_else(|e| panic!("Failed to parse target triple '{target}': {e}"));
+
+    // Map OS into Rust cfg target_os values. Rust uses `macos` even when the triple OS is `darwin`.
+    let os_cfg: String = match triple.operating_system {
+        OperatingSystem::Darwin(_) => "macos".to_string(),
+        ref os => os.to_string(),
+    };
+
+    let arch = triple.architecture.to_string();
+    let vendor = triple.vendor.to_string();
+    let env = triple.environment.to_string();
+
+    let mut parts: Vec<String> = Vec::with_capacity(4);
+    parts.push(format!("target_arch = \"{}\"", arch));
+    parts.push(format!("target_vendor = \"{}\"", vendor));
+    parts.push(format!("target_os = \"{}\"", os_cfg));
+    // Only include env when meaningful (not "unknown" or empty)
+    if !env.is_empty() && env != "unknown" {
+        parts.push(format!("target_env = \"{}\"", env));
+    }
+
+    if parts.len() == 1 {
+        parts.remove(0)
+    } else {
+        format!("all({})", parts.join(", "))
     }
 }

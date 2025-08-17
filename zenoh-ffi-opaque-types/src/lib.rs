@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 mod probe;
-pub(crate) mod transmute;
+pub mod transmute;
 pub(crate) mod opaque_types;
 
 pub use transmute::TakeCType;

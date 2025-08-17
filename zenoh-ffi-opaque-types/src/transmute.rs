@@ -89,7 +89,7 @@ pub(crate) trait TakeRustType: Sized {
     fn take_rust_type(&mut self) -> Self::RustType;
 }
 #[allow(dead_code)]
-pub(crate) trait TakeCType: Sized {
+pub trait TakeCType: Sized {
     type CType;
     fn take_c_type(&mut self) -> Self::CType;
 }
