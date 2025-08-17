@@ -21,7 +21,7 @@ use std::mem::MaybeUninit;
 // The result of this metod is placed to zenoh-c object representation
 // after dropping the original object.
 //
-pub(crate) trait Gravestone {
+pub trait Gravestone {
     // Create a gravestone object: an object which is safe to be forgotten
     // without calling drop() method on it.
     fn gravestone() -> Self;
@@ -105,6 +105,7 @@ where
     }
 }
 
+#[macro_export]
 macro_rules! validate_equivalence {
     ($type_a:ty, $type_b:ty) => {
         const _: () = {
@@ -145,6 +146,7 @@ macro_rules! validate_equivalence {
     };
 }
 
+#[macro_export]
 macro_rules! impl_transmute {
     (as_c ($rust_type:ty, $c_type:ty)) => {
         impl $crate::transmute::CTypeRef for $rust_type {
@@ -247,6 +249,7 @@ macro_rules! impl_transmute {
     };
 }
 
+#[macro_export]
 macro_rules! impl_owned {
     (owned $c_owned_type:ty, inner rust option $rust_inner_type:ty) => {
         impl_transmute!(as_c_owned(Option<$rust_inner_type>, $c_owned_type));
@@ -310,6 +313,7 @@ macro_rules! impl_owned {
 // But for some types which are not covered by C++ this restriction can be relaxed.
 // In this case the "inequal" variant should be used.
 
+#[macro_export]
 macro_rules! decl_c_type_inequal {
     //
     // Owned with with explicit rust loaned type - rarely used
@@ -395,6 +399,7 @@ macro_rules! decl_c_type_inequal {
     };
 }
 
+#[macro_export]
 macro_rules! decl_c_type {
     //
     // Owned type only
