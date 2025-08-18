@@ -13,10 +13,8 @@
 //
 #![allow(non_camel_case_types)]
 
-// Just reexport zenoh features list for simplicity, zenoh-ffi just mirrors them
-// It it becomes necessary to know the own zenoh-ffi features, it can be replaced with
-// the own FEATURES constant, using the same `zenoh_util::concat_enabled_features!` macro.
-pub const ZENOH_FEATURES: &str = zenoh::FEATURES;
+pub const FEATURES: &str = prebindgen_proc_macro::features!();
+pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!();
 
 use std::{cmp::min, slice};
 

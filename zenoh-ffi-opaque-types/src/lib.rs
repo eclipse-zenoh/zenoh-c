@@ -14,3 +14,6 @@
 mod probe;
 pub mod transmute;
 pub mod opaque_types;
+
+pub const FEATURES: &str = prebindgen_proc_macro::features!();
+pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!();
