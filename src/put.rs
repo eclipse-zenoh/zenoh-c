@@ -13,11 +13,13 @@
 //
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     qos::{CongestionControl, Priority},
     session::SessionClosedError,
     Wait,
 };
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t};
 
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;
@@ -25,11 +27,11 @@ use crate::{
     commons::*,
     result,
     transmute::{IntoRustType, RustTypeRef, TakeRustType},
-    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
     zc_locality_default, zc_locality_t,
 };
 
 /// Options passed to the `z_put()` function.
+#[prebindgen]
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_put_options_t {
@@ -60,9 +62,9 @@ pub struct z_put_options_t {
 }
 
 /// Constructs the default value for `z_put_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
+pub fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
     this_.write(z_put_options_t {
         encoding: None,
         congestion_control: CongestionControl::DEFAULT_PUSH.into(),
@@ -86,9 +88,9 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
 /// @param options: The put options (all owned values will be consumed upon function return).
 ///
 /// @return 0 in case of success, negative error values in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_put(
+pub fn z_put(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     payload: &mut z_moved_bytes_t,
@@ -133,6 +135,7 @@ pub extern "C" fn z_put(
 }
 
 /// Options passed to the `z_delete()` function.
+#[prebindgen]
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct z_delete_options_t {
@@ -154,9 +157,9 @@ pub struct z_delete_options_t {
 }
 
 /// Constructs the default value for `z_delete_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
+pub unsafe fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_t>) {
     this_.write(z_delete_options_t {
         congestion_control: CongestionControl::DEFAULT_PUSH.into(),
         priority: Priority::default().into(),
@@ -175,9 +178,9 @@ pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_dele
 /// @param options: The delete options.
 ///
 /// @return 0 in case of success, negative values in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_delete(
+pub fn z_delete(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     options: Option<&mut z_delete_options_t>,

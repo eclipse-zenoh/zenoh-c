@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 use std::{mem::MaybeUninit, sync::Arc};
+use prebindgen_proc_macro::prebindgen;
 
 use libc::c_void;
 use zenoh::{
@@ -21,7 +22,7 @@ use zenoh::{
 };
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
-pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::{z_protocol_id_t, z_segment_id_t},
@@ -30,6 +31,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Callback for ShmClient.
+#[prebindgen]
 #[derive(Debug)]
 #[repr(C)]
 pub struct zc_shm_client_callbacks_t {
@@ -80,8 +82,8 @@ impl ShmClient for DynamicShmClient {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new SHM Client.
-#[no_mangle]
-pub extern "C" fn z_shm_client_new(
+#[prebindgen]
+pub fn z_shm_client_new(
     this: &mut MaybeUninit<z_owned_shm_client_t>,
     context: zc_threadsafe_context_t,
     callbacks: zc_shm_client_callbacks_t,
@@ -92,21 +94,21 @@ pub extern "C" fn z_shm_client_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs SHM client in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_shm_client_null(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
+#[prebindgen]
+pub fn z_internal_shm_client_null(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return Returns ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_shm_client_check(this_: &z_owned_shm_client_t) -> bool {
+#[prebindgen]
+pub fn z_internal_shm_client_check(this_: &z_owned_shm_client_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes SHM Client.
-#[no_mangle]
-pub extern "C" fn z_shm_client_drop(this_: &mut z_moved_shm_client_t) {
+#[prebindgen]
+pub fn z_shm_client_drop(this_: &mut z_moved_shm_client_t) {
     let _ = this_.take_rust_type();
 }

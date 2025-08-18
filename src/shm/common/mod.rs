@@ -12,4 +12,5 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-pub mod types;
+pub(crate) mod types;
+pub use types::*;

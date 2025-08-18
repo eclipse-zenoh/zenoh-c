@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 ZettaScale Technology
+# Copyright (c) 2025 ZettaScale Technology
 #
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
@@ -11,41 +11,48 @@
 # Contributors:
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
-[package]
-name = "zenoh-c"
+[workspace]
+members = [".", "zenoh-ffi-opaque-types", "prebindgen-project-root"]
+
+[workspace.package]
 version = "1.5.0"
-repository = "https://github.com/eclipse-zenoh/zenoh-c"
+repository = "https://github.com/eclipse-zenoh/zenoh-ffi"
 homepage = "http://zenoh.io"
-authors = [
-    "kydos <angelo@icorsaro.net>",
-    "Julien Enoch <julien@enoch.fr>",
-    "Olivier Hécart <olivier.hecart@adlinktech.com>",
-    "Luca Cominardi <luca.cominardi@gmail.com>",
-]
+authors = ["ZettaScale Zenoh Team, <zenoh@zettascale.tech>"]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
-description = "The Zenoh C API"
+
+[package]
+name = "zenoh-ffi"
+version = { workspace = true }
+repository = { workspace = true}
+homepage = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+categories = { workspace = true }
+description = "The Zenoh-FFI crate provides a Foreign Function Interface (FFI) for the Zenoh library, allowind to easily implement bindings to other languages"
 readme = "README.md"
 build = "build.rs"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [features]
-shared-memory = ["zenoh/shared-memory"]
-unstable = ["zenoh/unstable", "zenoh-ext/unstable"]
-auth_pubkey = ["zenoh/auth_pubkey"]
-auth_usrpwd = ["zenoh/auth_usrpwd"]
-transport_multilink = ["zenoh/transport_multilink"]
-transport_compression = ["zenoh/transport_compression"]
-transport_quic = ["zenoh/transport_quic"]
-transport_serial = ["zenoh/transport_serial"]
-transport_unixpipe = ["zenoh/transport_unixpipe"]
-transport_tcp = ["zenoh/transport_tcp"]
-transport_tls = ["zenoh/transport_tls"]
-transport_udp = ["zenoh/transport_udp"]
-transport_unixsock-stream = ["zenoh/transport_unixsock-stream"]
-transport_ws = ["zenoh/transport_ws"]
-transport_vsock = ["zenoh/transport_vsock"]
+shared-memory = ["zenoh-ffi-opaque-types/shared-memory"]
+unstable = ["zenoh-ffi-opaque-types/unstable"]
+auth_pubkey = ["zenoh-ffi-opaque-types/auth_pubkey"]
+auth_usrpwd = ["zenoh-ffi-opaque-types/auth_usrpwd"]
+transport_multilink = ["zenoh-ffi-opaque-types/transport_multilink"]
+transport_compression = ["zenoh-ffi-opaque-types/transport_compression"]
+transport_quic = ["zenoh-ffi-opaque-types/transport_quic"]
+transport_serial = ["zenoh-ffi-opaque-types/transport_serial"]
+transport_unixpipe = ["zenoh-ffi-opaque-types/transport_unixpipe"]
+transport_tcp = ["zenoh-ffi-opaque-types/transport_tcp"]
+transport_tls = ["zenoh-ffi-opaque-types/transport_tls"]
+transport_udp = ["zenoh-ffi-opaque-types/transport_udp"]
+transport_unixsock-stream = ["zenoh-ffi-opaque-types/transport_unixsock-stream"]
+transport_ws = ["zenoh-ffi-opaque-types/transport_ws"]
+transport_vsock = ["zenoh-ffi-opaque-types/transport_vsock"]
 default = [
     "auth_pubkey",
     "auth_usrpwd",
@@ -73,54 +80,37 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
+zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+    "internal",
+] }
+zenoh-ext = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+    "internal",
+] }
 zenoh-runtime = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
+prebindgen-proc-macro = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+zenoh-ffi-opaque-types = { path = "zenoh-ffi-opaque-types" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-cbindgen = "0.29.0"
-fs2 = "0.4.3"
-regex = "1.11.1"
-serde_yaml = "0.9.19"
-fs_extra = "1.3.0"
-evalexpr = "11.3.0" # Bumping to 12.x.x will cause 1.75 check fails
-phf = { version = "0.11.2", features = ["macros"] }
+zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+    "internal",
+] }
+regex = "1.7.1"
+prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
+project-root = "0.2.2"
+cargo_metadata = "=0.19.0"
+serde_json = "1.0"
 
-[lib]
-path = "src/lib.rs"
-name = "zenohc"
-crate-type = ["cdylib", "staticlib"]
-doctest = false
+[patch]
 
-[package.metadata.deb.variants.libzenohc]
-name = "libzenohc"
-maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology"
-section = "net"
-license-file = ["LICENSE", "0"]
+[patch.crates-io]
 
-[package.metadata.deb.variants.libzenohc-dev]
-name = "libzenohc-dev"
-maintainer = "zenoh-dev@eclipse.org"
-copyright = "2017, 2022 ZettaScale Technology"
-section = "net"
-license-file = ["LICENSE", "0"]
-depends = "libzenohc (=1.5.0)"
-assets = [["include/*", "usr/include/", "755"]]
+[patch.crates-io.prebindgen-project-root]
+path = "prebindgen-project-root"
 
-[profile.dev]
-debug = true
-opt-level = 0
-
-[profile.release]
-debug = false     # If you want debug symbol in release mode, set the env variable: RUSTFLAGS=-g
-lto = "fat"
-codegen-units = 1
-opt-level = 3
-panic = "abort"
+[patch."https://github.com/milyin/prebindgen.git".prebindgen-project-root]
+path = "prebindgen-project-root"

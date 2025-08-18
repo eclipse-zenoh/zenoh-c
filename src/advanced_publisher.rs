@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use prebindgen_proc_macro::prebindgen;
 
 use std::{mem::MaybeUninit, time::Duration};
 
@@ -35,6 +36,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_cache_options_t {
     /// Must be set to ``true``, to enable the cache.
@@ -63,9 +65,9 @@ impl Default for ze_advanced_publisher_cache_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_publisher_cache_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_cache_options_default(
-    this: &mut MaybeUninit<ze_advanced_publisher_cache_options_t>,
+#[prebindgen]
+pub fn ze_advanced_publisher_cache_options_default(
+    this: &mut ::std::mem::MaybeUninit<ze_advanced_publisher_cache_options_t>,
 ) {
     this.write(ze_advanced_publisher_cache_options_t::default());
 }
@@ -83,6 +85,7 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
     }
 }
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -100,6 +103,7 @@ pub enum ze_advanced_publisher_heartbeat_mode_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Settings for sample miss detection on Advanced Publisher.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_sample_miss_detection_options_t {
     /// Must be set to ``true``, to enable sample miss detection by adding sequence numbers.
@@ -138,8 +142,8 @@ impl From<&ze_advanced_publisher_sample_miss_detection_options_t> for MissDetect
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `ze_advanced_publisher_sample_miss_detection_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_sample_miss_detection_options_default(
+#[prebindgen]
+pub fn ze_advanced_publisher_sample_miss_detection_options_default(
     this: &mut MaybeUninit<ze_advanced_publisher_sample_miss_detection_options_t>,
 ) {
     this.write(ze_advanced_publisher_sample_miss_detection_options_t::default());
@@ -147,6 +151,7 @@ pub extern "C" fn ze_advanced_publisher_sample_miss_detection_options_default(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_declare_advanced_publisher()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_options_t {
     /// Base publisher options.
@@ -165,8 +170,8 @@ pub struct ze_advanced_publisher_options_t {
 }
 
 /// Constructs the default value for `z_publisher_options_t`.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_options_default(
+#[prebindgen]
+pub fn ze_advanced_publisher_options_default(
     this_: &mut MaybeUninit<ze_advanced_publisher_options_t>,
 ) {
     let cache = ze_advanced_publisher_cache_options_t {
@@ -186,7 +191,7 @@ pub extern "C" fn ze_advanced_publisher_options_default(
     });
 }
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     ze_loaned_advanced_publisher_t, ze_moved_advanced_publisher_t, ze_owned_advanced_publisher_t,
 };
 decl_c_type!(
@@ -206,9 +211,9 @@ decl_c_type!(
 /// @param options: Additional options for the advanced publisher.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_declare_advanced_publisher(
+pub fn ze_declare_advanced_publisher(
     session: &'static z_loaned_session_t,
     publisher: &'static mut MaybeUninit<ze_owned_advanced_publisher_t>,
     key_expr: &'static z_loaned_keyexpr_t,
@@ -250,9 +255,9 @@ pub extern "C" fn ze_declare_advanced_publisher(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs an advanced publisher in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_internal_advanced_publisher_null(
+pub fn ze_internal_advanced_publisher_null(
     this_: &mut MaybeUninit<ze_owned_advanced_publisher_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
@@ -261,8 +266,8 @@ pub extern "C" fn ze_internal_advanced_publisher_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns ``true`` if advanced publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn ze_internal_advanced_publisher_check(
+#[prebindgen]
+pub fn ze_internal_advanced_publisher_check(
     this_: &ze_owned_advanced_publisher_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -270,9 +275,9 @@ pub extern "C" fn ze_internal_advanced_publisher_check(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Borrows advanced publisher.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_advanced_publisher_loan(
+pub unsafe fn ze_advanced_publisher_loan(
     this_: &ze_owned_advanced_publisher_t,
 ) -> &ze_loaned_advanced_publisher_t {
     this_
@@ -281,12 +286,21 @@ pub unsafe extern "C" fn ze_advanced_publisher_loan(
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// Moves advanced publisher.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn ze_advanced_publisher_move(
+    this_: &mut ze_owned_advanced_publisher_t,
+) -> &mut ze_moved_advanced_publisher_t {
+    std::mem::transmute(this_)
+}
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Mutably borrows advanced publisher.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_advanced_publisher_loan_mut(
+pub unsafe fn ze_advanced_publisher_loan_mut(
     this: &mut ze_owned_advanced_publisher_t,
 ) -> &mut ze_loaned_advanced_publisher_t {
     this.as_rust_type_mut()
@@ -297,6 +311,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_loan_mut(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options passed to the `ze_advanced_publisher_put()` function.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_put_options_t {
     /// Base put options.
@@ -305,9 +320,9 @@ pub struct ze_advanced_publisher_put_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs the default value for `ze_advanced_publisher_put_options_t`.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_advanced_publisher_put_options_default(
+pub fn ze_advanced_publisher_put_options_default(
     this: &mut MaybeUninit<ze_advanced_publisher_put_options_t>,
 ) {
     this.write(ze_advanced_publisher_put_options_t {
@@ -325,9 +340,9 @@ pub extern "C" fn ze_advanced_publisher_put_options_default(
 /// @param options: The advanced publisher put options. All owned fields will be consumed.
 ///
 /// @return 0 in case of success, negative error values in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn ze_advanced_publisher_put(
+pub unsafe fn ze_advanced_publisher_put(
     this: &ze_loaned_advanced_publisher_t,
     payload: &mut z_moved_bytes_t,
     options: Option<&mut ze_advanced_publisher_put_options_t>,
@@ -351,6 +366,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_put(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Represents the set of options that can be applied to the delete operation by a previously declared advanced publisher,
 /// whenever issued via `ze_advanced_publisher_delete()`.
+#[prebindgen]
 #[repr(C)]
 pub struct ze_advanced_publisher_delete_options_t {
     /// Base delete options.
@@ -359,9 +375,9 @@ pub struct ze_advanced_publisher_delete_options_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs the default values for the delete operation via an advanced publisher entity.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_advanced_publisher_delete_options_default(
+pub fn ze_advanced_publisher_delete_options_default(
     this: &mut MaybeUninit<ze_advanced_publisher_delete_options_t>,
 ) {
     this.write(ze_advanced_publisher_delete_options_t {
@@ -373,9 +389,9 @@ pub extern "C" fn ze_advanced_publisher_delete_options_default(
 /// Sends a `DELETE` message onto the advanced publisher's key expression.
 ///
 /// @return 0 in case of success, negative error code in case of failure.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_advanced_publisher_delete(
+pub fn ze_advanced_publisher_delete(
     publisher: &ze_loaned_advanced_publisher_t,
     options: Option<&mut ze_advanced_publisher_delete_options_t>,
 ) -> result::z_result_t {
@@ -394,8 +410,8 @@ pub extern "C" fn ze_advanced_publisher_delete(
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the ID of the advanced publisher.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_id(
+#[prebindgen]
+pub fn ze_advanced_publisher_id(
     publisher: &ze_loaned_advanced_publisher_t,
 ) -> z_entity_global_id_t {
     publisher.as_rust_type_ref().id().into_c_type()
@@ -403,8 +419,8 @@ pub extern "C" fn ze_advanced_publisher_id(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns the key expression of the publisher.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_keyexpr(
+#[prebindgen]
+pub fn ze_advanced_publisher_keyexpr(
     publisher: &ze_loaned_advanced_publisher_t,
 ) -> &z_loaned_keyexpr_t {
     publisher
@@ -440,8 +456,8 @@ fn _advanced_publisher_matching_listener_declare_inner<'a>(
 /// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
+#[prebindgen]
+pub fn ze_advanced_publisher_declare_matching_listener(
     publisher: &'static ze_loaned_advanced_publisher_t,
     matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
     callback: &mut z_moved_closure_matching_status_t,
@@ -470,8 +486,8 @@ pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
 /// @param callback: A closure that will be called every time the matching status of the publisher changes (If last subscriber disconnects or when the first subscriber connects).
 ///
 /// @return 0 in case of success, negative error code otherwise.
-#[no_mangle]
-pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
+#[prebindgen]
+pub fn ze_advanced_publisher_declare_background_matching_listener(
     publisher: &'static ze_loaned_advanced_publisher_t,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
@@ -490,9 +506,9 @@ pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
 /// @brief Gets advanced publisher matching status - i.e. if there are any subscribers matching its key expression.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_advanced_publisher_get_matching_status(
+pub fn ze_advanced_publisher_get_matching_status(
     this: &'static ze_loaned_advanced_publisher_t,
     matching_status: &mut MaybeUninit<z_matching_status_t>,
 ) -> result::z_result_t {
@@ -513,18 +529,18 @@ pub extern "C" fn ze_advanced_publisher_get_matching_status(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Frees memory and resets advanced_publisher to its gravestone state.
 /// This is equivalent to calling `z_undeclare_publisher()` and discarding its return value.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_advanced_publisher_drop(this: &mut ze_moved_advanced_publisher_t) {
+pub fn ze_advanced_publisher_drop(this: &mut ze_moved_advanced_publisher_t) {
     std::mem::drop(this.take_rust_type())
 }
 
-#[no_mangle]
+#[prebindgen]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given advanced publisher.
 ///
 /// @return 0 in case of success, negative error code otherwise.
-pub extern "C" fn ze_undeclare_advanced_publisher(
+pub fn ze_undeclare_advanced_publisher(
     this_: &mut ze_moved_advanced_publisher_t,
 ) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {

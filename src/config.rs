@@ -14,6 +14,7 @@
 use std::{mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
 use libc::{c_char, c_uint};
+use prebindgen_proc_macro::prebindgen;
 use zenoh::config::{Config, WhatAmI};
 
 use crate::{
@@ -23,38 +24,50 @@ use crate::{
     z_internal_string_null, z_owned_string_t, z_string_copy_from_substr, CStringView,
 };
 
-#[no_mangle]
-pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
-#[no_mangle]
-pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
-#[no_mangle]
-pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
+#[prebindgen]
+pub const Z_ROUTER: c_uint = 0b0001;
+const _: () = assert!(Z_ROUTER == WhatAmI::Router as c_uint);
 
-pub use crate::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
+#[prebindgen]
+pub const Z_PEER: c_uint = 0b0010;
+const _: () = assert!(Z_PEER == WhatAmI::Peer as c_uint);
+
+#[prebindgen]
+pub const Z_CLIENT: c_uint = 0b0100;
+const _: () = assert!(Z_CLIENT == WhatAmI::Client as c_uint);
+
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
 decl_c_type!(
     owned(z_owned_config_t, option Config),
     loaned(z_loaned_config_t),
 );
 
 /// Borrows config.
-#[no_mangle]
-pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &'static z_loaned_config_t {
+#[prebindgen]
+pub fn z_config_loan(this_: &'static z_owned_config_t) -> &'static z_loaned_config_t {
     let this = this_.as_rust_type_ref();
     let this = unsafe { this.as_ref().unwrap_unchecked() };
     this.as_loaned_c_type_ref()
 }
 
+// Moves config.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_config_move(this_: &mut z_owned_config_t) -> &mut z_moved_config_t {
+    std::mem::transmute(this_)
+}
+
 /// Mutably borrows config.
-#[no_mangle]
-pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {
+#[prebindgen]
+pub fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {
     let this = this_.as_rust_type_mut();
     let this = unsafe { this.as_mut().unwrap_unchecked() };
     this.as_loaned_c_type_mut()
 }
 
 /// Constructs a new empty configuration.
-#[no_mangle]
-pub extern "C" fn z_config_default(
+#[prebindgen]
+pub fn z_config_default(
     this_: &mut MaybeUninit<z_owned_config_t>,
 ) -> result::z_result_t {
     this_
@@ -64,14 +77,14 @@ pub extern "C" fn z_config_default(
 }
 
 /// Constructs config in its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_config_null(this_: &mut MaybeUninit<z_owned_config_t>) {
+#[prebindgen]
+pub fn z_internal_config_null(this_: &mut MaybeUninit<z_owned_config_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Clones the config into provided uninitialized memory location.
-#[no_mangle]
-pub extern "C" fn z_config_clone(
+#[prebindgen]
+pub fn z_config_clone(
     dst: &mut MaybeUninit<z_owned_config_t>,
     this: &z_loaned_config_t,
 ) {
@@ -81,9 +94,9 @@ pub extern "C" fn z_config_clone(
 }
 
 /// Gets the property with the given path key from the configuration, and constructs and owned string from it.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get_from_str(
+pub unsafe fn zc_config_get_from_str(
     this: &z_loaned_config_t,
     key: *const c_char,
     out_value_string: &mut MaybeUninit<z_owned_string_t>,
@@ -92,9 +105,9 @@ pub unsafe extern "C" fn zc_config_get_from_str(
 }
 
 /// Gets the property with the given path key from the configuration, and constructs and owned string from it.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get_from_substr(
+pub unsafe fn zc_config_get_from_substr(
     this: &z_loaned_config_t,
     key: *const c_char,
     key_len: usize,
@@ -136,9 +149,9 @@ pub unsafe extern "C" fn zc_config_get_from_substr(
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 ///
 /// Returns 0 if successful, a negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn zc_config_insert_json5(
+pub unsafe fn zc_config_insert_json5(
     this: &mut z_loaned_config_t,
     key: *const c_char,
     value: *const c_char,
@@ -149,9 +162,9 @@ pub unsafe extern "C" fn zc_config_insert_json5(
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 ///
 /// Returns 0 if successful, a negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
+pub unsafe fn zc_config_insert_json5_from_substr(
     this: &mut z_loaned_config_t,
     key: *const c_char,
     key_len: usize,
@@ -196,24 +209,24 @@ pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
 }
 
 /// Frees `config`, and resets it to its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_config_drop(this_: &mut z_moved_config_t) {
+#[prebindgen]
+pub fn z_config_drop(this_: &mut z_moved_config_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_internal_config_check(this_: &z_owned_config_t) -> bool {
+pub fn z_internal_config_check(this_: &z_owned_config_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
 ///
 /// Returns 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_from_str(
+pub unsafe fn zc_config_from_str(
     this: &mut MaybeUninit<z_owned_config_t>,
     s: *const c_char,
 ) -> result::z_result_t {
@@ -260,8 +273,8 @@ pub unsafe extern "C" fn zc_config_from_substr(
 ///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zc_config_to_string(
+#[prebindgen]
+pub unsafe fn zc_config_to_string(
     config: &z_loaned_config_t,
     out_config_string: &mut MaybeUninit<z_owned_string_t>,
 ) -> result::z_result_t {
@@ -289,8 +302,8 @@ pub unsafe extern "C" fn zc_config_to_string(
 ///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zc_config_from_file(
+#[prebindgen]
+pub unsafe fn zc_config_from_file(
     this: &mut MaybeUninit<z_owned_config_t>,
     path: *const c_char,
 ) -> result::z_result_t {
@@ -336,8 +349,8 @@ pub unsafe extern "C" fn zc_config_from_file_substr(
 ///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zc_config_from_env(
+#[prebindgen]
+pub unsafe fn zc_config_from_env(
     this: &mut MaybeUninit<z_owned_config_t>,
 ) -> result::z_result_t {
     match Config::from_env() {

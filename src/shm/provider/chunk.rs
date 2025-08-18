@@ -12,18 +12,21 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 use std::{mem::MaybeUninit, num::TryFromIntError, sync::Arc};
+use prebindgen_proc_macro::prebindgen;
 
 use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
 
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t};
+
 use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
-    opaque_types::{z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t},
     shm::common::types::{z_chunk_id_t, z_segment_id_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A ChunkDescriptor.
+#[prebindgen]
 #[repr(C)]
 pub struct z_chunk_descriptor_t {
     segment: z_segment_id_t,
@@ -50,6 +53,7 @@ impl From<&ChunkDescriptor> for z_chunk_descriptor_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocatedChunk.
+#[prebindgen]
 #[repr(C)]
 pub struct z_allocated_chunk_t {
     descriptpr: z_chunk_descriptor_t,
@@ -71,8 +75,8 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new data pointer in SHM Segment.
-#[no_mangle]
-pub extern "C" fn z_ptr_in_segment_new(
+#[prebindgen]
+pub fn z_ptr_in_segment_new(
     this: &mut MaybeUninit<z_owned_ptr_in_segment_t>,
     ptr: *mut u8,
     segment: zc_threadsafe_context_t,
@@ -84,8 +88,8 @@ pub extern "C" fn z_ptr_in_segment_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs data pointer in SHM Segment in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_ptr_in_segment_null(
+#[prebindgen]
+pub fn z_internal_ptr_in_segment_null(
     this_: &mut MaybeUninit<z_owned_ptr_in_segment_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
@@ -93,16 +97,16 @@ pub extern "C" fn z_internal_ptr_in_segment_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_ptr_in_segment_check(this_: &z_owned_ptr_in_segment_t) -> bool {
+#[prebindgen]
+pub fn z_internal_ptr_in_segment_check(this_: &z_owned_ptr_in_segment_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows data pointer in SHM Segment.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_ptr_in_segment_loan(
+pub unsafe fn z_ptr_in_segment_loan(
     this: &z_owned_ptr_in_segment_t,
 ) -> &z_loaned_ptr_in_segment_t {
     this.as_rust_type_ref()
@@ -112,16 +116,26 @@ pub unsafe extern "C" fn z_ptr_in_segment_loan(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves data pointer in SHM Segment.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_ptr_in_segment_move(
+    this: &mut z_owned_ptr_in_segment_t,
+) -> &mut z_moved_ptr_in_segment_t {
+    std::mem::transmute(this)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes data pointer in SHM Segment.
-#[no_mangle]
-pub extern "C" fn z_ptr_in_segment_drop(this_: &mut z_moved_ptr_in_segment_t) {
+#[prebindgen]
+pub fn z_ptr_in_segment_drop(this_: &mut z_moved_ptr_in_segment_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Makes a shallow data pointer in SHM Segment copy.
-#[no_mangle]
-pub extern "C" fn z_ptr_in_segment_clone(
+#[prebindgen]
+pub fn z_ptr_in_segment_clone(
     out: &mut MaybeUninit<z_owned_ptr_in_segment_t>,
     this_: &z_loaned_ptr_in_segment_t,
 ) {

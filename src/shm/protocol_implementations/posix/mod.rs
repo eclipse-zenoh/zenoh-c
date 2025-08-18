@@ -13,4 +13,6 @@
 //
 
 pub mod posix_shm_client;
+pub use posix_shm_client::*;
 pub mod posix_shm_provider;
+pub use posix_shm_provider::*;

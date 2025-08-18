@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use prebindgen_proc_macro::prebindgen;
 use std::mem::MaybeUninit;
 
 use zenoh::shm::{
@@ -30,6 +31,7 @@ use crate::{
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Allocation errors
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_alloc_error_t {
@@ -65,6 +67,7 @@ impl From<z_alloc_error_t> for ZAllocError {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Layouting errors
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_layout_error_t {
@@ -100,6 +103,7 @@ impl From<z_layout_error_t> for ZLayoutError {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocAlignment.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
@@ -115,8 +119,8 @@ decl_c_type_inequal!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Memory Layout.
-#[no_mangle]
-pub extern "C" fn z_memory_layout_new(
+#[prebindgen]
+pub fn z_memory_layout_new(
     this: &mut MaybeUninit<z_owned_memory_layout_t>,
     size: usize,
     alignment: z_alloc_alignment_t,
@@ -143,42 +147,52 @@ pub extern "C" fn z_memory_layout_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Memory Layout in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
+#[prebindgen]
+pub fn z_internal_memory_layout_null(this_: &mut MaybeUninit<z_owned_memory_layout_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
+#[prebindgen]
+pub fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows Memory Layout.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_memory_layout_loan(
-    this: &z_owned_memory_layout_t,
+pub unsafe fn z_memory_layout_loan(
+    this_: &z_owned_memory_layout_t,
 ) -> &z_loaned_memory_layout_t {
-    this.as_rust_type_ref()
+    this_.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Moves Memory Layout.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_memory_layout_move(
+    this_: &mut z_owned_memory_layout_t,
+) -> &mut z_moved_memory_layout_t {
+    std::mem::transmute(this_)
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Memory Layout.
-#[no_mangle]
-pub extern "C" fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
+#[prebindgen]
+pub fn z_memory_layout_drop(this_: &mut z_moved_memory_layout_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Extract data from Memory Layout.
-#[no_mangle]
-pub extern "C" fn z_memory_layout_get_data(
+#[prebindgen]
+pub fn z_memory_layout_get_data(
     this: &z_loaned_memory_layout_t,
     out_size: &mut MaybeUninit<usize>,
     out_alignment: &mut MaybeUninit<z_alloc_alignment_t>,
@@ -194,8 +208,8 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Chunk Alloc Result with Ok value.
-#[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_new_ok(
+#[prebindgen]
+pub fn z_chunk_alloc_result_new_ok(
     this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
     allocated_chunk: z_allocated_chunk_t,
 ) -> z_result_t {
@@ -210,8 +224,8 @@ pub extern "C" fn z_chunk_alloc_result_new_ok(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Chunk Alloc Result with Error value.
-#[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_new_error(
+#[prebindgen]
+pub fn z_chunk_alloc_result_new_error(
     this: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
     alloc_error: z_alloc_error_t,
 ) {
@@ -221,8 +235,8 @@ pub extern "C" fn z_chunk_alloc_result_new_error(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Chunk Alloc Result in its gravestone value.
-#[no_mangle]
-pub extern "C" fn z_internal_chunk_alloc_result_null(
+#[prebindgen]
+pub fn z_internal_chunk_alloc_result_null(
     this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
@@ -230,8 +244,8 @@ pub extern "C" fn z_internal_chunk_alloc_result_null(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
-#[no_mangle]
-pub extern "C" fn z_internal_chunk_alloc_result_check(
+#[prebindgen]
+pub fn z_internal_chunk_alloc_result_check(
     this_: &z_owned_chunk_alloc_result_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -239,13 +253,14 @@ pub extern "C" fn z_internal_chunk_alloc_result_check(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Chunk Alloc Result.
-#[no_mangle]
-pub extern "C" fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
+#[prebindgen]
+pub fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Status of SHM buffer allocation operation.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_buf_alloc_status_t {
@@ -257,6 +272,7 @@ pub enum zc_buf_alloc_status_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A result of SHM buffer allocation operation.
+#[prebindgen]
 #[repr(C)]
 pub struct z_buf_alloc_result_t {
     status: zc_buf_alloc_status_t,
@@ -292,6 +308,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Status of SHM buffer layouting + allocation operation.
+#[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum zc_buf_layout_alloc_status_t {
@@ -305,6 +322,7 @@ pub enum zc_buf_layout_alloc_status_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A result of SHM buffer layouting + allocation operation.
+#[prebindgen]
 #[repr(C)]
 pub struct z_buf_layout_alloc_result_t {
     status: zc_buf_layout_alloc_status_t,

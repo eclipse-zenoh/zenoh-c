@@ -13,13 +13,14 @@
 //
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     config::{WhatAmI, WhatAmIMatcher},
     scouting::Hello,
 };
 use zenoh_runtime::ZRuntime;
 
-pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -32,16 +33,16 @@ decl_c_type!(
 );
 
 /// Frees memory and resets hello message to its gravestone state.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_drop(this_: &mut z_moved_hello_t) {
+pub unsafe fn z_hello_drop(this_: &mut z_moved_hello_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Borrows hello message.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
+pub unsafe fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -49,10 +50,17 @@ pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hell
         .as_loaned_c_type_ref()
 }
 
-/// Mutably borrows hello message.
-#[no_mangle]
+/// Moves hello message.
+#[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_loan_mut(this_: &mut z_owned_hello_t) -> &mut z_loaned_hello_t {
+pub unsafe fn z_hello_move(this_: &mut z_owned_hello_t) -> &mut z_moved_hello_t {
+    std::mem::transmute(this_)
+}
+
+/// Mutably borrows hello message.
+#[prebindgen]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_hello_loan_mut(this_: &mut z_owned_hello_t) -> &mut z_loaned_hello_t {
     this_
         .as_rust_type_mut()
         .as_mut()
@@ -61,9 +69,9 @@ pub unsafe extern "C" fn z_hello_loan_mut(this_: &mut z_owned_hello_t) -> &mut z
 }
 
 /// Takes ownership of the mutably borrowed hello
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_take_from_loaned(
+pub unsafe fn z_hello_take_from_loaned(
     dst: &mut MaybeUninit<z_owned_hello_t>,
     src: &mut z_loaned_hello_t,
 ) {
@@ -74,33 +82,33 @@ pub unsafe extern "C" fn z_hello_take_from_loaned(
 }
 
 /// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {
+#[prebindgen]
+pub fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs hello message in a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
+#[prebindgen]
+pub fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Constructs an owned copy of hello message.
-#[no_mangle]
-pub extern "C" fn z_hello_clone(dst: &mut MaybeUninit<z_owned_hello_t>, this_: &z_loaned_hello_t) {
+#[prebindgen]
+pub fn z_hello_clone(dst: &mut MaybeUninit<z_owned_hello_t>, this_: &z_loaned_hello_t) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this_.as_rust_type_ref().clone()));
 }
 
 /// @brief Returns id of Zenoh entity that transmitted hello message.
-#[no_mangle]
-pub extern "C" fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
+#[prebindgen]
+pub fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
     this_.as_rust_type_ref().zid().into_c_type()
 }
 
 /// Returns type of Zenoh entity that transmitted hello message.
-#[no_mangle]
-pub extern "C" fn z_hello_whatami(this_: &z_loaned_hello_t) -> z_whatami_t {
+#[prebindgen]
+pub fn z_hello_whatami(this_: &z_loaned_hello_t) -> z_whatami_t {
     match this_.as_rust_type_ref().whatami() {
         WhatAmI::Router => z_whatami_t::ROUTER,
         WhatAmI::Peer => z_whatami_t::PEER,
@@ -111,8 +119,8 @@ pub extern "C" fn z_hello_whatami(this_: &z_loaned_hello_t) -> z_whatami_t {
 /// Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
 ///
 /// The lifetime of locator strings is bound to `this_`.
-#[no_mangle]
-pub extern "C" fn z_hello_locators(
+#[prebindgen]
+pub fn z_hello_locators(
     this: &z_loaned_hello_t,
     locators_out: &mut MaybeUninit<z_owned_string_array_t>,
 ) {
@@ -125,6 +133,7 @@ pub extern "C" fn z_hello_locators(
 }
 
 /// Options to pass to `z_scout()`.
+#[prebindgen]
 #[derive(Clone)]
 #[repr(C)]
 pub struct z_scout_options_t {
@@ -143,6 +152,7 @@ impl Default for z_scout_options_t {
     }
 }
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -152,6 +162,7 @@ pub enum z_whatami_t {
     CLIENT = 0x04,
 }
 
+#[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -165,12 +176,14 @@ pub enum z_what_t {
     ROUTER_PEER_CLIENT = 0x07, // 0x01 | 0x02 | 0x04,
 }
 
+#[prebindgen]
 pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
+#[prebindgen]
 pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
 /// Constructs the default values for the scouting operation.
-#[no_mangle]
-pub extern "C" fn z_scout_options_default(this_: &mut MaybeUninit<z_scout_options_t>) {
+#[prebindgen]
+pub fn z_scout_options_default(this_: &mut MaybeUninit<z_scout_options_t>) {
     this_.write(z_scout_options_t::default());
 }
 
@@ -182,8 +195,8 @@ pub extern "C" fn z_scout_options_default(this_: &mut MaybeUninit<z_scout_option
 ///
 /// @return 0 if successful, negative error values upon failure.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_scout(
+#[prebindgen]
+pub fn z_scout(
     config: &mut z_moved_config_t,
     callback: &mut z_moved_closure_hello_t,
     options: Option<&z_scout_options_t>,
@@ -233,8 +246,8 @@ pub extern "C" fn z_scout(
 /// @param str_out: An uninitialized memory location where strring will be constructed.
 ///
 /// @return 0 if successful, negative error values if whatami contains an invalid bitmask.
-#[no_mangle]
-pub extern "C" fn z_whatami_to_view_string(
+#[prebindgen]
+pub fn z_whatami_to_view_string(
     whatami: z_whatami_t,
     str_out: &mut MaybeUninit<z_view_string_t>,
 ) -> result::z_result_t {

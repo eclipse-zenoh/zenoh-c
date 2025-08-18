@@ -78,3 +78,6 @@ include/zenoh_opaque.h
 CMakeFiles/
 debug/
 release/
+
+# The Cargo.lock for opaque-types is copied from original Cargo.lock by build.rs
+build-resources/opaque-types/Cargo.lock

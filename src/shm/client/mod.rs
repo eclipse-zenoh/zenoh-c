@@ -13,4 +13,6 @@
 //
 
 pub mod shm_client;
+pub use shm_client::*;
 pub mod shm_segment;
+pub use shm_segment::*;

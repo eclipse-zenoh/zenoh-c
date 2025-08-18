@@ -15,12 +15,13 @@
 use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Query,
 };
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_fifo_handler_query_t, z_moved_fifo_handler_query_t, z_owned_fifo_handler_query_t,
 };
 use crate::{
@@ -34,22 +35,22 @@ decl_c_type!(
 );
 
 /// Drops the handler and resets it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_fifo_handler_query_drop(this_: &mut z_moved_fifo_handler_query_t) {
+#[prebindgen]
+pub fn z_fifo_handler_query_drop(this_: &mut z_moved_fifo_handler_query_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Constructs a handler in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_fifo_handler_query_null(
+#[prebindgen]
+pub fn z_internal_fifo_handler_query_null(
     this_: &mut MaybeUninit<z_owned_fifo_handler_query_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_fifo_handler_query_check(
+#[prebindgen]
+pub fn z_internal_fifo_handler_query_check(
     this_: &z_owned_fifo_handler_query_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
@@ -73,9 +74,9 @@ extern "C" fn __z_handler_query_drop(context: *mut c_void) {
 }
 
 /// Constructs send and recieve ends of the fifo channel
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_fifo_channel_query_new(
+pub unsafe fn z_fifo_channel_query_new(
     callback: &mut MaybeUninit<z_owned_closure_query_t>,
     handler: &mut MaybeUninit<z_owned_fifo_handler_query_t>,
     capacity: usize,
@@ -92,9 +93,9 @@ pub unsafe extern "C" fn z_fifo_channel_query_new(
 }
 
 /// Borrows handler.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_fifo_handler_query_loan(
+pub unsafe fn z_fifo_handler_query_loan(
     this: &z_owned_fifo_handler_query_t,
 ) -> &z_loaned_fifo_handler_query_t {
     this.as_rust_type_ref()
@@ -103,12 +104,21 @@ pub unsafe extern "C" fn z_fifo_handler_query_loan(
         .as_loaned_c_type_ref()
 }
 
+/// Moves handler.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_fifo_handler_query_move(
+    this: &mut z_owned_fifo_handler_query_t,
+) -> &mut z_moved_fifo_handler_query_t {
+    std::mem::transmute(this)
+}
+
 /// Returns query from the fifo buffer. If there are no more pending queries will block until next query is received, or until
 /// the channel is dropped (normally when Queryable is dropped).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
 /// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_fifo_handler_query_recv(
+#[prebindgen]
+pub fn z_fifo_handler_query_recv(
     this: &z_loaned_fifo_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
 ) -> z_result_t {
@@ -127,8 +137,8 @@ pub extern "C" fn z_fifo_handler_query_recv(
 /// Returns query from the fifo buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
 /// `Z_CHANNEL_NODATA` if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_fifo_handler_query_try_recv(
+#[prebindgen]
+pub fn z_fifo_handler_query_try_recv(
     this: &z_loaned_fifo_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
 ) -> z_result_t {
@@ -148,7 +158,7 @@ pub extern "C" fn z_fifo_handler_query_try_recv(
     }
 }
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_ring_handler_query_t, z_moved_ring_handler_query_t, z_owned_ring_handler_query_t,
 };
 decl_c_type!(
@@ -160,31 +170,31 @@ decl_c_type!(
 );
 
 /// Drops the handler and resets it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_ring_handler_query_drop(this_: &mut z_moved_ring_handler_query_t) {
+#[prebindgen]
+pub fn z_ring_handler_query_drop(this_: &mut z_moved_ring_handler_query_t) {
     let _ = this_.take_rust_type();
 }
 
 /// Constructs a handler in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_ring_handler_query_null(
+#[prebindgen]
+pub fn z_internal_ring_handler_query_null(
     this_: &mut MaybeUninit<z_owned_ring_handler_query_t>,
 ) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_ring_handler_query_check(
+#[prebindgen]
+pub fn z_internal_ring_handler_query_check(
     this_: &z_owned_ring_handler_query_t,
 ) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
 /// Constructs send and recieve ends of the ring channel
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_ring_channel_query_new(
+pub unsafe fn z_ring_channel_query_new(
     callback: &mut MaybeUninit<z_owned_closure_query_t>,
     handler: &mut MaybeUninit<z_owned_ring_handler_query_t>,
     capacity: usize,
@@ -201,9 +211,9 @@ pub unsafe extern "C" fn z_ring_channel_query_new(
 }
 
 /// Borrows handler.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_ring_handler_query_loan(
+pub unsafe fn z_ring_handler_query_loan(
     this: &z_owned_ring_handler_query_t,
 ) -> &z_loaned_ring_handler_query_t {
     this.as_rust_type_ref()
@@ -212,11 +222,20 @@ pub unsafe extern "C" fn z_ring_handler_query_loan(
         .as_loaned_c_type_ref()
 }
 
+/// Moves handler.
+#[prebindgen("move")]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe fn z_ring_handler_query_move(
+    this: &mut z_owned_ring_handler_query_t,
+) -> &mut z_moved_ring_handler_query_t {
+    std::mem::transmute(this)
+}
+
 /// Returns query from the ring buffer. If there are no more pending queries will block until next query is received, or until
 /// the channel is dropped (normally when Queryable is dropped).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_ring_handler_query_recv(
+#[prebindgen]
+pub fn z_ring_handler_query_recv(
     this: &z_loaned_ring_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
 ) -> z_result_t {
@@ -235,8 +254,8 @@ pub extern "C" fn z_ring_handler_query_recv(
 /// Returns query from the ring buffer. If there are no more pending queries will return immediately (with query set to its gravestone state).
 /// @return 0 in case of success, `Z_CHANNEL_DISCONNECTED` if channel was dropped (the query will be in the gravestone state),
 /// Z_CHANNEL_NODATA if the channel is still alive, but its buffer is empty (the query will be in the gravestone state).
-#[no_mangle]
-pub extern "C" fn z_ring_handler_query_try_recv(
+#[prebindgen]
+pub fn z_ring_handler_query_try_recv(
     this: &z_loaned_ring_handler_query_t,
     query: &mut MaybeUninit<z_owned_query_t>,
 ) -> z_result_t {

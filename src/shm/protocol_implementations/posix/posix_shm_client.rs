@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use prebindgen_proc_macro::prebindgen;
 use std::{mem::MaybeUninit, sync::Arc};
 
 use zenoh::shm::{PosixShmClient, ShmClient};
@@ -20,8 +21,8 @@ use crate::{transmute::RustTypeRefUninit, z_owned_shm_client_t};
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new POSIX SHM Client.
-#[no_mangle]
-pub extern "C" fn z_posix_shm_client_new(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
+#[prebindgen]
+pub fn z_posix_shm_client_new(this_: &mut MaybeUninit<z_owned_shm_client_t>) {
     let client = Arc::new(PosixShmClient) as Arc<dyn ShmClient>;
     this_.as_rust_type_mut_uninit().write(Some(client));
 }

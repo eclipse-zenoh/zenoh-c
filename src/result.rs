@@ -18,26 +18,46 @@ use std::{cell::RefCell, mem::MaybeUninit, str};
 #[cfg(feature = "unstable")]
 use crate::{z_view_string_from_substr, z_view_string_t};
 
+use prebindgen_proc_macro::prebindgen;
+
+#[prebindgen]
 #[allow(non_camel_case_types)]
 pub type z_result_t = i8;
 
+#[prebindgen]
 pub const Z_CHANNEL_DISCONNECTED: z_result_t = 1;
+#[prebindgen]
 pub const Z_CHANNEL_NODATA: z_result_t = 2;
+#[prebindgen]
 pub const Z_OK: z_result_t = 0;
+#[prebindgen]
 pub const Z_EINVAL: z_result_t = -1;
+#[prebindgen]
 pub const Z_EPARSE: z_result_t = -2;
+#[prebindgen]
 pub const Z_EIO: z_result_t = -3;
+#[prebindgen]
 pub const Z_ENETWORK: z_result_t = -4;
+#[prebindgen]
 pub const Z_ENULL: z_result_t = -5;
+#[prebindgen]
 pub const Z_EUNAVAILABLE: z_result_t = -6;
+#[prebindgen]
 pub const Z_EDESERIALIZE: z_result_t = -7;
+#[prebindgen]
 pub const Z_ESESSION_CLOSED: z_result_t = -8;
+#[prebindgen]
 pub const Z_EUTF8: z_result_t = -9;
 // negative pthread error codes (due to convention to return negative values on error)
+#[prebindgen]
 pub const Z_EBUSY_MUTEX: z_result_t = -16;
+#[prebindgen]
 pub const Z_EINVAL_MUTEX: z_result_t = -22;
+#[prebindgen]
 pub const Z_EAGAIN_MUTEX: z_result_t = -11;
+#[prebindgen]
 pub const Z_EPOISON_MUTEX: z_result_t = -22; // same as Z_EINVAL_MUTEX
+#[prebindgen]
 pub const Z_EGENERIC: z_result_t = i8::MIN;
 
 #[cfg(feature = "unstable")]

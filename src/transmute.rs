@@ -14,6 +14,8 @@
 
 use std::mem::MaybeUninit;
 
+use zenoh_ffi_opaque_types::transmute::TakeCType;
+
 //
 // The `Gravestone` trait is used to create valid instance of an object
 // which is safe to be forgotten without calling drop() method on it.
@@ -87,11 +89,6 @@ pub(crate) trait IntoCType: Sized {
 pub(crate) trait TakeRustType: Sized {
     type RustType;
     fn take_rust_type(&mut self) -> Self::RustType;
-}
-#[allow(dead_code)]
-pub(crate) trait TakeCType: Sized {
-    type CType;
-    fn take_c_type(&mut self) -> Self::CType;
 }
 
 impl<P, Q> TakeRustType for P
@@ -509,7 +506,7 @@ macro_rules! decl_c_type {
      $(,)?) => {
         validate_equivalence!($c_owned_type, $c_loaned_type);
         impl_owned!(owned rust $c_owned_type, loaned $c_loaned_type);
-        impl $crate::transmute::TakeCType for $c_moved_type {
+        impl zenoh_ffi_opaque_types::transmute::TakeCType for $c_moved_type {
             type CType = $c_owned_type;
             fn take_c_type(&mut self) -> Self::CType {
                 std::mem::take(&mut self._this)
