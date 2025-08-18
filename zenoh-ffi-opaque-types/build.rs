@@ -69,8 +69,7 @@ mod buildrs;
 //
 //  Cargo build steps:
 //
-//  1. create features cargo argument. Uses `concat_enabled_features!` macro
-//     from zenoh. Enable "panic" feature
+//  1. create features cargo argument using `prebindgen::get_enabled_features()`. Enable "panic" feature
 //  2. create target cargo argument from target parameter
 //  3. create linker cargo argument from linker parameter if present
 //  4. run cargo build with the arguments, return output

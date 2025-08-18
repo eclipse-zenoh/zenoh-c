@@ -1,8 +1,4 @@
-use std::{collections::BTreeSet, path::Path};
-
-pub fn zenoh_features() -> BTreeSet<&'static str> {
-    zenoh::FEATURES.split(" zenoh/").collect()
-}
+use std::path::Path;
 
 pub fn get_out_dir() -> std::path::PathBuf {
     let out_dir = std::env::var_os("OUT_DIR").unwrap();
