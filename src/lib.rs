@@ -20,10 +20,15 @@ pub const ZENOH_FEATURES: &str = zenoh::FEATURES;
 
 use std::{cmp::min, slice};
 
+use crate::transmute::{TakeRustType, LoanedCTypeRef};
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 
-pub use opaque_types::*;
+// Reexport opaque types (z_owned_xxx_t, etc)
+pub use zenoh_ffi_opaque_types::opaque_types::*;
+
+#[macro_use]
+mod transmute;
 
 mod collections;
 pub use crate::collections::*;

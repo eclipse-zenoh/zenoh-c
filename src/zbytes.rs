@@ -28,7 +28,7 @@ use zenoh::{
     internal::buffers::{ZBuf, ZSliceBuffer},
 };
 
-pub use crate::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::result::Z_ENULL;
 use crate::{
@@ -635,7 +635,7 @@ pub unsafe fn z_bytes_reader_remaining(this_: &z_bytes_reader_t) -> usize {
     reader.remaining()
 }
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_bytes_writer_t, z_moved_bytes_writer_t, z_owned_bytes_writer_t,
 };
 

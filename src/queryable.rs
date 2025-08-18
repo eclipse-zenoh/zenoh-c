@@ -22,7 +22,7 @@ use zenoh::{
     Wait,
 };
 
-pub use crate::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -62,7 +62,7 @@ pub unsafe fn z_queryable_move(this_: &mut z_owned_queryable_t) -> &mut z_moved_
     std::mem::transmute(this_)
 }
 
-pub use crate::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
     owned(z_owned_query_t, option Query),
     loaned(z_loaned_query_t),

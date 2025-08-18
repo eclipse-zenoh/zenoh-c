@@ -19,8 +19,9 @@ use prebindgen_proc_macro::prebindgen;
 use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
 
+use zenoh_ffi_opaque_types::opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t};
+
 use crate::{
-    opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,

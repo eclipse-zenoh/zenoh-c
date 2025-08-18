@@ -69,7 +69,7 @@ impl From<z_sample_kind_t> for SampleKind {
         }
     }
 }
-use crate::opaque_types::z_timestamp_t;
+use zenoh_ffi_opaque_types::opaque_types::z_timestamp_t;
 decl_c_type!(copy(z_timestamp_t, Timestamp));
 
 /// Create uhlc timestamp from session id.
@@ -95,8 +95,8 @@ pub fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
     this_.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
-use crate::opaque_types::z_loaned_sample_t;
-pub use crate::opaque_types::{z_moved_sample_t, z_owned_sample_t};
+use zenoh_ffi_opaque_types::opaque_types::z_loaned_sample_t;
+use zenoh_ffi_opaque_types::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
     owned(z_owned_sample_t, option Sample),
     loaned(z_loaned_sample_t),
@@ -604,7 +604,7 @@ pub fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
     this_.as_rust_type_ref().eid()
 }
 #[cfg(feature = "unstable")]
-pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
     owned(z_owned_source_info_t, SourceInfo),

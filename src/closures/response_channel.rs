@@ -21,7 +21,7 @@ use zenoh::{
     query::Reply,
 };
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_fifo_handler_reply_t, z_moved_fifo_handler_reply_t, z_owned_fifo_handler_reply_t,
 };
 use crate::{
@@ -157,7 +157,7 @@ pub fn z_fifo_handler_reply_try_recv(
     }
 }
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_ring_handler_reply_t, z_moved_ring_handler_reply_t, z_owned_ring_handler_reply_t,
 };
 decl_c_type!(

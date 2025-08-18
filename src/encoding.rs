@@ -25,7 +25,7 @@ use prebindgen_proc_macro::prebindgen;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::bytes::Encoding;
 
-pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
     strlen_or_zero,

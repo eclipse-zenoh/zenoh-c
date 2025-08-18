@@ -18,8 +18,10 @@ use zenoh::{Session, Wait};
 use crate::z_loaned_shm_client_storage_t;
 #[cfg(feature = "unstable")]
 use crate::zc_owned_concurrent_close_handle_t;
+
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_session_t, z_owned_session_t};
+
 use crate::{
-    opaque_types::{z_loaned_session_t, z_owned_session_t},
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t,

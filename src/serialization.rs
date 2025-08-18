@@ -21,7 +21,7 @@ use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
 };
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     ze_deserializer_t, ze_loaned_serializer_t, ze_moved_serializer_t, ze_owned_serializer_t,
 };
 use crate::{

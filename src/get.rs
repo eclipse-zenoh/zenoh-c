@@ -26,7 +26,7 @@ use zenoh::{
     Wait,
 };
 
-pub use crate::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result::{self, Z_EINVAL},
     strlen_or_zero,
@@ -120,7 +120,7 @@ pub fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
     let _ = this_.take_rust_type();
 }
 
-pub use crate::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
 decl_c_type!(
     owned(z_owned_reply_t, option Reply),
     loaned(z_loaned_reply_t),

@@ -25,9 +25,7 @@ use std::{
 use prebindgen_proc_macro::prebindgen;
 
 use crate::{
-    result::{self, z_result_t},
-    strlen_or_zero,
-    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    decl_c_type, result::{self, z_result_t}, strlen_or_zero, transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType}
 };
 
 pub(crate) struct CSlice {
@@ -289,7 +287,7 @@ impl From<Vec<u8>> for CSlice {
 
 impl std::cmp::Eq for CSlice {}
 
-use crate::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
 
 decl_c_type!(
     owned(z_owned_slice_t, CSliceOwned),
@@ -458,7 +456,7 @@ pub unsafe fn z_slice_from_buf(
     }
 }
 
-pub use crate::opaque_types::{
+use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_string_t, z_moved_string_t, z_owned_string_t, z_view_string_t,
 };
 
@@ -828,10 +826,10 @@ pub fn z_string_is_empty(this_: &z_loaned_string_t) -> bool {
     this_.as_rust_type_ref().is_empty()
 }
 
-use crate::opaque_types::{
+use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_string_array_t, z_moved_string_array_t, z_owned_string_array_t,
 };
-pub(crate) type ZVector = Vec<CStringInner>;
+pub type ZVector = Vec<CStringInner>;
 decl_c_type!(
     owned(z_owned_string_array_t, ZVector),
     loaned(z_loaned_string_array_t),

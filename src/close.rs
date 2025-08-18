@@ -17,11 +17,13 @@ use std::mem::MaybeUninit;
 
 use zenoh::{internal::builders::close::NolocalJoinHandle, Wait};
 
+use zenoh_ffi_opaque_types::opaque_types::{
+    zc_moved_concurrent_close_handle_t, zc_owned_concurrent_close_handle_t,
+};
+
 use crate::{
-    opaque_types::zc_owned_concurrent_close_handle_t,
     result::{z_result_t, Z_EIO, Z_OK},
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
-    zc_moved_concurrent_close_handle_t,
 };
 
 decl_c_type!(

@@ -7,7 +7,7 @@ use std::{
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 
-pub use crate::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -109,7 +109,7 @@ pub unsafe fn z_mutex_try_lock(
     result::Z_OK
 }
 
-pub use crate::opaque_types::{z_loaned_condvar_t, z_moved_condvar_t, z_owned_condvar_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_condvar_t, z_moved_condvar_t, z_owned_condvar_t};
 decl_c_type_inequal!(
     owned(z_owned_condvar_t, option Condvar),
     loaned(z_loaned_condvar_t),
@@ -206,7 +206,7 @@ pub unsafe fn z_condvar_wait(
     result::Z_OK
 }
 
-pub use crate::opaque_types::{z_moved_task_t, z_owned_task_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_task_t, z_owned_task_t};
 decl_c_type!(
     owned(z_owned_task_t, option JoinHandle<()>),
 );

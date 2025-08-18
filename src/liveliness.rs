@@ -22,8 +22,9 @@ use zenoh::{
     Wait,
 };
 
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_liveliness_token_t, z_owned_liveliness_token_t};
+
 use crate::{
-    opaque_types::{z_loaned_liveliness_token_t, z_owned_liveliness_token_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,

@@ -22,7 +22,7 @@ use zenoh::{
     Wait,
 };
 
-pub use crate::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t};
 use crate::{
     keyexpr::*,
     result,

@@ -16,7 +16,7 @@ use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
 use zenoh::{session::ZenohId, Wait};
 
-pub use crate::opaque_types::z_id_t;
+pub use zenoh_ffi_opaque_types::opaque_types::z_id_t;
 use crate::{
     result,
     transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -24,12 +24,6 @@ use crate::{
     z_owned_string_t,
 };
 decl_c_type!(copy(z_id_t, ZenohId));
-
-impl From<[u8; 16]> for z_id_t {
-    fn from(value: [u8; 16]) -> Self {
-        z_id_t { id: value }
-    }
-}
 
 /// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
 #[prebindgen]

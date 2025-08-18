@@ -17,7 +17,7 @@ use prebindgen_proc_macro::prebindgen;
 
 use zenoh::{matching::MatchingListener, Wait};
 
-pub use crate::opaque_types::{z_moved_matching_listener_t, z_owned_matching_listener_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_matching_listener_t, z_owned_matching_listener_t};
 use crate::{
     result,
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},

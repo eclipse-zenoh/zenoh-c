@@ -22,7 +22,7 @@ use zenoh::{
 };
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
-pub use crate::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},
     shm::common::types::{z_protocol_id_t, z_segment_id_t},

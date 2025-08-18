@@ -22,7 +22,7 @@ use zenoh::{
     Wait,
 };
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
 };
 use crate::{

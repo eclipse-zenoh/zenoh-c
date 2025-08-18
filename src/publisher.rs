@@ -79,7 +79,7 @@ pub fn z_publisher_options_default(this_: &mut MaybeUninit<z_publisher_options_t
     this_.write(z_publisher_options_t::default());
 }
 
-pub use crate::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
 decl_c_type!(
     owned(z_owned_publisher_t, option Publisher<'static>),
     loaned(z_loaned_publisher_t),
@@ -176,9 +176,7 @@ pub unsafe fn z_publisher_move(this_: &mut z_owned_publisher_t) -> &mut z_moved_
 /// Mutably borrows publisher.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_publisher_loan_mut(
-    this: &mut z_owned_publisher_t,
-) -> &mut z_loaned_publisher_t {
+pub unsafe fn z_publisher_loan_mut(this: &mut z_owned_publisher_t) -> &mut z_loaned_publisher_t {
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()
@@ -206,9 +204,7 @@ pub struct z_publisher_put_options_t {
 /// Constructs the default value for `z_publisher_put_options_t`.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn z_publisher_put_options_default(
-    this: &mut MaybeUninit<z_publisher_put_options_t>,
-) {
+pub fn z_publisher_put_options_default(this: &mut MaybeUninit<z_publisher_put_options_t>) {
     this.write(z_publisher_put_options_t {
         encoding: None,
         timestamp: None,
@@ -288,9 +284,7 @@ pub struct z_publisher_delete_options_t {
 /// Constructs the default values for the delete operation via a publisher entity.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn z_publisher_delete_options_default(
-    this: &mut MaybeUninit<z_publisher_delete_options_t>,
-) {
+pub fn z_publisher_delete_options_default(this: &mut MaybeUninit<z_publisher_delete_options_t>) {
     this.write(z_publisher_delete_options_t::default());
 }
 

@@ -20,7 +20,7 @@ use zenoh::{
 };
 use zenoh_runtime::ZRuntime;
 
-pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},

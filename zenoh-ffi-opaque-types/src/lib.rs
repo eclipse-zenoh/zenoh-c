@@ -13,6 +13,4 @@
 //
 mod probe;
 pub mod transmute;
-pub(crate) mod opaque_types;
-
-pub use opaque_types::*;
+pub mod opaque_types;

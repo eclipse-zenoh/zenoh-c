@@ -191,7 +191,7 @@ pub fn ze_advanced_publisher_options_default(
     });
 }
 
-pub use crate::opaque_types::{
+pub use zenoh_ffi_opaque_types::opaque_types::{
     ze_loaned_advanced_publisher_t, ze_moved_advanced_publisher_t, ze_owned_advanced_publisher_t,
 };
 decl_c_type!(

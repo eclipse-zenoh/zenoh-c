@@ -16,9 +16,10 @@ use prebindgen_proc_macro::prebindgen;
 
 use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
 
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t};
+
 use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
-    opaque_types::{z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t},
     shm::common::types::{z_chunk_id_t, z_segment_id_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };

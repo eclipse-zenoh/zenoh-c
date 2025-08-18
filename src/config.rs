@@ -36,7 +36,7 @@ const _: () = assert!(Z_PEER == WhatAmI::Peer as c_uint);
 pub const Z_CLIENT: c_uint = 0b0100;
 const _: () = assert!(Z_CLIENT == WhatAmI::Client as c_uint);
 
-pub use crate::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
 decl_c_type!(
     owned(z_owned_config_t, option Config),
     loaned(z_loaned_config_t),
