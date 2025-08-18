@@ -829,7 +829,7 @@ pub fn z_string_is_empty(this_: &z_loaned_string_t) -> bool {
 use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_string_array_t, z_moved_string_array_t, z_owned_string_array_t,
 };
-pub type ZVector = Vec<CStringInner>;
+pub(crate) type ZVector = Vec<CStringInner>;
 decl_c_type!(
     owned(z_owned_string_array_t, ZVector),
     loaned(z_loaned_string_array_t),
