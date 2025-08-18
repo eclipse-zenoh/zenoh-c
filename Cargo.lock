@@ -1672,6 +1672,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
 
 [[package]]
+name = "pathdiff"
+version = "0.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
+
+[[package]]
 name = "pem-rfc7468"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1874,7 +1880,7 @@ dependencies = [
 [[package]]
 name = "prebindgen"
 version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#2216e5bdf7f555dbb01df604d21d53cba0f543f9"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#b464a867118dc04232a01259262ef6510ea6cb2b"
 dependencies = [
  "if_rust_version",
  "itertools 0.14.0",
@@ -1892,7 +1898,7 @@ dependencies = [
 [[package]]
 name = "prebindgen-proc-macro"
 version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#2216e5bdf7f555dbb01df604d21d53cba0f543f9"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#b464a867118dc04232a01259262ef6510ea6cb2b"
 dependencies = [
  "prebindgen",
  "proc-macro2",
@@ -1900,6 +1906,18 @@ dependencies = [
  "serde",
  "serde_json",
  "syn 2.0.106",
+]
+
+[[package]]
+name = "prebindgen-project-root"
+version = "0.4.0"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#b464a867118dc04232a01259262ef6510ea6cb2b"
+dependencies = [
+ "anyhow",
+ "pathdiff",
+ "project-root",
+ "quote",
+ "toml_edit",
 ]
 
 [[package]]
@@ -2523,6 +2541,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde_spanned"
+version = "0.6.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf41e0cfaf7226dca15e8197172c295a782857fcb97fad1808a166870dee75a3"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_with"
 version = "3.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3084,6 +3111,9 @@ name = "toml_datetime"
 version = "0.6.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "22cddaf88f4fbc13c51aebbf5f8eceb5c7c5a9da2ac40a13519eb5b0a0e8f11c"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "toml_edit"
@@ -3092,9 +3122,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "41fe8c660ae4257887cf66394862d21dbca4a6ddd26f04a3560410406a2f819a"
 dependencies = [
  "indexmap 2.10.0",
+ "serde",
+ "serde_spanned",
  "toml_datetime",
+ "toml_write",
  "winnow",
 ]
+
+[[package]]
+name = "toml_write"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5d99f8c9a7727884afe522e9bd5edbfc91a3312b36a77b5fb8926e4c31a41801"
 
 [[package]]
 name = "tracing"
@@ -4146,6 +4185,7 @@ dependencies = [
  "flume",
  "prebindgen",
  "prebindgen-proc-macro",
+ "prebindgen-project-root",
  "prettyplease",
  "proc-macro2",
  "quote",

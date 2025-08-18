@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 use crate::buildrs::{get_out_opaque_types, write_if_changed};
 
@@ -30,11 +30,19 @@ pub fn generate_probe_project() {
     copy_file_if_changed(&src_probe, &dst_lib)
         .unwrap_or_else(|e| panic!("Failed to copy src/probe.rs to probe/src/lib.rs: {e}"));
 
-    // 4) Copy Cargo.lock to opaque-types/ from CARGO_LOCK env var
-    let cargo_lock_path = std::env::var("CARGO_LOCK").unwrap_or_else(|_| {
-        panic!("CARGO_LOCK environment variable must be set to the path of Cargo.lock")
-    });
-    let cargo_lock_src = std::path::PathBuf::from(cargo_lock_path);
+    // 4) Copy Cargo.lock to opaque-types/ from CARGO_LOCK env var or from project root
+    let cargo_lock_src = std::env::var("CARGO_LOCK")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let project_root = prebindgen_project_root::get_project_root().unwrap_or_else(|e| {
+                panic!(
+                    "Failed to find project root: {e}\n\n\
+                    Fix the issue as said above or pass path to CARGO_LOCK explicitly, e.g.:\n\n\
+                    CARGO_LOCK=$PWD/Cargo.lock cargo build\n\n"
+                );
+            });
+            project_root.join("Cargo.lock")
+        });
     let cargo_lock_dst = opaque_root.join("Cargo.lock");
     copy_file_if_changed(&cargo_lock_src, &cargo_lock_dst)
         .unwrap_or_else(|e| panic!("Failed to copy Cargo.lock: {e}"));

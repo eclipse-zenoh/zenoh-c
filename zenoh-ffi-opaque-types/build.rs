@@ -40,9 +40,9 @@ mod buildrs;
 //     will serve as local workspace
 //  3. copy project's Cargo.toml to the `probe` directory
 //  4. copy src/probe.rs to the `probe` directory with the name lib.rs
-//  5. copy Cargo.lock file to `opaque-types` directory. The path to
-//     Cargo.lock must be available in CARGO_LOCK environment variable.
-//     Panic if variable not found
+//  5. copy Cargo.lock file to `opaque-types` directory. Use
+//     prebindgen_project_root::get_project_root() to find the project root,
+//     allow also to pass CARGO_LOCK variable to get the path to Cargo.lock
 //
 //  II. cargo build execution
 //
