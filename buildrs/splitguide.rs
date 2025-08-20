@@ -7,7 +7,7 @@ use std::{
 
 use fs2::FileExt;
 
-use super::common_helpers::test_feature;
+use crate::buildrs::common_helpers::get_manifest_path;
 
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//
@@ -54,7 +54,7 @@ impl SplitGuide {
                                 let mut split = s.split('#');
                                 let val = split.next().unwrap();
                                 for feature in split {
-                                    if !test_feature(feature) {
+                                    if !prebindgen::is_feature_enabled(feature) {
                                         return None;
                                     }
                                 }
@@ -567,9 +567,15 @@ impl FunctionSignature {
     }
 }
 
-pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>, String> {
-    let bindings = std::fs::read_to_string(&genetation_path).unwrap();
-    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
+pub fn split_bindings(generation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>, String> {
+    let splitguide_path = get_manifest_path().join(SPLITGUIDE_PATH);
+    let split_guide = SplitGuide::from_yaml(&splitguide_path);
+    prebindgen::trace!(
+        "Splitting {} using {}:",
+        generation_path.as_ref().display(),
+        splitguide_path.display()
+    );
+    let bindings = std::fs::read_to_string(&generation_path).unwrap();
     let mut files = split_guide
         .rules
         .iter()
@@ -591,7 +597,7 @@ pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
             .map_err(|e| e.to_string())?;
     }
     let mut records = group_tokens(Tokenizer {
-        filename: genetation_path.as_ref(),
+        filename: generation_path.as_ref(),
         inner: &bindings,
     })?;
     for id in split_guide.requested_ids() {
@@ -612,13 +618,15 @@ pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
     for record in &records {
         record.is_used()?;
     }
-    let files = files
+    let files: Vec<PathBuf> = files
         .into_iter()
         .map(|(path, file)| {
             fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
             path.to_path_buf()
         })
         .collect();
-    std::fs::remove_file(genetation_path).unwrap();
+    files.iter().for_each(|file| {
+        prebindgen::trace!(" - {}", file.display());
+    });
     Ok(files)
 }

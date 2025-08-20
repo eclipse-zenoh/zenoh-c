@@ -74,14 +74,17 @@ tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
-zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "cargo_lock_175_fix" }
+zenoh-ffi-opaque-types = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
+zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen"}
+zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
+zenoh-ffi-opaque-types = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
 cbindgen = "0.29.0"
 fs2 = "0.4.3"
 regex = "1.11.1"
@@ -123,3 +126,13 @@ lto = "fat"
 codegen-units = 1
 opt-level = 3
 panic = "abort"
+
+[workspace]
+members = [".", "prebindgen-project-root"]
+
+[patch]
+[patch.crates-io]
+[patch.crates-io.prebindgen-project-root]
+path = "prebindgen-project-root"
+[patch."http://github.com/milyin/prebindgen".prebindgen-project-root]
+path = "prebindgen-project-root"

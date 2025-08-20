@@ -2,18 +2,8 @@ use itertools::Itertools;
 use std::path::PathBuf;
 
 pub fn generate_source() -> PathBuf {
-    let source = prebindgen::Source::new(zenohffi::PREBINDGEN_OUT_DIR);
-
-    let feature_filter = prebindgen::filter_map::FeatureFilter::builder();
-    #[cfg(feature = "unstable")]
-    let feature_filter = feature_filter.enable_feature("unstable");
-    #[cfg(not(feature = "unstable"))]
-    let feature_filter = feature_filter.disable_feature("unstable");
-    #[cfg(feature = "shared-memory")]
-    let feature_filter = feature_filter.enable_feature("shared-memory");
-    #[cfg(not(feature = "shared-memory"))]
-    let feature_filter = feature_filter.disable_feature("shared-memory");
-    let feature_filter = feature_filter.build();
+    let source_ffi = prebindgen::Source::new(zenoh_ffi::PREBINDGEN_OUT_DIR);
+    let source_ffi_opaque_types = prebindgen::Source::new(zenoh_ffi_opaque_types::PREBINDGEN_OUT_DIR);
 
     let replace_types = prebindgen::map::ReplaceTypes::builder()
         .replace_type("MaybeUninit", "std::mem::MaybeUninit")
@@ -38,12 +28,12 @@ pub fn generate_source() -> PathBuf {
         .strip_transparent_wrapper("Option")
         .build();
 
-    source
+    source_ffi
         .items_except_groups(&["move"]) // the move operations are generated in the header
+        .chain(source_ffi_opaque_types.items_all())
         .map(strip_derives.into_closure())
         .map(strip_macros.into_closure())
         .map(replace_types.into_closure())
-        .filter_map(feature_filter.into_closure())
         .batching(ffi_converter.into_closure())
         .collect::<prebindgen::collect::Destination>()
         .write("zenoh_ffi.rs")
