@@ -9,7 +9,9 @@ use fs2::FileExt;
 use phf::phf_map;
 use regex::Regex;
 
-use crate::buildrs::common_helpers::{get_manifest_path, get_out_dir};
+use crate::buildrs::common_helpers::{
+    get_manifest_path, get_tmp_dir,
+};
 
 use super::{
     common_helpers::{cargo_target_dir, split_type_name},
@@ -32,9 +34,15 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
     "transport_vsock" => "Z_FEATURE_VSOCK"
 };
 
+fn trace_generated(title: &str, path: &Path) {
+    let tmp =  path.starts_with(&get_tmp_dir());
+    prebindgen::trace!("{}{}{}", title, path.display(), if tmp { " [TEMPORARY] " } else { "" });
+}
+
+
 pub fn generate_c_headers(source: &Path) {
     let crate_dir = get_manifest_path();
-    let tmp_dir = get_out_dir().join("tmp");
+    let tmp_dir = get_tmp_dir();
 
     let config = cbindgen::Config::from_root_or_default(crate_dir.clone());
 
@@ -46,23 +54,36 @@ pub fn generate_c_headers(source: &Path) {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(&buggy_generation_path);
-    prebindgen::trace!("Generated buggy source by cbindgen: {}", buggy_generation_path.display());
+    trace_generated(
+        "Generated buggy source by cbindgen",
+        &buggy_generation_path,
+    );
 
     let generation_path = tmp_dir.join("zenoh-gen.h");
     fix_cbindgen(&buggy_generation_path, &generation_path);
-    prebindgen::trace!("Fixed cbindgen source: {}", generation_path.display());
+    trace_generated("Fixed cbindgen source", &generation_path);
 
     let zenoh_cpp_h_path = tmp_dir.join("zenoh-cpp.h");
     preprocess_header(&generation_path, &zenoh_cpp_h_path);
-    prebindgen::trace!("Preprocessed source: {}", zenoh_cpp_h_path.display());
+    trace_generated("Preprocessed source", &zenoh_cpp_h_path);
+
+    prebindgen::trace!("Splitting {}", generation_path.display());
+    let files = split_bindings(&generation_path).unwrap();
+    files.iter().for_each(|file| {
+        trace_generated(" - ", file);
+    });
+
+    let replaced = text_replace(files.iter(), &crate_dir.join("include"));
+    prebindgen::trace!("Resulting headers after text replacements");
+    replaced.iter().for_each(|file| {
+        trace_generated(" - ", file);
+    });
 
     let zenoh_macros_path = crate_dir.join("include/zenoh_macros.h");
     create_generics_header(&zenoh_cpp_h_path, &zenoh_macros_path);
-    prebindgen::trace!("Generated generics header: {}", zenoh_macros_path.display());
+    trace_generated("Generated generics header", &zenoh_macros_path);
 
     configure();
-    let files = split_bindings(&generation_path).unwrap();
-    text_replace(files.iter());
 
     fs_extra::copy_items(
         &["include"],
@@ -323,7 +344,10 @@ fn create_generics_header(path_in: &Path, path_out: &Path) {
 fn configure() {
     let crate_dir = get_manifest_path();
     let zenoh_configure_h_path = crate_dir.join("include/zenoh_configure.h");
-    prebindgen::trace!("Generating zenoh_configure.h: {}", zenoh_configure_h_path.display());
+    trace_generated(
+        "Generating configuration file",
+        &zenoh_configure_h_path
+    );
     let mut file = std::fs::File::options()
         .write(true)
         .truncate(true)
@@ -380,16 +404,18 @@ fn configure() {
     fs2::FileExt::unlock(&file).unwrap();
 }
 
-fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>) {
-    for name in files {
-        let path = PathBuf::from("include").join(name);
+fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>, dst_dir: &Path) -> Vec<PathBuf>{
+    let mut result = Vec::new();
+    for src_path in files {
+        assert!(src_path.as_ref().is_absolute());
+        let dst_path = dst_dir.join(src_path.as_ref().file_name().unwrap());
 
         // Read content
         let mut file = std::fs::File::options()
             .read(true)
             .create(false)
             .write(false)
-            .open(&path)
+            .open(&src_path)
             .unwrap();
         file.lock_exclusive().unwrap();
         let mut buf = String::new();
@@ -405,18 +431,20 @@ fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>) {
         // So have to do it here.
         let buf = buf.replace("extern const", "ZENOHC_API extern const");
 
-        // Overwrite content
+        // Store result
         let mut file = std::fs::File::options()
             .read(false)
             .create(false)
             .write(true)
             .truncate(true)
-            .open(&path)
+            .open(&dst_path)
             .unwrap();
         file.lock_exclusive().unwrap();
         file.write_all(buf.as_bytes()).unwrap();
         fs2::FileExt::unlock(&file).unwrap();
+        result.push(dst_path);
     }
+    result
 }
 
 /// Evaluates conditional feature macros in the form #if (logical expression of define(FEATURE_NAME))
@@ -461,7 +489,9 @@ fn evaluate_c_defines_line(line: &str) -> bool {
             },
         );
     }
-    let target = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap().to_uppercase();
+    let target = std::env::var("CARGO_CFG_TARGET_ARCH")
+        .unwrap()
+        .to_uppercase();
     s = s.replace(&format!("defined(TARGET_ARCH_{target})"), "true");
     // for all other entries "defined(TARGET_ARCH_\\w+)" replace them to false
     let re_arch = Regex::new(r"defined\(TARGET_ARCH_(\\w+)\)").unwrap();
@@ -1077,9 +1107,7 @@ fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
             .typename
             .replace(&format!(" (*{})", &processed_f.args[1].name), "");
         let callback_typename = f.func_name.clone() + "_callback_t";
-        out += &format!(
-            "extern \"C\" using {callback_typename} = {prototype};\n"
-        );
+        out += &format!("extern \"C\" using {callback_typename} = {prototype};\n");
         processed_f.args[1].typename.typename = callback_typename + "*";
         processed_f.args[2].typename.typename = "z_closure_drop_callback_t*".to_string();
         processed.push(processed_f);

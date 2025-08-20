@@ -52,3 +52,7 @@ pub fn get_manifest_path() -> std::path::PathBuf {
     std::path::Path::new(&manifest_path).to_path_buf()
 }
 
+pub fn get_tmp_dir() -> PathBuf {
+    get_out_dir().join("tmp")
+}
+

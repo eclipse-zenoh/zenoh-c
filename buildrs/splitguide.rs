@@ -7,7 +7,7 @@ use std::{
 
 use fs2::FileExt;
 
-use crate::buildrs::common_helpers::get_manifest_path;
+use crate::buildrs::common_helpers::{get_manifest_path, get_tmp_dir};
 
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//
@@ -570,30 +570,26 @@ impl FunctionSignature {
 pub fn split_bindings(generation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>, String> {
     let splitguide_path = get_manifest_path().join(SPLITGUIDE_PATH);
     let split_guide = SplitGuide::from_yaml(&splitguide_path);
-    prebindgen::trace!(
-        "Splitting {} using {}:",
-        generation_path.as_ref().display(),
-        splitguide_path.display()
-    );
     let bindings = std::fs::read_to_string(&generation_path).unwrap();
     let mut files = split_guide
         .rules
         .iter()
-        .map(|(path, _)| {
+        .map(|(name, _)| {
+            let path = get_tmp_dir().join(name);
             let file = std::fs::File::options()
                 .write(true)
                 .truncate(true)
                 .append(false)
                 .create(true)
-                .open(PathBuf::from("include").join(path))
+                .open(&path)
                 .unwrap();
             file.lock_exclusive().unwrap();
             file.set_len(0).unwrap();
-            (path as &Path, BufWriter::new(file))
+            (name as &Path, (path, BufWriter::new(file)))
         })
         .collect::<HashMap<_, _>>();
     for file in files.values_mut() {
-        file.write_all(HEADER.as_bytes())
+        file.1.write_all(HEADER.as_bytes())
             .map_err(|e| e.to_string())?;
     }
     let mut records = group_tokens(Tokenizer {
@@ -609,8 +605,8 @@ pub fn split_bindings(generation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
     }
     for record in &mut records {
         let appropriate_files = split_guide.appropriate_files(record);
-        for file in appropriate_files {
-            let writer = files.get_mut(&file).unwrap();
+        for name in appropriate_files {
+            let (_, writer) = files.get_mut(&name).unwrap();
             record.used = true;
             write!(writer, "{}", &record).unwrap();
         }
@@ -618,15 +614,12 @@ pub fn split_bindings(generation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
     for record in &records {
         record.is_used()?;
     }
-    let files: Vec<PathBuf> = files
+    let files =files
         .into_iter()
-        .map(|(path, file)| {
-            fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
-            path.to_path_buf()
+        .map(|(_, (path, writer))| {
+            fs2::FileExt::unlock(&writer.into_inner().unwrap()).unwrap();
+            path
         })
         .collect();
-    files.iter().for_each(|file| {
-        prebindgen::trace!(" - {}", file.display());
-    });
     Ok(files)
 }
