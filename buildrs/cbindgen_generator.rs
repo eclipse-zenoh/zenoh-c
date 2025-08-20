@@ -461,6 +461,11 @@ fn evaluate_c_defines_line(line: &str) -> bool {
             },
         );
     }
+    let target = std::env::var("CARGO_CFG_TARGET_ARCH").unwrap().to_uppercase();
+    s = s.replace(&format!("defined(TARGET_ARCH_{target})"), "true");
+    // for all other entries "defined(TARGET_ARCH_\\w+)" replace them to false
+    let re_arch = Regex::new(r"defined\(TARGET_ARCH_(\\w+)\)").unwrap();
+    s = re_arch.replace_all(&s, "false").to_string();
 
     s = s.replace("#if", "");
     match evalexpr::eval(&s) {
