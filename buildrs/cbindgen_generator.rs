@@ -9,9 +9,7 @@ use fs2::FileExt;
 use phf::phf_map;
 use regex::Regex;
 
-use crate::buildrs::common_helpers::{
-    get_manifest_path, get_tmp_dir,
-};
+use crate::buildrs::common_helpers::{get_manifest_path, get_tmp_dir};
 
 use super::{
     common_helpers::{cargo_target_dir, split_type_name},
@@ -35,14 +33,26 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
 };
 
 fn trace_generated(title: &str, path: &Path) {
-    let tmp =  path.starts_with(get_tmp_dir());
-    prebindgen::trace!("{}{}{}", title, path.display(), if tmp { " [TEMPORARY] " } else { "" });
+    let tmp = path.starts_with(get_tmp_dir());
+    prebindgen::trace!(
+        "{}{}{}",
+        title,
+        path.display(),
+        if tmp { " [TEMPORARY] " } else { "" }
+    );
 }
-
 
 pub fn generate_c_headers(source: &Path) {
     let crate_dir = get_manifest_path();
     let tmp_dir = get_tmp_dir();
+    let include_dir = crate_dir.join("include");
+    std::fs::create_dir_all(&include_dir).unwrap_or_else(|e| {
+        panic!(
+            "Failed to create include directory {}: {}",
+            include_dir.display(),
+            e
+        );
+    });
 
     let config = cbindgen::Config::from_root_or_default(crate_dir.clone());
 
@@ -54,10 +64,7 @@ pub fn generate_c_headers(source: &Path) {
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(&buggy_generation_path);
-    trace_generated(
-        "Generated buggy source by cbindgen",
-        &buggy_generation_path,
-    );
+    trace_generated("Generated buggy source by cbindgen", &buggy_generation_path);
 
     let generation_path = tmp_dir.join("zenoh-gen.h");
     fix_cbindgen(&buggy_generation_path, &generation_path);
@@ -68,42 +75,54 @@ pub fn generate_c_headers(source: &Path) {
     trace_generated("Preprocessed source", &zenoh_cpp_h_path);
 
     prebindgen::trace!("Splitting {}", generation_path.display());
-    let files = split_bindings(&generation_path).unwrap();
+    let files = split_bindings(&generation_path);
     files.iter().for_each(|file| {
         trace_generated(" - ", file);
     });
 
-    let replaced = text_replace(files.iter(), &crate_dir.join("include"));
+    let replaced = text_replace(files.iter(), &include_dir);
     prebindgen::trace!("Resulting headers after text replacements");
     replaced.iter().for_each(|file| {
         trace_generated(" - ", file);
     });
 
-    let zenoh_macros_path = crate_dir.join("include/zenoh_macros.h");
+    let zenoh_macros_path = include_dir.join("zenoh_macros.h");
     create_generics_header(&zenoh_cpp_h_path, &zenoh_macros_path);
     trace_generated("Generated generics header", &zenoh_macros_path);
 
     configure();
 
+    let cargo_target_dir = cargo_target_dir();
     fs_extra::copy_items(
-        &["include"],
-        cargo_target_dir(),
+        &[&include_dir],
+        &cargo_target_dir,
         &fs_extra::dir::CopyOptions::default().overwrite(true),
     )
-    .expect("include should be copied to CARGO_TARGET_DIR");
+    .unwrap_or_else(|e| {
+        panic!(
+            "failed to copy include directory from {} to {}: {}",
+            include_dir.display(),
+            cargo_target_dir.display(),
+            e
+        );
+    });
 }
 
 fn fix_cbindgen(input: &Path, output: &Path) {
-    let bindings = std::fs::read_to_string(input).expect("failed to open input file");
+    let bindings = std::fs::read_to_string(input)
+        .unwrap_or_else(|e| panic!("failed to open input file {}: {}", input.display(), e));
     let bindings = bindings.replace("\n#endif\n  ;", ";\n#endif");
 
-    let mut out = File::create(output).expect("failed to open output file");
+    let mut out = File::create(output)
+        .unwrap_or_else(|e| panic!("failed to open output file {}: {}", output.display(), e));
     out.write_all(bindings.as_bytes()).unwrap();
 }
 
 fn preprocess_header(input: &Path, output: &Path) {
-    let parsed = process_feature_defines(input).expect("failed to open input file");
-    let mut out = File::create(output).expect("failed to open output file");
+    let parsed = process_feature_defines(input)
+        .unwrap_or_else(|e| panic!("failed to open input file {}: {}", input.display(), e));
+    let mut out = File::create(output)
+        .unwrap_or_else(|e| panic!("failed to open output file {}: {}", output.display(), e));
     out.write_all(parsed.as_bytes()).unwrap();
 }
 
@@ -115,7 +134,7 @@ fn create_generics_header(path_in: &Path, path_out: &Path) {
         .append(false)
         .create(true)
         .open(path_out)
-        .unwrap();
+        .unwrap_or_else(|e| panic!("failed to open output file {}: {}", path_out.display(), e));
 
     file_out
         .write_all(
@@ -344,17 +363,20 @@ fn create_generics_header(path_in: &Path, path_out: &Path) {
 fn configure() {
     let crate_dir = get_manifest_path();
     let zenoh_configure_h_path = crate_dir.join("include/zenoh_configure.h");
-    trace_generated(
-        "Generating configuration file",
-        &zenoh_configure_h_path
-    );
+    trace_generated("Generating configuration file", &zenoh_configure_h_path);
     let mut file = std::fs::File::options()
         .write(true)
         .truncate(true)
         .append(false)
         .create(true)
-        .open(zenoh_configure_h_path)
-        .unwrap();
+        .open(&zenoh_configure_h_path)
+        .unwrap_or_else(|e| {
+            panic!(
+                "failed to open output file {}: {}",
+                zenoh_configure_h_path.display(),
+                e
+            )
+        });
     file.lock_exclusive().unwrap();
 
     let version_txt_path = crate_dir.join("version.txt");
@@ -404,7 +426,7 @@ fn configure() {
     fs2::FileExt::unlock(&file).unwrap();
 }
 
-fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>, dst_dir: &Path) -> Vec<PathBuf>{
+fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>, dst_dir: &Path) -> Vec<PathBuf> {
     let mut result = Vec::new();
     for src_path in files {
         assert!(src_path.as_ref().is_absolute());
@@ -416,7 +438,13 @@ fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>, dst_dir: &Path) -
             .create(false)
             .write(false)
             .open(&src_path)
-            .unwrap();
+            .unwrap_or_else(|e| {
+                panic!(
+                    "failed to open input file {}: {}",
+                    src_path.as_ref().display(),
+                    e
+                )
+            });
         file.lock_exclusive().unwrap();
         let mut buf = String::new();
         file.read_to_string(&mut buf).unwrap();
@@ -432,13 +460,9 @@ fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>, dst_dir: &Path) -
         let buf = buf.replace("extern const", "ZENOHC_API extern const");
 
         // Store result
-        let mut file = std::fs::File::options()
-            .read(false)
-            .create(false)
-            .write(true)
-            .truncate(true)
-            .open(&dst_path)
-            .unwrap();
+        let mut file = std::fs::File::create(&dst_path).unwrap_or_else(|e| {
+            panic!("failed to create output file {}: {}", dst_path.display(), e)
+        });
         file.lock_exclusive().unwrap();
         file.write_all(buf.as_bytes()).unwrap();
         fs2::FileExt::unlock(&file).unwrap();
@@ -505,7 +529,8 @@ fn evaluate_c_defines_line(line: &str) -> bool {
 }
 
 fn make_move_take_signatures(path_in: &Path) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"(\w+)_drop\(struct (\w+) \*(\w+)\);").unwrap();
     let mut move_funcs = Vec::<FunctionSignature>::new();
     let mut take_funcs = Vec::<FunctionSignature>::new();
@@ -538,7 +563,8 @@ fn make_move_take_signatures(path_in: &Path) -> (Vec<FunctionSignature>, Vec<Fun
 }
 
 fn find_loan_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"const struct (\w+) \*(\w+)_loan\(const struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -561,7 +587,8 @@ fn find_loan_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_loan_mut_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"struct (\w+) \*(\w+)_loan_mut\(struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -581,7 +608,8 @@ fn find_loan_mut_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_take_from_loaned_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"void (\w+)_take_from_loaned\(struct (\w+) \*(\w+)").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -604,7 +632,8 @@ fn find_take_from_loaned_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_drop_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"(.+?) +(\w+_drop)\(struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -631,7 +660,8 @@ fn find_drop_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_null_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r" (z.?_internal_\w+_null)\(struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -649,7 +679,8 @@ fn find_null_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_check_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"bool (z.?_internal_\w+_check)\(const struct (\w+) \*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -670,7 +701,8 @@ fn find_check_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_call_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(
         r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) (\*?)(\w+)\);",
     )
@@ -703,7 +735,8 @@ fn find_call_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_closure_constructors(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(
         r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
     )
@@ -739,7 +772,8 @@ fn find_closure_constructors(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_recv_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(r"(\w+)\s+z_(\w+)_handler_(\w+)_recv\(const\s+struct\s+(\w+)\s+\*(\w+),\s+struct\s+(\w+)\s+\*(\w+)\);").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
@@ -762,7 +796,8 @@ fn find_recv_functions(path_in: &Path) -> Vec<FunctionSignature> {
 }
 
 fn find_clone_functions(path_in: &Path) -> Vec<FunctionSignature> {
-    let bindings = std::fs::read_to_string(path_in).unwrap();
+    let bindings = std::fs::read_to_string(path_in)
+        .unwrap_or_else(|e| panic!("failed to read file {}: {}", path_in.display(), e));
     let re = Regex::new(
         r"(\w+)\s+z_(\w+)_clone\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
     )
