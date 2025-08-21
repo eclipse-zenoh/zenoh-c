@@ -35,7 +35,7 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
 fn trace_generated(title: &str, path: &Path) {
     let tmp = path.starts_with(get_tmp_dir());
     prebindgen::trace!(
-        "{}{}{}",
+        "{} {}{}",
         title,
         path.display(),
         if tmp { " [TEMPORARY] " } else { "" }
@@ -74,7 +74,7 @@ pub fn generate_c_headers(source: &Path) {
     preprocess_header(&generation_path, &zenoh_cpp_h_path);
     trace_generated("Preprocessed source", &zenoh_cpp_h_path);
 
-    prebindgen::trace!("Splitting {}", generation_path.display());
+    prebindgen::trace!("Splitting {}", generation_path.file_name().unwrap().display());
     let files = split_bindings(&generation_path);
     files.iter().for_each(|file| {
         trace_generated(" - ", file);

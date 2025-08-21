@@ -11,6 +11,19 @@
 # Contributors:
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
+[workspace]
+members = [".", "prebindgen-project-root"]
+
+[workspace.dependencies]
+zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+
+[patch]
+[patch.crates-io]
+[patch.crates-io.prebindgen-project-root]
+path = "prebindgen-project-root"
+[patch."http://github.com/milyin/prebindgen".prebindgen-project-root]
+path = "prebindgen-project-root"
+
 [package]
 name = "zenoh-c"
 version = "@CARGO_PROJECT_VERSION@"
@@ -75,7 +88,6 @@ unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
 zenoh-ffi-opaque-types = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
-zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
 konst = "0.3.0"
 
@@ -127,13 +139,3 @@ lto = "fat"
 codegen-units = 1
 opt-level = 3
 panic = "abort"
-
-[workspace]
-members = [".", "prebindgen-project-root"]
-
-[patch]
-[patch.crates-io]
-[patch.crates-io.prebindgen-project-root]
-path = "prebindgen-project-root"
-[patch."http://github.com/milyin/prebindgen".prebindgen-project-root]
-path = "prebindgen-project-root"
