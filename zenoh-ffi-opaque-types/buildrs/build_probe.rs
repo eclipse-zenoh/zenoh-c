@@ -16,6 +16,7 @@ use crate::buildrs::get_out_opaque_types;
 pub fn build_probe_project() -> HashMap<String, PathBuf> {
     let opaque_root = get_out_opaque_types();
     let probe_manifest = opaque_root.join("probe").join("Cargo.toml");
+    let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
 
     // Collect targets and (optional) linkers
     let host_target = std::env::var("TARGET").expect("TARGET is not set");
@@ -31,7 +32,7 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
 
     let mut outputs: HashMap<String, PathBuf> = HashMap::new();
     for (target, linker) in plans {
-        let out_path = run_cargo_build_for_target(&probe_manifest, &opaque_root, &target, linker.as_deref());
+        let out_path = run_cargo_build_for_target(&probe_manifest, &opaque_root, &profile, &target, linker.as_deref());
         outputs.insert(target, out_path);
     }
     outputs
@@ -40,6 +41,7 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
 fn run_cargo_build_for_target(
     probe_manifest: &PathBuf,
     opaque_root: &PathBuf,
+    profile: &str,
     target: &str,
     linker: Option<&str>,
 ) -> PathBuf {
@@ -61,8 +63,8 @@ fn run_cargo_build_for_target(
     // regardless of whether OPAQUE_TYPES_BUILD_DIR is set.
     let cargo_target_dir = opaque_root.join("target");
 
-    // Prepare output file under <cargo_target_dir>/<target>/probe_build_output.txt
-    let out_dir = cargo_target_dir.join(target);
+    // Prepare output file under <cargo_target_dir>/<target>/<profile>/probe_build_output.txt
+    let out_dir = cargo_target_dir.join(target).join(profile);
     let out_file = out_dir.join("probe_build_output.txt");
     if let Some(parent) = out_file.parent() {
         let _ = std::fs::create_dir_all(parent);
@@ -81,6 +83,10 @@ fn run_cargo_build_for_target(
     cmd_pieces.extend(cfg_args.iter().cloned());
     cmd_pieces.push("--target".into());
     cmd_pieces.push(target.into());
+    // Use explicit profile to mirror the parent build when release; for debug, omit flag
+    if profile == "release" {
+        cmd_pieces.push("--release".into());
+    }
     cmd_pieces.push("--manifest-path".into());
     cmd_pieces.push(probe_manifest.display().to_string());
     cmd_pieces.push("--target-dir".into());
@@ -100,11 +106,14 @@ fn run_cargo_build_for_target(
         .args(&feature_args)
         .args(&cfg_args)
         .arg("--target")
-        .arg(target)
-        .arg("--manifest-path")
+        .arg(target);
+    if profile == "release" {
+        cmd.arg("--release");
+    }
+    cmd.arg("--manifest-path")
         .arg(probe_manifest)
         .arg("--target-dir")
-    .arg(&cargo_target_dir)
+        .arg(&cargo_target_dir)
         .stdout(std::process::Stdio::from(file))
         .stderr(std::process::Stdio::from(file_clone));
 

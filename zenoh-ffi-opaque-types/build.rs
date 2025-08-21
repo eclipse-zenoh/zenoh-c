@@ -104,6 +104,9 @@ pub fn main() {
     // Step I: probe project preparation
     println!("cargo:rerun-if-env-changed=CARGO_LOCK");
     println!("cargo:rerun-if-env-changed=CROSS_TARGET");
+    println!("cargo:rerun-if-env-changed=RUSTC_LINKER");
+    println!("cargo:rerun-if-env-changed=CROSS_RUSTC_LINKER");
+    println!("cargo:rerun-if-env-changed=PROFILE");
     println!("cargo:rerun-if-env-changed=OPAQUE_TYPES_BUILD_DIR");
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=Cargo.toml");
