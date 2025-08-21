@@ -267,8 +267,8 @@ pub unsafe fn z_querier_get(
 ///
 /// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_querier_get_with_parameters_substr(
+#[prebindgen]
+pub unsafe fn z_querier_get_with_parameters_substr(
     querier: &z_loaned_querier_t,
     parameters: *const c_char,
     parameters_len: usize,

@@ -330,8 +330,8 @@ pub unsafe fn z_get(
 ///
 /// @return 0 in case of success, a negative error value upon failure.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn z_get_with_parameters_substr(
+#[prebindgen]
+pub unsafe fn z_get_with_parameters_substr(
     session: &z_loaned_session_t,
     key_expr: &z_loaned_keyexpr_t,
     parameters: *const c_char,

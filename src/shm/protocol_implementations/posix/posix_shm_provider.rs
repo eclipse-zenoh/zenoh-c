@@ -55,8 +55,8 @@ pub fn z_posix_shm_provider_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new POSIX SHM Provider.
-#[no_mangle]
-pub extern "C" fn z_posix_shm_provider_with_layout_new(
+#[prebindgen]
+pub fn z_posix_shm_provider_with_layout_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
     layout: &z_loaned_memory_layout_t,
 ) -> z_result_t {

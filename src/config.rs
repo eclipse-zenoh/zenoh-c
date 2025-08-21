@@ -236,9 +236,9 @@ pub unsafe fn zc_config_from_str(
 /// Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
 ///
 /// Returns 0 in case of success, negative error code otherwise.
-#[no_mangle]
+#[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_from_substr(
+pub unsafe fn zc_config_from_substr(
     this: &mut MaybeUninit<z_owned_config_t>,
     s: *const c_char,
     len: usize,
@@ -314,8 +314,8 @@ pub unsafe fn zc_config_from_file(
 ///
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zc_config_from_file_substr(
+#[prebindgen]
+pub unsafe fn zc_config_from_file_substr(
     this: &mut MaybeUninit<z_owned_config_t>,
     path: *const c_char,
     len: usize,

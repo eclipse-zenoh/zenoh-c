@@ -61,8 +61,8 @@ pub fn z_alloc_layout_new(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Alloc Layout for SHM Provider specifying the exact alignment.
-#[no_mangle]
-pub extern "C" fn z_alloc_layout_with_alignment_new(
+#[prebindgen]
+pub fn z_alloc_layout_with_alignment_new(
     this: &mut MaybeUninit<z_owned_alloc_layout_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,

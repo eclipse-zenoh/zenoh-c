@@ -57,8 +57,8 @@ decl_c_type!(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new SHM Provider ith default backend.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_default_new(
+#[prebindgen]
+pub fn z_shm_provider_default_new(
     this: &mut MaybeUninit<z_owned_shm_provider_t>,
     size: usize,
 ) -> z_result_t {
@@ -240,8 +240,8 @@ pub fn z_shm_provider_alloc_gc_defrag_async(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make aligned allocation without any additional actions.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_alloc_aligned(
+#[prebindgen]
+pub fn z_shm_provider_alloc_aligned(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -252,8 +252,8 @@ pub extern "C" fn z_shm_provider_alloc_aligned(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make aligned allocation performing garbage collection if needed.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_alloc_gc_aligned(
+#[prebindgen]
+pub fn z_shm_provider_alloc_gc_aligned(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -264,8 +264,8 @@ pub extern "C" fn z_shm_provider_alloc_gc_aligned(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make aligned allocation performing garbage collection and/or defragmentation if needed.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_alloc_gc_defrag_aligned(
+#[prebindgen]
+pub fn z_shm_provider_alloc_gc_defrag_aligned(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -276,8 +276,8 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_aligned(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make aligned allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc_aligned(
+#[prebindgen]
+pub fn z_shm_provider_alloc_gc_defrag_dealloc_aligned(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -288,8 +288,8 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc_aligned(
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make aligned allocation performing garbage collection and/or defragmentation and/or blocking if needed.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking_aligned(
+#[prebindgen]
+pub fn z_shm_provider_alloc_gc_defrag_blocking_aligned(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -301,8 +301,8 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_blocking_aligned(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make aligned allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
 /// if used with non-threadsafe SHM Provider.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_alloc_gc_defrag_aligned_async(
+#[prebindgen]
+pub fn z_shm_provider_alloc_gc_defrag_aligned_async(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,

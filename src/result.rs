@@ -93,8 +93,8 @@ thread_local! {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a view string on last error message.
 /// The view string only remains valid until next faillable zenoh API call from the same thread.
-#[no_mangle]
-extern "C" fn zc_get_last_error(out: &mut MaybeUninit<z_view_string_t>) {
+#[prebindgen]
+pub fn zc_get_last_error(out: &mut MaybeUninit<z_view_string_t>) {
     ERROR_DESCRIPTION.with_borrow(|b| unsafe {
         z_view_string_from_substr(out, b.buffer.as_ptr() as *const libc::c_char, b.len)
     });
