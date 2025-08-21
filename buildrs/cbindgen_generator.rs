@@ -35,7 +35,7 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
 };
 
 fn trace_generated(title: &str, path: &Path) {
-    let tmp =  path.starts_with(&get_tmp_dir());
+    let tmp =  path.starts_with(get_tmp_dir());
     prebindgen::trace!("{}{}{}", title, path.display(), if tmp { " [TEMPORARY] " } else { "" });
 }
 
