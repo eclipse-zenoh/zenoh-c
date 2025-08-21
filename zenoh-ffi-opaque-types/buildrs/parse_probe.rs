@@ -35,15 +35,30 @@ pub fn parse_probe_result(path: &std::path::PathBuf) -> HashMap<String, (u64, u6
         }
     }
 
-    // Count total Rust compiler error lines
-    let total_error_count = data
-        .lines()
-        .filter(|l| l.starts_with("error[E"))
-        .count();
+    // Count Rust compiler errors count by error id:
+    // fill hashmap by error integer id:
+    let mut error_count_map: HashMap<usize, usize> = HashMap::new();
+    for line in data.lines() {
+        if let Some(captures) = Regex::new(r"error\[E(\d+)\]").unwrap().captures(line) {
+            let error_id: usize = captures.get(1).unwrap().as_str().parse().unwrap();
+            *error_count_map.entry(error_id).or_insert(0) += 1;
+        }
+    }
 
+    // Panic if error other than E0080 (evaluation of constant value failed) found
+    if error_count_map.keys().any(|&id| id != 80) {
+        panic!(
+            "Unexpected Rust errors found in probe output.\nPath: {}\n\nOutput:\n{}",
+            path.display(),
+            data
+        );
+    }
+
+    // Panic if there are no E0080 errors
+    let total_error_count = *error_count_map.get(&80).unwrap_or(&0);
     if total_error_count == 0 {
         panic!(
-            "No Rust errors found in probe output.\nPath: {}\n\nOutput:\n{}",
+            "No E0080 errors found in probe output.\nPath: {}\n\nOutput:\n{}",
             path.display(),
             data
         );
@@ -66,9 +81,16 @@ pub fn parse_probe_result(path: &std::path::PathBuf) -> HashMap<String, (u64, u6
         );
     }
 
-    if matched_count != total_error_count {
+    // It can happen that matched count is greater than total error count: I've observed repeating of the error messages without exact line:
+    // ```
+    // error: could not compile `zenoh-ffi-opaque-types` (lib) due to 66 previous errors
+    // warning: build failed, waiting for other jobs to finish...
+    // evaluation panicked: type: z_loaned_condvar_t, align: 8, size: 16
+    // ```
+    // So panic only if matched count is less than error count: this means that there is some error not related to the probe.
+    if matched_count < total_error_count {
         panic!(
-            "Mismatch in probe output: found {total_error_count} errors but matched {matched_count} size/alignment entries.\nPath: {}\n\nOutput:\n{}",
+            "Mismatch in probe output: found {total_error_count} E0080 errors but matched only {matched_count} size/alignment entries.\nPath: {}\n\nOutput:\n{}",
             path.display(),
             data
         );
