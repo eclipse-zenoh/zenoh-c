@@ -4,7 +4,6 @@ use regex::Regex;
 use std::collections::{HashMap, HashSet};
 
 use crate::buildrs::{get_out_opaque_types, split_type_name, write_if_changed};
-use target_lexicon::{OperatingSystem, Triple};
 
 /// Generate Rust opaque types code for all targets and write it into OUT_DIR/opaque_types.rs
 ///
@@ -37,7 +36,11 @@ pub fn generate_rust_types(
             }
 
             // Build cfg tokens once; stringify for prebindgen and use tokens for #[cfg]
-            let cfg_tokens: TokenStream = cfg_from_target_triple(target);
+            let cfg_tokens = prebindgen::utils::TargetTriple::parse(target)
+                .unwrap_or_else(|e| {
+                    panic!("Failed to parse target triple '{target}': {e}");
+                })
+                .to_cfg_tokens();
             let cfg_expr: TokenStream = cfg_tokens.clone();
             let cfg_str: String = cfg_tokens.to_string();
             let type_ident = format_ident!("{}", type_name);
@@ -152,44 +155,4 @@ fn read_docs_from_probe_lib() -> HashMap<String, Vec<String>> {
         }
     }
     res
-}
-
-/// Convert a Rust target triple string (e.g., "aarch64-apple-darwin") into a cfg expression string
-/// like: all(target_arch = "aarch64", target_vendor = "apple", target_os = "darwin") and
-/// include target_env when present.
-fn cfg_from_target_triple(target: &str) -> TokenStream {
-    // Use target-lexicon (standard Rust ecosystem crate) to parse triples reliably
-    let triple: Triple = target
-        .parse()
-        .unwrap_or_else(|e| panic!("Failed to parse target triple '{target}': {e}"));
-
-    // Map OS into Rust cfg target_os values. Rust uses `macos` even when the triple OS is `darwin`.
-    let os_cfg: String = match triple.operating_system {
-        OperatingSystem::Darwin(_) => "macos".to_string(),
-        ref os => os.to_string(),
-    };
-
-    let arch = triple.architecture.to_string();
-    let vendor = triple.vendor.to_string();
-    let env = triple.environment.to_string();
-
-    // Build tokenized predicate parts
-    let arch_lit = syn::LitStr::new(&arch, Span::call_site());
-    let vendor_lit = syn::LitStr::new(&vendor, Span::call_site());
-    let os_lit = syn::LitStr::new(&os_cfg, Span::call_site());
-    let env_lit_opt = (!env.is_empty() && env != "unknown").then(|| syn::LitStr::new(&env, Span::call_site()));
-
-    let mut parts: Vec<TokenStream> = Vec::with_capacity(4);
-    parts.push(quote! { target_arch = #arch_lit });
-    parts.push(quote! { target_vendor = #vendor_lit });
-    parts.push(quote! { target_os = #os_lit });
-    if let Some(env_lit) = env_lit_opt {
-        parts.push(quote! { target_env = #env_lit });
-    }
-
-    if parts.len() == 1 {
-        parts.remove(0)
-    } else {
-        quote! { all( #(#parts),* ) }
-    }
 }
