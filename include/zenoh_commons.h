@@ -252,60 +252,37 @@ typedef enum ze_advanced_publisher_heartbeat_mode_t {
    */
   ZE_ADVANCED_PUBLISHER_HEARTBEAT_MODE_SPORADIC = 2,
 } ze_advanced_publisher_heartbeat_mode_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_alloc_layout_t {
   struct z_owned_alloc_layout_t _this;
 } z_moved_alloc_layout_t;
-#endif
 typedef int8_t z_result_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_bytes_t {
   struct z_owned_bytes_t _this;
 } z_moved_bytes_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_shm_t {
   struct z_owned_shm_t _this;
 } z_moved_shm_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_shm_mut_t {
   struct z_owned_shm_mut_t _this;
 } z_moved_shm_mut_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_slice_t {
   struct z_owned_slice_t _this;
 } z_moved_slice_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_string_t {
   struct z_owned_string_t _this;
 } z_moved_string_t;
-#endif
-/**
- *An iterator over slices of serialized data.
- */
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ALIGN(8) z_bytes_slice_iterator_t {
   uint8_t _0[24];
 } z_bytes_slice_iterator_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t _this;
 } z_moved_bytes_writer_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_chunk_alloc_result_t {
   struct z_owned_chunk_alloc_result_t _this;
 } z_moved_chunk_alloc_result_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_ptr_in_segment_t {
   struct z_owned_ptr_in_segment_t _this;
 } z_moved_ptr_in_segment_t;
-#endif
 /**
  * Monotonic clock
  */
@@ -435,16 +412,12 @@ typedef struct z_owned_closure_zid_t {
 typedef struct z_moved_closure_zid_t {
   struct z_owned_closure_zid_t _this;
 } z_moved_closure_zid_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_condvar_t {
   struct z_owned_condvar_t _this;
 } z_moved_condvar_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_config_t {
   struct z_owned_config_t _this;
 } z_moved_config_t;
-#endif
 /**
  * Options passed to the `z_declare_queryable()` function.
  */
@@ -469,11 +442,9 @@ typedef struct z_subscriber_options_t {
    */
   enum zc_locality_t allowed_origin;
 } z_subscriber_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_encoding_t {
   struct z_owned_encoding_t _this;
 } z_moved_encoding_t;
-#endif
 /**
  * Options passed to the `z_declare_publisher()` function.
  */
@@ -581,26 +552,18 @@ typedef struct z_delete_options_t {
    */
   enum zc_locality_t allowed_destination;
 } z_delete_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_fifo_handler_query_t {
   struct z_owned_fifo_handler_query_t _this;
 } z_moved_fifo_handler_query_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_fifo_handler_reply_t {
   struct z_owned_fifo_handler_reply_t _this;
 } z_moved_fifo_handler_reply_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_fifo_handler_sample_t {
   struct z_owned_fifo_handler_sample_t _this;
 } z_moved_fifo_handler_sample_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_source_info_t {
   struct z_owned_source_info_t _this;
 } z_moved_source_info_t;
-#endif
 /**
  * Options passed to the `z_get()` function.
  */
@@ -658,16 +621,12 @@ typedef struct z_get_options_t {
    */
   uint64_t timeout_ms;
 } z_get_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t _this;
 } z_moved_keyexpr_t;
-#endif
 /**
  * @brief The options for `z_liveliness_declare_subscriber()`
  */
@@ -692,26 +651,18 @@ typedef struct z_liveliness_get_options_t {
    */
   uint64_t timeout_ms;
 } z_liveliness_get_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_liveliness_token_t {
   struct z_owned_liveliness_token_t _this;
 } z_moved_liveliness_token_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_matching_listener_t {
   struct z_owned_matching_listener_t _this;
 } z_moved_matching_listener_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_memory_layout_t {
   struct z_owned_memory_layout_t _this;
 } z_moved_memory_layout_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_mutex_t {
   struct z_owned_mutex_t _this;
 } z_moved_mutex_t;
-#endif
 /**
  * Options passed to the `z_open()` function.
  */
@@ -728,11 +679,9 @@ typedef struct z_publisher_delete_options_t {
    */
   const struct z_timestamp_t *timestamp;
 } z_publisher_delete_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_publisher_t {
   struct z_owned_publisher_t _this;
 } z_moved_publisher_t;
-#endif
 /**
  * Options passed to the `z_publisher_put()` function.
  */
@@ -801,11 +750,9 @@ typedef struct z_put_options_t {
    */
   struct z_moved_bytes_t *attachment;
 } z_put_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_querier_t {
   struct z_owned_querier_t _this;
 } z_moved_querier_t;
-#endif
 /**
  * @brief Options passed to the `z_querier_get()` function.
  */
@@ -829,11 +776,9 @@ typedef struct z_querier_get_options_t {
    */
   struct z_moved_bytes_t *attachment;
 } z_querier_get_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_query_t {
   struct z_owned_query_t _this;
 } z_moved_query_t;
-#endif
 /**
  * Represents the set of options that can be applied to a query reply,
  * sent via `z_query_reply()`.
@@ -912,41 +857,27 @@ typedef struct z_query_reply_err_options_t {
    */
   struct z_moved_encoding_t *encoding;
 } z_query_reply_err_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_queryable_t {
   struct z_owned_queryable_t _this;
 } z_moved_queryable_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_reply_t {
   struct z_owned_reply_t _this;
 } z_moved_reply_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_reply_err_t {
   struct z_owned_reply_err_t _this;
 } z_moved_reply_err_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_ring_handler_query_t {
   struct z_owned_ring_handler_query_t _this;
 } z_moved_ring_handler_query_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_ring_handler_reply_t {
   struct z_owned_ring_handler_reply_t _this;
 } z_moved_ring_handler_reply_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_ring_handler_sample_t {
   struct z_owned_ring_handler_sample_t _this;
 } z_moved_ring_handler_sample_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_sample_t {
   struct z_owned_sample_t _this;
 } z_moved_sample_t;
-#endif
 /**
  * Options to pass to `z_scout()`.
  */
@@ -960,41 +891,27 @@ typedef struct z_scout_options_t {
    */
   enum z_what_t what;
 } z_scout_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_shm_client_t {
   struct z_owned_shm_client_t _this;
 } z_moved_shm_client_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_shm_client_storage_t {
   struct z_owned_shm_client_storage_t _this;
 } z_moved_shm_client_storage_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_shm_provider_t {
   struct z_owned_shm_provider_t _this;
 } z_moved_shm_provider_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_string_array_t {
   struct z_owned_string_array_t _this;
 } z_moved_string_array_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_subscriber_t {
   struct z_owned_subscriber_t _this;
 } z_moved_subscriber_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct z_moved_task_t {
   struct z_owned_task_t _this;
 } z_moved_task_t;
-#endif
 typedef struct z_task_attr_t {
   size_t _0;
 } z_task_attr_t;
@@ -1020,21 +937,17 @@ typedef struct zc_owned_closure_log_t {
 typedef struct zc_moved_closure_log_t {
   struct zc_owned_closure_log_t _this;
 } zc_moved_closure_log_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct zc_moved_concurrent_close_handle_t {
   struct zc_owned_concurrent_close_handle_t _this;
 } zc_moved_concurrent_close_handle_t;
-#endif
 typedef struct zc_internal_encoding_data_t {
   uint16_t id;
   const uint8_t *schema_ptr;
   size_t schema_len;
 } zc_internal_encoding_data_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct zc_moved_shm_client_list_t {
   struct zc_owned_shm_client_list_t _this;
 } zc_moved_shm_client_list_t;
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Setting for advanced publisher's cache. The cache allows advanced subscribers to recover history and/or lost samples.
@@ -1072,11 +985,9 @@ typedef struct ze_advanced_publisher_delete_options_t {
    */
   struct z_publisher_delete_options_t delete_options;
 } ze_advanced_publisher_delete_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ze_moved_advanced_publisher_t {
   struct ze_owned_advanced_publisher_t _this;
 } ze_moved_advanced_publisher_t;
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Settings for sample miss detection on Advanced Publisher.
@@ -1167,23 +1078,12 @@ typedef struct ze_owned_closure_miss_t {
 typedef struct ze_moved_closure_miss_t {
   struct ze_owned_closure_miss_t _this;
 } ze_moved_closure_miss_t;
-/**
- *@warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- *@brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
- *
- *A listener that sends notification when the advanced subscriber misses a sample .
- *Dropping the corresponding subscriber, also drops the listener.
- */
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ALIGN(8) ze_owned_sample_miss_listener_t {
   uint8_t _0[24];
 } ze_owned_sample_miss_listener_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ze_moved_advanced_subscriber_t {
   struct ze_owned_advanced_subscriber_t _this;
 } ze_moved_advanced_subscriber_t;
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Settings for retrievieng historical data for Advanced Subscriber.
@@ -1343,26 +1243,18 @@ typedef struct ze_querying_subscriber_options_t {
    */
   uint64_t query_timeout_ms;
 } ze_querying_subscriber_options_t;
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ze_moved_publication_cache_t {
   struct ze_owned_publication_cache_t _this;
 } ze_moved_publication_cache_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ze_moved_querying_subscriber_t {
   struct ze_owned_querying_subscriber_t _this;
 } ze_moved_querying_subscriber_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ze_moved_sample_miss_listener_t {
   struct ze_owned_sample_miss_listener_t _this;
 } ze_moved_sample_miss_listener_t;
-#endif
-#if defined(TARGET_ARCH_AARCH64)
 typedef struct ze_moved_serializer_t {
   struct ze_owned_serializer_t _this;
 } ze_moved_serializer_t;
-#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation without any additional actions.
@@ -1429,6 +1321,15 @@ z_result_t z_alloc_layout_threadsafe_alloc_gc_defrag_async(struct z_buf_alloc_re
                                                            struct zc_threadsafe_context_t result_context,
                                                            void (*result_callback)(void*,
                                                                                    struct z_buf_alloc_result_t*));
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Creates a new Alloc Layout for SHM Provider specifying the exact alignment.
+ */
+ZENOHC_API
+z_result_t z_alloc_layout_with_alignment_new(struct z_owned_alloc_layout_t *this_,
+                                             const struct z_loaned_shm_provider_t *provider,
+                                             size_t size,
+                                             struct z_alloc_alignment_t alignment);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Converts data into a loaned SHM buffer.
@@ -2730,6 +2631,26 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
+ * Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * @param session: The zenoh session.
+ * @param key_expr: The key expression matching resources to query.
+ * @param parameters: The query's parameters string, similar to a url's query segment.
+ * @param parameters_len: The parameters substring length.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, a negative error value upon failure.
+ */
+ZENOHC_API
+z_result_t z_get_with_parameters_substr(const struct z_loaned_session_t *session,
+                                        const struct z_loaned_keyexpr_t *key_expr,
+                                        const char *parameters,
+                                        size_t parameters_len,
+                                        struct z_moved_closure_reply_t *callback,
+                                        struct z_get_options_t *options);
+/**
  * Constructs an owned copy of hello message.
  */
 ZENOHC_API void z_hello_clone(struct z_owned_hello_t *dst, const struct z_loaned_hello_t *this_);
@@ -3544,6 +3465,13 @@ ZENOHC_API
 z_result_t z_posix_shm_provider_new(struct z_owned_shm_provider_t *this_,
                                     size_t size);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Creates a new POSIX SHM Provider.
+ */
+ZENOHC_API
+z_result_t z_posix_shm_provider_with_layout_new(struct z_owned_shm_provider_t *this_,
+                                                const struct z_loaned_memory_layout_t *layout);
+/**
  * Returns the default value of #z_priority_t.
  */
 ZENOHC_API enum z_priority_t z_priority_default(void);
@@ -3745,6 +3673,24 @@ z_result_t z_querier_get_matching_status(const struct z_loaned_querier_t *this_,
  * @brief Constructs the default value for `z_querier_get_options_t`.
  */
 ZENOHC_API void z_querier_get_options_default(struct z_querier_get_options_t *this_);
+/**
+ * @brief Query data from the matching queryables in the system.
+ * Replies are provided through a callback function.
+ *
+ * @param querier: The querier to make query from.
+ * @param parameters: The query's parameters, similar to a url's query segment.
+ * @param parameters_len: The length of the query's parameters substring.
+ * @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+ * @param options: Additional options for the get. All owned fields will be consumed.
+ *
+ * @return 0 in case of success, a negative error value upon failure.
+ */
+ZENOHC_API
+z_result_t z_querier_get_with_parameters_substr(const struct z_loaned_querier_t *querier,
+                                                const char *parameters,
+                                                size_t parameters_len,
+                                                struct z_moved_closure_reply_t *callback,
+                                                struct z_querier_get_options_t *options);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the ID of the querier.
@@ -4446,6 +4392,15 @@ void z_shm_provider_alloc(struct z_buf_layout_alloc_result_t *out_result,
                           size_t size);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Make aligned allocation without any additional actions.
+ */
+ZENOHC_API
+void z_shm_provider_alloc_aligned(struct z_buf_layout_alloc_result_t *out_result,
+                                  const struct z_loaned_shm_provider_t *provider,
+                                  size_t size,
+                                  struct z_alloc_alignment_t alignment);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation performing garbage collection if needed.
  */
 ZENOHC_API
@@ -4454,12 +4409,43 @@ void z_shm_provider_alloc_gc(struct z_buf_layout_alloc_result_t *out_result,
                              size_t size);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Make aligned allocation performing garbage collection if needed.
+ */
+ZENOHC_API
+void z_shm_provider_alloc_gc_aligned(struct z_buf_layout_alloc_result_t *out_result,
+                                     const struct z_loaned_shm_provider_t *provider,
+                                     size_t size,
+                                     struct z_alloc_alignment_t alignment);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation performing garbage collection and/or defragmentation if needed.
  */
 ZENOHC_API
 void z_shm_provider_alloc_gc_defrag(struct z_buf_layout_alloc_result_t *out_result,
                                     const struct z_loaned_shm_provider_t *provider,
                                     size_t size);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Make aligned allocation performing garbage collection and/or defragmentation if needed.
+ */
+ZENOHC_API
+void z_shm_provider_alloc_gc_defrag_aligned(struct z_buf_layout_alloc_result_t *out_result,
+                                            const struct z_loaned_shm_provider_t *provider,
+                                            size_t size,
+                                            struct z_alloc_alignment_t alignment);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Make aligned allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
+ * if used with non-threadsafe SHM Provider.
+ */
+ZENOHC_API
+z_result_t z_shm_provider_alloc_gc_defrag_aligned_async(struct z_buf_layout_alloc_result_t *out_result,
+                                                        const struct z_loaned_shm_provider_t *provider,
+                                                        size_t size,
+                                                        struct z_alloc_alignment_t alignment,
+                                                        struct zc_threadsafe_context_t result_context,
+                                                        void (*result_callback)(void*,
+                                                                                struct z_buf_layout_alloc_result_t*));
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
@@ -4482,6 +4468,15 @@ void z_shm_provider_alloc_gc_defrag_blocking(struct z_buf_layout_alloc_result_t 
                                              size_t size);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Make aligned allocation performing garbage collection and/or defragmentation and/or blocking if needed.
+ */
+ZENOHC_API
+void z_shm_provider_alloc_gc_defrag_blocking_aligned(struct z_buf_layout_alloc_result_t *out_result,
+                                                     const struct z_loaned_shm_provider_t *provider,
+                                                     size_t size,
+                                                     struct z_alloc_alignment_t alignment);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
  */
 ZENOHC_API
@@ -4490,10 +4485,26 @@ void z_shm_provider_alloc_gc_defrag_dealloc(struct z_buf_layout_alloc_result_t *
                                             size_t size);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Make aligned allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
+ */
+ZENOHC_API
+void z_shm_provider_alloc_gc_defrag_dealloc_aligned(struct z_buf_layout_alloc_result_t *out_result,
+                                                    const struct z_loaned_shm_provider_t *provider,
+                                                    size_t size,
+                                                    struct z_alloc_alignment_t alignment);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Return the memory size available in the provider.
  */
 ZENOHC_API
 size_t z_shm_provider_available(const struct z_loaned_shm_provider_t *provider);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Creates a new SHM Provider ith default backend.
+ */
+ZENOHC_API
+z_result_t z_shm_provider_default_new(struct z_owned_shm_provider_t *this_,
+                                      size_t size);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Perform memory defragmentation. The real operations taken depend on the provider's backend allocator
@@ -5123,6 +5134,15 @@ ZENOHC_API
 z_result_t zc_config_from_file(struct z_owned_config_t *this_,
                                const char *path);
 /**
+ * Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_from_file_substr(struct z_owned_config_t *this_,
+                                      const char *path,
+                                      size_t len);
+/**
  * Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
  *
  * Returns 0 in case of success, negative error code otherwise.
@@ -5130,6 +5150,15 @@ z_result_t zc_config_from_file(struct z_owned_config_t *this_,
 ZENOHC_API
 z_result_t zc_config_from_str(struct z_owned_config_t *this_,
                               const char *s);
+/**
+ * Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+ *
+ * Returns 0 in case of success, negative error code otherwise.
+ */
+ZENOHC_API
+z_result_t zc_config_from_substr(struct z_owned_config_t *this_,
+                                 const char *s,
+                                 size_t len);
 /**
  * Gets the property with the given path key from the configuration, and constructs and owned string from it.
  */
@@ -5173,6 +5202,13 @@ z_result_t zc_config_insert_json5_from_substr(struct z_loaned_config_t *this_,
 ZENOHC_API
 z_result_t zc_config_to_string(const struct z_loaned_config_t *config,
                                struct z_owned_string_t *out_config_string);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a view string on last error message.
+ * The view string only remains valid until next faillable zenoh API call from the same thread.
+ */
+ZENOHC_API
+void zc_get_last_error(struct z_view_string_t *out);
 /**
  * Initializes the zenoh runtime logger, using rust environment settings or the provided fallback level.
  * E.g.: `RUST_LOG=info` will enable logging at info level. Similarly, you can set the variable to `error` or `debug`.
