@@ -32,7 +32,7 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
 
     let mut plans: Vec<(String, Option<String>)> = vec![(host_target.clone(), host_linker)];
     if let Ok(cross_target) = std::env::var("CROSS_TARGET") {
-        if cross_target != host_target {
+        if !cross_target.is_empty() && cross_target != host_target {
             let cross_linker = std::env::var("CROSS_RUSTC_LINKER").ok();
             plans.push((cross_target, cross_linker));
         }
