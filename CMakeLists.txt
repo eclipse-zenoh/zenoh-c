@@ -181,16 +181,67 @@ macro(set_lib list var value)
 	list(APPEND ${list} ${value})
 endmacro()
 
+# if variable ZENOHC_CUSTOM_TARGET is set, extract the operation system and
+# environment from the target triple and set variables target_os and target_env accordingly.
+# Otherwise set them to the current operating system (by WIN32, MSVC, APPLE variable)
+
+# parse ZENOHC_CUSTOM_TARGET
+# NOTE:
+# - Do not use non-greedy regex like ".*?" — CMake regex does not support them.
+# - A Rust target triple is typically ARCH-VENDOR-SYS[-ENV]. We need SYS (os) and ENV.
+# - Normalize darwin → macos, windows stays windows, otherwise assume linux for lib naming.
+if(NOT "${ZENOHC_CUSTOM_TARGET}" STREQUAL "")
+	# Split the triple by '-' and pick components
+	string(REPLACE "-" ";" _triple "${ZENOHC_CUSTOM_TARGET}")
+	list(LENGTH _triple _triple_len)
+	unset(_triple_os)
+	unset(_triple_env)
+	if(_triple_len GREATER_EQUAL 3)
+		list(GET _triple 2 _triple_os)
+	endif()
+	if(_triple_len GREATER_EQUAL 4)
+		list(GET _triple 3 _triple_env)
+	endif()
+
+	# Normalize OS
+	if(DEFINED _triple_os AND _triple_os MATCHES "windows")
+		set(target_os "windows")
+	elseif(DEFINED _triple_os AND _triple_os MATCHES "darwin|macos|apple")
+		set(target_os "macos")
+	else()
+		# Default to linux-style naming when unknown
+		set(target_os "linux")
+	endif()
+
+	# Normalize environment
+	if(DEFINED _triple_env AND _triple_env MATCHES "msvc")
+		set(target_env "msvc")
+	elseif(DEFINED _triple_env AND _triple_env MATCHES "gnu")
+		set(target_env "gnu")
+	endif()
+else()
+	if(WIN32)
+		set(target_os "windows")
+	elseif(APPLE)
+		set(target_os "macos")
+	else()
+		set(target_os "linux")
+	endif()
+	if(MSVC)
+		set(target_env "msvc")
+	endif()
+endif()
+
 # dylib[r|d] - dymamic library (.so, .dll, .dylib)
 # staticlib[r|d] - static library (.a, .lib)
 # implib[r|d] - import library for windows dynamic library (DLL) - .lib
 # dylibs[r|d] - list of files required for use dynamic library
 # staticlibs[r|d] - list of files required for use static library
 # get rust output library names from https://github.com/corrosion-rs/corrosion/blob/1c6974c2473765449e7c4649f9f96f1b751420c3/cmake/Corrosion.cmake#L331
-if(WIN32)
+if(target_os STREQUAL "windows")
 	set_lib(dylibsr dylibr zenohc.dll)
 	set_lib(dylibsd dylibd zenohc.dll)
-	if(MSVC)
+	if(target_env STREQUAL "msvc")
 		set_lib(staticlibsr staticlibr zenohc.lib)
 		set_lib(staticlibsd staticlibd zenohc.lib)
 		set_lib(dylibsr implibr zenohc.dll.lib)
@@ -201,7 +252,7 @@ if(WIN32)
 		set_lib(dylibsr implibr libzenohc.dll.a)
 		set_lib(dylibsd implibd libzenohc.dll.a)
 	endif()
-elseif(APPLE)
+elseif(target_os STREQUAL "macos")
 	set_lib(dylibsr dylibr libzenohc.dylib)
 	set_lib(dylibsd dylibd libzenohc.dylib)
 	set_lib(staticlibsr staticlibr libzenohc.a)
