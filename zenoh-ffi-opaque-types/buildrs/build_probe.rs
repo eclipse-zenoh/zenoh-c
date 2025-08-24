@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use crate::buildrs::get_out_opaque_types;
 
@@ -19,7 +19,15 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
 
     // Collect targets and (optional) linkers
-    let host_target = std::env::var("TARGET").expect("TARGET is not set");
+    let target = std::env::var("TARGET").unwrap_or_default();
+    let host = std::env::var("HOST").unwrap_or_default();
+    let host_target = if !target.is_empty() {
+        target
+    } else if !host.is_empty() {
+        host
+    } else {
+        panic!("Neither TARGET nor HOST environment variable is set");
+    };
     let host_linker = std::env::var("RUSTC_LINKER").ok();
 
     let mut plans: Vec<(String, Option<String>)> = vec![(host_target.clone(), host_linker)];
@@ -32,15 +40,21 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
 
     let mut outputs: HashMap<String, PathBuf> = HashMap::new();
     for (target, linker) in plans {
-        let out_path = run_cargo_build_for_target(&probe_manifest, &opaque_root, &profile, &target, linker.as_deref());
+        let out_path = run_cargo_build_for_target(
+            &probe_manifest,
+            &opaque_root,
+            &profile,
+            &target,
+            linker.as_deref(),
+        );
         outputs.insert(target, out_path);
     }
     outputs
 }
 
 fn run_cargo_build_for_target(
-    probe_manifest: &PathBuf,
-    opaque_root: &PathBuf,
+    probe_manifest: &Path,
+    opaque_root: &Path,
     profile: &str,
     target: &str,
     linker: Option<&str>,
@@ -73,9 +87,12 @@ fn run_cargo_build_for_target(
     let cmd_file = out_dir.join("probe_build_cmd.txt");
     let file = std::fs::File::create(&out_file)
         .unwrap_or_else(|e| panic!("Failed to create output file {}: {e}", out_file.display()));
-    let file_clone = file
-        .try_clone()
-        .unwrap_or_else(|e| panic!("Failed to clone output file handle {}: {e}", out_file.display()));
+    let file_clone = file.try_clone().unwrap_or_else(|e| {
+        panic!(
+            "Failed to clone output file handle {}: {e}",
+            out_file.display()
+        )
+    });
 
     // Build a human-readable command string and store it
     let mut cmd_pieces: Vec<String> = vec!["cargo".into(), "build".into()];
@@ -95,7 +112,13 @@ fn run_cargo_build_for_target(
     // Quote pieces containing whitespace for readability
     let cmd_line = cmd_pieces
         .iter()
-        .map(|s| if s.chars().any(char::is_whitespace) { format!("\"{}\"", s) } else { s.clone() })
+        .map(|s| {
+            if s.chars().any(char::is_whitespace) {
+                format!("\"{}\"", s)
+            } else {
+                s.clone()
+            }
+        })
         .collect::<Vec<_>>()
         .join(" ");
     let _ = std::fs::write(&cmd_file, cmd_line.as_bytes());

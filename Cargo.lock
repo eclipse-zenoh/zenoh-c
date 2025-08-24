@@ -1874,7 +1874,7 @@ dependencies = [
 [[package]]
 name = "prebindgen"
 version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#8b39b261858c45099112c08b25aaab4a6672005a"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#24df4decb678e5d2ff665f2d262e5de85d272060"
 dependencies = [
  "if_rust_version",
  "itertools 0.14.0",
@@ -1894,7 +1894,7 @@ dependencies = [
 [[package]]
 name = "prebindgen-proc-macro"
 version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#8b39b261858c45099112c08b25aaab4a6672005a"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#24df4decb678e5d2ff665f2d262e5de85d272060"
 dependencies = [
  "prebindgen",
  "proc-macro2",
