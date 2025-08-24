@@ -255,13 +255,15 @@ endif()
 status_print(cargo_flags)
 status_print(libs)
 file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide.yaml")
-# probably not needed after switching to zenoh-ffi
-# COMMAND ${CMAKE_COMMAND} -E env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+# The zenoh-ffi needs for correct cross-target build not only "--target" parameter for
+# cargo, but also variable CROSS_TARGET set to the same value.
+# This is necessary because the build.rs of zenoh-ffi-opaque-types should know
+# the target to correctly calculate structure sizes
 add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
-	COMMAND ${CMAKE_COMMAND} -E echo \"cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
-	COMMAND cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E echo \"CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
+    COMMAND ${CMAKE_COMMAND} -E env CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
