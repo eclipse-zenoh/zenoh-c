@@ -70,7 +70,7 @@ pub fn generate_c_headers(source: &Path) {
     fix_cbindgen(&buggy_generation_path, &generation_path);
     trace_generated("Fixed cbindgen source", &generation_path);
 
-    prebindgen::trace!("Splitting {}", generation_path.file_name().unwrap().display());
+    prebindgen::trace!("Splitting {}", generation_path.file_name().unwrap().to_str().unwrap());
     let files = split_bindings(&generation_path);
     files.iter().for_each(|file| {
         trace_generated(" - ", file);
