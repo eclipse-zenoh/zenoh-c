@@ -1,7 +1,7 @@
 use std::{
     collections::HashSet,
     fs::File,
-    io::{BufRead, Read, Write},
+    io::{Read, Write},
     path::{Path, PathBuf},
 };
 
@@ -70,10 +70,6 @@ pub fn generate_c_headers(source: &Path) {
     fix_cbindgen(&buggy_generation_path, &generation_path);
     trace_generated("Fixed cbindgen source", &generation_path);
 
-    let zenoh_cpp_h_path = tmp_dir.join("zenoh-cpp.h");
-    preprocess_header(&generation_path, &zenoh_cpp_h_path);
-    trace_generated("Preprocessed source", &zenoh_cpp_h_path);
-
     prebindgen::trace!("Splitting {}", generation_path.file_name().unwrap().display());
     let files = split_bindings(&generation_path);
     files.iter().for_each(|file| {
@@ -87,7 +83,7 @@ pub fn generate_c_headers(source: &Path) {
     });
 
     let zenoh_macros_path = include_dir.join("zenoh_macros.h");
-    create_generics_header(&zenoh_cpp_h_path, &zenoh_macros_path);
+    create_generics_header(&generation_path, &zenoh_macros_path);
     trace_generated("Generated generics header", &zenoh_macros_path);
 
     configure();
@@ -116,14 +112,6 @@ fn fix_cbindgen(input: &Path, output: &Path) {
     let mut out = File::create(output)
         .unwrap_or_else(|e| panic!("failed to open output file {}: {}", output.display(), e));
     out.write_all(bindings.as_bytes()).unwrap();
-}
-
-fn preprocess_header(input: &Path, output: &Path) {
-    let parsed = process_feature_defines(input)
-        .unwrap_or_else(|e| panic!("failed to open input file {}: {}", input.display(), e));
-    let mut out = File::create(output)
-        .unwrap_or_else(|e| panic!("failed to open output file {}: {}", output.display(), e));
-    out.write_all(parsed.as_bytes()).unwrap();
 }
 
 fn create_generics_header(path_in: &Path, path_out: &Path) {
@@ -469,63 +457,6 @@ fn text_replace(files: impl Iterator<Item = impl AsRef<Path>>, dst_dir: &Path) -
         result.push(dst_path);
     }
     result
-}
-
-/// Evaluates conditional feature macros in the form #if (logical expression of define(FEATURE_NAME))
-/// and removes the code under those that evaluate to false
-/// Note: works only on single string conditional expressions
-fn process_feature_defines(input_path: &Path) -> Result<String, Box<dyn std::error::Error>> {
-    let file = std::fs::File::open(input_path)?;
-    let lines = std::io::BufReader::new(file).lines();
-    let mut out = String::new();
-    let mut skip = false;
-    let mut nest_level: usize = 0;
-    for line in lines.map_while(Result::ok) {
-        if line.starts_with("#ifdef") && skip {
-            nest_level += 1;
-        } else if line.starts_with("#endif") && skip {
-            nest_level -= 1;
-            skip = nest_level != 0;
-            continue;
-        } else if line.starts_with("#if ") {
-            skip = skip || evaluate_c_defines_line(&line);
-            if skip {
-                nest_level += 1;
-            }
-        }
-        if !skip {
-            out += &line;
-            out += "\n";
-        }
-    }
-
-    Ok(out)
-}
-
-fn evaluate_c_defines_line(line: &str) -> bool {
-    let mut s = line.to_string();
-    for (rust_feature, c_feature) in RUST_TO_C_FEATURES.entries() {
-        s = s.replace(
-            &format!("defined({c_feature})"),
-            match prebindgen::is_feature_enabled(rust_feature) {
-                true => "true",
-                false => "false",
-            },
-        );
-    }
-    let target = std::env::var("CARGO_CFG_TARGET_ARCH")
-        .unwrap()
-        .to_uppercase();
-    s = s.replace(&format!("defined(TARGET_ARCH_{target})"), "true");
-    // for all other entries "defined(TARGET_ARCH_\\w+)" replace them to false
-    let re_arch = Regex::new(r"defined\(TARGET_ARCH_(\\w+)\)").unwrap();
-    s = re_arch.replace_all(&s, "false").to_string();
-
-    s = s.replace("#if", "");
-    match evalexpr::eval(&s) {
-        Ok(v) => v == evalexpr::Value::from(false),
-        Err(_) => panic!("Failed to evaluate {}", &s),
-    }
 }
 
 fn make_move_take_signatures(path_in: &Path) -> (Vec<FunctionSignature>, Vec<FunctionSignature>) {
