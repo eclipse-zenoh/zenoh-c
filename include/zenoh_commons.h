@@ -271,6 +271,9 @@ typedef struct z_moved_slice_t {
 typedef struct z_moved_string_t {
   struct z_owned_string_t _this;
 } z_moved_string_t;
+/**
+ *An iterator over slices of serialized data.
+ */
 typedef struct ALIGN(8) z_bytes_slice_iterator_t {
   uint8_t _0[24];
 } z_bytes_slice_iterator_t;
@@ -1078,6 +1081,13 @@ typedef struct ze_owned_closure_miss_t {
 typedef struct ze_moved_closure_miss_t {
   struct ze_owned_closure_miss_t _this;
 } ze_moved_closure_miss_t;
+/**
+ *@warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ *@brief An owned Zenoh sample miss listener. Missed samples can only be detected from advanced publishers, enabling sample miss detection.
+ *
+ *A listener that sends notification when the advanced subscriber misses a sample .
+ *Dropping the corresponding subscriber, also drops the listener.
+ */
 typedef struct ALIGN(8) ze_owned_sample_miss_listener_t {
   uint8_t _0[24];
 } ze_owned_sample_miss_listener_t;
