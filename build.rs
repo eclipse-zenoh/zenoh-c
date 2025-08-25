@@ -1,6 +1,5 @@
 mod buildrs;
 
-
 fn main() {
     let source = buildrs::prebindgen_generator::generate_source();
     prebindgen::trace!("Generated source: {}", source.display());

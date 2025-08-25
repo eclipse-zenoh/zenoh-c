@@ -1,9 +1,11 @@
-use itertools::Itertools;
 use std::path::PathBuf;
+
+use itertools::Itertools;
 
 pub fn generate_source() -> PathBuf {
     let source_ffi = prebindgen::Source::new(zenoh_ffi::PREBINDGEN_OUT_DIR);
-    let source_ffi_opaque_types = prebindgen::Source::new(zenoh_ffi_opaque_types::PREBINDGEN_OUT_DIR);
+    let source_ffi_opaque_types =
+        prebindgen::Source::new(zenoh_ffi_opaque_types::PREBINDGEN_OUT_DIR);
 
     let replace_types = prebindgen::map::ReplaceTypes::builder()
         .replace_type("MaybeUninit", "std::mem::MaybeUninit")

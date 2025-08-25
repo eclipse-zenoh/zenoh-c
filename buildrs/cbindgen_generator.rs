@@ -9,12 +9,11 @@ use fs2::FileExt;
 use phf::phf_map;
 use regex::Regex;
 
-use crate::buildrs::common_helpers::{get_manifest_path, get_tmp_dir};
-
 use super::{
     common_helpers::{cargo_target_dir, split_type_name},
     splitguide::{split_bindings, FuncArg, FunctionSignature},
 };
+use crate::buildrs::common_helpers::{get_manifest_path, get_tmp_dir};
 
 static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
     "unstable" => "Z_FEATURE_UNSTABLE_API",
@@ -70,7 +69,10 @@ pub fn generate_c_headers(source: &Path) {
     fix_cbindgen(&buggy_generation_path, &generation_path);
     trace_generated("Fixed cbindgen source", &generation_path);
 
-    prebindgen::trace!("Splitting {}", generation_path.file_name().unwrap().to_str().unwrap());
+    prebindgen::trace!(
+        "Splitting {}",
+        generation_path.file_name().unwrap().to_str().unwrap()
+    );
     let files = split_bindings(&generation_path);
     files.iter().for_each(|file| {
         trace_generated(" - ", file);
