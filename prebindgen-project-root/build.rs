@@ -19,7 +19,7 @@ fn main() {
         println!("cargo:warning=prebindgen-project-root is not located inside your workspace");
     } else {
         let workspace_root = project_root::get_project_root()
-            .unwrap_or_else(|e| panic!("Failed to determine workspace root: {}", e));
+            .unwrap_or_else(|e| panic!("Failed to determine workspace root: {e}"));
         println!("cargo:rustc-env=PROJECT_ROOT={}", workspace_root.display());
     }
 }
