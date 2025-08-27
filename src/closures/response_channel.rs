@@ -30,7 +30,7 @@ use crate::{
     z_loaned_reply_t, z_owned_closure_reply_t, z_owned_reply_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_reply_t, option FifoChannelHandler<Reply>),
+    owned(z_owned_fifo_handler_reply_t, z_moved_fifo_handler_reply_t, option FifoChannelHandler<Reply>),
     loaned(z_loaned_fifo_handler_reply_t),
 );
 
@@ -161,7 +161,7 @@ pub use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_ring_handler_reply_t, z_moved_ring_handler_reply_t, z_owned_ring_handler_reply_t,
 };
 decl_c_type!(
-    owned(z_owned_ring_handler_reply_t, option RingChannelHandler<Reply>),
+    owned(z_owned_ring_handler_reply_t, z_moved_ring_handler_reply_t, option RingChannelHandler<Reply>),
     loaned(z_loaned_ring_handler_reply_t),
 );
 

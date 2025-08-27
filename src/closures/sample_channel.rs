@@ -30,7 +30,7 @@ use crate::{
     z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_sample_t, option FifoChannelHandler<Sample>),
+    owned(z_owned_fifo_handler_sample_t, z_moved_fifo_handler_sample_t, option FifoChannelHandler<Sample>),
     loaned(z_loaned_fifo_handler_sample_t),
 );
 
@@ -164,6 +164,7 @@ pub use zenoh_ffi_opaque_types::opaque_types::{
 decl_c_type!(
     owned(
         z_owned_ring_handler_sample_t,
+        z_moved_ring_handler_sample_t,
         option RingChannelHandler<Sample>,
     ),
     loaned(z_loaned_ring_handler_sample_t),

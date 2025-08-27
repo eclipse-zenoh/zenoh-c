@@ -23,7 +23,7 @@ use crate::{
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 decl_c_type!(
-    owned(z_owned_matching_listener_t, option MatchingListener<()>),
+    owned(z_owned_matching_listener_t, z_moved_matching_listener_t, option MatchingListener<()>),
 );
 
 #[prebindgen]

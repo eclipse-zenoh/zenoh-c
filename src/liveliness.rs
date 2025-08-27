@@ -32,7 +32,7 @@ use crate::{
     z_moved_liveliness_token_t, z_owned_subscriber_t,
 };
 decl_c_type!(
-    owned(z_owned_liveliness_token_t, option LivelinessToken),
+    owned(z_owned_liveliness_token_t, z_moved_liveliness_token_t, option LivelinessToken),
     loaned(z_loaned_liveliness_token_t),
 );
 

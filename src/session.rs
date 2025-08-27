@@ -27,7 +27,7 @@ use crate::{
     z_moved_config_t, z_moved_session_t,
 };
 decl_c_type!(
-    owned(z_owned_session_t, option Session),
+    owned(z_owned_session_t, z_moved_session_t, option Session),
     loaned(z_loaned_session_t),
 );
 

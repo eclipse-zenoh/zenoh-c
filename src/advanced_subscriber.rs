@@ -244,7 +244,7 @@ fn _declare_advanced_subscriber_inner(
 }
 
 decl_c_type!(
-    owned(ze_owned_advanced_subscriber_t, option zenoh_ext::AdvancedSubscriber<()>),
+    owned(ze_owned_advanced_subscriber_t, ze_moved_advanced_subscriber_t, option zenoh_ext::AdvancedSubscriber<()>),
     loaned(ze_loaned_advanced_subscriber_t),
 );
 
@@ -380,7 +380,7 @@ pub struct ze_miss_t {
 }
 
 decl_c_type!(
-    owned(ze_owned_sample_miss_listener_t, option SampleMissListener<()>),
+    owned(ze_owned_sample_miss_listener_t, ze_moved_sample_miss_listener_t, option SampleMissListener<()>),
 );
 
 #[prebindgen]

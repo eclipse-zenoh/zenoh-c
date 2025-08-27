@@ -14,7 +14,7 @@ use crate::{
 };
 
 decl_c_type_inequal!(
-    owned(z_owned_mutex_t, option(Mutex<()>, Option<MutexGuard<'static, ()>>)),
+    owned(z_owned_mutex_t, z_moved_mutex_t, option(Mutex<()>, Option<MutexGuard<'static, ()>>)),
     loaned(z_loaned_mutex_t),
 );
 
@@ -111,7 +111,7 @@ pub unsafe fn z_mutex_try_lock(
 
 pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_condvar_t, z_moved_condvar_t, z_owned_condvar_t};
 decl_c_type_inequal!(
-    owned(z_owned_condvar_t, option Condvar),
+    owned(z_owned_condvar_t, z_moved_condvar_t, option Condvar),
     loaned(z_loaned_condvar_t),
 );
 
@@ -208,7 +208,7 @@ pub unsafe fn z_condvar_wait(
 
 pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_task_t, z_owned_task_t};
 decl_c_type!(
-    owned(z_owned_task_t, option JoinHandle<()>),
+    owned(z_owned_task_t, z_moved_task_t, option JoinHandle<()>),
 );
 
 #[prebindgen]

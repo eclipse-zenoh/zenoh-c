@@ -33,7 +33,7 @@ use crate::{
 };
 
 decl_c_type! {
-    owned(z_owned_keyexpr_t, KeyExpr<'static>),
+    owned(z_owned_keyexpr_t, z_moved_keyexpr_t, KeyExpr<'static>),
     loaned(z_loaned_keyexpr_t),
     view(z_view_keyexpr_t, KeyExpr<'static>),
 }

@@ -42,7 +42,7 @@ use crate::{
     zc_reply_keyexpr_t,
 };
 decl_c_type!(
-    owned(z_owned_reply_err_t, ReplyError),
+    owned(z_owned_reply_err_t, z_moved_reply_err_t, ReplyError),
     loaned(z_loaned_reply_err_t, ReplyError),
 );
 
@@ -122,7 +122,7 @@ pub fn z_reply_err_drop(this_: &mut z_moved_reply_err_t) {
 
 use zenoh_ffi_opaque_types::opaque_types::{z_loaned_reply_t, z_moved_reply_t, z_owned_reply_t};
 decl_c_type!(
-    owned(z_owned_reply_t, option Reply),
+    owned(z_owned_reply_t, z_moved_reply_t, option Reply),
     loaned(z_loaned_reply_t),
 );
 

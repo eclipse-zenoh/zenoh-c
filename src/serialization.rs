@@ -33,7 +33,7 @@ use crate::{
 };
 
 decl_c_type! {
-    owned(ze_owned_serializer_t, option ZSerializer),
+    owned(ze_owned_serializer_t, ze_moved_serializer_t, option ZSerializer),
     loaned(ze_loaned_serializer_t),
 }
 
@@ -110,7 +110,7 @@ pub unsafe fn ze_serializer_finish(
         .write(this.take_rust_type().unwrap_unchecked().finish());
 }
 
-decl_c_type! {loaned(ze_deserializer_t, ZDeserializer<'static>)}
+decl_c_type!(loaned(ze_deserializer_t, ZDeserializer<'static>));
 
 fn ze_serialize_arithmetic<T>(this: &mut MaybeUninit<z_owned_bytes_t>, val: &T)
 where

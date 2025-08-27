@@ -195,7 +195,7 @@ pub use zenoh_ffi_opaque_types::opaque_types::{
     ze_loaned_advanced_publisher_t, ze_moved_advanced_publisher_t, ze_owned_advanced_publisher_t,
 };
 decl_c_type!(
-    owned(ze_owned_advanced_publisher_t, option zenoh_ext::AdvancedPublisher<'static>),
+    owned(ze_owned_advanced_publisher_t, ze_moved_advanced_publisher_t, option zenoh_ext::AdvancedPublisher<'static>),
     loaned(ze_loaned_advanced_publisher_t),
 );
 

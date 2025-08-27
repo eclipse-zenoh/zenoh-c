@@ -41,7 +41,6 @@ pub fn generate_rust_types(
                     panic!("Failed to parse target triple '{target}': {e}");
                 })
                 .to_cfg_tokens();
-            let cfg_expr: TokenStream = cfg_tokens.clone();
             let cfg_str: String = cfg_tokens.to_string();
             let type_ident = format_ident!("{}", type_name);
             let align_val = *align;
@@ -89,18 +88,7 @@ pub fn generate_rust_types(
                     #[repr(C)]
                     #[rustfmt::skip]
                     pub struct #moved_ident {
-                        _this: #type_ident,
-                    }
-
-                    #[rustfmt::skip]
-                    #[cfg(#cfg_expr)]
-                    impl crate::transmute::TakeCType for #moved_ident {
-                        type CType = #type_ident;
-                        fn take_c_type(&mut self) -> Self::CType {
-                            // Replace with a zeroed-bytes instance; safe because the type is repr(C) of [u8; N]
-                            let replacement = #type_ident { #field_ident: [0u8; #size_val as usize] };
-                            std::mem::replace(&mut self._this, replacement)
-                        }
+                        pub _this: #type_ident,
                     }
                 });
             }

@@ -63,6 +63,7 @@ pub use zenoh_ffi_opaque_types::opaque_types::{
 decl_c_type!(
     owned(
         ze_owned_publication_cache_t,
+        ze_moved_publication_cache_t,
         option zenoh_ext::PublicationCache,
     ),
     loaned(ze_loaned_publication_cache_t),

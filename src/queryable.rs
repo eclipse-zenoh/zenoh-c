@@ -34,7 +34,7 @@ use crate::{
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t};
 decl_c_type!(
-    owned(z_owned_queryable_t, option Queryable<()>),
+    owned(z_owned_queryable_t, z_moved_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),
 );
 
@@ -64,7 +64,7 @@ pub unsafe fn z_queryable_move(this_: &mut z_owned_queryable_t) -> &mut z_moved_
 
 pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
 decl_c_type!(
-    owned(z_owned_query_t, option Query),
+    owned(z_owned_query_t, z_moved_query_t, option Query),
     loaned(z_loaned_query_t),
 );
 

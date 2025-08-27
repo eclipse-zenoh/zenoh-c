@@ -27,7 +27,7 @@ use crate::{
 };
 
 decl_c_type!(
-    owned(zc_owned_concurrent_close_handle_t, option NolocalJoinHandle<zenoh::Result<()>>),
+    owned(zc_owned_concurrent_close_handle_t, ze_moved_concurrent_close_handle_t, option NolocalJoinHandle<zenoh::Result<()>>),
 );
 
 /// @brief Blocking wait on close handle to complete. Returns `Z_EIO` if close finishes with error.

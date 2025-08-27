@@ -83,7 +83,7 @@ pub fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_options_t>) {
 }
 
 decl_c_type!(
-    owned(z_owned_querier_t, option Querier<'static>),
+    owned(z_owned_querier_t, z_moved_querier_t, option Querier<'static>),
     loaned(z_loaned_querier_t),
 );
 

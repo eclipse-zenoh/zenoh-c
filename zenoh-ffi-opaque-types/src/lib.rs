@@ -12,8 +12,16 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 mod probe;
-pub mod transmute;
 pub mod opaque_types;
 
 pub const FEATURES: &str = prebindgen_proc_macro::features!();
 pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!();
+
+use crate::opaque_types::z_id_t;
+
+impl From<[u8; 16]> for z_id_t {
+    fn from(value: [u8; 16]) -> Self {
+        z_id_t { id: value }
+    }
+}
+

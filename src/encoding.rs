@@ -34,7 +34,7 @@ use crate::{
 };
 
 decl_c_type!(
-    owned(z_owned_encoding_t, Encoding),
+    owned(z_owned_encoding_t, z_moved_encoding_t, Encoding),
     loaned(z_loaned_encoding_t, Encoding),
 );
 

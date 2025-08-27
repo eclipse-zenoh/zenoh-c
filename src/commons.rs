@@ -98,7 +98,7 @@ pub fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
 use zenoh_ffi_opaque_types::opaque_types::z_loaned_sample_t;
 use zenoh_ffi_opaque_types::opaque_types::{z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
-    owned(z_owned_sample_t, option Sample),
+    owned(z_owned_sample_t, z_moved_sample_t, option Sample),
     loaned(z_loaned_sample_t),
 );
 
@@ -607,7 +607,7 @@ pub fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
 pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
-    owned(z_owned_source_info_t, SourceInfo),
+    owned(z_owned_source_info_t, z_moved_source_info_t, option SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
 );
 

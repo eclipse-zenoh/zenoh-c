@@ -34,7 +34,7 @@ use crate::{
 use crate::{transmute::IntoCType, z_entity_global_id_t};
 
 decl_c_type!(
-    owned(z_owned_subscriber_t, option Subscriber<()>),
+    owned(z_owned_subscriber_t, z_moved_subscriber_t,option Subscriber<()>),
     loaned(z_loaned_subscriber_t),
 );
 

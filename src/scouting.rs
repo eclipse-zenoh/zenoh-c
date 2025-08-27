@@ -28,7 +28,7 @@ use crate::{
     z_owned_string_array_t, z_view_string_t, CStringInner, CStringView, ZVector,
 };
 decl_c_type!(
-    owned(z_owned_hello_t, option Hello ),
+    owned(z_owned_hello_t, z_moved_hello_t, option Hello ),
     loaned(z_loaned_hello_t),
 );
 

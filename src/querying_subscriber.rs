@@ -34,6 +34,7 @@ use crate::{zc_reply_keyexpr_default, zc_reply_keyexpr_t, ze_moved_querying_subs
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
+        ze_moved_querying_subscriber_t,
         option(zenoh_ext::FetchingSubscriber<()>, &'static Session),
     ),
     loaned(ze_loaned_querying_subscriber_t),

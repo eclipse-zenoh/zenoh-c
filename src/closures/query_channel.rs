@@ -30,7 +30,7 @@ use crate::{
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
 };
 decl_c_type!(
-    owned(z_owned_fifo_handler_query_t, option FifoChannelHandler<Query> ),
+    owned(z_owned_fifo_handler_query_t, z_moved_fifo_handler_query_t, option FifoChannelHandler<Query> ),
     loaned(z_loaned_fifo_handler_query_t),
 );
 
@@ -164,6 +164,7 @@ pub use zenoh_ffi_opaque_types::opaque_types::{
 decl_c_type!(
     owned(
         z_owned_ring_handler_query_t,
+        z_moved_ring_handler_query_t,
         option RingChannelHandler<Query>,
     ),
     loaned(z_loaned_ring_handler_query_t),
