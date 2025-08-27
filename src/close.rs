@@ -11,12 +11,10 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use prebindgen_proc_macro::prebindgen;
-
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{internal::builders::close::NolocalJoinHandle, Wait};
-
 use zenoh_ffi_opaque_types::opaque_types::{
     zc_moved_concurrent_close_handle_t, zc_owned_concurrent_close_handle_t,
 };

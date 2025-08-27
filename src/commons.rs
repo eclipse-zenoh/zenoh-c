@@ -95,8 +95,7 @@ pub fn z_timestamp_id(this_: &z_timestamp_t) -> z_id_t {
     this_.as_rust_type_ref().get_id().to_le_bytes().into()
 }
 
-use zenoh_ffi_opaque_types::opaque_types::z_loaned_sample_t;
-use zenoh_ffi_opaque_types::opaque_types::{z_moved_sample_t, z_owned_sample_t};
+use zenoh_ffi_opaque_types::opaque_types::{z_loaned_sample_t, z_moved_sample_t, z_owned_sample_t};
 decl_c_type!(
     owned(z_owned_sample_t, z_moved_sample_t, option Sample),
     loaned(z_loaned_sample_t),

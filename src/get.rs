@@ -25,6 +25,9 @@ use zenoh::{
     session::SessionClosedError,
     Wait,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t,
+};
 
 use crate::{
     result::{self, Z_EINVAL},
@@ -39,9 +42,6 @@ use crate::{
 use crate::{
     transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_reply_keyexpr_default,
     zc_reply_keyexpr_t,
-};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, z_moved_reply_err_t, ReplyError),

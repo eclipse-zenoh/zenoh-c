@@ -20,14 +20,14 @@ use zenoh::{
     handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Query,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_fifo_handler_query_t, z_moved_fifo_handler_query_t, z_owned_fifo_handler_query_t,
+};
 
 use crate::{
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_query_t, z_owned_closure_query_t, z_owned_query_t,
-};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_fifo_handler_query_t, z_moved_fifo_handler_query_t, z_owned_fifo_handler_query_t,
 };
 decl_c_type!(
     owned(z_owned_fifo_handler_query_t, z_moved_fifo_handler_query_t, option FifoChannelHandler<Query> ),

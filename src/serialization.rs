@@ -20,6 +20,9 @@ use zenoh::bytes::ZBytes;
 use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    ze_deserializer_t, ze_loaned_serializer_t, ze_moved_serializer_t, ze_owned_serializer_t,
+};
 
 use crate::{
     result::{self, z_result_t},
@@ -27,9 +30,6 @@ use crate::{
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
-};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    ze_deserializer_t, ze_loaned_serializer_t, ze_moved_serializer_t, ze_owned_serializer_t,
 };
 
 decl_c_type! {

@@ -13,12 +13,11 @@
 //
 #![allow(deprecated)]
 
-use prebindgen_proc_macro::prebindgen;
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
-
 use zenoh_ffi_opaque_types::opaque_types::{
     ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t,
 };

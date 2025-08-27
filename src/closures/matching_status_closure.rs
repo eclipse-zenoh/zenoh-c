@@ -11,9 +11,10 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+use std::mem::MaybeUninit;
+
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
-use std::mem::MaybeUninit;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},

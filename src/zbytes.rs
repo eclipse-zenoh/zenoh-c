@@ -27,6 +27,7 @@ use zenoh::{
     bytes::{ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
     internal::buffers::{ZBuf, ZSliceBuffer},
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::result::Z_ENULL;
@@ -40,7 +41,6 @@ use crate::{
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 decl_c_type! {
     owned(z_owned_bytes_t, z_moved_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t),

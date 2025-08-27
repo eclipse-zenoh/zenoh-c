@@ -21,15 +21,15 @@ use zenoh::{
     key_expr::{keyexpr, Canonize, KeyExpr},
     Wait,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
+};
 
 use crate::{
     result::{self, z_result_t, Z_OK},
     strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
-};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
 };
 
 decl_c_type! {

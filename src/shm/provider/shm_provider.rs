@@ -12,10 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::mem::MaybeUninit;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     shm::{
         BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc, ShmProvider, ShmProviderBuilder,

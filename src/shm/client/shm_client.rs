@@ -11,15 +11,16 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use prebindgen_proc_macro::prebindgen;
 use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     internal::bail,
     shm::{ProtocolID, SegmentID, ShmClient, ShmSegment, WithProtocolID},
     Result,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 
 use super::shm_segment::{z_shm_segment_t, DynamicShmSegment};
 use crate::{
@@ -27,7 +28,6 @@ use crate::{
     shm::common::types::{z_protocol_id_t, z_segment_id_t},
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
-pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_shm_client_t, z_owned_shm_client_t};
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Callback for ShmClient.

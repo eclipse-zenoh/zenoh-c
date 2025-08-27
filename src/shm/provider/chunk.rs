@@ -11,11 +11,10 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use prebindgen_proc_macro::prebindgen;
 use std::{mem::MaybeUninit, num::TryFromIntError, sync::Arc};
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
-
 use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t,
 };

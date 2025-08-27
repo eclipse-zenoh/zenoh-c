@@ -18,12 +18,12 @@ pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!(
 
 use std::{cmp::min, slice};
 
-use crate::transmute::{LoanedCTypeRef, TakeRustType};
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
-
 // Reexport opaque types (z_owned_xxx_t, etc)
 pub use zenoh_ffi_opaque_types::opaque_types::*;
+
+use crate::transmute::{LoanedCTypeRef, TakeRustType};
 
 #[macro_use]
 mod transmute;

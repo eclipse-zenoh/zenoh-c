@@ -12,10 +12,10 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::fmt::Debug;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 
 /// A trait for implementing droppable contexts
 pub trait DroppableContext: Debug {

@@ -21,6 +21,9 @@ use zenoh::{
     sample::Sample,
     Wait,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t,
+};
 
 use crate::{
     keyexpr::*,
@@ -31,9 +34,6 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_subscriber_t, z_moved_subscriber_t, z_owned_subscriber_t,
-};
 
 decl_c_type!(
     owned(z_owned_subscriber_t, z_moved_subscriber_t,option Subscriber<()>),

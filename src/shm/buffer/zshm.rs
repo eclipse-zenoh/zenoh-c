@@ -12,12 +12,12 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::{
     borrow::{Borrow, BorrowMut},
     mem::MaybeUninit,
 };
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{zshm, zshmmut, ZShm};
 
 use crate::{

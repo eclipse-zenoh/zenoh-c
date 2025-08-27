@@ -1,5 +1,6 @@
-use regex::Regex;
 use std::collections::HashMap;
+
+use regex::Regex;
 
 /// Parse the outputs of cargo probe builds and extract size/alignment entries.
 ///

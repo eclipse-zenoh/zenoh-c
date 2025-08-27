@@ -12,17 +12,17 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{matching::MatchingListener, Wait};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_moved_matching_listener_t, z_owned_matching_listener_t,
+};
 
 use crate::{
     result,
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
-};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_moved_matching_listener_t, z_owned_matching_listener_t,
 };
 decl_c_type!(
     owned(z_owned_matching_listener_t, z_moved_matching_listener_t, option MatchingListener<()>),

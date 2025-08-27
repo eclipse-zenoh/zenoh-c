@@ -12,10 +12,9 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 #![allow(deprecated)]
-use prebindgen_proc_macro::prebindgen;
-
 use std::{mem::MaybeUninit, ptr::null};
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::Wait;
 use zenoh_ext::{PublicationCacheBuilder, SessionExt};
 

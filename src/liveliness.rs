@@ -21,7 +21,6 @@ use zenoh::{
     sample::Sample,
     Wait,
 };
-
 use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_liveliness_token_t, z_owned_liveliness_token_t,
 };

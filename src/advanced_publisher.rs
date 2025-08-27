@@ -11,10 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use prebindgen_proc_macro::prebindgen;
-
 use std::{mem::MaybeUninit, time::Duration};
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     handlers::Callback,
     matching::MatchingStatus,

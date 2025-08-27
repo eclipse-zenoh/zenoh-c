@@ -12,10 +12,10 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::fmt::Debug;
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{
     ChunkAllocResult, ChunkDescriptor, MemoryLayout, ProtocolID, ShmProviderBackend,
     WithProtocolID, ZLayoutError,

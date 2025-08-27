@@ -6,13 +6,13 @@ use std::{
 
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t,
+};
 
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-};
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t,
 };
 
 decl_c_type_inequal!(

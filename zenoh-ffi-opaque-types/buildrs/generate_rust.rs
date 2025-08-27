@@ -1,7 +1,8 @@
+use std::collections::{HashMap, HashSet};
+
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
 use regex::Regex;
-use std::collections::{HashMap, HashSet};
 
 use crate::buildrs::{get_out_opaque_types, split_type_name, write_if_changed};
 

@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::mem::MaybeUninit;
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{
     AllocAlignment, BufAllocResult, BufLayoutAllocResult, ChunkAllocResult, MemoryLayout,
     ZAllocError, ZLayoutError,

@@ -11,10 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use prebindgen_proc_macro::prebindgen;
-
 use std::{mem::MaybeUninit, time::Duration};
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{handlers::Callback, liveliness::LivelinessSubscriberBuilder, sample::Sample, Wait};
 use zenoh_ext::{AdvancedSubscriberBuilderExt, HistoryConfig, RecoveryConfig, SampleMissListener};
 

@@ -12,9 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use prebindgen_proc_macro::prebindgen;
 use std::{mem::MaybeUninit, sync::Arc};
 
+use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
 use crate::{

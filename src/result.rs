@@ -15,10 +15,10 @@
 #[cfg(feature = "unstable")]
 use std::{cell::RefCell, mem::MaybeUninit, str};
 
+use prebindgen_proc_macro::prebindgen;
+
 #[cfg(feature = "unstable")]
 use crate::{z_view_string_from_substr, z_view_string_t};
-
-use prebindgen_proc_macro::prebindgen;
 
 #[prebindgen]
 #[allow(non_camel_case_types)]
