@@ -607,7 +607,7 @@ pub fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
 pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
 #[cfg(feature = "unstable")]
 decl_c_type!(
-    owned(z_owned_source_info_t, z_moved_source_info_t, option SourceInfo),
+    owned(z_owned_source_info_t, z_moved_source_info_t, SourceInfo),
     loaned(z_loaned_source_info_t, SourceInfo),
 );
 

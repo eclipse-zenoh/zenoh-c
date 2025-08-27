@@ -69,7 +69,8 @@ impl TryFrom<z_allocated_chunk_t> for AllocatedChunk {
 }
 
 decl_c_type!(
-    owned(z_owned_ptr_in_segment_t, option PtrInSegment),
+    owned(z_owned_ptr_in_segment_t, z_moved_ptr_in_segment_t,
+        option PtrInSegment),
     loaned(z_loaned_ptr_in_segment_t),
 );
 

@@ -26,7 +26,7 @@ use crate::{
 };
 
 decl_c_type!(
-    owned(z_owned_shm_t, option ZShm),
+    owned(z_owned_shm_t, z_moved_shm_t, option ZShm),
     loaned(z_loaned_shm_t, zshm),
 );
 

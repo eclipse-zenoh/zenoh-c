@@ -26,7 +26,8 @@ use crate::{
 };
 
 decl_c_type!(
-    owned(zc_owned_shm_client_list_t, option Vec<Arc<dyn ShmClient>>),
+    owned(zc_owned_shm_client_list_t, zc_moved_shm_client_list_t,
+        option Vec<Arc<dyn ShmClient>>),
     loaned(zc_loaned_shm_client_list_t),
 );
 
@@ -111,7 +112,8 @@ pub fn zc_shm_client_list_add_client(
 }
 
 decl_c_type!(
-    owned(z_owned_shm_client_storage_t, option Arc<ShmClientStorage> ),
+    owned(z_owned_shm_client_storage_t, z_moved_shm_client_storage_t,
+        option Arc<ShmClientStorage> ),
     loaned(z_loaned_shm_client_storage_t),
 );
 

@@ -47,7 +47,8 @@ pub struct zc_shm_client_callbacks_t {
 }
 
 decl_c_type!(
-    owned(z_owned_shm_client_t, option Arc<dyn ShmClient>),
+    owned(z_owned_shm_client_t, z_moved_shm_client_t,
+        option Arc<dyn ShmClient>),
 );
 
 #[derive(Debug)]
