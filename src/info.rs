@@ -16,13 +16,13 @@ use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
 use zenoh::{session::ZenohId, Wait};
 
-pub use zenoh_ffi_opaque_types::opaque_types::z_id_t;
 use crate::{
     result,
     transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
     z_owned_string_t,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::z_id_t;
 decl_c_type!(copy(z_id_t, ZenohId));
 
 /// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)

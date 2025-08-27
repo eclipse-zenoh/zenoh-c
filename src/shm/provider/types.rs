@@ -164,10 +164,9 @@ pub fn z_internal_memory_layout_check(this_: &z_owned_memory_layout_t) -> bool {
 /// @brief Borrows Memory Layout.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_memory_layout_loan(
-    this_: &z_owned_memory_layout_t,
-) -> &z_loaned_memory_layout_t {
-    this_.as_rust_type_ref()
+pub unsafe fn z_memory_layout_loan(this_: &z_owned_memory_layout_t) -> &z_loaned_memory_layout_t {
+    this_
+        .as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
         .as_loaned_c_type_ref()
@@ -238,18 +237,14 @@ pub fn z_chunk_alloc_result_new_error(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Chunk Alloc Result in its gravestone value.
 #[prebindgen]
-pub fn z_internal_chunk_alloc_result_null(
-    this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>,
-) {
+pub fn z_internal_chunk_alloc_result_null(this_: &mut MaybeUninit<z_owned_chunk_alloc_result_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[prebindgen]
-pub fn z_internal_chunk_alloc_result_check(
-    this_: &z_owned_chunk_alloc_result_t,
-) -> bool {
+pub fn z_internal_chunk_alloc_result_check(this_: &z_owned_chunk_alloc_result_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

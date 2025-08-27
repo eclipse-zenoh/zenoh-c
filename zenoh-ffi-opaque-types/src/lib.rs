@@ -11,8 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-mod probe;
 pub mod opaque_types;
+mod probe;
 
 pub const FEATURES: &str = prebindgen_proc_macro::features!();
 pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!();
@@ -24,4 +24,3 @@ impl From<[u8; 16]> for z_id_t {
         z_id_t { id: value }
     }
 }
-

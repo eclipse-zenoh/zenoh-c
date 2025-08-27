@@ -81,9 +81,7 @@ impl Drop for z_owned_closure_query_t {
 /// Constructs a closure in its gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_internal_closure_query_null(
-    this_: &mut MaybeUninit<z_owned_closure_query_t>,
-) {
+pub unsafe fn z_internal_closure_query_null(this_: &mut MaybeUninit<z_owned_closure_query_t>) {
     this_.write(z_owned_closure_query_t::default());
 }
 
@@ -95,10 +93,7 @@ pub fn z_internal_closure_query_check(this_: &z_owned_closure_query_t) -> bool {
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[prebindgen]
-pub fn z_closure_query_call(
-    closure: &z_loaned_closure_query_t,
-    query: &mut z_loaned_query_t,
-) {
+pub fn z_closure_query_call(closure: &z_loaned_closure_query_t, query: &mut z_loaned_query_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(query, closure._context),
@@ -134,9 +129,7 @@ impl<F: Fn(&mut z_loaned_query_t)> From<F> for z_owned_closure_query_t {
 
 /// Borrows closure.
 #[prebindgen]
-pub fn z_closure_query_loan(
-    closure: &z_owned_closure_query_t,
-) -> &z_loaned_closure_query_t {
+pub fn z_closure_query_loan(closure: &z_owned_closure_query_t) -> &z_loaned_closure_query_t {
     closure.as_loaned_c_type_ref()
 }
 

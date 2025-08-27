@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::fmt::Debug;
 use prebindgen_proc_macro::prebindgen;
+use std::fmt::Debug;
 
 use libc::c_void;
 use zenoh::shm::{

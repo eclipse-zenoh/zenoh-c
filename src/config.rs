@@ -36,7 +36,9 @@ const _: () = assert!(Z_PEER == WhatAmI::Peer as c_uint);
 pub const Z_CLIENT: c_uint = 0b0100;
 const _: () = assert!(Z_CLIENT == WhatAmI::Client as c_uint);
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_config_t, z_moved_config_t, z_owned_config_t,
+};
 decl_c_type!(
     owned(z_owned_config_t, z_moved_config_t, option Config),
     loaned(z_loaned_config_t),
@@ -67,9 +69,7 @@ pub fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t
 
 /// Constructs a new empty configuration.
 #[prebindgen]
-pub fn z_config_default(
-    this_: &mut MaybeUninit<z_owned_config_t>,
-) -> result::z_result_t {
+pub fn z_config_default(this_: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
     this_
         .as_rust_type_mut_uninit()
         .write(Some(Config::default()));
@@ -84,10 +84,7 @@ pub fn z_internal_config_null(this_: &mut MaybeUninit<z_owned_config_t>) {
 
 /// Clones the config into provided uninitialized memory location.
 #[prebindgen]
-pub fn z_config_clone(
-    dst: &mut MaybeUninit<z_owned_config_t>,
-    this: &z_loaned_config_t,
-) {
+pub fn z_config_clone(dst: &mut MaybeUninit<z_owned_config_t>, this: &z_loaned_config_t) {
     let src = Some(this.as_rust_type_ref().clone());
     let dst = dst.as_rust_type_mut_uninit();
     dst.write(src);
@@ -350,9 +347,7 @@ pub unsafe fn zc_config_from_file_substr(
 /// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[prebindgen]
-pub unsafe fn zc_config_from_env(
-    this: &mut MaybeUninit<z_owned_config_t>,
-) -> result::z_result_t {
+pub unsafe fn zc_config_from_env(this: &mut MaybeUninit<z_owned_config_t>) -> result::z_result_t {
     match Config::from_env() {
         Ok(c) => {
             this.as_rust_type_mut_uninit().write(Some(c));

@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
 use prebindgen_proc_macro::prebindgen;
+use std::{mem::MaybeUninit, sync::Arc};
 
 use zenoh::shm::{ShmClient, ShmClientStorage, GLOBAL_CLIENT_STORAGE};
 
@@ -41,9 +41,7 @@ pub fn zc_shm_client_list_new(this_: &mut MaybeUninit<zc_owned_shm_client_list_t
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs SHM client list in its gravestone value.
 #[prebindgen]
-pub fn zc_internal_shm_client_list_null(
-    this_: &mut MaybeUninit<zc_owned_shm_client_list_t>,
-) {
+pub fn zc_internal_shm_client_list_null(this_: &mut MaybeUninit<zc_owned_shm_client_list_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -120,9 +118,7 @@ decl_c_type!(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Reference the global client storage.
 #[prebindgen]
-pub fn z_ref_shm_client_storage_global(
-    this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
-) {
+pub fn z_ref_shm_client_storage_global(this: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
     this.as_rust_type_mut_uninit()
         .write(Some(Arc::clone(&GLOBAL_CLIENT_STORAGE.read())));
 }
@@ -130,9 +126,7 @@ pub fn z_ref_shm_client_storage_global(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Construct client storage with default client set.
 #[prebindgen]
-pub fn z_shm_client_storage_new_default(
-    this: &mut MaybeUninit<z_owned_shm_client_storage_t>,
-) {
+pub fn z_shm_client_storage_new_default(this: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
     this.as_rust_type_mut_uninit().write(Some(Arc::new(
         ShmClientStorage::builder()
             .with_default_client_set()
@@ -178,18 +172,14 @@ pub fn z_shm_client_storage_clone(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs SHM Client Storage in its gravestone value.
 #[prebindgen]
-pub fn z_internal_shm_client_storage_null(
-    this_: &mut MaybeUninit<z_owned_shm_client_storage_t>,
-) {
+pub fn z_internal_shm_client_storage_null(this_: &mut MaybeUninit<z_owned_shm_client_storage_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @return ``true`` if `this` is valid.
 #[prebindgen]
-pub fn z_internal_shm_client_storage_check(
-    this_: &z_owned_shm_client_storage_t,
-) -> bool {
+pub fn z_internal_shm_client_storage_check(this_: &z_owned_shm_client_storage_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

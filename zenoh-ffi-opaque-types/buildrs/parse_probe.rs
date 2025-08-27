@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use regex::Regex;
+use std::collections::HashMap;
 
 /// Parse the outputs of cargo probe builds and extract size/alignment entries.
 ///
@@ -16,12 +16,8 @@ pub fn parse_probe_result(path: &std::path::PathBuf) -> HashMap<String, (u64, u6
     let mut map: HashMap<String, (u64, u64)> = HashMap::new();
     let re_sizes = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").expect("valid regex");
 
-    let data = std::fs::read_to_string(path).unwrap_or_else(|e| {
-        panic!(
-            "Failed to read probe output at {}: {e}",
-            path.display()
-        )
-    });
+    let data = std::fs::read_to_string(path)
+        .unwrap_or_else(|e| panic!("Failed to read probe output at {}: {e}", path.display()));
 
     // Cargo error detection first: if the first non-empty line starts with 'error:',
     // treat this as a cargo error unrelated to our intentional probe panics.

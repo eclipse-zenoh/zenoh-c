@@ -11,12 +11,14 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::{mem::MaybeUninit, num::TryFromIntError, sync::Arc};
 use prebindgen_proc_macro::prebindgen;
+use std::{mem::MaybeUninit, num::TryFromIntError, sync::Arc};
 
 use zenoh::shm::{AllocatedChunk, ChunkDescriptor, PtrInSegment};
 
-use zenoh_ffi_opaque_types::opaque_types::{z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t};
+use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_ptr_in_segment_t, z_moved_ptr_in_segment_t, z_owned_ptr_in_segment_t,
+};
 
 use crate::{
     context::{zc_threadsafe_context_t, ThreadsafeContext},
@@ -90,9 +92,7 @@ pub fn z_ptr_in_segment_new(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs data pointer in SHM Segment in its gravestone value.
 #[prebindgen]
-pub fn z_internal_ptr_in_segment_null(
-    this_: &mut MaybeUninit<z_owned_ptr_in_segment_t>,
-) {
+pub fn z_internal_ptr_in_segment_null(this_: &mut MaybeUninit<z_owned_ptr_in_segment_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -107,9 +107,7 @@ pub fn z_internal_ptr_in_segment_check(this_: &z_owned_ptr_in_segment_t) -> bool
 /// @brief Borrows data pointer in SHM Segment.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_ptr_in_segment_loan(
-    this: &z_owned_ptr_in_segment_t,
-) -> &z_loaned_ptr_in_segment_t {
+pub unsafe fn z_ptr_in_segment_loan(this: &z_owned_ptr_in_segment_t) -> &z_loaned_ptr_in_segment_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()

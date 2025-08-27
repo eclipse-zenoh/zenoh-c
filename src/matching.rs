@@ -12,15 +12,17 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use zenoh::{matching::MatchingListener, Wait};
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_moved_matching_listener_t, z_owned_matching_listener_t};
 use crate::{
     result,
     transmute::{RustTypeRef, RustTypeRefUninit, TakeRustType},
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_moved_matching_listener_t, z_owned_matching_listener_t,
 };
 decl_c_type!(
     owned(z_owned_matching_listener_t, z_moved_matching_listener_t, option MatchingListener<()>),
@@ -28,9 +30,7 @@ decl_c_type!(
 
 #[prebindgen]
 /// @brief Constructs an empty matching listener.
-pub fn z_internal_matching_listener_null(
-    this_: &mut MaybeUninit<z_owned_matching_listener_t>,
-) {
+pub fn z_internal_matching_listener_null(this_: &mut MaybeUninit<z_owned_matching_listener_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -60,9 +60,7 @@ pub fn z_matching_listener_drop(this: &mut z_moved_matching_listener_t) {
 /// @return 0 in case of success, negative error code otherwise.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn z_undeclare_matching_listener(
-    this: &mut z_moved_matching_listener_t,
-) -> result::z_result_t {
+pub fn z_undeclare_matching_listener(this: &mut z_moved_matching_listener_t) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
         if let Err(e) = m.undeclare().wait() {
             crate::report_error!("{}", e);

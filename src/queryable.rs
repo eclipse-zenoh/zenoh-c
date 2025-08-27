@@ -22,7 +22,6 @@ use zenoh::{
     Wait,
 };
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -33,6 +32,7 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_queryable_t, z_owned_queryable_t};
 decl_c_type!(
     owned(z_owned_queryable_t, z_moved_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),
@@ -62,7 +62,9 @@ pub unsafe fn z_queryable_move(this_: &mut z_owned_queryable_t) -> &mut z_moved_
     std::mem::transmute(this_)
 }
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_query_t, z_moved_query_t, z_owned_query_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_query_t, z_moved_query_t, z_owned_query_t,
+};
 decl_c_type!(
     owned(z_owned_query_t, z_moved_query_t, option Query),
     loaned(z_loaned_query_t),
@@ -81,9 +83,7 @@ pub fn z_internal_query_check(query: &z_owned_query_t) -> bool {
 /// Borrows the query.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_query_loan(
-    this_: &'static z_owned_query_t,
-) -> &'static z_loaned_query_t {
+pub unsafe fn z_query_loan(this_: &'static z_owned_query_t) -> &'static z_loaned_query_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -213,9 +213,7 @@ pub struct z_query_reply_err_options_t {
 /// Constructs the default value for `z_query_reply_err_options_t`.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn z_query_reply_err_options_default(
-    this: &mut MaybeUninit<z_query_reply_err_options_t>,
-) {
+pub fn z_query_reply_err_options_default(this: &mut MaybeUninit<z_query_reply_err_options_t>) {
     this.write(z_query_reply_err_options_t { encoding: None });
 }
 
@@ -245,9 +243,7 @@ pub struct z_query_reply_del_options_t {
 /// Constructs the default value for `z_query_reply_del_options_t`.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn z_query_reply_del_options_default(
-    this: &mut MaybeUninit<z_query_reply_del_options_t>,
-) {
+pub fn z_query_reply_del_options_default(this: &mut MaybeUninit<z_query_reply_del_options_t>) {
     this.write(z_query_reply_del_options_t {
         congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
         priority: Priority::default().into(),
@@ -532,9 +528,7 @@ pub fn z_query_payload(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t> {
 ///
 /// Returns NULL if query does not contain a payload.
 #[prebindgen]
-pub fn z_query_payload_mut(
-    this_: &mut z_loaned_query_t,
-) -> Option<&mut z_loaned_bytes_t> {
+pub fn z_query_payload_mut(this_: &mut z_loaned_query_t) -> Option<&mut z_loaned_bytes_t> {
     this_
         .as_rust_type_mut()
         .payload_mut()
@@ -567,9 +561,7 @@ pub fn z_query_attachment(this_: &z_loaned_query_t) -> Option<&z_loaned_bytes_t>
 ///
 /// Returns NULL if query does not contain an attachment.
 #[prebindgen]
-pub fn z_query_attachment_mut(
-    this_: &mut z_loaned_query_t,
-) -> Option<&mut z_loaned_bytes_t> {
+pub fn z_query_attachment_mut(this_: &mut z_loaned_query_t) -> Option<&mut z_loaned_bytes_t> {
     this_
         .as_rust_type_mut()
         .attachment_mut()

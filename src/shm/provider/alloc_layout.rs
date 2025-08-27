@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::shm::{AllocLayout, BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc};
@@ -90,9 +90,7 @@ pub fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
 /// @brief Borrows Alloc Layout.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_alloc_layout_loan(
-    this: &z_owned_alloc_layout_t,
-) -> &z_loaned_alloc_layout_t {
+pub unsafe fn z_alloc_layout_loan(this: &z_owned_alloc_layout_t) -> &z_loaned_alloc_layout_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()

@@ -18,7 +18,7 @@ pub const PREBINDGEN_OUT_DIR: &str = prebindgen_proc_macro::prebindgen_out_dir!(
 
 use std::{cmp::min, slice};
 
-use crate::transmute::{TakeRustType, LoanedCTypeRef};
+use crate::transmute::{LoanedCTypeRef, TakeRustType};
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 
@@ -140,9 +140,7 @@ pub fn zc_try_init_log_from_env() {
 /// @param fallback_filter: The fallback filter if the `RUST_LOG` environment variable is not set.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn zc_init_log_from_env_or(
-    fallback_filter: *const libc::c_char,
-) -> result::z_result_t {
+pub unsafe fn zc_init_log_from_env_or(fallback_filter: *const libc::c_char) -> result::z_result_t {
     match std::ffi::CStr::from_ptr(fallback_filter).to_str() {
         Ok(s) => {
             zenoh::init_log_from_env_or(s);

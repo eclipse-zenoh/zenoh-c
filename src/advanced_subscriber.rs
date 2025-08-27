@@ -287,9 +287,7 @@ pub fn ze_advanced_subscriber_drop(this_: &mut ze_moved_advanced_subscriber_t) {
 
 /// Returns ``true`` if advanced subscriber is valid, ``false`` otherwise.
 #[prebindgen]
-pub fn ze_internal_advanced_subscriber_check(
-    this_: &ze_owned_advanced_subscriber_t,
-) -> bool {
+pub fn ze_internal_advanced_subscriber_check(this_: &ze_owned_advanced_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -395,9 +393,7 @@ pub fn ze_internal_sample_miss_listener_null(
 #[prebindgen]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Checks the sample_miss listener is for the gravestone state
-pub fn ze_internal_sample_miss_listener_check(
-    this_: &ze_owned_sample_miss_listener_t,
-) -> bool {
+pub fn ze_internal_sample_miss_listener_check(this_: &ze_owned_sample_miss_listener_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

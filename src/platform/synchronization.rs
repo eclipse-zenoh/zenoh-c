@@ -7,10 +7,12 @@ use std::{
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t};
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_mutex_t, z_moved_mutex_t, z_owned_mutex_t,
 };
 
 decl_c_type_inequal!(
@@ -93,9 +95,7 @@ pub fn z_mutex_unlock(this_: &mut z_loaned_mutex_t) -> result::z_result_t {
 /// @return 0 in case of success, negative value if failed to aquire the lock.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_mutex_try_lock(
-    this: &'static mut z_loaned_mutex_t,
-) -> result::z_result_t {
+pub unsafe fn z_mutex_try_lock(this: &'static mut z_loaned_mutex_t) -> result::z_result_t {
     let this = this.as_rust_type_mut();
     match this.0.try_lock() {
         Ok(new_lock) => {
@@ -109,7 +109,9 @@ pub unsafe fn z_mutex_try_lock(
     result::Z_OK
 }
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_condvar_t, z_moved_condvar_t, z_owned_condvar_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_condvar_t, z_moved_condvar_t, z_owned_condvar_t,
+};
 decl_c_type_inequal!(
     owned(z_owned_condvar_t, z_moved_condvar_t, option Condvar),
     loaned(z_loaned_condvar_t),
@@ -153,18 +155,14 @@ pub unsafe fn z_condvar_loan(this_: &z_owned_condvar_t) -> &z_loaned_condvar_t {
 /// Moves conditional variable.
 #[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_condvar_move(
-    this_: &mut z_owned_condvar_t,
-) -> &mut z_moved_condvar_t {
+pub unsafe fn z_condvar_move(this_: &mut z_owned_condvar_t) -> &mut z_moved_condvar_t {
     std::mem::transmute(this_)
 }
 
 /// Mutably borrows conditional variable.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_condvar_loan_mut(
-    this: &mut z_owned_condvar_t,
-) -> &mut z_loaned_condvar_t {
+pub unsafe fn z_condvar_loan_mut(this: &mut z_owned_condvar_t) -> &mut z_loaned_condvar_t {
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()

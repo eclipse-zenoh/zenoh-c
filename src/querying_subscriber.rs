@@ -13,13 +13,15 @@
 //
 #![allow(deprecated)]
 
-use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
 
-use zenoh_ffi_opaque_types::opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t};
+use zenoh_ffi_opaque_types::opaque_types::{
+    ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t,
+};
 
 use crate::{
     result,
@@ -267,9 +269,7 @@ pub fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
 /// @warning This API is deprecated. Please use ze_advanced_subscriber.
 /// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
 #[prebindgen]
-pub fn ze_internal_querying_subscriber_check(
-    this_: &ze_owned_querying_subscriber_t,
-) -> bool {
+pub fn ze_internal_querying_subscriber_check(this_: &ze_owned_querying_subscriber_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

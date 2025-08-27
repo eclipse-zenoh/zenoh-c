@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use libc::c_char;
 use zenoh::{
@@ -173,9 +173,7 @@ pub unsafe fn z_querier_move(this_: &mut z_owned_querier_t) -> &mut z_moved_quer
 /// @brief Mutably borrows querier.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_querier_loan_mut(
-    this: &mut z_owned_querier_t,
-) -> &mut z_loaned_querier_t {
+pub unsafe fn z_querier_loan_mut(this: &mut z_owned_querier_t) -> &mut z_loaned_querier_t {
     this.as_rust_type_mut()
         .as_mut()
         .unwrap_unchecked()

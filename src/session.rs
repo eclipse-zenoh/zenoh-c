@@ -52,9 +52,7 @@ pub unsafe fn z_session_move(this_: &mut z_owned_session_t) -> &mut z_moved_sess
 // Mutably borrows session.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_session_loan_mut(
-    this_: &mut z_owned_session_t,
-) -> &mut z_loaned_session_t {
+pub unsafe fn z_session_loan_mut(this_: &mut z_owned_session_t) -> &mut z_loaned_session_t {
     this_
         .as_rust_type_mut()
         .as_mut()
@@ -166,7 +164,8 @@ pub struct z_close_options_t {
     /// An optional uninitialized concurrent close handle. If set, the close operation will be executed
     /// concurrently in separate task, and this handle will be initialized to be used for controlling
     /// it's execution.
-    internal_out_concurrent: Option<&'static mut std::mem::MaybeUninit<zc_owned_concurrent_close_handle_t>>,
+    internal_out_concurrent:
+        Option<&'static mut std::mem::MaybeUninit<zc_owned_concurrent_close_handle_t>>,
 
     #[cfg(not(feature = "unstable"))]
     _dummy: u8,

@@ -21,13 +21,13 @@ use zenoh::{
     sample::Sample,
 };
 
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_fifo_handler_sample_t, z_moved_fifo_handler_sample_t, z_owned_fifo_handler_sample_t,
-};
 use crate::{
     result::{self, z_result_t},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_sample_t, z_owned_closure_sample_t, z_owned_sample_t,
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_fifo_handler_sample_t, z_moved_fifo_handler_sample_t, z_owned_fifo_handler_sample_t,
 };
 decl_c_type!(
     owned(z_owned_fifo_handler_sample_t, z_moved_fifo_handler_sample_t, option FifoChannelHandler<Sample>),
@@ -42,17 +42,13 @@ pub fn z_fifo_handler_sample_drop(this_: &mut z_moved_fifo_handler_sample_t) {
 
 /// Constructs a handler in gravestone state.
 #[prebindgen]
-pub fn z_internal_fifo_handler_sample_null(
-    this: &mut MaybeUninit<z_owned_fifo_handler_sample_t>,
-) {
+pub fn z_internal_fifo_handler_sample_null(this: &mut MaybeUninit<z_owned_fifo_handler_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[prebindgen]
-pub fn z_internal_fifo_handler_sample_check(
-    this_: &z_owned_fifo_handler_sample_t,
-) -> bool {
+pub fn z_internal_fifo_handler_sample_check(this_: &z_owned_fifo_handler_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -178,17 +174,13 @@ pub fn z_ring_handler_sample_drop(this_: &mut z_moved_ring_handler_sample_t) {
 
 /// Constructs a handler in gravestone state.
 #[prebindgen]
-pub fn z_internal_ring_handler_sample_null(
-    this: &mut MaybeUninit<z_owned_ring_handler_sample_t>,
-) {
+pub fn z_internal_ring_handler_sample_null(this: &mut MaybeUninit<z_owned_ring_handler_sample_t>) {
     this.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if handler is valid, ``false`` if it is in gravestone state.
 #[prebindgen]
-pub fn z_internal_ring_handler_sample_check(
-    this_: &z_owned_ring_handler_sample_t,
-) -> bool {
+pub fn z_internal_ring_handler_sample_check(this_: &z_owned_ring_handler_sample_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

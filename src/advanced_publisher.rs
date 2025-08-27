@@ -257,9 +257,7 @@ pub fn ze_declare_advanced_publisher(
 /// Constructs an advanced publisher in a gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub fn ze_internal_advanced_publisher_null(
-    this_: &mut MaybeUninit<ze_owned_advanced_publisher_t>,
-) {
+pub fn ze_internal_advanced_publisher_null(this_: &mut MaybeUninit<ze_owned_advanced_publisher_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -267,9 +265,7 @@ pub fn ze_internal_advanced_publisher_null(
 /// Returns ``true`` if advanced publisher is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[prebindgen]
-pub fn ze_internal_advanced_publisher_check(
-    this_: &ze_owned_advanced_publisher_t,
-) -> bool {
+pub fn ze_internal_advanced_publisher_check(this_: &ze_owned_advanced_publisher_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 

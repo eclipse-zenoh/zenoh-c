@@ -80,17 +80,12 @@ impl Drop for z_owned_closure_hello_t {
 /// Constructs a closure in a gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_internal_closure_hello_null(
-    this_: &mut MaybeUninit<z_owned_closure_hello_t>,
-) {
+pub unsafe fn z_internal_closure_hello_null(this_: &mut MaybeUninit<z_owned_closure_hello_t>) {
     this_.write(z_owned_closure_hello_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[prebindgen]
-pub fn z_closure_hello_call(
-    closure: &z_loaned_closure_hello_t,
-    hello: &mut z_loaned_hello_t,
-) {
+pub fn z_closure_hello_call(closure: &z_loaned_closure_hello_t, hello: &mut z_loaned_hello_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(hello, closure._context),
@@ -134,9 +129,7 @@ pub fn z_internal_closure_hello_check(this_: &z_owned_closure_hello_t) -> bool {
 
 /// Borrows closure.
 #[prebindgen]
-pub fn z_closure_hello_loan(
-    closure: &z_owned_closure_hello_t,
-) -> &z_loaned_closure_hello_t {
+pub fn z_closure_hello_loan(closure: &z_owned_closure_hello_t) -> &z_loaned_closure_hello_t {
     closure.as_loaned_c_type_ref()
 }
 

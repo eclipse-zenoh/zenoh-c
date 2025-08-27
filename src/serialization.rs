@@ -21,15 +21,15 @@ use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
 };
 
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    ze_deserializer_t, ze_loaned_serializer_t, ze_moved_serializer_t, ze_owned_serializer_t,
-};
 use crate::{
     result::{self, z_result_t},
     strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    ze_deserializer_t, ze_loaned_serializer_t, ze_moved_serializer_t, ze_owned_serializer_t,
 };
 
 decl_c_type! {
@@ -62,9 +62,7 @@ pub fn ze_internal_serializer_check(this: &ze_owned_serializer_t) -> bool {
 /// @brief Borrows serializer.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn ze_serializer_loan(
-    this: &ze_owned_serializer_t,
-) -> &ze_loaned_serializer_t {
+pub unsafe fn ze_serializer_loan(this: &ze_owned_serializer_t) -> &ze_loaned_serializer_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
@@ -137,110 +135,77 @@ where
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serialize_uint8(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: u8,
-) -> z_result_t {
+pub fn ze_serialize_uint8(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u8) -> z_result_t {
     ze_serialize_arithmetic::<u8>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serialize_uint16(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: u16,
-) -> z_result_t {
+pub fn ze_serialize_uint16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u16) -> z_result_t {
     ze_serialize_arithmetic::<u16>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serialize_uint32(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: u32,
-) -> z_result_t {
+pub fn ze_serialize_uint32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u32) -> z_result_t {
     ze_serialize_arithmetic::<u32>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serialize_uint64(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: u64,
-) -> z_result_t {
+pub fn ze_serialize_uint64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: u64) -> z_result_t {
     ze_serialize_arithmetic::<u64>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serialize_int8(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: i8,
-) -> z_result_t {
+pub fn ze_serialize_int8(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i8) -> z_result_t {
     ze_serialize_arithmetic::<i8>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serialize_int16(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: i16,
-) -> z_result_t {
+pub fn ze_serialize_int16(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i16) -> z_result_t {
     ze_serialize_arithmetic::<i16>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serialize_int32(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: i32,
-) -> z_result_t {
+pub fn ze_serialize_int32(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i32) -> z_result_t {
     ze_serialize_arithmetic::<i32>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serialize_int64(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: i64,
-) -> z_result_t {
+pub fn ze_serialize_int64(this_: &mut MaybeUninit<z_owned_bytes_t>, val: i64) -> z_result_t {
     ze_serialize_arithmetic::<i64>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a float.
 #[prebindgen]
-pub fn ze_serialize_float(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: f32,
-) -> z_result_t {
+pub fn ze_serialize_float(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f32) -> z_result_t {
     ze_serialize_arithmetic::<f32>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a double.
 #[prebindgen]
-pub fn ze_serialize_double(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: f64,
-) -> z_result_t {
+pub fn ze_serialize_double(this_: &mut MaybeUninit<z_owned_bytes_t>, val: f64) -> z_result_t {
     ze_serialize_arithmetic::<f64>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a bool.
 #[prebindgen]
-pub fn ze_serialize_bool(
-    this_: &mut MaybeUninit<z_owned_bytes_t>,
-    val: bool,
-) -> z_result_t {
+pub fn ze_serialize_bool(this_: &mut MaybeUninit<z_owned_bytes_t>, val: bool) -> z_result_t {
     ze_serialize_arithmetic::<bool>(this_, &val);
     result::Z_OK
 }
@@ -500,110 +465,77 @@ where
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_uint8(
-    this_: &mut ze_loaned_serializer_t,
-    val: u8,
-) -> z_result_t {
+pub fn ze_serializer_serialize_uint8(this_: &mut ze_loaned_serializer_t, val: u8) -> z_result_t {
     ze_serializer_serialize_arithmetic::<u8>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_uint16(
-    this_: &mut ze_loaned_serializer_t,
-    val: u16,
-) -> z_result_t {
+pub fn ze_serializer_serialize_uint16(this_: &mut ze_loaned_serializer_t, val: u16) -> z_result_t {
     ze_serializer_serialize_arithmetic::<u16>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_uint32(
-    this_: &mut ze_loaned_serializer_t,
-    val: u32,
-) -> z_result_t {
+pub fn ze_serializer_serialize_uint32(this_: &mut ze_loaned_serializer_t, val: u32) -> z_result_t {
     ze_serializer_serialize_arithmetic::<u32>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes an unsigned integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_uint64(
-    this_: &mut ze_loaned_serializer_t,
-    val: u64,
-) -> z_result_t {
+pub fn ze_serializer_serialize_uint64(this_: &mut ze_loaned_serializer_t, val: u64) -> z_result_t {
     ze_serializer_serialize_arithmetic::<u64>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_int8(
-    this_: &mut ze_loaned_serializer_t,
-    val: i8,
-) -> z_result_t {
+pub fn ze_serializer_serialize_int8(this_: &mut ze_loaned_serializer_t, val: i8) -> z_result_t {
     ze_serializer_serialize_arithmetic::<i8>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_int16(
-    this_: &mut ze_loaned_serializer_t,
-    val: i16,
-) -> z_result_t {
+pub fn ze_serializer_serialize_int16(this_: &mut ze_loaned_serializer_t, val: i16) -> z_result_t {
     ze_serializer_serialize_arithmetic::<i16>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_int32(
-    this_: &mut ze_loaned_serializer_t,
-    val: i32,
-) -> z_result_t {
+pub fn ze_serializer_serialize_int32(this_: &mut ze_loaned_serializer_t, val: i32) -> z_result_t {
     ze_serializer_serialize_arithmetic::<i32>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a signed integer.
 #[prebindgen]
-pub fn ze_serializer_serialize_int64(
-    this_: &mut ze_loaned_serializer_t,
-    val: i64,
-) -> z_result_t {
+pub fn ze_serializer_serialize_int64(this_: &mut ze_loaned_serializer_t, val: i64) -> z_result_t {
     ze_serializer_serialize_arithmetic::<i64>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a float.
 #[prebindgen]
-pub fn ze_serializer_serialize_float(
-    this_: &mut ze_loaned_serializer_t,
-    val: f32,
-) -> z_result_t {
+pub fn ze_serializer_serialize_float(this_: &mut ze_loaned_serializer_t, val: f32) -> z_result_t {
     ze_serializer_serialize_arithmetic::<f32>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a double.
 #[prebindgen]
-pub fn ze_serializer_serialize_double(
-    this_: &mut ze_loaned_serializer_t,
-    val: f64,
-) -> z_result_t {
+pub fn ze_serializer_serialize_double(this_: &mut ze_loaned_serializer_t, val: f64) -> z_result_t {
     ze_serializer_serialize_arithmetic::<f64>(this_, &val);
     result::Z_OK
 }
 
 /// @brief Serializes a bool.
 #[prebindgen]
-pub fn ze_serializer_serialize_bool(
-    this_: &mut ze_loaned_serializer_t,
-    val: bool,
-) -> z_result_t {
+pub fn ze_serializer_serialize_bool(this_: &mut ze_loaned_serializer_t, val: bool) -> z_result_t {
     ze_serializer_serialize_arithmetic::<bool>(this_, &val);
     result::Z_OK
 }
@@ -611,10 +543,7 @@ pub fn ze_serializer_serialize_bool(
 /// @brief Deserializes into an unsigned integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[prebindgen]
-pub fn ze_deserializer_deserialize_uint8(
-    this: &mut ze_deserializer_t,
-    dst: &mut u8,
-) -> z_result_t {
+pub fn ze_deserializer_deserialize_uint8(this: &mut ze_deserializer_t, dst: &mut u8) -> z_result_t {
     ze_deserializer_deserialize_arithmetic::<u8>(this, dst)
 }
 
@@ -651,10 +580,7 @@ pub fn ze_deserializer_deserialize_uint64(
 /// @brief Deserializes into a signed integer.
 /// @return 0 in case of success, negative error code otherwise.
 #[prebindgen]
-pub fn ze_deserializer_deserialize_int8(
-    this: &mut ze_deserializer_t,
-    dst: &mut i8,
-) -> z_result_t {
+pub fn ze_deserializer_deserialize_int8(this: &mut ze_deserializer_t, dst: &mut i8) -> z_result_t {
     ze_deserializer_deserialize_arithmetic::<i8>(this, dst)
 }
 
@@ -734,7 +660,7 @@ pub fn ze_serializer_serialize_slice(
 /// @param data: A pointer to the buffer containing data.
 /// @param len: Length of the buffer.
 #[prebindgen]
-#[allow(clippy::missing_safety_doc)] 
+#[allow(clippy::missing_safety_doc)]
 pub unsafe fn ze_serializer_serialize_buf(
     this: &mut ze_loaned_serializer_t,
     data: *const u8,

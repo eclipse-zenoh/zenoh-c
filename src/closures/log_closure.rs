@@ -146,9 +146,7 @@ impl Drop for zc_owned_closure_log_t {
 /// Constructs a closure in a gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn zc_internal_closure_log_null(
-    this_: &mut MaybeUninit<zc_owned_closure_log_t>,
-) {
+pub unsafe fn zc_internal_closure_log_null(this_: &mut MaybeUninit<zc_owned_closure_log_t>) {
     this_.write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
@@ -180,9 +178,7 @@ pub fn zc_internal_closure_log_check(this_: &zc_owned_closure_log_t) -> bool {
 
 /// Borrows closure.
 #[prebindgen]
-pub fn zc_closure_log_loan(
-    closure: &zc_owned_closure_log_t,
-) -> &zc_loaned_closure_log_t {
+pub fn zc_closure_log_loan(closure: &zc_owned_closure_log_t) -> &zc_loaned_closure_log_t {
     closure.as_loaned_c_type_ref()
 }
 

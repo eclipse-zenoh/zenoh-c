@@ -25,7 +25,12 @@ pub fn get_target_dir() -> std::path::PathBuf {
     for _ in 0..4 {
         p = p
             .parent()
-            .unwrap_or_else(|| panic!("Invalid OUT_DIR, cannot get target dir from {}", get_out_dir().display()))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Invalid OUT_DIR, cannot get target dir from {}",
+                    get_out_dir().display()
+                )
+            })
             .to_path_buf();
     }
     p
@@ -67,4 +72,3 @@ pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let semantic = &type_name[prefix_cat_len..type_name.len() - postfix.len() - 1];
     (prefix, category, semantic, postfix)
 }
-

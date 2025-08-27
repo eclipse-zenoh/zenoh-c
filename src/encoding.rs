@@ -25,13 +25,13 @@ use prebindgen_proc_macro::prebindgen;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::bytes::Encoding;
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
     strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 
 decl_c_type!(
     owned(z_owned_encoding_t, z_moved_encoding_t, Encoding),

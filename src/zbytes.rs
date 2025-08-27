@@ -28,7 +28,6 @@ use zenoh::{
     internal::buffers::{ZBuf, ZSliceBuffer},
 };
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::result::Z_ENULL;
 use crate::{
@@ -41,6 +40,7 @@ use crate::{
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_t, z_moved_shm_mut_t, z_moved_shm_t, z_owned_shm_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_bytes_t, z_owned_bytes_t};
 decl_c_type! {
     owned(z_owned_bytes_t, z_moved_bytes_t, ZBytes),
     loaned(z_loaned_bytes_t),
@@ -472,9 +472,7 @@ decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 /// Please note that no guarantee is provided on the internal memory layout.
 /// The only provided guarantee is on the bytes order that is preserved.
 #[prebindgen]
-pub fn z_bytes_get_slice_iterator(
-    this: &'static z_loaned_bytes_t,
-) -> z_bytes_slice_iterator_t {
+pub fn z_bytes_get_slice_iterator(this: &'static z_loaned_bytes_t) -> z_bytes_slice_iterator_t {
     *this.as_rust_type_ref().slices().as_loaned_c_type_ref()
 }
 
@@ -576,11 +574,7 @@ pub fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
 /// @return number of bytes read. If return value is smaller than `len`, it means that  theend of the data was reached.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_bytes_reader_read(
-    this: &mut z_bytes_reader_t,
-    dst: *mut u8,
-    len: usize,
-) -> usize {
+pub unsafe fn z_bytes_reader_read(this: &mut z_bytes_reader_t, dst: *mut u8, len: usize) -> usize {
     let reader = this.as_rust_type_mut();
     let buf = unsafe { from_raw_parts_mut(dst, len) };
     reader.read(buf).unwrap_or(0)
@@ -668,9 +662,7 @@ pub fn z_internal_bytes_writer_check(this: &z_owned_bytes_writer_t) -> bool {
 /// Borrows writer.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_bytes_writer_loan(
-    this: &z_owned_bytes_writer_t,
-) -> &z_loaned_bytes_writer_t {
+pub unsafe fn z_bytes_writer_loan(this: &z_owned_bytes_writer_t) -> &z_loaned_bytes_writer_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()

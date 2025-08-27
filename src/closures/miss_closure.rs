@@ -11,8 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 
@@ -84,9 +84,7 @@ impl Drop for ze_owned_closure_miss_t {
 /// @brief Constructs a null value of 'ze_owned_closure_miss_t' type
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn ze_internal_closure_miss_null(
-    this: &mut MaybeUninit<ze_owned_closure_miss_t>,
-) {
+pub unsafe fn ze_internal_closure_miss_null(this: &mut MaybeUninit<ze_owned_closure_miss_t>) {
     this.write(ze_owned_closure_miss_t::default());
 }
 
@@ -100,10 +98,7 @@ pub fn ze_internal_closure_miss_check(this: &ze_owned_closure_miss_t) -> bool {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
 #[prebindgen]
-pub fn ze_closure_miss_call(
-    closure: &ze_loaned_closure_miss_t,
-    mathing_status: &ze_miss_t,
-) {
+pub fn ze_closure_miss_call(closure: &ze_loaned_closure_miss_t, mathing_status: &ze_miss_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(mathing_status, closure._context),
@@ -141,9 +136,7 @@ impl<F: Fn(&ze_miss_t)> From<F> for ze_owned_closure_miss_t {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows closure.
 #[prebindgen]
-pub fn ze_closure_miss_loan(
-    closure: &ze_owned_closure_miss_t,
-) -> &ze_loaned_closure_miss_t {
+pub fn ze_closure_miss_loan(closure: &ze_owned_closure_miss_t) -> &ze_loaned_closure_miss_t {
     closure.as_loaned_c_type_ref()
 }
 

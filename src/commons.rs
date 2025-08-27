@@ -166,10 +166,7 @@ pub fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
 #[prebindgen]
-pub fn z_sample_clone(
-    dst: &mut MaybeUninit<z_owned_sample_t>,
-    this: &z_loaned_sample_t,
-) {
+pub fn z_sample_clone(dst: &mut MaybeUninit<z_owned_sample_t>, this: &z_loaned_sample_t) {
     dst.as_rust_type_mut_uninit()
         .write(Some(this.as_rust_type_ref().clone()));
 }
@@ -677,9 +674,7 @@ pub fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_inf
 /// @brief Moves source info.
 #[prebindgen("move")]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_source_info_move(
-    this_: &mut z_owned_source_info_t,
-) -> &mut z_moved_source_info_t {
+pub unsafe fn z_source_info_move(this_: &mut z_owned_source_info_t) -> &mut z_moved_source_info_t {
     std::mem::transmute(this_)
 }
 

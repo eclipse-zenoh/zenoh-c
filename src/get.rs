@@ -26,7 +26,6 @@ use zenoh::{
     Wait,
 };
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t};
 use crate::{
     result::{self, Z_EINVAL},
     strlen_or_zero,
@@ -40,6 +39,9 @@ use crate::{
 use crate::{
     transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_reply_keyexpr_default,
     zc_reply_keyexpr_t,
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_reply_err_t, z_moved_reply_err_t, z_owned_reply_err_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, z_moved_reply_err_t, ReplyError),
@@ -78,9 +80,7 @@ pub fn z_reply_err_payload(this_: &z_loaned_reply_err_t) -> &z_loaned_bytes_t {
 
 /// Returns mutable reply error payload.
 #[prebindgen]
-pub fn z_reply_err_payload_mut(
-    this_: &mut z_loaned_reply_err_t,
-) -> &mut z_loaned_bytes_t {
+pub fn z_reply_err_payload_mut(this_: &mut z_loaned_reply_err_t) -> &mut z_loaned_bytes_t {
     this_
         .as_rust_type_mut()
         .payload_mut()
@@ -108,9 +108,7 @@ pub unsafe fn z_reply_err_move(this_: &mut z_owned_reply_err_t) -> &mut z_moved_
 
 /// Mutably borrows reply error.
 #[prebindgen]
-pub fn z_reply_err_loan_mut(
-    this_: &mut z_owned_reply_err_t,
-) -> &mut z_loaned_reply_err_t {
+pub fn z_reply_err_loan_mut(this_: &mut z_owned_reply_err_t) -> &mut z_loaned_reply_err_t {
     this_.as_rust_type_mut().as_loaned_c_type_mut()
 }
 
@@ -174,9 +172,7 @@ pub unsafe fn z_reply_err(this_: &z_loaned_reply_t) -> *const z_loaned_reply_err
 /// Returns `NULL` if reply does not contain a error  (i. e. if `z_reply_is_ok` returns ``true``).
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_reply_err_mut(
-    this_: &mut z_loaned_reply_t,
-) -> *mut z_loaned_reply_err_t {
+pub unsafe fn z_reply_err_mut(this_: &mut z_loaned_reply_t) -> *mut z_loaned_reply_err_t {
     match this_.as_rust_type_mut().result_mut() {
         Ok(_) => null_mut(),
         Err(v) => v.as_loaned_c_type_mut(),
@@ -540,10 +536,7 @@ pub fn z_query_consolidation_none() -> z_query_consolidation_t {
 
 /// Constructs a copy of the reply error message.
 #[prebindgen]
-pub fn z_reply_err_clone(
-    dst: &mut MaybeUninit<z_owned_reply_err_t>,
-    this: &z_loaned_reply_err_t,
-) {
+pub fn z_reply_err_clone(dst: &mut MaybeUninit<z_owned_reply_err_t>, this: &z_loaned_reply_err_t) {
     dst.as_rust_type_mut_uninit()
         .write(this.as_rust_type_ref().clone());
 }

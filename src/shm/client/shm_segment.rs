@@ -13,11 +13,11 @@
 //
 
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
 use zenoh::{
     shm::{ChunkID, ShmSegment},
     Result,
 };
-use prebindgen_proc_macro::prebindgen;
 
 use crate::{
     context::{zc_threadsafe_context_t, DroppableContext, ThreadsafeContext},

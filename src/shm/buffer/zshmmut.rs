@@ -99,9 +99,7 @@ pub unsafe fn z_shm_mut_move(this_: &mut z_owned_shm_mut_t) -> &mut z_moved_shm_
 /// @brief Mutably borrows ZShmMut slice.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_shm_mut_loan_mut(
-    this: &mut z_owned_shm_mut_t,
-) -> &mut z_loaned_shm_mut_t {
+pub unsafe fn z_shm_mut_loan_mut(this: &mut z_owned_shm_mut_t) -> &mut z_loaned_shm_mut_t {
     let shmmut: &mut zshmmut = this
         .as_rust_type_mut()
         .as_mut()

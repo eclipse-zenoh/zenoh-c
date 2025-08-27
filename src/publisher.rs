@@ -79,7 +79,9 @@ pub fn z_publisher_options_default(this_: &mut MaybeUninit<z_publisher_options_t
     this_.write(z_publisher_options_t::default());
 }
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_publisher_t, z_moved_publisher_t, z_owned_publisher_t,
+};
 decl_c_type!(
     owned(z_owned_publisher_t, z_moved_publisher_t, option Publisher<'static>),
     loaned(z_loaned_publisher_t),

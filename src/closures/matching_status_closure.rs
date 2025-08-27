@@ -11,9 +11,9 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
-use prebindgen_proc_macro::prebindgen;
 use libc::c_void;
+use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
@@ -92,9 +92,7 @@ pub unsafe fn z_internal_closure_matching_status_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[prebindgen]
-pub fn z_internal_closure_matching_status_check(
-    this: &z_owned_closure_matching_status_t,
-) -> bool {
+pub fn z_internal_closure_matching_status_check(this: &z_owned_closure_matching_status_t) -> bool {
     !this.is_empty()
 }
 

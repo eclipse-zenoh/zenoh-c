@@ -12,11 +12,11 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use prebindgen_proc_macro::prebindgen;
 use std::{
     borrow::{Borrow, BorrowMut},
     mem::MaybeUninit,
 };
-use prebindgen_proc_macro::prebindgen;
 
 use zenoh::shm::{zshm, zshmmut, ZShm};
 
@@ -33,10 +33,7 @@ decl_c_type!(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs ZShm slice from ZShmMut slice.
 #[prebindgen]
-pub fn z_shm_from_mut(
-    this_: &mut MaybeUninit<z_owned_shm_t>,
-    that: &mut z_moved_shm_mut_t,
-) {
+pub fn z_shm_from_mut(this_: &mut MaybeUninit<z_owned_shm_t>, that: &mut z_moved_shm_mut_t) {
     let shm: Option<ZShm> = that.take_rust_type().map(|val| val.into());
     this_.as_rust_type_mut_uninit().write(shm);
 }

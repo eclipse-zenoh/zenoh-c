@@ -12,8 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
 use prebindgen_proc_macro::prebindgen;
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::{
@@ -123,9 +123,7 @@ pub fn z_internal_shm_provider_check(this_: &z_owned_shm_provider_t) -> bool {
 /// @brief Borrows SHM Provider.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_shm_provider_loan(
-    this: &z_owned_shm_provider_t,
-) -> &z_loaned_shm_provider_t {
+pub unsafe fn z_shm_provider_loan(this: &z_owned_shm_provider_t) -> &z_loaned_shm_provider_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()

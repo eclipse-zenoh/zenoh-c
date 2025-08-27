@@ -22,7 +22,9 @@ use zenoh::{
     Wait,
 };
 
-use zenoh_ffi_opaque_types::opaque_types::{z_loaned_liveliness_token_t, z_owned_liveliness_token_t};
+use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_liveliness_token_t, z_owned_liveliness_token_t,
+};
 
 use crate::{
     result,

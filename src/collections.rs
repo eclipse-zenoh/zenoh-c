@@ -25,7 +25,10 @@ use std::{
 use prebindgen_proc_macro::prebindgen;
 
 use crate::{
-    decl_c_type, result::{self, z_result_t}, strlen_or_zero, transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType}
+    decl_c_type,
+    result::{self, z_result_t},
+    strlen_or_zero,
+    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
 
 pub(crate) struct CSlice {
@@ -287,7 +290,9 @@ impl From<Vec<u8>> for CSlice {
 
 impl std::cmp::Eq for CSlice {}
 
-use zenoh_ffi_opaque_types::opaque_types::{z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t};
+use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_slice_t, z_moved_slice_t, z_owned_slice_t, z_view_slice_t,
+};
 
 decl_c_type!(
     owned(z_owned_slice_t, z_moved_slice_t, CSliceOwned),
@@ -805,10 +810,7 @@ pub fn z_string_data(this_: &z_loaned_string_t) -> *const libc::c_char {
 
 /// Constructs an owned copy of a string.
 #[prebindgen]
-pub fn z_string_clone(
-    dst: &mut MaybeUninit<z_owned_string_t>,
-    this: &z_loaned_string_t,
-) {
+pub fn z_string_clone(dst: &mut MaybeUninit<z_owned_string_t>, this: &z_loaned_string_t) {
     let slice = this.as_rust_type_ref().clone_to_owned();
     dst.as_rust_type_mut_uninit()
         .write(CStringOwned(CStringInner(slice.0)));
@@ -870,9 +872,7 @@ pub fn z_string_array_drop(this_: &mut z_moved_string_array_t) {
 
 /// Borrows string array.
 #[prebindgen]
-pub fn z_string_array_loan(
-    this: &z_owned_string_array_t,
-) -> &z_loaned_string_array_t {
+pub fn z_string_array_loan(this: &z_owned_string_array_t) -> &z_loaned_string_array_t {
     this.as_rust_type_ref().as_loaned_c_type_ref()
 }
 

@@ -19,7 +19,9 @@ use zenoh::{
     session::SessionClosedError,
     Wait,
 };
-use zenoh_ffi_opaque_types::opaque_types::{z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t};
+use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
+};
 
 #[cfg(feature = "unstable")]
 use crate::z_moved_source_info_t;

@@ -82,9 +82,7 @@ impl Drop for z_owned_closure_sample_t {
 /// Constructs a closure in its gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_internal_closure_sample_null(
-    this_: &mut MaybeUninit<z_owned_closure_sample_t>,
-) {
+pub unsafe fn z_internal_closure_sample_null(this_: &mut MaybeUninit<z_owned_closure_sample_t>) {
     this_.write(z_owned_closure_sample_t::default());
 }
 
@@ -96,10 +94,7 @@ pub fn z_internal_closure_sample_check(this_: &z_owned_closure_sample_t) -> bool
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[prebindgen]
-pub fn z_closure_sample_call(
-    closure: &z_loaned_closure_sample_t,
-    sample: &mut z_loaned_sample_t,
-) {
+pub fn z_closure_sample_call(closure: &z_loaned_closure_sample_t, sample: &mut z_loaned_sample_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(sample, closure._context),
@@ -136,9 +131,7 @@ impl<F: Fn(&mut z_loaned_sample_t)> From<F> for z_owned_closure_sample_t {
 
 /// Borrows closure.
 #[prebindgen]
-pub fn z_closure_sample_loan(
-    closure: &z_owned_closure_sample_t,
-) -> &z_loaned_closure_sample_t {
+pub fn z_closure_sample_loan(closure: &z_owned_closure_sample_t) -> &z_loaned_closure_sample_t {
     closure.as_loaned_c_type_ref()
 }
 

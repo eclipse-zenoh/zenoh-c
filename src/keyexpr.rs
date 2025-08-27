@@ -22,14 +22,14 @@ use zenoh::{
     Wait,
 };
 
-pub use zenoh_ffi_opaque_types::opaque_types::{
-    z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
-};
 use crate::{
     result::{self, z_result_t, Z_OK},
     strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_session_t, z_view_string_from_substr, z_view_string_t,
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_keyexpr_t, z_moved_keyexpr_t, z_owned_keyexpr_t, z_view_keyexpr_t,
 };
 
 decl_c_type! {
@@ -500,10 +500,7 @@ pub fn z_keyexpr_equals(left: &z_loaned_keyexpr_t, right: &z_loaned_keyexpr_t) -
 /// Returns ``true`` if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the
 /// sets defined by ``left`` and ``right``, ``false`` otherwise.
 #[prebindgen]
-pub fn z_keyexpr_intersects(
-    left: &z_loaned_keyexpr_t,
-    right: &z_loaned_keyexpr_t,
-) -> bool {
+pub fn z_keyexpr_intersects(left: &z_loaned_keyexpr_t, right: &z_loaned_keyexpr_t) -> bool {
     let l = left.as_rust_type_ref();
     let r = right.as_rust_type_ref();
     l.intersects(r)
@@ -512,10 +509,7 @@ pub fn z_keyexpr_intersects(
 /// Returns ``true`` if ``left`` includes ``right``, i.e. the set defined by ``left`` contains every key belonging to the set
 /// defined by ``right``, ``false`` otherwise.
 #[prebindgen]
-pub fn z_keyexpr_includes(
-    left: &z_loaned_keyexpr_t,
-    right: &z_loaned_keyexpr_t,
-) -> bool {
+pub fn z_keyexpr_includes(left: &z_loaned_keyexpr_t, right: &z_loaned_keyexpr_t) -> bool {
     let l = left.as_rust_type_ref();
     let r = right.as_rust_type_ref();
     l.includes(r)

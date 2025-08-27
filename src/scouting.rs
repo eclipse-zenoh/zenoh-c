@@ -20,12 +20,14 @@ use zenoh::{
 };
 use zenoh_runtime::ZRuntime;
 
-pub use zenoh_ffi_opaque_types::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
 use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
     z_owned_string_array_t, z_view_string_t, CStringInner, CStringView, ZVector,
+};
+pub use zenoh_ffi_opaque_types::opaque_types::{
+    z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t,
 };
 decl_c_type!(
     owned(z_owned_hello_t, z_moved_hello_t, option Hello ),

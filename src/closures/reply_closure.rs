@@ -83,9 +83,7 @@ impl Drop for z_owned_closure_reply_t {
 /// Constructs a closure int its gravestone state.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_internal_closure_reply_null(
-    this_: &mut MaybeUninit<z_owned_closure_reply_t>,
-) {
+pub unsafe fn z_internal_closure_reply_null(this_: &mut MaybeUninit<z_owned_closure_reply_t>) {
     this_.write(z_owned_closure_reply_t::default());
 }
 
@@ -97,10 +95,7 @@ pub fn z_internal_closure_reply_check(this_: &z_owned_closure_reply_t) -> bool {
 
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[prebindgen]
-pub fn z_closure_reply_call(
-    closure: &z_loaned_closure_reply_t,
-    reply: &mut z_loaned_reply_t,
-) {
+pub fn z_closure_reply_call(closure: &z_loaned_closure_reply_t, reply: &mut z_loaned_reply_t) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(reply, closure._context),
@@ -138,9 +133,7 @@ impl<F: Fn(&mut z_loaned_reply_t)> From<F> for z_owned_closure_reply_t {
 
 /// Borrows closure.
 #[prebindgen]
-pub fn z_closure_reply_loan(
-    closure: &z_owned_closure_reply_t,
-) -> &z_loaned_closure_reply_t {
+pub fn z_closure_reply_loan(closure: &z_owned_closure_reply_t) -> &z_loaned_closure_reply_t {
     closure.as_loaned_c_type_ref()
 }
 
