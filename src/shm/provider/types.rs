@@ -33,7 +33,7 @@ use crate::{
 /// @brief Allocation errors
 #[prebindgen]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_alloc_error_t {
     /// Defragmentation needed.
     NEED_DEFRAGMENT,
@@ -69,7 +69,7 @@ impl From<z_alloc_error_t> for ZAllocError {
 /// @brief Layouting errors
 #[prebindgen]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_layout_error_t {
     /// Layout arguments are incorrect.
     INCORRECT_LAYOUT_ARGS,
@@ -259,7 +259,7 @@ pub fn z_chunk_alloc_result_drop(this_: &mut z_moved_chunk_alloc_result_t) {
 /// @brief Status of SHM buffer allocation operation.
 #[prebindgen]
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum zc_buf_alloc_status_t {
     /// Allocation ok
     OK = 0,
@@ -307,7 +307,7 @@ impl From<BufAllocResult> for z_buf_alloc_result_t {
 /// @brief Status of SHM buffer layouting + allocation operation.
 #[prebindgen]
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum zc_buf_layout_alloc_status_t {
     /// Allocation ok
     OK = 0,

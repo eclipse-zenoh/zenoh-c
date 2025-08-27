@@ -44,7 +44,7 @@ pub type z_zint_t = c_ulong;
 #[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_sample_kind_t {
     /// The Sample was issued by a ``put`` operation.
     PUT = 0,
@@ -259,7 +259,7 @@ pub fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
 /// The locality of samples to be received by subscribers or targeted by publishers.
 #[prebindgen]
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum zc_locality_t {
     /// Any
     ANY = 0,
@@ -303,7 +303,7 @@ pub fn zc_locality_default() -> zc_locality_t {
 #[cfg(feature = "unstable")]
 #[allow(non_camel_case_types, clippy::upper_case_acronyms)]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_reliability_t {
     /// Defines reliability as ``BEST_EFFORT``
     BEST_EFFORT = 0,
@@ -346,7 +346,7 @@ impl From<z_reliability_t> for Reliability {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Key expressions types to which Queryable should reply to.
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum zc_reply_keyexpr_t {
     /// Replies to any key expression queries.
     ANY = 0,
@@ -386,7 +386,7 @@ pub fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
 #[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_query_target_t {
     /// The nearest complete queryable if any else all matching queryables.
     BEST_MATCHING = 0,
@@ -427,7 +427,7 @@ pub fn z_query_target_default() -> z_query_target_t {
 /// Consolidation mode values.
 #[prebindgen]
 #[repr(C)]
-#[derive(Clone, Copy, Default)]
+#[derive(Clone, Copy, Default, Debug, PartialEq)]
 pub enum z_consolidation_mode_t {
     /// Let Zenoh decide the best consolidation mode depending on the query selector.
     /// If the selector contains time range properties, consolidation mode `NONE` is used.
@@ -474,7 +474,7 @@ impl From<z_consolidation_mode_t> for ConsolidationMode {
 #[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_priority_t {
     /// Priority for ``RealTime`` messages.
     REAL_TIME = 1,
@@ -529,7 +529,7 @@ pub fn z_priority_default() -> z_priority_t {
 #[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_congestion_control_t {
     /// Messages are not dropped in case of congestion.
     BLOCK = 0,

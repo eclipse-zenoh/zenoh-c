@@ -157,7 +157,7 @@ impl Default for z_scout_options_t {
 #[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_whatami_t {
     ROUTER = 0x01,
     PEER = 0x02,
@@ -167,7 +167,7 @@ pub enum z_whatami_t {
 #[prebindgen]
 #[allow(non_camel_case_types)]
 #[repr(C)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum z_what_t {
     ROUTER = 0x01,
     PEER = 0x02,
