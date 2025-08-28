@@ -260,6 +260,14 @@ if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 	set(cargo_flags ${cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
 endif()
 
+# If ZENOHC_CUSTOM_TARGET is set and ZENOHC_CARGO_FLAGS contains target linker setting
+# for this target, e.g.
+# "--config=target.armv7-unknown-linux-gnueabihf.linker=\"armv7-linux-gnueabihf-gcc\""
+# then extract the linker name and assign it to variable CROSS_RUSTC_LINKER
+if("${cargo_flags}" MATCHES "--config=target.${ZENOHC_CUSTOM_TARGET}.linker=\"([^\"]+)\"")
+	set(cross_rustc_linker "${CMAKE_MATCH_1}")
+endif()
+
 status_print(cargo_flags)
 status_print(libs)
 file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide.yaml")
@@ -270,8 +278,8 @@ file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide
 add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
-	COMMAND ${CMAKE_COMMAND} -E echo \"CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
-    COMMAND ${CMAKE_COMMAND} -E env CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E echo \"CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} CROSS_RUSTC_LINKER=${cross_rustc_linker} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
+    COMMAND ${CMAKE_COMMAND} -E env CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} CROSS_RUSTC_LINKER=${cross_rustc_linker} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
