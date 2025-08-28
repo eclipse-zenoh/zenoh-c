@@ -84,6 +84,10 @@ if(ZENOHC_BUILD_IN_SOURCE_TREE AND(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_
 		set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
 		file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
 		file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
+		file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+		     DESTINATION ${cargo_toml_dir_debug})
+		file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+		     DESTINATION ${cargo_toml_dir_release})
 	else()
 		message(STATUS "Mode: IDE, Single-Config generator (${CMAKE_GENERATOR})")
 		set(cargo_toml_dir_debug ${cargo_toml_dir_ide})
@@ -96,6 +100,10 @@ else()
 	set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
 	file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
 	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
+	file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+			DESTINATION ${cargo_toml_dir_debug})
+	file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+			DESTINATION ${cargo_toml_dir_release})
 endif()
 
 # note: case-insensitive build configuration check
