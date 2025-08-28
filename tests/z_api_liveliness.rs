@@ -20,13 +20,11 @@ use zenoh_ffi::{
     z_fifo_handler_reply_move, z_fifo_handler_reply_recv, z_keyexpr_as_view_string,
     z_liveliness_declare_subscriber, z_liveliness_declare_token, z_liveliness_get,
     z_liveliness_token_drop, z_liveliness_token_move, z_liveliness_undeclare_token,
-    z_loaned_sample_t, z_open, z_owned_closure_reply_t, z_owned_closure_sample_t, z_owned_config_t,
-    z_owned_fifo_handler_reply_t, z_owned_liveliness_token_t, z_owned_reply_t, z_owned_session_t,
-    z_owned_subscriber_t, z_reply_drop, z_reply_is_ok, z_reply_loan, z_reply_move, z_reply_ok,
+    z_loaned_sample_t, z_open, z_reply_drop, z_reply_is_ok, z_reply_loan, z_reply_move, z_reply_ok,
     z_sample_keyexpr, z_sample_kind, z_sample_kind_t, z_session_drop, z_session_loan,
     z_session_move, z_sleep_s, z_string_data, z_string_len, z_subscriber_drop, z_subscriber_move,
-    z_view_keyexpr_from_str, z_view_keyexpr_loan, z_view_keyexpr_t, z_view_string_loan,
-    z_view_string_t, Z_CHANNEL_DISCONNECTED, Z_OK,
+    z_view_keyexpr_from_str, z_view_keyexpr_loan, z_view_string_loan, z_view_string_t,
+    Z_CHANNEL_DISCONNECTED, Z_OK,
 };
 
 #[repr(C)]
@@ -106,11 +104,11 @@ fn liveliness_sub() {
         const EXPR: *const c_char = EXPR_STR.as_ptr() as *const c_char;
 
         // z_owned_session_t s1, s2;
-        let mut s1 = MaybeUninit::<z_owned_session_t>::uninit();
-        let mut s2 = MaybeUninit::<z_owned_session_t>::uninit();
+        let mut s1 = MaybeUninit::uninit();
+        let mut s2 = MaybeUninit::uninit();
         // z_owned_config_t c1, c2;
-        let mut c1 = MaybeUninit::<z_owned_config_t>::uninit();
-        let mut c2 = MaybeUninit::<z_owned_config_t>::uninit();
+        let mut c1 = MaybeUninit::uninit();
+        let mut c2 = MaybeUninit::uninit();
         // z_config_default(&c1);
         // z_config_default(&c2);
         z_config_default(&mut c1);
@@ -118,9 +116,9 @@ fn liveliness_sub() {
         z_config_default(&mut c2);
         let mut c2 = c2.assume_init();
         // z_view_keyexpr_t k, k1, k2;
-        let mut k = MaybeUninit::<z_view_keyexpr_t>::uninit();
-        let mut k1 = MaybeUninit::<z_view_keyexpr_t>::uninit();
-        let mut k2 = MaybeUninit::<z_view_keyexpr_t>::uninit();
+        let mut k = MaybeUninit::uninit();
+        let mut k1 = MaybeUninit::uninit();
+        let mut k2 = MaybeUninit::uninit();
         // z_view_keyexpr_from_str(&k, expr);
         z_view_keyexpr_from_str(&mut k, EXPR);
         let k = k.assume_init();
@@ -139,7 +137,7 @@ fn liveliness_sub() {
         let mut s2 = s2.assume_init();
 
         // z_owned_closure_sample_t closure;
-        let mut closure = MaybeUninit::<z_owned_closure_sample_t>::uninit();
+        let mut closure = MaybeUninit::uninit();
         // context_t context = {false, false, false, false};
         let mut context = Context {
             token1_put: false,
@@ -157,7 +155,7 @@ fn liveliness_sub() {
         let mut closure = closure.assume_init();
 
         // z_owned_subscriber_t sub;
-        let mut sub = MaybeUninit::<z_owned_subscriber_t>::uninit();
+        let mut sub = MaybeUninit::uninit();
         // z_liveliness_declare_subscriber(z_loan(s2), &sub, z_loan(k), z_move(closure), NULL);
         z_liveliness_declare_subscriber(
             z_session_loan(&s2),
@@ -172,8 +170,8 @@ fn liveliness_sub() {
         z_sleep_s(1);
 
         // z_owned_liveliness_token_t t1, t2;
-        let mut t1 = MaybeUninit::<z_owned_liveliness_token_t>::uninit();
-        let mut t2 = MaybeUninit::<z_owned_liveliness_token_t>::uninit();
+        let mut t1 = MaybeUninit::uninit();
+        let mut t2 = MaybeUninit::uninit();
         // z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
         z_liveliness_declare_token(z_session_loan(&s1), &mut t1, z_view_keyexpr_loan(&k1), None);
         let mut t1 = t1.assume_init();
@@ -226,11 +224,11 @@ fn liveliness_get() {
         const EXPR: *const c_char = EXPR_STR.as_ptr() as *const c_char;
 
         // z_owned_session_t s1, s2;
-        let mut s1 = MaybeUninit::<z_owned_session_t>::uninit();
-        let mut s2 = MaybeUninit::<z_owned_session_t>::uninit();
+        let mut s1 = MaybeUninit::uninit();
+        let mut s2 = MaybeUninit::uninit();
         // z_owned_config_t c1, c2;
-        let mut c1 = MaybeUninit::<z_owned_config_t>::uninit();
-        let mut c2 = MaybeUninit::<z_owned_config_t>::uninit();
+        let mut c1 = MaybeUninit::uninit();
+        let mut c2 = MaybeUninit::uninit();
         // z_config_default(&c1);
         z_config_default(&mut c1);
         let mut c1 = c1.assume_init();
@@ -238,8 +236,8 @@ fn liveliness_get() {
         z_config_default(&mut c2);
         let mut c2 = c2.assume_init();
         // z_view_keyexpr_t k, k1;
-        let mut k = MaybeUninit::<z_view_keyexpr_t>::uninit();
-        let mut k1 = MaybeUninit::<z_view_keyexpr_t>::uninit();
+        let mut k = MaybeUninit::uninit();
+        let mut k1 = MaybeUninit::uninit();
         // z_view_keyexpr_from_str(&k, expr);
         z_view_keyexpr_from_str(&mut k, EXPR);
         let k = k.assume_init();
@@ -259,7 +257,7 @@ fn liveliness_get() {
         z_sleep_s(1);
 
         // z_owned_liveliness_token_t t1;
-        let mut t1 = MaybeUninit::<z_owned_liveliness_token_t>::uninit();
+        let mut t1 = MaybeUninit::uninit();
         // z_liveliness_declare_token(z_loan(s1), &t1, z_loan(k1), NULL);
         z_liveliness_declare_token(z_session_loan(&s1), &mut t1, z_view_keyexpr_loan(&k1), None);
         let mut t1 = t1.assume_init();
@@ -267,9 +265,9 @@ fn liveliness_get() {
         z_sleep_s(1);
 
         // z_owned_fifo_handler_reply_t handler;
-        let mut handler = MaybeUninit::<z_owned_fifo_handler_reply_t>::uninit();
+        let mut handler = MaybeUninit::uninit();
         // z_owned_closure_reply_t cb;
-        let mut cb = MaybeUninit::<z_owned_closure_reply_t>::uninit();
+        let mut cb = MaybeUninit::uninit();
         // z_fifo_channel_reply_new(&cb, &handler, 3);
         z_fifo_channel_reply_new(&mut cb, &mut handler, 3);
         let mut cb = cb.assume_init();
@@ -283,7 +281,7 @@ fn liveliness_get() {
             None,
         );
         // z_owned_reply_t reply;
-        let mut reply = MaybeUninit::<z_owned_reply_t>::uninit();
+        let mut reply = MaybeUninit::uninit();
         // assert(z_recv(z_loan(handler), &reply) == Z_OK);
         assert!(z_fifo_handler_reply_recv(z_fifo_handler_reply_loan(&handler), &mut reply) == Z_OK);
         let mut reply = reply.assume_init();
@@ -294,7 +292,7 @@ fn liveliness_get() {
         assert!(!reply_ok.is_null());
         let reply_keyexpr = z_sample_keyexpr(reply_ok.as_ref().unwrap());
         // z_view_string_t reply_keyexpr_s;
-        let mut reply_keyexpr_s = MaybeUninit::<z_view_string_t>::uninit();
+        let mut reply_keyexpr_s = MaybeUninit::uninit();
         // z_keyexpr_as_view_string(reply_keyexpr, &reply_keyexpr_s);
         z_keyexpr_as_view_string(reply_keyexpr, &mut reply_keyexpr_s);
         let reply_keyexpr_s = reply_keyexpr_s.assume_init();
@@ -309,7 +307,7 @@ fn liveliness_get() {
         // z_drop(z_move(reply));
         z_reply_drop(z_reply_move(&mut reply));
         // assert(z_recv(z_loan(handler), &reply) == Z_CHANNEL_DISCONNECTED);
-        let mut reply = MaybeUninit::<z_owned_reply_t>::uninit();
+        let mut reply = MaybeUninit::uninit();
         assert!(
             z_fifo_handler_reply_recv(z_fifo_handler_reply_loan(&handler), &mut reply)
                 == Z_CHANNEL_DISCONNECTED
@@ -322,8 +320,8 @@ fn liveliness_get() {
         // z_sleep_s(1);
         z_sleep_s(1);
         // z_fifo_channel_reply_new(&cb, &handler, 3);
-        let mut handler = MaybeUninit::<z_owned_fifo_handler_reply_t>::uninit();
-        let mut cb = MaybeUninit::<z_owned_closure_reply_t>::uninit();
+        let mut handler = MaybeUninit::uninit();
+        let mut cb = MaybeUninit::uninit();
         z_fifo_channel_reply_new(&mut cb, &mut handler, 3);
         let mut cb = cb.assume_init();
         let mut handler = handler.assume_init();
