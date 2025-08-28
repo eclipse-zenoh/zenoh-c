@@ -17,7 +17,7 @@ use std::{mem::MaybeUninit, sync::Arc};
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 use zenoh::{
-    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
+    handlers::{self, Callback, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Reply,
 };
 pub use zenoh_ffi_opaque_types::opaque_types::{
@@ -54,11 +54,9 @@ pub fn z_internal_fifo_handler_reply_check(this_: &z_owned_fifo_handler_reply_t)
 
 extern "C" fn __z_handler_reply_send(reply: &mut z_loaned_reply_t, context: *mut c_void) {
     unsafe {
-        let f = (context as *mut std::sync::Arc<dyn Fn(Reply) + Send + Sync>)
-            .as_mut()
-            .unwrap_unchecked();
+        let f = &mut *(context as *mut Callback<Reply>);
         let owned_ref: &mut Option<Reply> = std::mem::transmute(reply);
-        (f)(std::mem::take(owned_ref).unwrap_unchecked());
+        f.call(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 
