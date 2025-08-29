@@ -136,9 +136,7 @@ pub fn main() {
     }
 
     // Step IV: generate rust code into OUT_DIR/opaque_types.rs
-    let host_target_triple = std::env::var("HOST").expect("HOST variable not set");
-    println!("cargo:warning=Host target triple: {}", host_target_triple);
-    let generated = buildrs::generate_rust_types(&host_target_triple, &layouts);
+    let generated = buildrs::generate_rust_types(&layouts);
     println!(
         "cargo:warning=Generated opaque types file: {}",
         generated.display()

@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 use proc_macro2::{Span, TokenStream};
 use quote::{format_ident, quote};
@@ -62,42 +62,17 @@ fn generate_single_type(
 /// layouts: HashMap<target_triple, HashMap<type_name, (size, align)>>
 /// docs: name -> Vec<String> (each starts with '///')
 pub fn generate_rust_types(
-    host_target_triple: &str,
     layouts: &HashMap<&str, HashMap<String, (u64, u64)>>,
 ) -> std::path::PathBuf {
     let mut out_ts = TokenStream::new();
     let docs = read_docs_from_probe_lib();
 
-    // Collect all targets except host one and build negative conditions based on them
-    let mut cfgs = HashSet::new();
-    for target in layouts.keys() {
-        if *target == host_target_triple {
-            continue;
-        }
-        let triple = prebindgen::utils::TargetTriple::parse(*target).unwrap_or_else(|e| {
-            panic!("Failed to parse target triple '{target}': {e}");
-        });
-        cfgs.insert(triple);
-    }
-    let cfg_tokens = &cfgs.iter().map(|t| t.to_cfg_tokens()).collect::<Vec<_>>();
-    let negated_cfg_tokens = if cfg_tokens.is_empty() {
-        TokenStream::new()
-    } else if cfg_tokens.len() == 1 {
-        quote! { not( #(#cfg_tokens),* ) }
-    } else {
-        quote! { not(any( #(#cfg_tokens),* )) }
-    };
-
     for (target, types) in layouts {
-        let cfg_tokens = if *target == host_target_triple {
-            negated_cfg_tokens.clone()
-        } else {
-            prebindgen::utils::TargetTriple::parse(*target)
-                .unwrap_or_else(|e| {
-                    panic!("Failed to parse target triple '{target}': {e}");
-                })
-                .to_cfg_tokens()
-        };
+        let cfg_tokens = prebindgen::utils::TargetTriple::parse(*target)
+            .unwrap_or_else(|e| {
+                panic!("Failed to parse target triple '{target}': {e}");
+            })
+            .to_cfg_tokens();
         for (type_name, (size, align)) in types {
             let lines = docs
                 .get(type_name)
