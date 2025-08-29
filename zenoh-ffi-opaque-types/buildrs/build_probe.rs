@@ -23,9 +23,11 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
     // Collect targets and (optional) linkers
     let host = std::env::var("HOST").expect("HOST environment variable not set");
     let target = std::env::var("TARGET").expect("TARGET environment variable not set");
-    let target_linker = std::env::var("RUSTC_LINKER").ok();
-    let cross_target = std::env::var("CROSS_TARGET").ok();
-    let cross_linker = std::env::var("CROSS_RUSTC_LINKER").ok();
+    let target_linker = std::env::var("RUSTC_LINKER").ok().filter(|s| !s.is_empty());
+    let cross_target = std::env::var("CROSS_TARGET").ok().filter(|s| !s.is_empty());
+    let cross_linker = std::env::var("CROSS_RUSTC_LINKER")
+        .ok()
+        .filter(|s| !s.is_empty());
 
     let mut plans: Vec<(String, Option<String>)> = if let Some(ref cross_target) = cross_target {
         vec![
@@ -34,7 +36,10 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
             (cross_target.clone(), cross_linker.clone()),
         ]
     } else {
-        vec![(host.clone(), None), (target.clone(), target_linker.clone())]
+        vec![
+            (host.clone(), None),
+            (target.clone(), target_linker.clone()),
+        ]
     };
     // deduplicate plans
     plans.sort_unstable();

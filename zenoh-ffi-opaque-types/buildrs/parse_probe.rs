@@ -35,8 +35,9 @@ pub fn parse_probe_result(path: &std::path::PathBuf) -> HashMap<String, (u64, u6
     // Count Rust compiler errors count by error id:
     // fill hashmap by error integer id:
     let mut error_count_map: HashMap<usize, usize> = HashMap::new();
+    let regex = Regex::new(r"error\[E(\d+)\]").unwrap();
     for line in data.lines() {
-        if let Some(captures) = Regex::new(r"error\[E(\d+)\]").unwrap().captures(line) {
+        if let Some(captures) = regex.captures(line) {
             let error_id: usize = captures.get(1).unwrap().as_str().parse().unwrap();
             *error_count_map.entry(error_id).or_insert(0) += 1;
         }
