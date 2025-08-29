@@ -19,8 +19,11 @@ pub fn get_out_opaque_types() -> std::path::PathBuf {
 }
 
 pub fn get_target_dir() -> std::path::PathBuf {
-    // OUT_DIR typically looks like: target/<profile>/build/<crate-hash>/out
-    // We need to go 4 levels up to reach the target directory root
+    // OUT_DIR may be target/[Debug|Release]/build/<crate-hash>/out
+    // or target/<target-triple>/[Debug|Release]/build/<crate-hash>/out
+    // To decide in which situation we are in we test the name of
+    // directory 4-levels up from current. If it's valid target triple,
+    // then go up one additional level
     let mut p = get_out_dir();
     for _ in 0..4 {
         p = p
@@ -33,6 +36,20 @@ pub fn get_target_dir() -> std::path::PathBuf {
             })
             .to_path_buf();
     }
+    if prebindgen::utils::TargetTriple::parse(
+        p.file_name()
+            .unwrap_or_else(|| {
+                panic!(
+                    "Invalid OUT_DIR, cannot get target dir from {}",
+                    get_out_dir().display()
+                )
+            })
+            .to_str()
+            .unwrap_or(""),
+    ).is_ok()
+    {
+        p = p.parent().unwrap().to_path_buf();
+    }   
     p
 }
 
