@@ -15,6 +15,9 @@ pub fn generate_rust_types(
 ) -> std::path::PathBuf {
     let mut out_ts = TokenStream::new();
     let mut documented: HashSet<String> = HashSet::new();
+    // Collect dummy types (by type name) and the list of cfgs used for concrete targets
+    let mut dummy_types: HashMap<String, TokenStream> = HashMap::new();
+    let mut all_cfgs: HashSet<String> = HashSet::new();
     let docs = read_docs_from_probe_lib();
 
     for (target, types) in layouts {
@@ -42,6 +45,7 @@ pub fn generate_rust_types(
                 })
                 .to_cfg_tokens();
             let cfg_str: String = cfg_tokens.to_string();
+            all_cfgs.insert(cfg_str.clone());
             let type_ident = format_ident!("{}", type_name);
             let align_val = *align;
             let align_lit = syn::LitInt::new(&align_val.to_string(), Span::call_site());
@@ -75,6 +79,8 @@ pub fn generate_rust_types(
                 }
             };
             out_ts.extend(struct_tokens);
+            // Store dummy type once per name
+            dummy_types.entry(type_name.clone()).or_insert(dummy_struct_tokens);
 
             if category == Some("owned") {
                 let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
@@ -95,8 +101,27 @@ pub fn generate_rust_types(
                     }
                 };
                 out_ts.extend(moved_struct_tokens);
+                dummy_types
+                    .entry(moved_type_name)
+                    .or_insert(dummy_moved_struct_tokens);
             }
         }
+    }
+
+    // Build a single negated cfg expression string: not(any(cfg1, cfg2, ...)) or not(cfg1)
+    let mut cfg_list: Vec<String> = all_cfgs.into_iter().collect();
+    assert!(!cfg_list.is_empty());
+    cfg_list.sort();
+    let negated_cfg_str = if cfg_list.len() == 1 {
+        format!("not({})", cfg_list[0])
+    } else {
+        format!("not(any({}))", cfg_list.join(", "))
+    };
+    for (_name, ts) in dummy_types.into_iter() {
+        out_ts.extend(quote! {
+            #[prebindgen("types", cfg = #negated_cfg_str)]
+            #ts
+        });
     }
 
     // Write to OUT_DIR/opaque_types.rs
