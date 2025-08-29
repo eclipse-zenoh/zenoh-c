@@ -19,7 +19,6 @@ pub fn generate_rust_types(
 
     for (target, types) in layouts {
         for (type_name, (size, align)) in types {
-            let is_pub_id = type_name.as_str() == "z_id_t";
             let (prefix, category, semantic, postfix) = split_type_name(type_name);
 
             // Docs once per type
@@ -47,36 +46,25 @@ pub fn generate_rust_types(
             let align_val = *align;
             let align_lit = syn::LitInt::new(&align_val.to_string(), Span::call_site());
             let size_val = *size;
-            let field_ident = if is_pub_id {
-                format_ident!("id")
+            // Specific case for z_id_t: the identifier is public
+            let field_name: TokenStream = if type_name.as_str() == "z_id_t" {
+                quote!(pub id)
             } else {
-                format_ident!("_0")
+                quote!(_0)
             };
+
             let derive_tokens = if category != Some("owned") {
                 quote! { #[derive(Copy, Clone)] }
             } else {
                 TokenStream::new()
             };
-
-            let struct_tokens = if is_pub_id {
-                quote! {
-                    #[prebindgen("types", cfg = #cfg_str)]
-                    #derive_tokens
-                    #[repr(C, align(#align_lit))]
-                    #[rustfmt::skip]
-                    pub struct #type_ident {
-                        pub #field_ident: [u8; #size_val as usize],
-                    }
-                }
-            } else {
-                quote! {
-                    #[prebindgen("types", cfg = #cfg_str)]
-                    #derive_tokens
-                    #[repr(C, align(#align_lit))]
-                    #[rustfmt::skip]
-                    pub struct #type_ident {
-                        #field_ident: [u8; #size_val as usize],
-                    }
+            let struct_tokens = quote! {
+                #[prebindgen("types", cfg = #cfg_str)]
+                #derive_tokens
+                #[repr(C, align(#align_lit))]
+                #[rustfmt::skip]
+                pub struct #type_ident {
+                    #field_name: [u8; #size_val as usize],
                 }
             };
             out_ts.extend(struct_tokens);
