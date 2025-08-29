@@ -4548,7 +4548,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#334da4ca85d19436dee382b3631e967bcde8ab74"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#91790df3851013c707e6cf854dd304af0f0e3b49"
 dependencies = [
  "chrono",
  "const_format",
@@ -4577,7 +4577,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi-opaque-types"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#334da4ca85d19436dee382b3631e967bcde8ab74"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#91790df3851013c707e6cf854dd304af0f0e3b49"
 dependencies = [
  "const_format",
  "flume",
