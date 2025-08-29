@@ -860,8 +860,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "531e46835a22af56d1e3b66f04844bed63158bc094a628bec1d321d9b4c44bf2"
 dependencies = [
  "bit-set",
- "regex-automata 0.4.10",
- "regex-syntax 0.8.6",
+ "regex-automata",
+ "regex-syntax",
 ]
 
 [[package]]
@@ -1617,11 +1617,11 @@ dependencies = [
 
 [[package]]
 name = "matchers"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8263075bb86c5a1b1427b5ae862e8889656f126e9f77c484496e8b47cf5c5558"
+checksum = "d1525a2a28c7f4fa0fc98bb91ae755d1e2d1505079e05539e35bc876b5d65ae9"
 dependencies = [
- "regex-automata 0.1.10",
+ "regex-automata",
 ]
 
 [[package]]
@@ -1759,12 +1759,11 @@ dependencies = [
 
 [[package]]
 name = "nu-ansi-term"
-version = "0.46.0"
+version = "0.50.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77a8165726e8236064dbb45459242600304b42a5ea24ee2948e18e023bf7ba84"
+checksum = "d4a28e057d01f97e61255210fcff094d74ed0466038633e95017f5beb68e4399"
 dependencies = [
- "overload",
- "winapi",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -1927,12 +1926,6 @@ name = "outref"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a80800c0488c3a21695ea981a54918fbb37abf04f4d0720c453632255e2ff0e"
-
-[[package]]
-name = "overload"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
 
 [[package]]
 name = "parking"
@@ -2194,8 +2187,8 @@ dependencies = [
 
 [[package]]
 name = "prebindgen"
-version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#d652c9b1451e6eaa7a34fbf91371653aabfad3b1"
+version = "0.4.1"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#629ab371cde8854873f477590c05ea4f005d28cf"
 dependencies = [
  "if_rust_version",
  "itertools 0.14.0",
@@ -2208,14 +2201,13 @@ dependencies = [
  "serde",
  "serde_json",
  "syn 2.0.106",
- "target-lexicon",
  "toml 0.9.5",
 ]
 
 [[package]]
 name = "prebindgen"
-version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen#d652c9b1451e6eaa7a34fbf91371653aabfad3b1"
+version = "0.4.1"
+source = "git+https://github.com/milyin/prebindgen#629ab371cde8854873f477590c05ea4f005d28cf"
 dependencies = [
  "if_rust_version",
  "itertools 0.14.0",
@@ -2228,16 +2220,15 @@ dependencies = [
  "serde",
  "serde_json",
  "syn 2.0.106",
- "target-lexicon",
  "toml 0.9.5",
 ]
 
 [[package]]
 name = "prebindgen-proc-macro"
-version = "0.4.0"
-source = "git+https://github.com/milyin/prebindgen.git?branch=main#d652c9b1451e6eaa7a34fbf91371653aabfad3b1"
+version = "0.4.1"
+source = "git+https://github.com/milyin/prebindgen.git?branch=main#629ab371cde8854873f477590c05ea4f005d28cf"
 dependencies = [
- "prebindgen 0.4.0 (git+https://github.com/milyin/prebindgen.git?branch=main)",
+ "prebindgen 0.4.1 (git+https://github.com/milyin/prebindgen.git?branch=main)",
  "proc-macro2",
  "quote",
  "rand 0.9.2",
@@ -2476,17 +2467,8 @@ checksum = "23d7fd106d8c02486a8d64e778353d1cffe08ce79ac2e82f540c86d0facf6912"
 dependencies = [
  "aho-corasick",
  "memchr",
- "regex-automata 0.4.10",
- "regex-syntax 0.8.6",
-]
-
-[[package]]
-name = "regex-automata"
-version = "0.1.10"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c230d73fb8d8c1b9c0b3135c5142a8acee3a0558fb8db5cf1cb65f8d7862132"
-dependencies = [
- "regex-syntax 0.6.29",
+ "regex-automata",
+ "regex-syntax",
 ]
 
 [[package]]
@@ -2497,14 +2479,8 @@ checksum = "6b9458fa0bfeeac22b5ca447c63aaf45f28439a709ccd244698632f9aa6394d6"
 dependencies = [
  "aho-corasick",
  "memchr",
- "regex-syntax 0.8.6",
+ "regex-syntax",
 ]
-
-[[package]]
-name = "regex-syntax"
-version = "0.6.29"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
 
 [[package]]
 name = "regex-syntax"
@@ -3231,12 +3207,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "target-lexicon"
-version = "0.13.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e502f78cdbb8ba4718f566c418c52bc729126ffd16baee5baa718cf25dd5a69a"
-
-[[package]]
 name = "tempfile"
 version = "3.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3608,14 +3578,14 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.19"
+version = "0.3.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e8189decb5ac0fa7bc8b96b7cb9b2701d60d48805aca84a238004d665fcc4008"
+checksum = "2054a14f5307d601f88daf0553e1cbf472acc4f2c51afab632431cdcd72124d5"
 dependencies = [
  "matchers",
  "nu-ansi-term",
  "once_cell",
- "regex",
+ "regex-automata",
  "serde",
  "serde_json",
  "sharded-slab",
@@ -4480,7 +4450,7 @@ dependencies = [
  "konst",
  "libc",
  "phf",
- "prebindgen 0.4.0 (git+https://github.com/milyin/prebindgen)",
+ "prebindgen 0.4.1 (git+https://github.com/milyin/prebindgen)",
  "regex",
  "serde_yaml",
  "zenoh-ffi",
@@ -4578,7 +4548,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#b82293a1e755b75a18502bd0ac57cca0237352e1"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#334da4ca85d19436dee382b3631e967bcde8ab74"
 dependencies = [
  "chrono",
  "const_format",
@@ -4587,7 +4557,7 @@ dependencies = [
  "json5",
  "lazy_static",
  "libc",
- "prebindgen 0.4.0 (git+https://github.com/milyin/prebindgen.git?branch=main)",
+ "prebindgen 0.4.1 (git+https://github.com/milyin/prebindgen.git?branch=main)",
  "prebindgen-proc-macro",
  "project-root",
  "rand 0.9.2",
@@ -4607,11 +4577,11 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi-opaque-types"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#b82293a1e755b75a18502bd0ac57cca0237352e1"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#334da4ca85d19436dee382b3631e967bcde8ab74"
 dependencies = [
  "const_format",
  "flume",
- "prebindgen 0.4.0 (git+https://github.com/milyin/prebindgen.git?branch=main)",
+ "prebindgen 0.4.1 (git+https://github.com/milyin/prebindgen.git?branch=main)",
  "prebindgen-proc-macro",
  "prebindgen-project-root",
  "prettyplease",
