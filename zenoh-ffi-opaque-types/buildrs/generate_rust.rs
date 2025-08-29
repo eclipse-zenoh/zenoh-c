@@ -17,7 +17,9 @@ pub fn generate_rust_types(
     let mut documented: HashSet<String> = HashSet::new();
     // Collect dummy types (by type name) and the list of cfgs used for concrete targets
     let mut dummy_types: HashMap<String, TokenStream> = HashMap::new();
-    let mut all_cfgs: HashSet<String> = HashSet::new();
+    // Keep cfg predicates as tokens, with a set of stringified forms to deduplicate
+    let mut all_cfg_tokens: Vec<TokenStream> = Vec::new();
+    let mut all_cfg_seen: HashSet<String> = HashSet::new();
     let docs = read_docs_from_probe_lib();
 
     for (target, types) in layouts {
@@ -45,7 +47,9 @@ pub fn generate_rust_types(
                 })
                 .to_cfg_tokens();
             let cfg_str: String = cfg_tokens.to_string();
-            all_cfgs.insert(cfg_str.clone());
+            if all_cfg_seen.insert(cfg_str.clone()) {
+                all_cfg_tokens.push(cfg_tokens.clone());
+            }
             let type_ident = format_ident!("{}", type_name);
             let align_val = *align;
             let align_lit = syn::LitInt::new(&align_val.to_string(), Span::call_site());
@@ -108,18 +112,18 @@ pub fn generate_rust_types(
         }
     }
 
-    // Build a single negated cfg expression string: not(any(cfg1, cfg2, ...)) or not(cfg1)
-    let mut cfg_list: Vec<String> = all_cfgs.into_iter().collect();
-    assert!(!cfg_list.is_empty());
-    cfg_list.sort();
-    let negated_cfg_str = if cfg_list.len() == 1 {
-        format!("not({})", cfg_list[0])
+    // Build a negated cfg predicate using quote!: not(any(cfg1, cfg2, ...)) or not(cfg1)
+    assert!(!all_cfg_tokens.is_empty());
+    let negated_cfg_tokens: TokenStream = if all_cfg_tokens.len() == 1 {
+        let single = &all_cfg_tokens[0];
+        quote! { not(#single) }
     } else {
-        format!("not(any({}))", cfg_list.join(", "))
+        let list = &all_cfg_tokens;
+        quote! { not(any( #(#list),* )) }
     };
     for (_name, ts) in dummy_types.into_iter() {
         out_ts.extend(quote! {
-            #[prebindgen("types", cfg = #negated_cfg_str)]
+            #[cfg(#negated_cfg_tokens)]
             #ts
         });
     }
