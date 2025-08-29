@@ -79,7 +79,7 @@ pub fn generate_rust_types(
                 #[repr(C)]
                 #[rustfmt::skip]
                 pub struct #type_ident {
-                    #field_name: [u8; #size_val as usize],
+                    #field_name: ()
                 }
             };
             out_ts.extend(struct_tokens);
