@@ -21,23 +21,35 @@ pub fn build_probe_project() -> HashMap<String, PathBuf> {
     let profile = std::env::var("PROFILE").unwrap_or_else(|_| "debug".to_string());
 
     // Collect targets and (optional) linkers
-    let target = std::env::var("TARGET").unwrap_or_default();
-    let host = std::env::var("HOST").unwrap_or_default();
-    let host_target = if !target.is_empty() {
-        target
-    } else if !host.is_empty() {
-        host
-    } else {
-        panic!("Neither TARGET nor HOST environment variable is set");
-    };
-    let host_linker = std::env::var("RUSTC_LINKER").ok();
+    let host = std::env::var("HOST").expect("HOST environment variable not set");
+    let target = std::env::var("TARGET").expect("TARGET environment variable not set");
+    let target_linker = std::env::var("RUSTC_LINKER").ok();
+    let cross_target = std::env::var("CROSS_TARGET").ok();
+    let cross_linker = std::env::var("CROSS_RUSTC_LINKER").ok();
 
-    let mut plans: Vec<(String, Option<String>)> = vec![(host_target.clone(), host_linker)];
-    if let Ok(cross_target) = std::env::var("CROSS_TARGET") {
-        if !cross_target.is_empty() && cross_target != host_target {
-            let cross_linker = std::env::var("CROSS_RUSTC_LINKER").ok();
-            plans.push((cross_target, cross_linker));
-        }
+    let mut plans: Vec<(String, Option<String>)> = if let Some(ref cross_target) = cross_target {
+        vec![
+            (host.clone(), None),
+            (target.clone(), target_linker.clone()),
+            (cross_target.clone(), cross_linker.clone()),
+        ]
+    } else {
+        vec![(host.clone(), None), (target.clone(), target_linker.clone())]
+    };
+    // deduplicate plans
+    plans.sort_unstable();
+    plans.dedup();
+    // Only 1 or 2 elements should remain after deduplication. Panic with current plan status
+    // and values of environment variables read above
+    if plans.len() > 2 {
+        panic!("Seems like CROSS_TARGET variable doesn't match --target cargo parameter or CROSS_TARGET_LINKER variable doesn't match the linker for the target\n\
+        The variables are:\n\
+        HOST: {}\n\
+        TARGET: {}\n\
+        CROSS_TARGET: {}\n\
+        RUSTC_LINKER: {}\n\
+        CROSS_RUSTC_LINKER: {}",
+        host, target, cross_target.unwrap_or_default(), target_linker.unwrap_or_default(), cross_linker.unwrap_or_default());
     }
 
     let mut outputs: HashMap<String, PathBuf> = HashMap::new();
