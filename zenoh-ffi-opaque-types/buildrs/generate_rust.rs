@@ -67,19 +67,34 @@ pub fn generate_rust_types(
                     #field_name: [u8; #size_val as usize],
                 }
             };
+            let dummy_struct_tokens = quote! {
+                #[repr(C)]
+                #[rustfmt::skip]
+                pub struct #type_ident {
+                    #field_name: [u8; 1],
+                }
+            };
             out_ts.extend(struct_tokens);
 
             if category == Some("owned") {
                 let moved_type_name = format!("{}_{}_{}_{}", prefix, "moved", semantic, postfix);
                 let moved_ident = format_ident!("{}", moved_type_name);
-                out_ts.extend(quote! {
+                let moved_struct_tokens = quote! {
                     #[prebindgen("types", cfg = #cfg_str)]
                     #[repr(C)]
                     #[rustfmt::skip]
                     pub struct #moved_ident {
                         pub _this: #type_ident,
                     }
-                });
+                };
+                let dummy_moved_struct_tokens = quote! {
+                    #[repr(C)]
+                    #[rustfmt::skip]
+                    pub struct #moved_ident {
+                        pub _this: #type_ident,
+                    }
+                };
+                out_ts.extend(moved_struct_tokens);
             }
         }
     }
