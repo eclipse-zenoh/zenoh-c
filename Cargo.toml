@@ -91,10 +91,6 @@ zenoh-util = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.
 flume = "*"
 prebindgen-proc-macro = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 zenoh-ffi-opaque-types = { path = "zenoh-ffi-opaque-types" }
-cargo_metadata = "=0.19.0"
-cargo-platform = "=0.1.8"
-safe_arch = "=0.7.4"
-wide = "=0.7.33"
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
