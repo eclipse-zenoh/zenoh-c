@@ -4638,7 +4638,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#7466a97d8e4a5568244d5f5459160db1074aa9fa"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#3f6018a8e0615699dc9405105ee7b82ce9e5cb65"
 dependencies = [
  "cargo-platform",
  "cargo_metadata",
@@ -4671,7 +4671,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ffi-opaque-types"
 version = "1.5.0"
-source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#7466a97d8e4a5568244d5f5459160db1074aa9fa"
+source = "git+https://github.com/ZettaScaleLabs/zenoh-ffi.git?branch=zenoh-ffi#3f6018a8e0615699dc9405105ee7b82ce9e5cb65"
 dependencies = [
  "const_format",
  "flume",
