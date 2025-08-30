@@ -1,4 +1,4 @@
-use std::{collections::BTreeSet, env, path::PathBuf};
+use std::{env, path::PathBuf};
 
 pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let mut split = type_name.split('_');
@@ -17,14 +17,6 @@ pub fn split_type_name(type_name: &str) -> (&str, Option<&str>, &str, &str) {
     let prefix_cat_len = prefix.len() + 1 + category.map(|c| c.len() + 1).unwrap_or(0);
     let semantic = &type_name[prefix_cat_len..type_name.len() - postfix.len() - 1];
     (prefix, category, semantic, postfix)
-}
-
-pub fn features() -> BTreeSet<&'static str> {
-    zenoh::FEATURES.split(" zenoh/").collect()
-}
-
-pub fn test_feature(feature: &str) -> bool {
-    zenoh::FEATURES.contains(format!(" zenoh/{feature}").as_str())
 }
 
 // See: https://github.com/rust-lang/cargo/issues/9661
@@ -48,4 +40,18 @@ pub fn cargo_target_dir() -> PathBuf {
     target_dir
         .expect("OUT_DIR should be a child of a PROFILE directory")
         .to_path_buf()
+}
+
+pub fn get_out_dir() -> std::path::PathBuf {
+    let out_dir = std::env::var_os("OUT_DIR").unwrap();
+    std::path::Path::new(&out_dir).to_path_buf()
+}
+
+pub fn get_manifest_path() -> std::path::PathBuf {
+    let manifest_path = std::env::var_os("CARGO_MANIFEST_DIR").unwrap();
+    std::path::Path::new(&manifest_path).to_path_buf()
+}
+
+pub fn get_tmp_dir() -> PathBuf {
+    get_out_dir().join("tmp")
 }

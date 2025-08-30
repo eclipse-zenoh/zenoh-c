@@ -7,7 +7,7 @@ use std::{
 
 use fs2::FileExt;
 
-use super::common_helpers::test_feature;
+use crate::buildrs::common_helpers::{get_manifest_path, get_tmp_dir};
 
 const SPLITGUIDE_PATH: &str = "splitguide.yaml";
 const HEADER: &str = r"//
@@ -54,7 +54,7 @@ impl SplitGuide {
                                 let mut split = s.split('#');
                                 let val = split.next().unwrap();
                                 for feature in split {
-                                    if !test_feature(feature) {
+                                    if !prebindgen::is_feature_enabled(feature) {
                                         return None;
                                     }
                                 }
@@ -567,59 +567,71 @@ impl FunctionSignature {
     }
 }
 
-pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>, String> {
-    let bindings = std::fs::read_to_string(&genetation_path).unwrap();
-    let split_guide = SplitGuide::from_yaml(SPLITGUIDE_PATH);
+pub fn split_bindings(generation_path: impl AsRef<Path>) -> Vec<PathBuf> {
+    let splitguide_path = get_manifest_path().join(SPLITGUIDE_PATH);
+    let split_guide = SplitGuide::from_yaml(&splitguide_path);
+    let bindings = std::fs::read_to_string(&generation_path).unwrap();
     let mut files = split_guide
         .rules
         .iter()
-        .map(|(path, _)| {
+        .map(|(name, _)| {
+            let path = get_tmp_dir().join(name);
             let file = std::fs::File::options()
                 .write(true)
                 .truncate(true)
                 .append(false)
                 .create(true)
-                .open(PathBuf::from("include").join(path))
+                .open(&path)
                 .unwrap();
             file.lock_exclusive().unwrap();
             file.set_len(0).unwrap();
-            (path as &Path, BufWriter::new(file))
+            (name as &Path, (path, BufWriter::new(file)))
         })
         .collect::<HashMap<_, _>>();
     for file in files.values_mut() {
-        file.write_all(HEADER.as_bytes())
-            .map_err(|e| e.to_string())?;
+        file.1
+            .write_all(HEADER.as_bytes())
+            .unwrap_or_else(|e| panic!("Failed to write to file {}: {}", file.0.display(), e));
     }
     let mut records = group_tokens(Tokenizer {
-        filename: genetation_path.as_ref(),
+        filename: generation_path.as_ref(),
         inner: &bindings,
-    })?;
+    })
+    .unwrap_or_else(|e| {
+        panic!(
+            "Failed to parse C file {}: {}",
+            generation_path.as_ref().display(),
+            e
+        );
+    });
     for id in split_guide.requested_ids() {
         if !records.iter().any(|r| r.contains_id(id)) {
-            return Err(format!(
-                "{} not found (requested explicitly by splitguide.yaml)",
-                id,
-            ));
+            panic!("{id} not found (requested explicitly by splitguide.yaml)",);
         }
     }
     for record in &mut records {
         let appropriate_files = split_guide.appropriate_files(record);
-        for file in appropriate_files {
-            let writer = files.get_mut(&file).unwrap();
+        for name in appropriate_files {
+            let (_, writer) = files.get_mut(&name).unwrap();
             record.used = true;
             write!(writer, "{}", &record).unwrap();
         }
     }
     for record in &records {
-        record.is_used()?;
+        record.is_used().unwrap_or_else(|e| {
+            panic!(
+                "Unused record {:?} in file {}: {}",
+                record.rt,
+                generation_path.as_ref().display(),
+                e
+            );
+        });
     }
-    let files = files
+    files
         .into_iter()
-        .map(|(path, file)| {
-            fs2::FileExt::unlock(&file.into_inner().unwrap()).unwrap();
-            path.to_path_buf()
+        .map(|(_, (path, writer))| {
+            fs2::FileExt::unlock(&writer.into_inner().unwrap()).unwrap();
+            path
         })
-        .collect();
-    std::fs::remove_file(genetation_path).unwrap();
-    Ok(files)
+        .collect()
 }
