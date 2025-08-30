@@ -15,7 +15,6 @@
 members = [".", "prebindgen-project-root"]
 
 [workspace.dependencies]
-zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
 zenoh-ffi-opaque-types = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
 libc = "0.2.139"
@@ -27,11 +26,6 @@ serde_yaml = "0.9.19"
 fs_extra = "1.3.0"
 phf = { version = "0.11.2", features = ["macros"] }
 itertools = "0.14.0"
-# additionnally pidded deps, to be removed when included to zenoh-pinned-deps-1-75
-cargo_metadata = "=0.19.0"
-cargo-platform = "=0.1.8"
-safe_arch = "=0.7.4"
-wide = "=0.7.33"
 
 [patch]
 [patch.crates-io]
@@ -94,15 +88,13 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 zenoh-ffi = { workspace = true }
 zenoh-ffi-opaque-types = { workspace = true }
-zenoh-pinned-deps-1-75 = { workspace = true }
 libc = { workspace = true }
 konst = { workspace = true }
 
 [build-dependencies]
-prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen"}
+prebindgen = { version = "0.4.1", git = "https://github.com/milyin/prebindgen"}
 zenoh-ffi = { workspace = true }
 zenoh-ffi-opaque-types = { workspace = true }
-zenoh-pinned-deps-1-75 = { workspace = true }
 cbindgen = { workspace = true }
 fs2 = { workspace = true }
 regex = { workspace = true }
@@ -145,4 +137,4 @@ opt-level = 3
 panic = "abort"
 
 [package.metadata.cargo-machete]
-ignored = ["konst", "libc", "zenoh-ffi", "zenoh-ffi-opaque-types", "zenoh-pinned-deps-1-75"]
+ignored = ["konst", "libc", "zenoh-ffi", "zenoh-ffi-opaque-types"]
