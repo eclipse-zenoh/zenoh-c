@@ -17,6 +17,7 @@ members = [".", "prebindgen-project-root"]
 [workspace.dependencies]
 zenoh-ffi = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
 zenoh-ffi-opaque-types = { version = "1.5.0", git = "https://github.com/ZettaScaleLabs/zenoh-ffi.git", branch = "zenoh-ffi" }
+zenoh-pinned-deps-1-75 = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "rust-1-75-cleanup" }
 libc = "0.2.139"
 konst = "0.3.0"
 cbindgen = "0.29.0"
@@ -88,6 +89,7 @@ maintenance = { status = "actively-developed" }
 [dependencies]
 zenoh-ffi = { workspace = true }
 zenoh-ffi-opaque-types = { workspace = true }
+zenoh-pinned-deps-1-75 = { workspace = true }
 libc = { workspace = true }
 konst = { workspace = true }
 
@@ -95,6 +97,7 @@ konst = { workspace = true }
 prebindgen = { version = "0.4.1", git = "https://github.com/milyin/prebindgen"}
 zenoh-ffi = { workspace = true }
 zenoh-ffi-opaque-types = { workspace = true }
+zenoh-pinned-deps-1-75 = { workspace = true }
 cbindgen = { workspace = true }
 fs2 = { workspace = true }
 regex = { workspace = true }
