@@ -25,13 +25,19 @@ macro(status_print var)
 	message(STATUS "${var} = ${${var}}")
 endmacro()
 
+# if variable is overridden from .cmake configuration file, avoid overriding it
+# so keep set CACHE in the function. But do status_print in the macro
+# to show real value of overridden variable
+function(_declare_cache_var_impl var default_value type docstring)
+	set(${var} ${default_value} CACHE ${type} ${docstring})
+endfunction()
 #
 # Declare cache variable and print VARIABLE = value on configuration stage
 #
-function(declare_cache_var var default_value type docstring)
-	set(${var} ${default_value} CACHE ${type} ${docstring})
-	status_print(${var})
-endfunction()
+macro(declare_cache_var var default_value type docstring)
+    _declare_cache_var_impl("${var}" "${default_value}" "${type}" "${docstring}")
+    status_print(${var})
+endmacro()
 
 #
 # Declare cache variable which is set to TRUE if project is supposedly

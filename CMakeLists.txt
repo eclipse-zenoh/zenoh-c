@@ -84,6 +84,10 @@ if(ZENOHC_BUILD_IN_SOURCE_TREE AND(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_
 		set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
 		file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
 		file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
+		file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+		     DESTINATION ${cargo_toml_dir_debug})
+		file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+		     DESTINATION ${cargo_toml_dir_release})
 	else()
 		message(STATUS "Mode: IDE, Single-Config generator (${CMAKE_GENERATOR})")
 		set(cargo_toml_dir_debug ${cargo_toml_dir_ide})
@@ -96,6 +100,10 @@ else()
 	set(cargo_toml_dir_release ${CMAKE_CURRENT_BINARY_DIR}/release)
 	file(MAKE_DIRECTORY ${cargo_toml_dir_debug}/include)
 	file(MAKE_DIRECTORY ${cargo_toml_dir_release}/include)
+	file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+			DESTINATION ${cargo_toml_dir_debug})
+	file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/prebindgen-project-root 
+			DESTINATION ${cargo_toml_dir_release})
 endif()
 
 # note: case-insensitive build configuration check
@@ -252,14 +260,26 @@ if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 	set(cargo_flags ${cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
 endif()
 
+# If ZENOHC_CUSTOM_TARGET is set and ZENOHC_CARGO_FLAGS contains target linker setting
+# for this target, e.g.
+# "--config=target.armv7-unknown-linux-gnueabihf.linker=\"armv7-linux-gnueabihf-gcc\""
+# then extract the linker name and assign it to variable CROSS_RUSTC_LINKER
+if("${cargo_flags}" MATCHES "--config=target.${ZENOHC_CUSTOM_TARGET}.linker=\"([^\"]+)\"")
+	set(cross_rustc_linker "${CMAKE_MATCH_1}")
+endif()
+
 status_print(cargo_flags)
 status_print(libs)
 file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide.yaml")
+# The zenoh-ffi needs for correct cross-target build not only "--target" parameter for
+# cargo, but also variable CROSS_TARGET set to the same value.
+# This is necessary because the build.rs of zenoh-ffi-opaque-types should know
+# the target to correctly calculate structure sizes
 add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
-	COMMAND ${CMAKE_COMMAND} -E echo \"cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
-	COMMAND ${CMAKE_COMMAND} -E env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E echo \"CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} CROSS_RUSTC_LINKER=${cross_rustc_linker} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
+    COMMAND ${CMAKE_COMMAND} -E env CROSS_TARGET=${ZENOHC_CUSTOM_TARGET} CROSS_RUSTC_LINKER=${cross_rustc_linker} cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
