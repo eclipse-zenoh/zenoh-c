@@ -115,18 +115,11 @@ pub fn main() {
 
     // Step II: execute cargo build for the probe project and capture outputs into files
     let probe_build_outputs = buildrs::build_probe_project();
-    for (target, output_path) in &probe_build_outputs {
-        println!(
-            "cargo:warning=Generated probe build output for {}: {}",
-            target,
-            output_path.display()
-        );
-    }
 
     // Step III: analyze each probe build output, extract size and alignment data
     let mut layouts = HashMap::new();
-    for (target, path) in &probe_build_outputs {
-        let parsed = buildrs::parse_probe_result(path);
+    for (target, (stdout, stderr)) in &probe_build_outputs {
+        let parsed = buildrs::parse_probe_result(target, stdout, stderr);
         println!(
             "cargo:warning=Parsed for target {}: {} type layout records",
             target,

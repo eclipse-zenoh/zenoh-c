@@ -46,10 +46,11 @@ pub fn get_target_dir() -> std::path::PathBuf {
             })
             .to_str()
             .unwrap_or(""),
-    ).is_ok()
+    )
+    .is_ok()
     {
         p = p.parent().unwrap().to_path_buf();
-    }   
+    }
     p
 }
 
