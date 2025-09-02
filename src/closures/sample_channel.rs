@@ -12,11 +12,11 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::{
-    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
+    handlers::{self, Callback, FifoChannelHandler, IntoHandler, RingChannelHandler},
     sample::Sample,
 };
 
@@ -57,17 +57,17 @@ pub extern "C" fn z_internal_fifo_handler_sample_check(
 
 extern "C" fn __z_handler_sample_send(sample: &mut z_loaned_sample_t, context: *mut c_void) {
     unsafe {
-        let f = (context as *mut std::sync::Arc<dyn Fn(Sample) + Send + Sync>)
+        let f = (context as *mut Callback<Sample>)
             .as_mut()
             .unwrap_unchecked();
         let owned_ref: &mut Option<Sample> = std::mem::transmute(sample);
-        (f)(std::mem::take(owned_ref).unwrap_unchecked());
+        f.call(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 
 extern "C" fn __z_handler_sample_drop(context: *mut c_void) {
     unsafe {
-        let f = Box::from_raw(context as *mut Arc<dyn Fn(Sample) + Send + Sync>);
+        let f = Box::from_raw(context as *mut Callback<Sample>);
         std::mem::drop(f);
     }
 }
