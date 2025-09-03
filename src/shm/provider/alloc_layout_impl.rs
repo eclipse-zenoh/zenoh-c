@@ -17,7 +17,8 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        AllocLayout, AllocPolicy, AsyncAllocPolicy, PosixShmProviderBackend, ShmProviderBackend,
+        AllocLayout, AllocPolicy, AsyncAllocPolicy, MemoryLayout, PosixShmProviderBackend,
+        ShmProviderBackend,
     },
     Wait,
 };
@@ -39,9 +40,17 @@ pub(crate) fn alloc_layout_new(
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
 ) -> z_result_t {
+    let mem_layout: MemoryLayout = match size.try_into() {
+        Ok(mem_layout) => mem_layout,
+        Err(e) => {
+            crate::report_error!("{:?}", e);
+            return Z_EINVAL;
+        }
+    };
+
     let layout = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
-            match provider.alloc(size).into_layout() {
+            match provider.alloc(mem_layout).into_layout() {
                 Ok(layout) => CSHMLayout::Posix(layout),
                 Err(e) => {
                     crate::report_error!("{:?}", e);
@@ -50,7 +59,7 @@ pub(crate) fn alloc_layout_new(
             }
         }
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
-            match provider.alloc(size).into_layout() {
+            match provider.alloc(mem_layout).into_layout() {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
                 Err(e) => {
                     crate::report_error!("{:?}", e);
@@ -59,7 +68,7 @@ pub(crate) fn alloc_layout_new(
             }
         }
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            match provider.alloc(size).into_layout() {
+            match provider.alloc(mem_layout).into_layout() {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
                 Err(e) => {
                     crate::report_error!("{:?}", e);
@@ -78,13 +87,17 @@ pub(crate) fn alloc_layout_with_alignment_new(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_result_t {
+    let mem_layout = match MemoryLayout::new(size, alignment.into_rust_type()) {
+        Ok(layout) => layout,
+        Err(e) => {
+            crate::report_error!("{:?}", e);
+            return Z_EINVAL;
+        }
+    };
+
     let layout = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
-            match provider
-                .alloc(size)
-                .with_alignment(alignment.into_rust_type())
-                .into_layout()
-            {
+            match provider.alloc(mem_layout).into_layout() {
                 Ok(layout) => CSHMLayout::Posix(layout),
                 Err(e) => {
                     crate::report_error!("{:?}", e);
@@ -93,11 +106,7 @@ pub(crate) fn alloc_layout_with_alignment_new(
             }
         }
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
-            match provider
-                .alloc(size)
-                .with_alignment(alignment.into_rust_type())
-                .into_layout()
-            {
+            match provider.alloc(mem_layout).into_layout() {
                 Ok(layout) => CSHMLayout::Dynamic(layout),
                 Err(e) => {
                     crate::report_error!("{:?}", e);
@@ -106,11 +115,7 @@ pub(crate) fn alloc_layout_with_alignment_new(
             }
         }
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            match provider
-                .alloc(size)
-                .with_alignment(alignment.into_rust_type())
-                .into_layout()
-            {
+            match provider.alloc(mem_layout).into_layout() {
                 Ok(layout) => CSHMLayout::DynamicThreadsafe(layout),
                 Err(e) => {
                     crate::report_error!("{:?}", e);
@@ -172,7 +177,7 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 
 pub fn alloc_async_impl<Policy: AsyncAllocPolicy, Backend: ShmProviderBackend + Send + Sync>(
     out_result: &'static mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &'static AllocLayout<'static, Backend>,
+    layout: &'static AllocLayout<'static, Backend, MemoryLayout>,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
 ) {
