@@ -460,10 +460,10 @@ get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type PosixAllocLayout = AllocLayout<'static, PosixShmProviderBackend>;
+type PosixAllocLayout = AllocLayout<'static, PosixShmProviderBackend, MemoryLayout>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type DummyDynamicAllocLayout = AllocLayout<'static, DummySHMProviderBackend>;
+type DummyDynamicAllocLayout = AllocLayout<'static, DummySHMProviderBackend, MemoryLayout>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CSHMLayout {

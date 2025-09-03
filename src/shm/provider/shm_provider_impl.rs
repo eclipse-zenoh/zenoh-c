@@ -158,8 +158,7 @@ fn alloc_impl<Policy: AllocPolicy, TBackend: ShmProviderBackend>(
     alignment: z_alloc_alignment_t,
 ) {
     let result = provider
-        .alloc(size)
-        .with_alignment(alignment.into_rust_type())
+        .alloc((size, alignment.into_rust_type()))
         .with_policy::<Policy>()
         .wait();
 
@@ -182,8 +181,7 @@ pub(crate) fn alloc_async_impl<
 ) {
     zenoh_runtime::ZRuntime::Application.spawn(async move {
         let result = provider
-            .alloc(size)
-            .with_alignment(alignment.into_rust_type())
+            .alloc((size, alignment.into_rust_type()))
             .with_policy::<Policy>()
             .await;
         out_result.write(result.into());
