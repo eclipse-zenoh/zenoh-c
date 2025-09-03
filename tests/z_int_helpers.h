@@ -155,10 +155,20 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
 
 #endif  // def windows
 
-#define ASSERT_STR_BYTES_EQUAL(str, bytes)                                                         \
-    do {                                                                                           \
-        if (strlen(str) != bytes.len || strncmp(str, (const char *)bytes.start, (int)bytes.len)) { \
-            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)bytes.len, bytes.start);   \
-            exit(-1);                                                                              \
-        }                                                                                          \
+#define ASSERT_STR_SLICE_EQUAL(str, slice)                                                                        \
+    do {                                                                                                          \
+        if (strlen(str) != z_slice_len(slice) ||                                                                  \
+            strncmp(str, (const char *)z_slice_data(slice), (int)z_slice_len(slice))) {                           \
+            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)z_slice_len(slice), z_slice_data(slice)); \
+            exit(-1);                                                                                             \
+        }                                                                                                         \
+    } while (0)
+
+#define ASSERT_STR_STRING_EQUAL(str, string)                                                                          \
+    do {                                                                                                              \
+        if (strlen(str) != z_string_len(string) ||                                                                    \
+            strncmp(str, (const char *)z_string_data(string), (int)z_string_len(string))) {                           \
+            fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)z_string_len(string), z_string_data(string)); \
+            exit(-1);                                                                                                 \
+        }                                                                                                             \
     } while (0)

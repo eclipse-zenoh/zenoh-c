@@ -14,237 +14,257 @@
 name: Release
 
 on:
-  release:
-    types: [published]
   schedule:
-    - cron: "0 1 * * 1-5"
+    - cron: "0 0 * * 1-5"
   workflow_dispatch:
+    inputs:
+      live-run:
+        type: boolean
+        description: Live-run
+        required: false
+      version:
+        type: string
+        description: Release number
+        required: false
+      zenoh-version:
+        type: string
+        description: Release number of Zenoh
+        required: false
+      branch:
+        type: string
+        description: Release branch
+        required: false
 
 jobs:
-  checks:
-    name: Code checks
+  tag:
+    name: Branch, Bump & tag
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        run: rustup component add rustfmt clippy
-
-      - name: Code format check
-        run: cargo fmt --check
-
-      - name: Clippy check
-        run: cargo clippy --all-targets --all-features -- --deny warnings
-
-      - name: Environment setup
-        id: env
-        shell: bash
-        run: |
-          # log some info
-          gcc --version || true
-          rustup -V
-          rustup toolchain list
-          rustup default
-          cargo -V
-          rustc -V
-
-          echo "GITHUB_REF=${GITHUB_REF}"
-          echo "GITHUB_SHA=${GITHUB_SHA:0:8}"
-          GIT_BRANCH=`[[ $GITHUB_REF =~ ^refs/heads/.* ]] && echo ${GITHUB_REF/refs\/heads\//} || true`
-          echo "GIT_BRANCH=${GIT_BRANCH}"
-          echo "GIT_BRANCH=${GIT_BRANCH}" >> $GITHUB_OUTPUT
-          GIT_TAG=`[[ $GITHUB_REF =~ ^refs/tags/.* ]] && echo ${GITHUB_REF/refs\/tags\//} || true`
-          echo "GIT_TAG=${GIT_TAG}"
-          echo "GIT_TAG=${GIT_TAG}" >> $GITHUB_OUTPUT
-
-          ZENOH_VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
-          echo "ZENOH_VERSION=${ZENOH_VERSION}"
-          echo "ZENOH_VERSION=${ZENOH_VERSION}" >> $GITHUB_OUTPUT
-          if [ -n "${GIT_TAG}" ]; then
-            IS_RELEASE="true"
-            echo "IS_RELEASE=${IS_RELEASE}"
-            echo "IS_RELEASE=${IS_RELEASE}" >> $GITHUB_OUTPUT
-            PKG_VERSION=${ZENOH_VERSION}
-          elif [ -n "${GIT_BRANCH}" ]; then
-            PKG_VERSION=${GIT_BRANCH}-${GITHUB_SHA:0:8}
-          else
-            PKG_VERSION=${ZENOH_VERSION}-${GITHUB_SHA:0:8}
-          fi
-          echo "PKG_VERSION=${PKG_VERSION}"
-          echo "PKG_VERSION=${PKG_VERSION}" >> $GITHUB_OUTPUT
     outputs:
-      GIT_BRANCH: ${{ steps.env.outputs.GIT_BRANCH }}
-      GIT_TAG: ${{ steps.env.outputs.GIT_TAG }}
-      IS_RELEASE: ${{ steps.env.outputs.IS_RELEASE }}
-      ZENOH_VERSION: ${{ steps.env.outputs.ZENOH_VERSION }}
-      PKG_VERSION: ${{ steps.env.outputs.PKG_VERSION }}
+      version: ${{ steps.create-release-branch.outputs.version }}
+      branch: ${{ steps.create-release-branch.outputs.branch }}
+    steps:
+      - id: create-release-branch
+        uses: eclipse-zenoh/ci/create-release-branch@main
+        with:
+          repo: ${{ github.repository }}
+          live-run: ${{ inputs.live-run || false }}
+          # NOTE(fuzzypixelz): When the version is undefined (e.g. on schedule
+          # events) we cannot use git-describe as CMake doesn't support it.
+          # However, we still need some placeholder version to test that the
+          # version can be reliably bumped.
+          version: ${{ inputs.version || '0.0.0' }}
+          branch: ${{ inputs.branch }}
+          github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
 
-  builds:
-    name: Build for ${{ matrix.job.target }} on ${{ matrix.job.os }}
-    needs: checks
-    runs-on: ${{ matrix.job.os }}
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.create-release-branch.outputs.branch }}
+          token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
+
+      - name: Bump and tag project
+        run: bash ci/scripts/bump-and-tag.bash
+        env:
+          LIVE_RUN: ${{ inputs.live-run || false }}
+          VERSION: ${{ steps.create-release-branch.outputs.version }}
+          BUMP_DEPS_VERSION: ${{ inputs.zenoh-version }}
+          BUMP_DEPS_PATTERN: ${{ inputs.zenoh-version && 'zenoh.*' || '' }}
+          BUMP_DEPS_BRANCH: ${{ inputs.zenoh-version && format('release/{0}', inputs.zenoh-version) || '' }}
+          GIT_USER_NAME: eclipse-zenoh-bot
+          GIT_USER_EMAIL: eclipse-zenoh-bot@users.noreply.github.com
+
+  build:
+    name: Build packages
+    runs-on: ${{ matrix.build.os }}
     strategy:
       fail-fast: false
       matrix:
-        job:
-          - { target: x86_64-unknown-linux-gnu, arch: amd64, os: ubuntu-20.04, build-cmd: "cargo" }
-          - { target: arm-unknown-linux-gnueabi, arch: armel, os: ubuntu-20.04, build-cmd: "cross" }
-          - {
-              target: arm-unknown-linux-gnueabihf,
-              arch: armhf,
-              os: ubuntu-20.04,
-              build-cmd: "cross",
-            }
-          - {
-              target: armv7-unknown-linux-gnueabihf,
-              arch: armhf,
-              os: ubuntu-20.04,
-              build-cmd: "cross",
-            }
-          - { target: aarch64-unknown-linux-gnu, arch: arm64, os: ubuntu-20.04, build-cmd: "cross" }
-          - { target: x86_64-apple-darwin, arch: darwin, os: macos-latest, build-cmd: "cargo" }
-          - { target: aarch64-apple-darwin, arch: darwin, os: macos-latest, build-cmd: "cargo" }
-          - { target: x86_64-pc-windows-msvc, arch: win64, os: windows-2019, build-cmd: "cargo" }
-          - { target: x86_64-pc-windows-gnu, arch: win64, os: windows-2019, build-cmd: "cargo" }
-    env:
-      CMAKE_CROSSCOMPILING: ON
+        build:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: arm-unknown-linux-gnueabi, os: ubuntu-latest }
+          - { target: arm-unknown-linux-gnueabihf, os: ubuntu-latest }
+          - { target: armv7-unknown-linux-gnueabihf, os: macos-latest }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: x86_64-apple-darwin, os: macos-latest }
+          - { target: aarch64-apple-darwin, os: macos-latest }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest}
+          - { target: x86_64-pc-windows-gnu, os: ubuntu-latest }
+    needs: tag
     steps:
-      - name: Checkout source code
+      - name: Checkout this repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 500 # NOTE: get long history for git-version crate to correctly compute a version
-      - name: Fetch Git tags # NOTE: workaround for https://github.com/actions/checkout/issues/290
-        shell: bash
-        run: git fetch --tags --force
-      - name: Install prerequisites
+          ref: ${{ needs.tag.outputs.branch }}
+          token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
+
+      - name: Add rust toolchain
+        run: |
+          rustup target add ${{ matrix.build.target }}
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'x86_64-unknown-linux-musl'}}
+        run: |
+          sudo apt-get install -y musl-tools
+          wget https://github.com/ZettaScaleLabs/muslcc/raw/refs/heads/main/x86_64-linux-musl-cross.tgz?download= -O x86_64-linux-musl-cross.tgz
+          tar xvfz x86_64-linux-musl-cross.tgz
+          echo "$(readlink -f x86_64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'arm-unknown-linux-gnueabi'}}
+        run: sudo apt-get install -y gcc-arm-linux-gnueabi g++-arm-linux-gnueabi
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'arm-unknown-linux-gnueabihf'}}
+        run: sudo apt-get install -y gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'armv7-unknown-linux-gnueabihf'}}
+        run: |
+          brew install -f messense/macos-cross-toolchains/armv7-unknown-linux-gnueabihf
+          brew install dpkg
+          brew install rpm
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'aarch64-unknown-linux-gnu'}}
+        run: sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'aarch64-unknown-linux-musl'}}
+        run: |
+          wget https://github.com/ZettaScaleLabs/muslcc/raw/refs/heads/main/aarch64-linux-musl-cross.tgz?download= -O aarch64-linux-musl-cross.tgz
+          tar xvfz aarch64-linux-musl-cross.tgz
+          echo "$(readlink -f aarch64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
+
+      - name: Install build deps
+        if: ${{ matrix.build.target == 'x86_64-pc-windows-gnu'}}
+        run: |
+          sudo apt-get install -y mingw-w64
+
+      - name: Compute package name
+        id: compute-package-name
         shell: bash
         run: |
-          case ${{ matrix.job.target }} in
-            *-linux-gnu*) cargo install cargo-deb ;;
-          esac
+          if [[ "${{ matrix.build.target }}" =~ "armv7" ]]; then
+            echo "value=zenohc-armv7" >> $GITHUB_OUTPUT
+          elif [[ "${{ matrix.build.target }}" =~ "musl" ]]; then
+            echo "value=zenohc-musl" >> $GITHUB_OUTPUT
+          else
+            echo "value=zenohc" >> $GITHUB_OUTPUT
+          fi
 
-          case ${{ matrix.job.target }} in
-            arm-unknown-linux-gnueabi)
-              sudo apt-get -y update
-              sudo apt-get -y install gcc-arm-linux-gnueabi
-              ;;
-            arm*-unknown-linux-gnueabihf)
-              sudo apt-get -y update
-              sudo apt-get -y install gcc-arm-linux-gnueabihf
-              ;;
-            aarch64-unknown-linux-gnu)
-              sudo apt-get -y update
-              sudo apt-get -y install gcc-aarch64-linux-gnu
-              ;;
-          esac
-
-          cargo install cross --git https://github.com/cross-rs/cross
-
-      - name: Install Rust toolchain
-        run: |
-          rustup set profile minimal
-          rustup target add ${{ matrix.job.target }}
-
-      - name: Build for ${{ matrix.job.target }} target
-        run: ${{ matrix.job.build-cmd }} build --release --target=${{ matrix.job.target }} --features=logger-autoinit --features=shared-memory
-
-      - name: Debian package - libzenohc
-        if: contains(matrix.job.target, '-linux-gnu')
-        run: cargo deb --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc
-
-      - name: Debian package - libzenohc-dev
-        if: contains(matrix.job.target, '-linux-gnu')
-        run: cargo deb --no-build --no-strip --target=${{ matrix.job.target }} --variant=libzenohc-dev
-
-      - name: Packaging
-        id: package
+      - name: Build standalone
+        id: build
         shell: bash
         run: |
-          TARGET=${{ matrix.job.target }}
-          LIB_PKG_NAME="${GITHUB_WORKSPACE}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}.zip"
-          DEBS_PKG_NAME="${GITHUB_WORKSPACE}/zenoh-c-${{ needs.checks.outputs.PKG_VERSION }}-${TARGET}-deb-pkgs.zip"
+          toolchain_file=$(readlink -f ci/toolchains/TC-${{ matrix.build.target }}.cmake)
+          mkdir -p build  && cd build
+          cmake .. -DCPACK_PACKAGE_NAME=${{ steps.compute-package-name.outputs.value }} -DZENOHC_CUSTOM_TARGET=${{ matrix.build.target }} -DCMAKE_TOOLCHAIN_FILE="${toolchain_file}" -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=ON -DZENOHC_BUILD_WITH_SHARED_MEMORY=ON
+          cmake --build . --config Release
+          cpack -C Release -G ZIP
 
-          case ${TARGET} in
-            *linux*)
-              cd "target/${TARGET}/release/"
-              echo "Packaging ${LIB_PKG_NAME}:"
-              mkdir lib && cp libzenohc.so lib/
-              zip -r ${LIB_PKG_NAME} lib
-              cd -
-              zip -r ${LIB_PKG_NAME} include
-              echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
+      - name: Build distro packages (DEB/RPM)
+        id: build-distro-packages
+        if: ${{ contains(matrix.build.target, 'linux') }}
+        run: |
+          cd build
+          cpack -G DEB
+          cpack -G RPM
 
-              # check if debian packages has been created and packages them in a single tgz
-              if [[ -d target/${TARGET}/debian ]]; then
-                cd target/${TARGET}/debian
-                echo "Packaging ${DEBS_PKG_NAME}:"
-                zip ${DEBS_PKG_NAME} *.deb
-                cd -
-                echo "DEBS_PKG_NAME=${DEBS_PKG_NAME}" >> $GITHUB_OUTPUT
-              fi
-              ;;
-            *apple*)
-              cd "target/${TARGET}/release/"
-              echo "Packaging ${LIB_PKG_NAME}:"
-              mkdir lib && cp libzenohc.dylib lib/
-              zip -r ${LIB_PKG_NAME} lib
-              cd -
-              zip -r ${LIB_PKG_NAME} include
-              echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
-              ;;
-            *windows*)
-              cd "target/${TARGET}/release/"
-              echo "Packaging ${LIB_PKG_NAME}:"
-              mkdir lib && cp zenohc.dll lib/
-              7z -y -r a "${LIB_PKG_NAME}" lib
-              cd -
-              7z -y -r a "${LIB_PKG_NAME}" include
-              echo "LIB_PKG_NAME=${LIB_PKG_NAME}" >> $GITHUB_OUTPUT
-              ;;
-          esac
+      - name: Prepare standalone archives
+        shell: bash
+        run: |
+          zip_filename=$(readlink -f ./build/packages/*.zip)
+          mv ${zip_filename} zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
 
-      - name: "Upload packages"
-        uses: actions/upload-artifact@v3
+      - name: Zip deb/rpm archives
+        shell: bash
+        if: ${{ contains(matrix.build.target, 'linux') }}
+        run: |
+          zip -9 -j libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip ./build/packages/*.deb
+          zip -9 -j libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip ./build/packages/*.rpm
+
+      - name: Upload standalone archive
+        uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.job.target }}
-          path: |
-            ${{ steps.package.outputs.LIB_PKG_NAME }}
-            ${{ steps.package.outputs.DEBS_PKG_NAME }}
+          # Publish the artifact with zenoh-c (repo name) so it can be used by homebrew action
+          name: zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
+          path: zenoh-c-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-standalone.zip
 
-  publication:
-    name: Publish the release
-    if: needs.checks.outputs.IS_RELEASE == 'true'
-    needs: [checks, builds]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download result of previous builds
-        uses: actions/download-artifact@v3
+      - name: Upload DEB archive
+        if: ${{ contains(matrix.build.target, 'linux') }}
+        uses: actions/upload-artifact@v4
         with:
-          path: ARTIFACTS
-      - name: Publish as github release
-        uses: softprops/action-gh-release@v1
+          name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip
+          path: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-debian.zip
+
+      - name: Upload RPM archive
+        if: ${{ contains(matrix.build.target, 'linux') }}
+        uses: actions/upload-artifact@v4
         with:
-          files: ARTIFACTS/*/*.*
-      - name: Publish to download.eclipse.org/zenoh
-        env:
-          SSH_TARGET: genie.zenoh@projects-storage.eclipse.org
-          ECLIPSE_BASE_DIR: /home/data/httpd/download.eclipse.org/zenoh/zenoh-c
-        shell: bash
-        run: |
-          echo "--- setup ssh-agent"
-          eval "$(ssh-agent -s)"
-          echo 'echo "${{ secrets.SSH_PASSPHRASE }}"' > ~/.ssh_askpass && chmod +x ~/.ssh_askpass
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | tr -d '\r' | DISPLAY=NONE SSH_ASKPASS=~/.ssh_askpass ssh-add - > /dev/null 2>&1
-          rm -f ~/.ssh_askpass
-          echo "--- test ssh:"
-          ssh -o "StrictHostKeyChecking=no" ${SSH_TARGET} ls -al
-          echo "---- list artifacts to upload:"
-          ls -R ARTIFACTS || true
-          DOWNLOAD_DIR=${ECLIPSE_BASE_DIR}/${{ needs.checks.outputs.ZENOH_VERSION }}
-          echo "---- copy artifacts into ${DOWNLOAD_DIR}"
-          ssh -o "StrictHostKeyChecking=no" ${SSH_TARGET} mkdir -p ${DOWNLOAD_DIR}
-          cd ARTIFACTS
-          sha256sum */* > sha256sums.txt
-          scp -o "StrictHostKeyChecking=no" -r * ${SSH_TARGET}:${DOWNLOAD_DIR}/
-          echo "---- cleanup identity"
-          ssh-add -D
+          name: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip
+          path: libzenohc-${{ inputs.version || '0.0.0' }}-${{ matrix.build.target }}-rpm.zip
+
+  debian:
+    name: Publish Debian packages
+    needs: [tag, build]
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-debian.yml@main
+    with:
+      no-build: true
+      live-run: ${{ inputs.live-run || false }}
+      version: ${{ needs.tag.outputs.version }}
+      repo: ${{ github.repository }}
+      branch: ${{ needs.tag.outputs.branch }}
+      installation-test: false
+    secrets: inherit
+
+  homebrew:
+    name: Publish Homebrew formulae
+    needs: [tag, build]
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-homebrew.yml@main
+    with:
+      no-build: true
+      repo: ${{ github.repository }}
+      live-run: ${{ inputs.live-run || false }}
+      version: ${{ needs.tag.outputs.version }}
+      branch: ${{ needs.tag.outputs.branch }}
+      artifact-patterns: |
+        ^libzenohc\.dylib$
+        ^include$
+      formulae: |
+        libzenohc
+    secrets: inherit
+
+  eclipse:
+    name: Publish artifacts to Eclipse downloads
+    needs: [tag, build]
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-eclipse.yml@main
+    with:
+      no-build: true
+      live-run: ${{ inputs.live-run || false }}
+      version: ${{ needs.tag.outputs.version }}
+      repo: ${{ github.repository }}
+      branch: ${{ needs.tag.outputs.branch }}
+      artifact-patterns: |
+        ^libzenohc\.(dylib|so)$
+        ^zenohc\.dll$
+        ^include$
+      name: zenoh-c
+    secrets: inherit
+
+  github:
+    name: Publish artifacts to GitHub Releases
+    needs: [tag, build]
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-github.yml@main
+    with:
+      no-build: true
+      live-run: ${{ inputs.live-run || false }}
+      version: ${{ needs.tag.outputs.version }}
+      repo: ${{ github.repository }}
+      branch: ${{ needs.tag.outputs.branch }}
+      artifact-patterns: |
+        ^libzenohc\.(dylib|so)$
+        ^zenohc\.dll$
+        ^include$
+    secrets: inherit

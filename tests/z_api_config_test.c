@@ -18,23 +18,25 @@
 #undef NDEBUG
 #include <assert.h>
 
-void config_client() {
-    const char *peers[] = {"tcp/127.0.0.1", "tcp/192.168.0.1", "tcp/10.0.0.1"};
-    z_owned_config_t config = z_config_client(peers, 3);
-    z_owned_str_t endpoints = zc_config_get(z_loan(config), "connect/endpoints");
-    assert(strcmp(z_loan(endpoints), "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]") == 0);
+void insert_get() {
+    z_owned_config_t config;
+    z_config_default(&config);
+    zc_config_insert_json5(z_loan_mut(config), "mode", "\"client\"");
+    zc_config_insert_json5(z_loan_mut(config), "connect/endpoints",
+                           "[\"tcp/127.0.0.1\", \"tcp/192.168.0.1\", \"tcp/10.0.0.1\"]");
+    z_owned_string_t endpoints;
+    zc_config_get_from_str(z_loan(config), "connect/endpoints", &endpoints);
+    assert(strncmp(z_string_data(z_loan(endpoints)), "[\"tcp/127.0.0.1\",\"tcp/192.168.0.1\",\"tcp/10.0.0.1\"]",
+                   z_string_len(z_loan(endpoints))) == 0);
     z_drop(z_move(endpoints));
-}
-
-void config_peer() {
-    z_owned_config_t config = z_config_peer();
-    z_owned_str_t mode = zc_config_get(z_loan(config), "mode");
-    assert(strcmp(z_loan(mode), "\"peer\"") == 0);
+    z_owned_string_t mode;
+    zc_config_get_from_str(z_loan(config), "mode", &mode);
+    assert(strncmp(z_string_data(z_loan(mode)), "\"client\"", z_string_len(z_loan(mode))) == 0);
     z_drop(z_move(mode));
+    z_drop(z_move(config));
 }
 
 int main(int argc, char **argv) {
-    zc_init_logger();
-    config_client();
-    config_peer();
+    zc_try_init_log_from_env();
+    insert_get();
 }

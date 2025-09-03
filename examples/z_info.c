@@ -13,30 +13,27 @@
 
 #include <stdio.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-void print_zid(const z_id_t *id, void *ctx) {
-    for (int i = 0; i < 16; i++) {
-        printf("%02x", id->id[i]);
-    }
-    printf("\n");
+void print_zid(const z_id_t* id, void* ctx) {
+    z_owned_string_t str;
+    z_id_to_string(id, &str);
+    printf("%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 }
 
-int main(int argc, char **argv) {
-    z_owned_config_t config = z_config_default();
-    if (argc > 1) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[1]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[1], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+void parse_args(int argc, char** argv, z_owned_config_t* config);
+
+int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
+
+    z_owned_config_t config;
+    parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -46,14 +43,41 @@ int main(int argc, char **argv) {
     print_zid(&self_id, NULL);
 
     printf("routers ids:\n");
-    z_owned_closure_zid_t callback = z_closure(print_zid);
+    z_owned_closure_zid_t callback;
+    z_closure(&callback, print_zid, NULL, NULL);
     z_info_routers_zid(z_loan(s), z_move(callback));
 
     // `callback` has been `z_move`d just above, so it's safe to reuse the variable,
     // we'll just have to make sure we `z_move` it again to avoid mem-leaks.
     printf("peers ids:\n");
-    z_owned_closure_zid_t callback2 = z_closure(print_zid);
+    z_owned_closure_zid_t callback2;
+    z_closure(&callback2, print_zid, NULL, NULL);
     z_info_peers_zid(z_loan(s), z_move(callback2));
 
-    z_close(z_move(s));
+    z_drop(z_move(s));
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_info [OPTIONS]\n\n\
+    Options:\n");
+    printf(COMMON_HELP);
+}
+
+void parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
 }

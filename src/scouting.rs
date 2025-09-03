@@ -11,287 +11,240 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use crate::{
-    z_closure_hello_call, z_config_check, z_config_default, z_config_null, z_config_t, z_id_t,
-    z_owned_closure_hello_t, z_owned_config_t, zc_init_logger, CopyableToCArray,
+use std::mem::MaybeUninit;
+
+use zenoh::{
+    config::{WhatAmI, WhatAmIMatcher},
+    scouting::Hello,
 };
-use async_std::task;
-use libc::{c_char, c_uint, c_ulong, size_t};
-use std::{ffi::CString, os::raw::c_void};
-use zenoh::scouting::Hello;
-use zenoh_protocol::core::{whatami::WhatAmIMatcher, WhatAmI};
-use zenoh_util::core::AsyncResolve;
+use zenoh_runtime::ZRuntime;
 
-/// An owned array of owned, zenoh allocated, NULL terminated strings.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_str_array_t {
-    pub val: *mut *mut c_char,
-    pub len: size_t,
+pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t};
+use crate::{
+    result,
+    transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
+    z_owned_string_array_t, z_view_string_t, CStringInner, CStringView, ZVector,
+};
+decl_c_type!(
+    owned(z_owned_hello_t, option Hello ),
+    loaned(z_loaned_hello_t),
+);
+
+/// Frees memory and resets hello message to its gravestone state.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_drop(this_: &mut z_moved_hello_t) {
+    let _ = this_.take_rust_type();
 }
 
-/// Frees `strs` and invalidates it for double-drop safety.
-#[allow(clippy::missing_safety_doc)]
+/// Borrows hello message.
 #[no_mangle]
-pub unsafe extern "C" fn z_str_array_drop(strs: &mut z_owned_str_array_t) {
-    let locators = Vec::from_raw_parts(strs.val as *mut *const c_char, strs.len, strs.len);
-    for locator in locators {
-        std::mem::drop(CString::from_raw(locator as *mut c_char));
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_loan(this_: &z_owned_hello_t) -> &z_loaned_hello_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap()
+        .as_loaned_c_type_ref()
+}
+
+/// Mutably borrows hello message.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_loan_mut(this_: &mut z_owned_hello_t) -> &mut z_loaned_hello_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// Takes ownership of the mutably borrowed hello
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_hello_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_hello_t>,
+    src: &mut z_loaned_hello_t,
+) {
+    let dst = dst.as_rust_type_mut_uninit();
+    let src = src.as_rust_type_mut();
+    let src = std::mem::replace(src, Hello::empty());
+    dst.write(Some(src));
+}
+
+/// Returns ``true`` if `hello message` is valid, ``false`` if it is in a gravestone state.
+#[no_mangle]
+pub extern "C" fn z_internal_hello_check(this_: &z_owned_hello_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// Constructs hello message in a gravestone state.
+#[no_mangle]
+pub extern "C" fn z_internal_hello_null(this_: &mut MaybeUninit<z_owned_hello_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// Constructs an owned copy of hello message.
+#[no_mangle]
+pub extern "C" fn z_hello_clone(dst: &mut MaybeUninit<z_owned_hello_t>, this_: &z_loaned_hello_t) {
+    dst.as_rust_type_mut_uninit()
+        .write(Some(this_.as_rust_type_ref().clone()));
+}
+
+/// @brief Returns id of Zenoh entity that transmitted hello message.
+#[no_mangle]
+pub extern "C" fn z_hello_zid(this_: &z_loaned_hello_t) -> z_id_t {
+    this_.as_rust_type_ref().zid().into_c_type()
+}
+
+/// Returns type of Zenoh entity that transmitted hello message.
+#[no_mangle]
+pub extern "C" fn z_hello_whatami(this_: &z_loaned_hello_t) -> z_whatami_t {
+    match this_.as_rust_type_ref().whatami() {
+        WhatAmI::Router => z_whatami_t::ROUTER,
+        WhatAmI::Peer => z_whatami_t::PEER,
+        WhatAmI::Client => z_whatami_t::CLIENT,
     }
-    strs.val = std::ptr::null_mut();
-    strs.len = 0;
 }
 
-/// Returns ``true`` if `strs` is valid.
-#[allow(clippy::missing_safety_doc)]
+/// Constructs an array of non-owned locators (in the form non-null-terminated strings) of Zenoh entity that sent hello message.
+///
+/// The lifetime of locator strings is bound to `this_`.
 #[no_mangle]
-pub extern "C" fn z_str_array_check(strs: &z_owned_str_array_t) -> bool {
-    !strs.val.is_null()
-}
-
-/// An borrowed array of borrowed, zenoh allocated, NULL terminated strings.
-#[repr(C)]
-pub struct z_str_array_t {
-    pub len: size_t,
-    pub val: *const *const c_char,
-}
-
-/// Returns a :c:type:`z_str_array_t` loaned from :c:type:`z_owned_str_array_t`.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_str_array_loan(strs: &z_owned_str_array_t) -> z_str_array_t {
-    z_str_array_t {
-        val: strs.val as *const _,
-        len: strs.len,
+pub extern "C" fn z_hello_locators(
+    this: &z_loaned_hello_t,
+    locators_out: &mut MaybeUninit<z_owned_string_array_t>,
+) {
+    let this = this.as_rust_type_ref();
+    let mut locators = ZVector::with_capacity(this.locators().len());
+    for l in this.locators().iter() {
+        locators.push(CStringInner::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
-}
-/// A zenoh-allocated hello message returned by a zenoh entity to a scout message sent with `z_scout`.
-///
-/// Members:
-///   unsigned int whatami: The kind of zenoh entity.
-///   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
-///   z_owned_str_array_t locators: The locators of the scouted entity.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_hello_t {
-    pub _whatami: c_uint,
-    pub _pid: z_id_t,
-    pub _locators: z_owned_str_array_t,
-}
-/// A reference-type hello message returned by a zenoh entity to a scout message sent with `z_scout`.
-///
-/// Members:
-///   unsigned int whatami: The kind of zenoh entity.
-///   z_owned_bytes_t pid: The peer id of the scouted entity (empty if absent).
-///   z_owned_str_array_t locators: The locators of the scouted entity.
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` (or `z_check(val)` if your compiler supports `_Generic`), which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_hello_t {
-    pub whatami: c_uint,
-    pub pid: z_id_t,
-    pub locators: z_str_array_t,
+    locators_out.as_rust_type_mut_uninit().write(locators);
 }
 
-impl From<Hello> for z_owned_hello_t {
-    fn from(h: Hello) -> Self {
-        z_owned_hello_t {
-            _whatami: h.whatami as c_uint,
-            _pid: unsafe { std::mem::transmute(h.zid) },
-            _locators: if !h.locators.is_empty() {
-                let mut locators = h
-                    .locators
-                    .into_iter()
-                    .map(|l| CString::new(l.to_string()).unwrap().into_raw())
-                    .collect::<Vec<_>>();
-                let val = locators.as_mut_ptr();
-                let len = locators.len();
-                std::mem::forget(locators);
-                z_owned_str_array_t { val, len }
-            } else {
-                z_owned_str_array_t {
-                    val: std::ptr::null_mut(),
-                    len: 0,
-                }
-            },
+/// Options to pass to `z_scout()`.
+#[derive(Clone)]
+#[repr(C)]
+pub struct z_scout_options_t {
+    /// The maximum duration in ms the scouting can take.
+    pub timeout_ms: u64,
+    /// Type of entities to scout for.
+    pub what: z_what_t,
+}
+
+impl Default for z_scout_options_t {
+    fn default() -> Self {
+        z_scout_options_t {
+            timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
+            what: DEFAULT_SCOUTING_WHAT,
         }
     }
 }
 
-/// Frees `hello`, invalidating it for double-drop safety.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_hello_drop(hello: &mut z_owned_hello_t) {
-    z_str_array_drop(&mut hello._locators);
-    hello._whatami = 0;
-}
-
-/// Returns a :c:type:`z_hello_t` loaned from :c:type:`z_owned_hello_t`.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_hello_loan(hello: &z_owned_hello_t) -> z_hello_t {
-    z_hello_t {
-        whatami: hello._whatami,
-        pid: hello._pid,
-        locators: z_str_array_loan(&hello._locators),
-    }
-}
-
-/// Constructs a gravestone value for hello, useful to steal one from a callback
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_hello_null() -> z_owned_hello_t {
-    z_owned_hello_t {
-        _whatami: 0,
-        _pid: z_id_t { id: [0; 16] },
-        _locators: z_owned_str_array_t {
-            val: std::ptr::null_mut(),
-            len: 0,
-        },
-    }
-}
-impl Drop for z_owned_hello_t {
-    fn drop(&mut self) {
-        unsafe { z_hello_drop(self) };
-    }
-}
-/// Returns ``true`` if `hello` is valid.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_hello_check(hello: &z_owned_hello_t) -> bool {
-    hello._whatami != 0 && z_str_array_check(&hello._locators)
-}
-
+#[allow(non_camel_case_types)]
 #[repr(C)]
-pub struct z_owned_scouting_config_t {
-    _config: z_owned_config_t,
-    pub zc_timeout_ms: c_ulong,
-    pub zc_what: u8,
+#[derive(Clone, Copy, Debug)]
+pub enum z_whatami_t {
+    ROUTER = 0x01,
+    PEER = 0x02,
+    CLIENT = 0x04,
 }
 
-pub const DEFAULT_SCOUTING_WHAT: u8 = WhatAmI::Router as u8 | WhatAmI::Peer as u8;
-pub const DEFAULT_SCOUTING_TIMEOUT: c_ulong = 1000;
-
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn z_scouting_config_null() -> z_owned_scouting_config_t {
-    z_owned_scouting_config_t {
-        _config: z_config_null(),
-        zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-        zc_what: DEFAULT_SCOUTING_WHAT,
-    }
+#[allow(non_camel_case_types)]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum z_what_t {
+    ROUTER = 0x01,
+    PEER = 0x02,
+    CLIENT = 0x04,
+    ROUTER_PEER = 0x03,        // 0x01 | 0x02,
+    ROUTER_CLIENT = 0x05,      // 0x01 | 0x04,
+    PEER_CLIENT = 0x06,        // 0x02 | 0x04,
+    ROUTER_PEER_CLIENT = 0x07, // 0x01 | 0x02 | 0x04,
 }
 
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_default() -> z_owned_scouting_config_t {
-    z_owned_scouting_config_t {
-        _config: z_config_default(),
-        zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-        zc_what: DEFAULT_SCOUTING_WHAT,
-    }
-}
+pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
+pub const DEFAULT_SCOUTING_TIMEOUT: u64 = 1000;
 
+/// Constructs the default values for the scouting operation.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_from(config: z_config_t) -> z_owned_scouting_config_t {
-    z_owned_scouting_config_t {
-        _config: config.as_ref().clone().into(),
-        zc_timeout_ms: DEFAULT_SCOUTING_TIMEOUT,
-        zc_what: DEFAULT_SCOUTING_WHAT,
-    }
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_check(config: &z_owned_scouting_config_t) -> bool {
-    z_config_check(&config._config)
-}
-
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_scouting_config_drop(config: &mut z_owned_scouting_config_t) {
-    std::mem::drop(std::mem::replace(config, z_scouting_config_null()));
+pub extern "C" fn z_scout_options_default(this_: &mut MaybeUninit<z_scout_options_t>) {
+    this_.write(z_scout_options_t::default());
 }
 
 /// Scout for routers and/or peers.
 ///
-/// Parameters:
-///     what: A whatami bitmask of zenoh entities kind to scout for.
-///     config: A set of properties to configure the scouting.
-///     timeout: The time (in milliseconds) that should be spent scouting.
+/// @param config: A set of properties to configure scouting session.
+/// @param callback: A closure that will be called on each hello message received from discoverd Zenoh entities.
+/// @param options: A set of scouting options
 ///
-/// Returns 0 if successful, negative values upon failure.
+/// @return 0 if successful, negative error values upon failure.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_scout(
-    config: &mut z_owned_scouting_config_t,
-    callback: &mut z_owned_closure_hello_t,
-) -> i8 {
-    if cfg!(feature = "logger-autoinit") {
-        zc_init_logger();
-    }
-    let config = std::mem::replace(config, z_scouting_config_null());
-    let what = WhatAmIMatcher::try_from(config.zc_what).unwrap_or(WhatAmI::Router | WhatAmI::Peer);
-    #[allow(clippy::unnecessary_cast)] // Required for multi-target
-    let timeout = config.zc_timeout_ms as u64;
-    let mut config = config._config;
-    let config = config.as_mut().take().expect("invalid config");
-    let mut closure = z_owned_closure_hello_t::empty();
-    std::mem::swap(&mut closure, callback);
+    config: &mut z_moved_config_t,
+    callback: &mut z_moved_closure_hello_t,
+    options: Option<&z_scout_options_t>,
+) -> result::z_result_t {
+    let callback = callback.take_rust_type();
+    let options = options.cloned().unwrap_or_default();
 
-    task::block_on(async move {
-        let scout = zenoh::scout(what, *config)
+    let Ok(what) = WhatAmIMatcher::try_from(options.what as u8) else {
+        crate::report_error!("Invalid WhatAmIMatcher value: {:?}", options.what);
+        return result::Z_EINVAL;
+    };
+
+    #[allow(clippy::unnecessary_cast)] // Required for multi-target
+    let timeout = options.timeout_ms;
+    let Some(config) = config.take_rust_type() else {
+        crate::report_error!("Config not provided");
+        return result::Z_EINVAL;
+    };
+
+    ZRuntime::Application.block_in_place(async move {
+        let res = zenoh::scout(what, config)
             .callback(move |h| {
-                let mut hello = h.into();
-                z_closure_hello_call(&closure, &mut hello)
+                let mut owned_h = Some(h);
+                z_closure_hello_call(z_closure_hello_loan(&callback), unsafe {
+                    owned_h.as_mut().unwrap_unchecked().as_loaned_c_type_mut()
+                })
             })
-            .res_async()
-            .await
-            .unwrap();
-        async_std::task::sleep(std::time::Duration::from_millis(timeout)).await;
-        std::mem::drop(scout);
-    });
-    0
+            .await;
+
+        match res {
+            Ok(_) => {
+                tokio::time::sleep(std::time::Duration::from_millis(timeout)).await;
+                result::Z_OK
+            }
+            Err(e) => {
+                crate::report_error!("{}", e);
+                result::Z_EGENERIC
+            }
+        }
+    })
 }
 
-/// Converts the kind of zenoh entity into a string.
+/// Constructs a non-owned non-null-terminated string from the kind of zenoh entity.
 ///
-/// Parameters:
-///     whatami: A whatami bitmask of zenoh entity kind.
-///     buf: Buffer to write a null-terminated string to.
-///     len: Maximum number of bytes that can be written to the `buf`.
+/// The string has static storage (i.e. valid until the end of the program).
+/// @param whatami: A whatami bitmask of zenoh entity kind.
+/// @param str_out: An uninitialized memory location where strring will be constructed.
 ///
-/// Returns 0 if successful, negative values if whatami contains an invalid bitmask or `buf` is null,
-/// or number of remaining bytes, if the null-terminated string size exceeds `len`.
+/// @return 0 if successful, negative error values if whatami contains an invalid bitmask.
 #[no_mangle]
-pub extern "C" fn z_whatami_to_str(whatami: u8, buf: *mut c_char, len: usize) -> i8 {
-    if buf.is_null() || len == 0 {
-        return -1;
-    }
-    match WhatAmIMatcher::try_from(whatami) {
-        Err(_) => -1,
+pub extern "C" fn z_whatami_to_view_string(
+    whatami: z_whatami_t,
+    str_out: &mut MaybeUninit<z_view_string_t>,
+) -> result::z_result_t {
+    match WhatAmIMatcher::try_from(whatami as u8) {
+        Err(_) => result::Z_EINVAL,
         Ok(w) => {
             let s = w.to_str();
-            let res = s.copy_to_c_array(buf as *mut c_void, len - 1);
-            unsafe {
-                *((buf as usize + res) as *mut c_char) = 0;
-            }
-            (s.len() - res) as i8
+            let slice = CStringView::new_borrowed_from_slice(s.as_bytes());
+            str_out.as_rust_type_mut_uninit().write(slice);
+            result::Z_OK
         }
     }
 }

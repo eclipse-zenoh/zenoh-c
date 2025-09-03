@@ -1,11 +1,8 @@
 message(STATUS "zenoh-c install")
 
-declare_cache_var(ZENOHC_INSTALL_STATIC_LIBRARY FALSE BOOL "Install zenoh-c static library")
-
 #
 # Installation
-# For debug configuration installs libraries with 'd' added to filename and
-# package named 'zenohc_debug'
+# For debug configuration installs libraries with 'd' added to filename
 #
 status_print(CMAKE_INSTALL_PREFIX)
 
@@ -13,54 +10,68 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 function(install_zenohc_lib configurations property_postfix package_name)
-    # Prepare parameters for PackageConfig.cmake.in
-    get_target_property(dylib_path zenohc::lib IMPORTED_LOCATION_${property_postfix})
-    get_target_property_if_set(implib_path zenohc::lib IMPORTED_IMPLIB_${property_postfix})
-    get_target_property(staticlib_path zenohc::static IMPORTED_LOCATION_${property_postfix})
-    get_target_property(NATIVE_STATIC_LIBS zenohc::static INTERFACE_LINK_LIBRARIES)
+    get_target_property(dylib_path zenohc::shared IMPORTED_LOCATION_${property_postfix})
+    get_target_property_if_set(implib_path zenohc::shared IMPORTED_IMPLIB_${property_postfix})
     get_filename_component(DYLIB ${dylib_path} NAME)
     get_filename_component(IMPLIB "${implib_path}" NAME)
-    get_filename_component(STATICLIB ${staticlib_path} NAME)
-
-    # Install dynamic, import and static library
-    install(FILES ${dylib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations})
+    # On Windows .dll need to be installed in ${CMAKE_INSTALL_BINDIR}, 
+    # while on Linux and macOS .so and .dylib need to be installed in ${CMAKE_INSTALL_LIBDIR}
+    if(WIN32)
+        set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_BINDIR})
+    else()
+        set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_LIBDIR})
+    endif()
+    install(FILES ${dylib_path} DESTINATION ${ZENOHC_INSTALL_DYLIBDIR} CONFIGURATIONS ${configurations} COMPONENT lib)
     if(DEFINED implib_path)
-        install(FILES ${implib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations})
+        install(FILES ${implib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations} COMPONENT lib)
     endif()
-    if(ZENOHC_INSTALL_STATIC_LIBRARY)
-        install(FILES ${staticlib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations})
+    if((APPLE OR UNIX))
+        get_filename_component(LIBNAME ${DYLIB} NAME_WE)
+        string(REGEX REPLACE "^lib" "" LIBNAME ${LIBNAME})
+        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc @ONLY)
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc 
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" 
+            CONFIGURATIONS ${configurations}
+            RENAME ${package_name}.pc
+            OPTIONAL
+            COMPONENT dev)
     endif()
+
+    get_target_property(staticlib_path zenohc::static IMPORTED_LOCATION_${property_postfix})
+    get_target_property(NATIVE_STATIC_LIBS zenohc::static INTERFACE_LINK_LIBRARIES)
+    get_filename_component(STATICLIB ${staticlib_path} NAME)
+    install(FILES ${staticlib_path} DESTINATION ${CMAKE_INSTALL_LIBDIR} CONFIGURATIONS ${configurations} COMPONENT dev)
 
     set(CMAKE_INSTALL_CMAKEDIR "${CMAKE_INSTALL_LIBDIR}/cmake/${package_name}")
 
     # Generate <Package>Config.cmake
     configure_package_config_file(
         "PackageConfig.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}Config.cmake"
+        PATH_VARS CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR ZENOHC_INSTALL_DYLIBDIR
         INSTALL_DESTINATION "${CMAKE_INSTALL_CMAKEDIR}")
 
     # Generate <Package>Version.cmake
     write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}ConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}ConfigVersion.cmake"
         VERSION ${PROJECT_VERSION}
         COMPATIBILITY SameMajorVersion)
 
     install(
-        FILES "${CMAKE_CURRENT_BINARY_DIR}/${package_name}Config.cmake"
-              "${CMAKE_CURRENT_BINARY_DIR}/${package_name}ConfigVersion.cmake"
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}Config.cmake"
         DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
         CONFIGURATIONS ${configurations}
+        RENAME ${package_name}Config.cmake
         COMPONENT dev)
 
-    if(APPLE OR UNIX)
-        get_filename_component(LIBNAME ${DYLIB} NAME_WE)
-        string(REGEX REPLACE "^lib" "" LIBNAME ${LIBNAME})
-        configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc @ONLY)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}.pc 
-            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" 
-            CONFIGURATIONS ${configurations}
-            OPTIONAL)
-    endif()
+    install(
+        FILES "${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}ConfigVersion.cmake"
+        DESTINATION "${CMAKE_INSTALL_CMAKEDIR}"
+        CONFIGURATIONS ${configurations}
+        RENAME ${package_name}ConfigVersion.cmake
+        COMPONENT dev)
+
+
 endfunction()
 
 
@@ -69,11 +80,61 @@ endfunction()
 #
 get_target_property(include_dirs zenohc::lib INTERFACE_INCLUDE_DIRECTORIES)
 foreach(dir ${include_dirs})
-    install(DIRECTORY "${dir}/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install(DIRECTORY "${dir}/" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endforeach()
 
 #
 # Install lib files 
 #
-install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel" "RELEASE" zenohc)
-install_zenohc_lib("Debug" "DEBUG" zenohc_debug)
+install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel;None" "RELEASE" zenohc)
+install_zenohc_lib("Debug" "DEBUG" zenohc)
+
+#
+# Configure CPack
+#
+set(CPACK_BUILD_CONFIG ${CMAKE_BUILD_TYPE})
+set(CPACK_PACKAGE_DIRECTORY "${CMAKE_BINARY_DIR}/packages")
+set(CPACK_PACKAGE_CHECKSUM MD5)
+set(CPACK_PACKAGE_VENDOR "The Eclipse Foundation")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_COMPONENT_LIB_DESCRIPTION "The C client library for Eclipse zenoh")
+set(CPACK_COMPONENT_DEV_DESCRIPTION "${CPACK_COMPONENT_LIB_DESCRIPTION} - zenoh-c static lib and cmake files")
+set(CPACK_COMPONENT_HEADERS_DESCRIPTION "${CPACK_COMPONENT_LIB_DESCRIPTION} - header files")
+set(CPACK_COMPONENT_LIB_GROUP "lib")
+set(CPACK_COMPONENT_HEADERS_GROUP "dev")
+set(CPACK_COMPONENT_DEV_GROUP "dev")
+set(CPACK_COMPONENT_HEADERS_DEPENDS lib)
+set(CPACK_COMPONENT_DEV_DEPENDS lib)
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+
+set(CPACK_GENERATOR ZIP)
+set(CPACK_CMAKE_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR})
+
+if(NOT CPACK_PACKAGE_VERSION)
+    set(SEM_VER "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}")
+    if(PROJECT_VERSION_TWEAK STREQUAL "")
+        set(CPACK_PACKAGE_VERSION ${SEM_VER})
+    elseif(PROJECT_VERSION_TWEAK EQUAL 0)
+        set(CPACK_PACKAGE_VERSION "${SEM_VER}~dev-1")
+    elseif(PROJECT_VERSION_TWEAK GREATER 0)
+        set(CPACK_PACKAGE_VERSION "${SEM_VER}~pre.${PROJECT_VERSION_TWEAK}-1")
+    endif()
+endif()
+
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+
+if(NOT DEBARCH)
+    set(DEBARCH ${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_SYSTEM_NAME})
+endif()
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE ${DEBARCH})
+
+if(NOT RPMARCH)
+    set(RPMARCH ${CMAKE_SYSTEM_PROCESSOR})
+endif()
+set(CPACK_RPM_PACKAGE_ARCHITECTURE ${RPMARCH})
+
+set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/cpack_project_config.cmake")
+
+include(CPack)

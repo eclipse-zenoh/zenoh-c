@@ -14,54 +14,92 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
-    char *expr = "group1/**";
-    if (argc > 1) {
-        expr = argv[1];
-    }
+#define DEFAULT_KEYEXPR "group1/**"
+#define DEFAULT_TIMEOUT_MS 10000
 
-    z_keyexpr_t keyexpr = z_keyexpr(expr);
-    if (!z_check(keyexpr)) {
-        printf("%s is not a valid key expression\n", expr);
+struct args_t {
+    char* keyexpr;        // -k, --key
+    uint64_t timeout_ms;  // -o, --timeout
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
+
+    z_owned_config_t config;
+    struct args_t args = parse_args(argc, argv, &config);
+
+    z_view_keyexpr_t keyexpr;
+    if (z_view_keyexpr_from_str(&keyexpr, args.keyexpr) < 0) {
+        printf("%s is not a valid key expression\n", args.keyexpr);
         exit(-1);
     }
 
-    z_owned_config_t config = z_config_default();
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
-
+    z_owned_session_t s;
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    printf("Sending liveliness query '%s'...\n", expr);
-    z_owned_reply_channel_t channel = zc_reply_fifo_new(16);
-    zc_liveliness_get(z_loan(s), keyexpr, z_move(channel.send), NULL);
-    z_owned_reply_t reply = z_reply_null();
-    for (z_call(channel.recv, &reply); z_check(reply); z_call(channel.recv, &reply)) {
-        if (z_reply_is_ok(&reply)) {
-            z_sample_t sample = z_reply_ok(&reply);
-            z_owned_str_t keystr = z_keyexpr_to_string(sample.keyexpr);
-            printf(">> Alive token ('%s')\n", z_loan(keystr));
-            z_drop(z_move(keystr));
+    printf("Sending liveliness query '%s'...\n", args.keyexpr);
+    z_owned_fifo_handler_reply_t handler;
+    z_owned_closure_reply_t closure;
+    z_fifo_channel_reply_new(&closure, &handler, 16);
+    z_liveliness_get_options_t opts;
+    z_liveliness_get_options_default(&opts);
+    opts.timeout_ms = args.timeout_ms;
+    z_liveliness_get(z_loan(s), z_loan(keyexpr), z_move(closure), &opts);
+    z_owned_reply_t reply;
+    while (z_recv(z_loan(handler), &reply) == Z_OK) {
+        if (z_reply_is_ok(z_loan(reply))) {
+            const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
+            z_view_string_t key_str;
+            z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_str);
+            printf(">> Alive token ('%.*s')\n", (int)z_string_len(z_loan(key_str)), z_string_data(z_loan(key_str)));
         } else {
             printf("Received an error\n");
         }
     }
+
     z_drop(z_move(reply));
-    z_drop(z_move(channel));
-    z_close(z_move(s));
+    z_drop(z_move(handler));
+    z_drop(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_get_liveliness [OPTIONS]\n\n\
+    Options:\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to query\n\
+        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n",
+        DEFAULT_KEYEXPR, DEFAULT_TIMEOUT_MS);
+    printf(COMMON_HELP);
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
+
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return args;
 }

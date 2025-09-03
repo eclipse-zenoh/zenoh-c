@@ -14,49 +14,99 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
-    if (argc < 2) {
-        printf("USAGE:\n\tz_pub_thr <payload-size> [<zenoh-locator>]\n\n");
-        exit(-1);
+#define DEFAULT_PRIORITY Z_PRIORITY_DATA
+struct args_t {
+    unsigned int size;      // positional_1
+    z_priority_t priority;  // -p, --priority
+    bool express;           // --express
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+int main(int argc, char** argv) {
+    char* keyexpr = "test/thr";
+
+    zc_init_log_from_env_or("error");
+
+    z_owned_config_t config;
+    struct args_t args = parse_args(argc, argv, &config);
+    uint8_t* value = (uint8_t*)z_malloc(args.size);
+    memset(value, 0, args.size);
+    for (size_t i = 0; i < args.size; ++i) {
+        value[i] = i % 10;
     }
 
-    char *keyexpr = "test/thr";
-    size_t len = atoi(argv[1]);
-    uint8_t *value = (uint8_t *)z_malloc(len);
-    memset(value, 1, len);
-
-    z_owned_config_t config = z_config_default();
-    if (argc > 2) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[2]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[2], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
-
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    z_publisher_options_t options = z_publisher_options_default();
+    z_publisher_options_t options;
+    z_publisher_options_default(&options);
     options.congestion_control = Z_CONGESTION_CONTROL_BLOCK;
+    options.priority = args.priority;
+    options.is_express = args.express;
 
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), &options);
-    if (!z_check(pub)) {
+    z_owned_publisher_t pub;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, keyexpr);
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), &options) < 0) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
 
+    printf("Press CTRL-C to quit...\n");
+    z_owned_bytes_t payload;
+    z_bytes_from_buf(&payload, value, args.size, NULL, NULL);
     while (1) {
-        z_publisher_put(z_loan(pub), (const uint8_t *)value, len, NULL);
+        z_owned_bytes_t to_send;
+        z_bytes_clone(&to_send, z_loan(payload));
+        z_publisher_put(z_loan(pub), z_move(to_send), NULL);
     }
 
-    z_undeclare_publisher(z_move(pub));
-    z_close(z_move(s));
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pub_thr [OPTIONS] <PAYLOAD_SIZE>\n\n\
+    Arguments:\n\
+        <PAYLOAD_SIZE> (required, number): Size of the payload to publish\n\n\
+    Options:\n\
+        -p, --priority <PRIORITY> (optional, number [%d - %d], default='%d'): Priority for sending data\n\
+        --express (optional): Batch messages.\n",
+        Z_PRIORITY_REAL_TIME, Z_PRIORITY_BACKGROUND, DEFAULT_PRIORITY);
+    printf(COMMON_HELP);
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.priority, "p", "priority", parse_priority, DEFAULT_PRIORITY);
+    args.express = _Z_CHECK_FLAG("express");
+
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args) {
+        printf("Unexpected additional positional arguments\n");
+        exit(-1);
+    }
+    if (!pos_args[0]) {
+        printf("<PAYLOAD_SIZE> argument is required\n");
+        free(pos_args);
+        exit(-1);
+    }
+    args.size = atoi(pos_args[0]);
+    free(pos_args);
+    return args;
 }

@@ -11,11 +11,17 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use libc::{c_char, c_uint};
-use std::ffi::CStr;
-use zenoh::config::{Config, ValidatedMap, WhatAmI};
+use std::{mem::MaybeUninit, slice::from_raw_parts, str::from_utf8};
 
-use crate::{impl_guarded_transmute, z_owned_str_t, z_str_null};
+use libc::{c_char, c_uint};
+use zenoh::config::{Config, WhatAmI};
+
+use crate::{
+    result::{self, Z_OK},
+    strlen_or_zero,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_internal_string_null, z_owned_string_t, z_string_copy_from_substr, CStringView,
+};
 
 #[no_mangle]
 pub static Z_ROUTER: c_uint = WhatAmI::Router as c_uint;
@@ -24,259 +30,324 @@ pub static Z_PEER: c_uint = WhatAmI::Peer as c_uint;
 #[no_mangle]
 pub static Z_CLIENT: c_uint = WhatAmI::Client as c_uint;
 
-#[no_mangle]
-pub static Z_CONFIG_MODE_KEY: &c_char = unsafe { &*(b"mode\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_CONNECT_KEY: &c_char =
-    unsafe { &*(b"connect/endpoints\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_LISTEN_KEY: &c_char =
-    unsafe { &*(b"listen/endpoints\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_USER_KEY: &c_char =
-    unsafe { &*(b"transport/auth/usrpwd/user\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_PASSWORD_KEY: &c_char =
-    unsafe { &*(b"transport/auth/usrpwd/password\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_MULTICAST_SCOUTING_KEY: &c_char =
-    unsafe { &*(b"scouting/multicast/enabled\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_MULTICAST_INTERFACE_KEY: &c_char =
-    unsafe { &*(b"scouting/multicast/interface\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_MULTICAST_IPV4_ADDRESS_KEY: &c_char =
-    unsafe { &*(b"scouting/multicast/address\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_SCOUTING_TIMEOUT_KEY: &c_char =
-    unsafe { &*(b"scouting/timeout\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_SCOUTING_DELAY_KEY: &c_char =
-    unsafe { &*(b"scouting/delay\0".as_ptr() as *const c_char) };
-#[no_mangle]
-pub static Z_CONFIG_ADD_TIMESTAMP_KEY: &c_char =
-    unsafe { &*(b"timestamping/enabled\0".as_ptr() as *const c_char) };
+pub use crate::opaque_types::{z_loaned_config_t, z_moved_config_t, z_owned_config_t};
+decl_c_type!(
+    owned(z_owned_config_t, option Config),
+    loaned(z_loaned_config_t),
+);
 
-/// A loaned zenoh configuration.
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct z_config_t(*const z_owned_config_t);
-
-/// An owned zenoh configuration.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct z_owned_config_t(*mut ());
-impl_guarded_transmute!(Option<Box<Config>>, z_owned_config_t);
-
-/// Returns a :c:type:`z_config_t` loaned from `s`.
+/// Borrows config.
 #[no_mangle]
-pub extern "C" fn z_config_loan(s: &z_owned_config_t) -> z_config_t {
-    z_config_t(s)
-}
-impl AsRef<Option<Box<Config>>> for z_config_t {
-    fn as_ref(&self) -> &Option<Box<Config>> {
-        unsafe { (*self.0).as_ref() }
-    }
-}
-impl AsMut<Option<Box<Config>>> for z_config_t {
-    fn as_mut(&mut self) -> &mut Option<Box<Config>> {
-        unsafe { (*(self.0 as *mut z_owned_config_t)).as_mut() }
-    }
-}
-impl AsRef<Option<Box<Config>>> for z_owned_config_t {
-    fn as_ref(&self) -> &Option<Box<Config>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl AsMut<Option<Box<Config>>> for z_owned_config_t {
-    fn as_mut(&mut self) -> &mut Option<Box<Config>> {
-        unsafe { std::mem::transmute(self) }
-    }
-}
-impl z_owned_config_t {
-    pub fn null() -> Self {
-        None.into()
-    }
+pub extern "C" fn z_config_loan(this_: &'static z_owned_config_t) -> &'static z_loaned_config_t {
+    let this = this_.as_rust_type_ref();
+    let this = unsafe { this.as_ref().unwrap_unchecked() };
+    this.as_loaned_c_type_ref()
 }
 
-/// Return a new, zenoh-allocated, empty configuration.
-///
-/// Like most `z_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `z_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
+/// Mutably borrows config.
 #[no_mangle]
-pub extern "C" fn z_config_new() -> z_owned_config_t {
-    let config: Box<Config> = Box::default();
-    unsafe { z_owned_config_t(std::mem::transmute(Some(config))) }
+pub extern "C" fn z_config_loan_mut(this_: &mut z_owned_config_t) -> &mut z_loaned_config_t {
+    let this = this_.as_rust_type_mut();
+    let this = unsafe { this.as_mut().unwrap_unchecked() };
+    this.as_loaned_c_type_mut()
 }
 
-/// Constructs a null safe-to-drop value of 'z_owned_config_t' type
+/// Constructs a new empty configuration.
 #[no_mangle]
-pub extern "C" fn z_config_null() -> z_owned_config_t {
-    z_owned_config_t::null()
+pub extern "C" fn z_config_default(
+    this_: &mut MaybeUninit<z_owned_config_t>,
+) -> result::z_result_t {
+    this_
+        .as_rust_type_mut_uninit()
+        .write(Some(Config::default()));
+    Z_OK
 }
 
-/// Gets the property with the given path key from the configuration, returning an owned, null-terminated, JSON serialized string.
-/// Use `z_drop` to safely deallocate this string
+/// Constructs config in its gravestone state.
+#[no_mangle]
+pub extern "C" fn z_internal_config_null(this_: &mut MaybeUninit<z_owned_config_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// Clones the config into provided uninitialized memory location.
+#[no_mangle]
+pub extern "C" fn z_config_clone(
+    dst: &mut MaybeUninit<z_owned_config_t>,
+    this: &z_loaned_config_t,
+) {
+    let src = Some(this.as_rust_type_ref().clone());
+    let dst = dst.as_rust_type_mut_uninit();
+    dst.write(src);
+}
+
+/// Gets the property with the given path key from the configuration, and constructs and owned string from it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_get(config: z_config_t, key: *const c_char) -> z_owned_str_t {
-    let key = match CStr::from_ptr(key).to_str() {
-        Ok(s) => s,
-        Err(_) => return z_str_null(),
-    };
+pub unsafe extern "C" fn zc_config_get_from_str(
+    this: &z_loaned_config_t,
+    key: *const c_char,
+    out_value_string: &mut MaybeUninit<z_owned_string_t>,
+) -> result::z_result_t {
+    zc_config_get_from_substr(this, key, strlen_or_zero(key), out_value_string)
+}
 
-    let val = config.as_ref().as_ref().and_then(|c| c.get_json(key).ok());
+/// Gets the property with the given path key from the configuration, and constructs and owned string from it.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_config_get_from_substr(
+    this: &z_loaned_config_t,
+    key: *const c_char,
+    key_len: usize,
+    out_value_string: &mut MaybeUninit<z_owned_string_t>,
+) -> result::z_result_t {
+    let config = this.as_rust_type_ref();
+    if key.is_null() {
+        z_internal_string_null(out_value_string);
+        crate::report_error!("Key should not be null");
+        return result::Z_EINVAL;
+    }
+
+    let key = match from_utf8(from_raw_parts(key as _, key_len)) {
+        Ok(s) => s,
+        Err(e) => {
+            crate::report_error!("Config key is not a valid utf-8 string: {}", e);
+            z_internal_string_null(out_value_string);
+            return result::Z_EINVAL;
+        }
+    };
+    let val = config.get_json(key).ok();
     match val {
-        Some(val) => val.as_bytes().into(),
-        None => z_str_null(),
+        Some(val) => {
+            z_string_copy_from_substr(
+                out_value_string,
+                val.as_ptr() as *const libc::c_char,
+                val.len(),
+            );
+            result::Z_OK
+        }
+        None => {
+            crate::report_error!("No value was found in the config for key: '{}'", key);
+            z_internal_string_null(out_value_string);
+            result::Z_EUNAVAILABLE
+        }
     }
 }
 
 /// Inserts a JSON-serialized `value` at the `key` position of the configuration.
 ///
-/// Returns 0 if successful, a negative value otherwise.
+/// Returns 0 if successful, a negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc, unused_must_use)]
-pub unsafe extern "C" fn zc_config_insert_json(
-    mut config: z_config_t,
+pub unsafe extern "C" fn zc_config_insert_json5(
+    this: &mut z_loaned_config_t,
     key: *const c_char,
     value: *const c_char,
-) -> i8 {
-    let key = CStr::from_ptr(key);
-    let value = CStr::from_ptr(value);
-    match config
-        .as_mut()
-        .as_mut()
-        .expect("uninitialized config")
-        .insert_json5(&key.to_string_lossy(), &value.to_string_lossy())
-    {
+) -> result::z_result_t {
+    zc_config_insert_json5_from_substr(this, key, strlen_or_zero(key), value, strlen_or_zero(value))
+}
+
+/// Inserts a JSON-serialized `value` at the `key` position of the configuration.
+///
+/// Returns 0 if successful, a negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc, unused_must_use)]
+pub unsafe extern "C" fn zc_config_insert_json5_from_substr(
+    this: &mut z_loaned_config_t,
+    key: *const c_char,
+    key_len: usize,
+    value: *const c_char,
+    value_len: usize,
+) -> result::z_result_t {
+    let config = this.as_rust_type_mut();
+    let csk = match CStringView::new_borrowed(key, key_len) {
+        Ok(cs) => cs,
+        Err(r) => return r,
+    };
+    let key = match (&csk).try_into() {
+        Ok(s) => s,
+        Err(e) => {
+            crate::report_error!("Config key is not a valid utf-8 string: {}", e);
+            return result::Z_EINVAL;
+        }
+    };
+    let csv = match CStringView::new_borrowed(value, value_len) {
+        Ok(cs) => cs,
+        Err(r) => return r,
+    };
+    let value = match (&csv).try_into() {
+        Ok(s) => s,
+        Err(e) => {
+            crate::report_error!("Config value is not a valid utf-8 string: {}", e);
+            return result::Z_EINVAL;
+        }
+    };
+    match config.insert_json5(key, value) {
         Ok(_) => 0,
-        Err(_) => i8::MIN,
+        Err(e) => {
+            crate::report_error!(
+                "Failed to insert value '{}' for key '{}' into config: {}",
+                value,
+                key,
+                e
+            );
+            result::Z_EGENERIC
+        }
     }
 }
 
-/// Frees `config`, invalidating it for double-drop safety.
+/// Frees `config`, and resets it to its gravestone state.
 #[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_drop(config: &mut z_owned_config_t) {
-    std::mem::drop(config.as_mut().take())
-}
-/// Returns ``true`` if `config` is valid.
-#[no_mangle]
-#[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_check(config: &z_owned_config_t) -> bool {
-    config.as_ref().is_some()
+pub extern "C" fn z_config_drop(this_: &mut z_moved_config_t) {
+    let _ = this_.take_rust_type();
 }
 
-/// Creates a default, zenoh-allocated, configuration.
+/// Returns ``true`` if config is valid, ``false`` if it is in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn z_config_default() -> z_owned_config_t {
-    z_config_new()
+pub extern "C" fn z_internal_config_check(this_: &z_owned_config_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
 
 /// Reads a configuration from a JSON-serialized string, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
 ///
-/// Passing a null-ptr will result in a gravestone value (`z_check(x) == false`).
+/// Returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn zc_config_from_str(s: *const c_char) -> z_owned_config_t {
+pub unsafe extern "C" fn zc_config_from_str(
+    this: &mut MaybeUninit<z_owned_config_t>,
+    s: *const c_char,
+) -> result::z_result_t {
+    zc_config_from_substr(this, s, strlen_or_zero(s))
+}
+
+/// Reads a configuration from a JSON-serialized substring of specified lenght, such as '{mode:"client",connect:{endpoints:["tcp/127.0.0.1:7447"]}}'.
+///
+/// Returns 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn zc_config_from_substr(
+    this: &mut MaybeUninit<z_owned_config_t>,
+    s: *const c_char,
+    len: usize,
+) -> result::z_result_t {
+    z_internal_config_null(this);
     if s.is_null() {
-        z_config_null()
+        crate::report_error!("String should not be NULL");
+        result::Z_EINVAL
     } else {
-        let conf_str = CStr::from_ptr(s);
-        let props: Option<Config> = json5::from_str(&conf_str.to_string_lossy()).ok();
-        z_owned_config_t(std::mem::transmute(props.map(Box::new)))
-    }
-}
-
-/// Converts `config` into a JSON-serialized string, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn zc_config_to_string(config: z_config_t) -> z_owned_str_t {
-    let config: &Config = match config.as_ref() {
-        Some(c) => c,
-        None => return z_str_null(),
-    };
-    match json5::to_string(config) {
-        Ok(s) => s.as_bytes().into(),
-        Err(_) => z_str_null(),
-    }
-}
-
-/// Constructs a configuration by parsing a file at `path`. Currently supported format is JSON5, a superset of JSON.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub unsafe extern "C" fn zc_config_from_file(path: *const c_char) -> z_owned_config_t {
-    let path_str = CStr::from_ptr(path);
-    z_owned_config_t(std::mem::transmute(match path_str.to_str() {
-        Ok(path) => match zenoh::config::Config::from_file(path) {
-            Ok(c) => Some(Box::new(c)),
+        let slice = std::slice::from_raw_parts(s as _, len);
+        let conf_str = match std::str::from_utf8(slice) {
+            Ok(cs) => cs,
             Err(e) => {
-                log::error!("Couldn't read config from {}: {}", path, e);
-                None
+                crate::report_error!("Config should be a valid utf-8 string {}", e);
+                return result::Z_EINVAL;
             }
-        },
-        Err(e) => {
-            log::error!("Invalid path '{}': {}", path_str.to_string_lossy(), e);
-            None
+        };
+        match json5::from_str(conf_str) {
+            Ok(props) => {
+                this.as_rust_type_mut_uninit().write(Some(props));
+                result::Z_OK
+            }
+            Err(e) => {
+                crate::report_error!("Invalid config string: {}", e);
+                result::Z_EPARSE
+            }
         }
-    }))
+    }
 }
 
-/// Constructs a default, zenoh-allocated, peer mode configuration.
+/// Constructs a json string representation of the `config`, such as '{"mode":"client","connect":{"endpoints":["tcp/127.0.0.1:7447"]}}'.
+///
+/// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_config_peer() -> z_owned_config_t {
-    unsafe { z_owned_config_t(std::mem::transmute(Some(Box::new(zenoh::config::peer())))) }
+pub unsafe extern "C" fn zc_config_to_string(
+    config: &z_loaned_config_t,
+    out_config_string: &mut MaybeUninit<z_owned_string_t>,
+) -> result::z_result_t {
+    let config = config.as_rust_type_ref();
+    match json5::to_string(config) {
+        Ok(s) => {
+            unsafe {
+                z_string_copy_from_substr(
+                    out_config_string,
+                    s.as_ptr() as *const libc::c_char,
+                    s.len(),
+                )
+            };
+            result::Z_OK
+        }
+        Err(e) => {
+            crate::report_error!("Config is not a valid json5: {}", e);
+            z_internal_string_null(out_config_string);
+            result::Z_EPARSE
+        }
+    }
 }
 
-/// Constructs a default, zenoh-allocated, client mode configuration.
-/// If `peer` is not null, it is added to the configuration as remote peer.
+/// Constructs a configuration by parsing a file at `path` null-terminated string. Currently supported format is JSON5, a superset of JSON.
+///
+/// Returns 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub unsafe extern "C" fn z_config_client(
-    peers: *const *const c_char,
-    n_peers: usize,
-) -> z_owned_config_t {
-    let locators = if peers.is_null() {
-        Vec::new()
-    } else if let Ok(locators) = std::slice::from_raw_parts(peers, n_peers)
-        .iter()
-        .map(|&s| CStr::from_ptr(s).to_string_lossy().parse())
-        .try_fold(
-            Vec::<zenoh::prelude::Locator>::new(),
-            |mut acc, it| match it {
-                Err(e) => {
-                    log::error!("Error parsing peer address: {}", e);
-                    Err(())
-                }
-                Ok(loc) => {
-                    acc.push(loc);
-                    Ok(acc)
-                }
-            },
-        )
-    {
-        locators
-    } else {
-        return z_owned_config_t(std::mem::transmute(None::<Box<Config>>));
+pub unsafe extern "C" fn zc_config_from_file(
+    this: &mut MaybeUninit<z_owned_config_t>,
+    path: *const c_char,
+) -> result::z_result_t {
+    zc_config_from_file_substr(this, path, strlen_or_zero(path))
+}
+
+/// Constructs a configuration by parsing a file at `path` susbstring of specified length. Currently supported format is JSON5, a superset of JSON.
+///
+/// Returns 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_config_from_file_substr(
+    this: &mut MaybeUninit<z_owned_config_t>,
+    path: *const c_char,
+    len: usize,
+) -> result::z_result_t {
+    z_internal_config_null(this);
+    if path.is_null() {
+        crate::report_error!("Path should be NULL");
+        return result::Z_EINVAL;
+    }
+    let slice = std::slice::from_raw_parts(path as _, len);
+    let path_str = match std::str::from_utf8(slice) {
+        Ok(cs) => cs,
+        Err(e) => {
+            crate::report_error!("Path should be a valid utf-8 string {}", e);
+            return result::Z_EINVAL;
+        }
     };
-    z_owned_config_t(std::mem::transmute(Some(Box::new(zenoh::config::client(
-        locators,
-    )))))
+    match zenoh::config::Config::from_file(path_str) {
+        Ok(c) => {
+            this.as_rust_type_mut_uninit().write(Some(c));
+            result::Z_OK
+        }
+        Err(e) => {
+            crate::report_error!("Failed to read config from {}: {}", path_str, e);
+            result::Z_EPARSE
+        }
+    }
+}
+
+/// Constructs a configuration by parsing a file path stored in ZENOH_CONFIG environmental variable.
+///
+/// Returns 0 in case of success, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn zc_config_from_env(
+    this: &mut MaybeUninit<z_owned_config_t>,
+) -> result::z_result_t {
+    match Config::from_env() {
+        Ok(c) => {
+            this.as_rust_type_mut_uninit().write(Some(c));
+            result::Z_OK
+        }
+        Err(e) => {
+            crate::report_error!("Close error: {}", e);
+            result::Z_EIO
+        }
+    }
 }

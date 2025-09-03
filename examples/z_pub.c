@@ -14,68 +14,122 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-void matching_status_handler(const zcu_matching_status_t *matching_status, void *arg) {
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-pub"
+#define DEFAULT_VALUE "Pub from C!"
+#define DEFAULT_ATTACHMENT NULL
+
+struct args_t {
+    char* keyexpr;               // -k, --key
+    char* value;                 // -p, --payload
+    char* attachment;            // -a, --attach
+    bool add_matching_listener;  // --add-matching-listener
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
+
+void matching_status_handler(const z_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
-        printf("Subscriber matched\n");
+        printf("Publisher has matching subscribers.\n");
     } else {
-        printf("No Subscribers matched\n");
+        printf("Publisher has NO MORE matching subscribers.\n");
     }
 }
 
-int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-pub";
-    char *value = "Pub from C!";
-    bool add_matching_listener = false;
+int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
 
-    if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) value = argv[2];
-    if (argc > 3) add_matching_listener = atoi(argv[3]);
-
-    z_owned_config_t config = z_config_default();
-    if (argc > 4) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[4]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[4], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    z_owned_config_t config;
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    printf("Declaring Publisher on '%s'...\n", keyexpr);
-    z_owned_publisher_t pub = z_declare_publisher(z_loan(s), z_keyexpr(keyexpr), NULL);
-    if (!z_check(pub)) {
+    printf("Declaring Publisher on '%s'...\n", args.keyexpr);
+    z_owned_publisher_t pub;
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), NULL) < 0) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
 
-    zcu_owned_matching_listener_t listener;
-    if (add_matching_listener) {
-        zcu_owned_closure_matching_status_t callback = z_closure(matching_status_handler);
-        listener =  zcu_publisher_matching_listener_callback(z_loan(pub), z_move(callback));
+    if (args.add_matching_listener) {
+        z_owned_closure_matching_status_t callback;
+        z_closure(&callback, matching_status_handler, NULL, NULL);
+        if (z_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback)) < 0) {
+            printf("Unable to declare background matching listener for key expression!\n");
+            exit(-1);
+        }
     }
 
-    char buf[256];
+    printf("Press CTRL-C to quit...\n");
+    char buf[256] = {0};
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
-        sprintf(buf, "[%4d] %s", idx, value);
-        printf("Putting Data ('%s': '%s')...\n", keyexpr, buf);
-        z_publisher_put_options_t options = z_publisher_put_options_default();
-        options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-        z_publisher_put(z_loan(pub), (const uint8_t *)buf, strlen(buf), &options);
+        sprintf(buf, "[%4d] %s", idx, args.value);
+        printf("Putting Data ('%s': '%s')...\n", args.keyexpr, buf);
+        z_publisher_put_options_t options;
+        z_publisher_put_options_default(&options);
+
+        z_owned_bytes_t payload;
+        z_bytes_copy_from_str(&payload, buf);
+        z_owned_bytes_t attachment;
+        if (args.attachment != NULL) {
+            z_bytes_copy_from_str(&attachment, args.attachment);
+            options.attachment = z_move(attachment);
+        }
+        /// optional encoding
+        z_owned_encoding_t encoding;
+        z_encoding_clone(&encoding, z_encoding_text_plain());
+        options.encoding = z_move(encoding);
+
+        z_publisher_put(z_loan(pub), z_move(payload), &options);
     }
 
-    z_undeclare_publisher(z_move(pub));
-
-    z_close(z_move(s));
+    z_drop(z_move(pub));
+    z_drop(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_pub [OPTIONS]\n\n\
+    Options:\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n\
+        -a, --attach <ATTACHMENT> (optional, string, default=NULL): The attachment to add to each put\n\
+        --add-matching-listener (optional): Add matching listener\n",
+        DEFAULT_KEYEXPR, DEFAULT_VALUE);
+    printf(COMMON_HELP);
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.attachment, "a", "attach", (char*), (char*)DEFAULT_ATTACHMENT);
+    args.add_matching_listener = _Z_CHECK_FLAG("add-matching-listener");
+
+    parse_zenoh_common_args(argc, argv, config);
+    const char* unknown_arg = check_unknown_opts(argc, argv);
+    if (unknown_arg) {
+        printf("Unknown option %s\n", unknown_arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return args;
 }

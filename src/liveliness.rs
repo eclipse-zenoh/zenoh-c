@@ -12,244 +12,265 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+use std::mem::MaybeUninit;
+
 use zenoh::{
-    liveliness::{Liveliness, LivelinessToken},
-    prelude::{SessionDeclarations, SplitBuffer},
+    handlers::Callback,
+    liveliness::{LivelinessSubscriberBuilder, LivelinessToken},
+    sample::Sample,
+    Wait,
 };
-use zenoh_util::core::{zresult::ErrNo, SyncResolve};
 
 use crate::{
-    z_closure_reply_call, z_closure_sample_call, z_keyexpr_t, z_owned_closure_reply_t,
-    z_owned_closure_sample_t, z_owned_subscriber_t, z_sample_t, z_session_t,
+    opaque_types::{z_loaned_liveliness_token_t, z_owned_liveliness_token_t},
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_reply_call, z_closure_reply_loan, z_closure_sample_call, z_closure_sample_loan,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
+    z_moved_liveliness_token_t, z_owned_subscriber_t,
 };
+decl_c_type!(
+    owned(z_owned_liveliness_token_t, option LivelinessToken),
+    loaned(z_loaned_liveliness_token_t),
+);
 
-/// A liveliness token that can be used to provide the network with information about connectivity to its
-/// declarer: when constructed, a PUT sample will be received by liveliness subscribers on intersecting key
-/// expressions.
-///
-/// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
-#[repr(C)]
-pub struct zc_owned_liveliness_token_t {
-    _inner: [usize; 4],
-}
-
-/// The gravestone value for liveliness tokens.
+/// @brief Constructs liveliness token in its gravestone state.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_token_null() -> zc_owned_liveliness_token_t {
-    zc_owned_liveliness_token_t { _inner: [0; 4] }
-}
-
-/// Returns `true` unless the token is at its gravestone value.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_token_check(token: &zc_owned_liveliness_token_t) -> bool {
-    token._inner.iter().any(|v| *v != 0)
-}
-/// The options for `zc_liveliness_declare_token`
-#[repr(C)]
-pub struct zc_owned_liveliness_declaration_options_t {
-    _inner: u8,
-}
-/// The gravestone value for `zc_owned_liveliness_declaration_options_t`
-#[no_mangle]
-pub extern "C" fn zc_liveliness_declaration_options_null(
-) -> zc_owned_liveliness_declaration_options_t {
-    zc_owned_liveliness_declaration_options_t { _inner: 0 }
-}
-/// Returns `true` if the options are valid.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_declaration_options_check(
-    _opts: &zc_owned_liveliness_declaration_options_t,
-) -> bool {
-    true
-}
-/// Destroys the options.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_declaration_options_drop(
-    opts: &mut zc_owned_liveliness_declaration_options_t,
+pub extern "C" fn z_internal_liveliness_token_null(
+    this_: &mut MaybeUninit<z_owned_liveliness_token_t>,
 ) {
-    *opts = zc_liveliness_declaration_options_null()
+    this_.as_rust_type_mut_uninit().write(None);
 }
-impl From<LivelinessToken<'static>> for zc_owned_liveliness_token_t {
-    fn from(value: LivelinessToken<'static>) -> Self {
-        unsafe { core::mem::transmute(value) }
-    }
+
+/// @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn z_internal_liveliness_token_check(this_: &z_owned_liveliness_token_t) -> bool {
+    this_.as_rust_type_ref().is_some()
 }
-impl From<zc_owned_liveliness_token_t> for Option<LivelinessToken<'static>> {
-    fn from(value: zc_owned_liveliness_token_t) -> Self {
-        if value._inner.iter().all(|v| *v == 0) {
-            None
-        } else {
-            Some(unsafe { core::mem::transmute(value) })
-        }
-    }
+
+/// @brief Undeclares liveliness token, frees memory and resets it to a gravestone state.
+#[no_mangle]
+pub extern "C" fn z_liveliness_token_drop(this_: &mut z_moved_liveliness_token_t) {
+    let _ = this_.take_rust_type();
 }
-/// Constructs and declares a liveliness token on the network.
+
+/// @brief The options for `z_liveliness_declare_token()`.
+#[repr(C)]
+pub struct z_liveliness_token_options_t {
+    _dummy: u8,
+}
+
+/// @brief Constructs default value for `z_liveliness_token_options_t`.
+#[no_mangle]
+pub extern "C" fn z_liveliness_token_options_default(
+    this: &mut MaybeUninit<z_liveliness_token_options_t>,
+) {
+    this.write(z_liveliness_token_options_t { _dummy: 0 });
+}
+
+/// @brief Borrows token.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_liveliness_token_loan(
+    this: &z_owned_liveliness_token_t,
+) -> &z_loaned_liveliness_token_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
+}
+
+/// @brief Constructs and declares a liveliness token on the network.
 ///
 /// Liveliness token subscribers on an intersecting key expression will receive a PUT sample when connectivity
 /// is achieved, and a DELETE sample if it's lost.
 ///
-/// Passing `NULL` as options is valid and equivalent to a pointer to the default options.
+/// @param session: A Zenos session to declare the liveliness token.
+/// @param token: An uninitialized memory location where liveliness token will be constructed.
+/// @param key_expr: A keyexpr to declare a liveliess token for.
+/// @param _options: Liveliness token declaration properties.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_declare_token(
-    session: z_session_t,
-    key: z_keyexpr_t,
-    _options: Option<&zc_owned_liveliness_declaration_options_t>,
-) -> zc_owned_liveliness_token_t {
-    let Some(session) = session.upgrade() else {
-        log::error!("Failed to declare liveliness token: provided session was invalid");
-        return zc_liveliness_token_null();
-    };
-    match session.liveliness().declare_token(key).res() {
-        Ok(token) => unsafe { core::mem::transmute(token) },
+pub extern "C" fn z_liveliness_declare_token(
+    session: &z_loaned_session_t,
+    token: &mut MaybeUninit<z_owned_liveliness_token_t>,
+    key_expr: &z_loaned_keyexpr_t,
+    _options: Option<&z_liveliness_token_options_t>,
+) -> result::z_result_t {
+    let this = token.as_rust_type_mut_uninit();
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    match session.liveliness().declare_token(key_expr).wait() {
+        Ok(token) => {
+            this.write(Some(token));
+            result::Z_OK
+        }
         Err(e) => {
-            log::error!("Failed to declare liveliness token: {e}");
-            zc_liveliness_token_null()
+            crate::report_error!("Failed to undeclare liveliness token: {e}");
+            this.write(None);
+            result::Z_EGENERIC
         }
     }
 }
 
-/// Destroys a liveliness token, notifying subscribers of its destruction.
+/// @brief Destroys a liveliness token, notifying subscribers of its destruction.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_undeclare_token(token: &mut zc_owned_liveliness_token_t) {
-    let Some(token): Option<LivelinessToken> =
-        core::mem::replace(token, zc_liveliness_token_null()).into()
-    else {
-        return;
-    };
-    if let Err(e) = token.undeclare().res() {
-        log::error!("Failed to undeclare token: {e}");
+pub extern "C" fn z_liveliness_undeclare_token(
+    this: &mut z_moved_liveliness_token_t,
+) -> result::z_result_t {
+    if let Some(token) = this.take_rust_type() {
+        if let Err(e) = token.undeclare().wait() {
+            crate::report_error!("Failed to undeclare token: {e}");
+            return result::Z_EGENERIC;
+        }
     }
+    result::Z_OK
 }
 
-/// The options for :c:func:`zc_liveliness_declare_subscriber`
+/// @brief The options for `z_liveliness_declare_subscriber()`
 #[repr(C)]
-pub struct zc_owned_liveliness_declare_subscriber_options_t {
-    _inner: u8,
+pub struct z_liveliness_subscriber_options_t {
+    /// If true, subscriber will receive the state change notifications for liveliness tokens that were declared before its declaration.
+    pub history: bool,
 }
-/// The gravestone value for `zc_owned_liveliness_declare_subscriber_options_t`
+
+/// @brief Constucts default value for `z_liveliness_declare_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_options_null(
-) -> zc_owned_liveliness_declare_subscriber_options_t {
-    zc_owned_liveliness_declare_subscriber_options_t { _inner: 0 }
-}
-/// Returns `true` if the options are valid.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_options_check(
-    _opts: &zc_owned_liveliness_declare_subscriber_options_t,
-) -> bool {
-    true
-}
-/// Destroys the options.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_subscriber_options_drop(
-    opts: &mut zc_owned_liveliness_declare_subscriber_options_t,
+pub extern "C" fn z_liveliness_subscriber_options_default(
+    this: &mut MaybeUninit<z_liveliness_subscriber_options_t>,
 ) {
-    *opts = zc_liveliness_subscriber_options_null()
+    this.write(z_liveliness_subscriber_options_t { history: false });
 }
 
-/// Declares a subscriber on liveliness tokens that intersect `key`.
-///
-/// Parameters:
-///     z_session_t session: The zenoh session.
-///     z_keyexpr_t keyexpr: The key expression to subscribe.
-///     z_owned_closure_sample_t callback: The callback function that will be called each time a
-///                                        liveliness token status changed.
-///     zc_owned_liveliness_declare_subscriber_options_t _options: The options to be passed to describe the options to be passed to the liveliness subscriber declaration.
-///
-/// Returns:
-///    A :c:type:`z_owned_subscriber_t`.
-///
-///    To check if the subscription succeeded and if the subscriber is still valid,
-///    you may use `z_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_declare_subscriber(
-    session: z_session_t,
-    key: z_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
-    _options: Option<&zc_owned_liveliness_declare_subscriber_options_t>,
-) -> z_owned_subscriber_t {
-    let Some(session) = session.upgrade() else {
-        log::error!("Failed to declare liveliness token: provided session was invalid");
-        return z_owned_subscriber_t::null();
-    };
-    let callback = core::mem::replace(callback, z_owned_closure_sample_t::empty());
-    match session
+fn _liveliness_declare_subscriber_inner<'a, 'b>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut z_liveliness_subscriber_options_t>,
+) -> LivelinessSubscriberBuilder<'a, 'b, Callback<Sample>> {
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let sub = session
         .liveliness()
-        .declare_subscriber(key)
+        .declare_subscriber(key_expr)
+        .history(options.is_some_and(|o| o.history))
         .callback(move |sample| {
-            let payload = sample.payload.contiguous();
-            let owner = match payload {
-                std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                _ => sample.payload.clone(),
-            };
-            let sample = z_sample_t::new(&sample, &owner);
-            z_closure_sample_call(&callback, &sample)
-        })
-        .res()
-    {
-        Ok(token) => z_owned_subscriber_t::new(token),
+            let mut owned_sample = Some(sample);
+            z_closure_sample_call(z_closure_sample_loan(&callback), unsafe {
+                owned_sample
+                    .as_mut()
+                    .unwrap_unchecked()
+                    .as_loaned_c_type_mut()
+            })
+        });
+    sub
+}
+/// @brief Declares a subscriber on liveliness tokens that intersect `key_expr`.
+///
+/// @param session: A Zenoh session.
+/// @param subscriber: An uninitialized memory location where subscriber will be constructed.
+/// @param key_expr: The key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a liveliness token status is changed.
+/// @param options: The options to be passed to the liveliness subscriber declaration.
+///
+/// @return 0 in case of success, negative error values otherwise.
+#[no_mangle]
+pub extern "C" fn z_liveliness_declare_subscriber(
+    session: &z_loaned_session_t,
+    subscriber: &mut MaybeUninit<z_owned_subscriber_t>,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut z_liveliness_subscriber_options_t>,
+) -> result::z_result_t {
+    let this = subscriber.as_rust_type_mut_uninit();
+    let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
+    match subscriber.wait() {
+        Ok(subscriber) => {
+            this.write(Some(subscriber));
+            result::Z_OK
+        }
         Err(e) => {
-            log::error!("Failed to subscribe to liveliness: {e}");
-            z_owned_subscriber_t::null()
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
+            this.write(None);
+            result::Z_EGENERIC
         }
     }
 }
 
-/// The options for :c:func:`zc_liveliness_declare_subscriber`
-#[repr(C)]
-pub struct zc_liveliness_get_options_t {
-    timeout_ms: u32,
-}
-/// The gravestone value for `zc_liveliness_get_options_t`
+/// @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
+/// until the corresponding session is closed or dropped.
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a liveliness token status is changed.
+/// @param options: The options to be passed to the liveliness subscriber declaration.
+///
+/// @return 0 in case of success, negative error values otherwise.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_null() -> zc_liveliness_get_options_t {
-    zc_liveliness_get_options_t { timeout_ms: 0 }
-}
-/// The gravestone value for `zc_liveliness_get_options_t`
-#[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_default() -> zc_liveliness_get_options_t {
-    zc_liveliness_get_options_t { timeout_ms: 10000 }
-}
-/// Returns `true` if the options are valid.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_check(_opts: &zc_liveliness_get_options_t) -> bool {
-    true
-}
-/// Destroys the options.
-#[no_mangle]
-pub extern "C" fn zc_liveliness_get_options_drop(opts: &mut zc_liveliness_get_options_t) {
-    *opts = zc_liveliness_get_options_null()
+pub extern "C" fn z_liveliness_declare_background_subscriber(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut z_liveliness_subscriber_options_t>,
+) -> result::z_result_t {
+    let subscriber = _liveliness_declare_subscriber_inner(session, key_expr, callback, options);
+    match subscriber.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
+            result::Z_EGENERIC
+        }
+    }
 }
 
-/// Queries liveliness tokens currently on the network with a key expression intersecting with `key`.
-///
-/// Note that the same "value stealing" tricks apply as with a normal :c:func:`z_get`
-///
-/// Passing `NULL` as options is valid and equivalent to passing a pointer to the default options.
+/// @brief The options for `z_liveliness_get()`
+#[repr(C)]
+pub struct z_liveliness_get_options_t {
+    /// The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
+    timeout_ms: u64,
+}
+
+/// @brief Constructs default value `z_liveliness_get_options_t`.
 #[no_mangle]
-pub extern "C" fn zc_liveliness_get(
-    session: z_session_t,
-    key: z_keyexpr_t,
-    callback: &mut z_owned_closure_reply_t,
-    options: Option<&zc_liveliness_get_options_t>,
-) -> i8 {
-    let Some(session) = session.upgrade() else {
-        log::error!("Failed to declare liveliness token: provided session was invalid");
-        return i8::MIN;
-    };
-    let callback = core::mem::replace(callback, z_owned_closure_reply_t::empty());
-    let liveliness: Liveliness<'static> = session.liveliness();
-    let mut builder = liveliness
-        .get(key)
-        .callback(move |response| z_closure_reply_call(&callback, &mut response.into()));
+pub extern "C" fn z_liveliness_get_options_default(
+    this: &mut MaybeUninit<z_liveliness_get_options_t>,
+) {
+    this.write(z_liveliness_get_options_t { timeout_ms: 10000 });
+}
+
+/// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
+///
+/// @param session: The Zenoh session.
+/// @param key_expr: The key expression to query liveliness tokens for.
+/// @param callback: The callback function that will be called for each received reply.
+/// @param options: Additional options for the liveliness get operation.
+#[no_mangle]
+pub extern "C" fn z_liveliness_get(
+    session: &z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_reply_t,
+    options: Option<&mut z_liveliness_get_options_t>,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let key_expr = key_expr.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let liveliness = session.liveliness();
+    let mut builder = liveliness.get(key_expr).callback(move |response| {
+        let mut owned_response = Some(response);
+        z_closure_reply_call(z_closure_reply_loan(&callback), unsafe {
+            owned_response
+                .as_mut()
+                .unwrap_unchecked()
+                .as_loaned_c_type_mut()
+        })
+    });
     if let Some(options) = options {
-        builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms as u64))
+        builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms));
     }
-    match builder.res() {
-        Ok(()) => 0,
+    match builder.wait() {
+        Ok(()) => result::Z_OK,
         Err(e) => {
-            log::error!("Failed to subscribe to liveliness: {e}");
-            e.errno().get()
+            crate::report_error!("Failed to subscribe to liveliness: {e}");
+            result::Z_EGENERIC
         }
     }
 }

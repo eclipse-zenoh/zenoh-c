@@ -14,46 +14,77 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "parse_args.h"
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
-    char *keyexpr = "demo/example/zenoh-c-put";
-    char *value = "Put from C!";
+#define DEFAULT_KEYEXPR "demo/example/zenoh-c-put"
+#define DEFAULT_VALUE "Put from C!"
 
-    if (argc > 1) keyexpr = argv[1];
-    if (argc > 2) value = argv[2];
+struct args_t {
+    char* keyexpr;  // -k, --key
+    char* value;    // -p, --payload
+};
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-    z_owned_bytes_map_t attachment = z_bytes_map_new();
-    z_bytes_map_insert_by_alias(&attachment, z_bytes_from_str("hello"), z_bytes_from_str("there"));
+int main(int argc, char** argv) {
+    zc_init_log_from_env_or("error");
 
-    z_owned_config_t config = z_config_default();
-    if (argc > 3) {
-        if (zc_config_insert_json(z_loan(config), Z_CONFIG_CONNECT_KEY, argv[3]) < 0) {
-            printf(
-                "Couldn't insert value `%s` in configuration at `%s`. This is likely because `%s` expects a "
-                "JSON-serialized list of strings\n",
-                argv[3], Z_CONFIG_CONNECT_KEY, Z_CONFIG_CONNECT_KEY);
-            exit(-1);
-        }
-    }
+    z_owned_config_t config;
+    struct args_t args = parse_args(argc, argv, &config);
 
     printf("Opening session...\n");
-    z_owned_session_t s = z_open(z_move(config));
-    if (!z_check(s)) {
+    z_owned_session_t s;
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    printf("Putting Data ('%s': '%s')...\n", keyexpr, value);
-    z_put_options_t options = z_put_options_default();
-    options.encoding = z_encoding(Z_ENCODING_PREFIX_TEXT_PLAIN, NULL);
-    options.attachment = z_bytes_map_as_attachment(&attachment);
-    int res = z_put(z_loan(s), z_keyexpr(keyexpr), (const uint8_t *)value, strlen(value), &options);
+    printf("Putting Data ('%s': '%s')...\n", args.keyexpr, args.value);
+
+    z_view_keyexpr_t ke;
+    z_view_keyexpr_from_str(&ke, args.keyexpr);
+
+    z_owned_bytes_t payload;
+    z_bytes_from_static_str(&payload, args.value);
+
+    int res = z_put(z_loan(s), z_loan(ke), z_move(payload), NULL);
     if (res < 0) {
         printf("Put failed...\n");
     }
 
-    z_close(z_move(s));
-    z_drop(z_move(attachment));
+    z_drop(z_move(s));
     return 0;
+}
+
+void print_help() {
+    printf(
+        "\
+    Usage: z_put [OPTIONS]\n\n\
+    Options:\n\
+        -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
+        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n",
+        DEFAULT_KEYEXPR, DEFAULT_VALUE);
+    printf(COMMON_HELP);
+}
+
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
+    _Z_CHECK_HELP;
+    struct args_t args;
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
+
+    parse_zenoh_common_args(argc, argv, config);
+    const char* arg = check_unknown_opts(argc, argv);
+    if (arg) {
+        printf("Unknown option %s\n", arg);
+        exit(-1);
+    }
+    char** pos_args = parse_pos_args(argc, argv, 1);
+    if (!pos_args || pos_args[0]) {
+        printf("Unexpected positional arguments\n");
+        free(pos_args);
+        exit(-1);
+    }
+    free(pos_args);
+    return args;
 }

@@ -29,8 +29,19 @@ mod response_channel;
 pub use query_channel::*;
 mod query_channel;
 
+pub use sample_channel::*;
+mod sample_channel;
+
 pub use hello_closure::*;
 mod hello_closure;
 
+pub use log_closure::*;
+mod log_closure;
+
 pub use matching_status_closure::*;
 mod matching_status_closure;
+
+#[cfg(feature = "unstable")]
+pub use miss_closure::*;
+#[cfg(feature = "unstable")]
+mod miss_closure;

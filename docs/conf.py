@@ -12,24 +12,28 @@
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 
-# Configuration file for the Sphinx documentation builder.
-from clang.cindex import Config
+
+import subprocess, os
+
+read_the_docs_build = os.environ.get('READTHEDOCS', None) == 'True'
+if read_the_docs_build:
+    subprocess.call('doxygen', shell=True)
 
 # -- Project information -----------------------------------------------------
 project = 'zenoh-c'
 copyright = '2017, 2022 ZettaScale Technology'
 author = 'ZettaScale Zenoh team'
-release = '0.11.0.0'
+with open("../version.txt", "rt") as f:
+    release = f.read()
 
 # -- General configuration ---------------------------------------------------
 master_doc = 'index'
-extensions = ['sphinx_c_autodoc', 'sphinx_c_autodoc.napoleon']
+extensions = ['breathe']
 language = 'c'
-c_autodoc_roots = ['../include']
-c_autodoc_compilation_args = ["-DDOCS"]
+breathe_projects = {"zenoh-c": "./doxyxml/xml/"}
+breathe_default_project = "zenoh-c"
 
 # -- Options for HTML output -------------------------------------------------
 html_theme = 'sphinx_rtd_theme'
 
 # ----------------------------------------------------------------------------
-Config.set_library_file('/usr/lib/llvm-14/lib/libclang.so.1')

@@ -12,58 +12,52 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <stdio.h>
+
 #include "zenoh.h"
 
 void fprintpid(FILE *stream, z_id_t pid) {
-    int len = 0;
-    for (int i = 0; i < 16; i++) {
-        if (pid.id[i]) {
-            len = i + 1;
-        }
-    }
-    if (!len) {
-        fprintf(stream, "None");
-    } else {
-        fprintf(stream, "Some(");
-        for (unsigned int i = 0; i < len; i++) {
-            fprintf(stream, "%02X", (int)pid.id[i]);
-        }
-        fprintf(stream, ")");
-    }
+    z_owned_string_t str;
+    z_id_to_string(&pid, &str);
+    fprintf(stream, "%.*s", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    z_drop(z_move(str));
 }
 
-void fprintwhatami(FILE *stream, unsigned int whatami) {
-    char buf[64];
-    z_whatami_to_str(whatami, buf, sizeof(buf));
-    fprintf(stream, "%s", buf);
+void fprintwhatami(FILE *stream, z_whatami_t whatami) {
+    z_view_string_t whatami_str;
+    z_whatami_to_view_string(whatami, &whatami_str);
+    fprintf(stream, "%.*s", (int)z_string_len(z_loan(whatami_str)), z_string_data(z_loan(whatami_str)));
 }
 
-void fprintlocators(FILE *stream, const z_str_array_t *locs) {
+void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < locs->len; i++) {
-        fprintf(stream, "\"");
-        fprintf(stream, "%s", locs->val[i]);
-        fprintf(stream, "\"");
-        if (i < locs->len - 1) {
+    for (unsigned int i = 0; i < z_string_array_len(locs); i++) {
+        const z_loaned_string_t *loc = z_string_array_get(locs, i);
+        fprintf(stream, "%.*s", (int)z_string_len(loc), z_string_data(loc));
+        if (i < z_string_array_len(locs) - 1) {
             fprintf(stream, ", ");
         }
     }
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, const z_hello_t hello) {
+void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintf(stream, "Hello { pid: ");
-    fprintpid(stream, hello.pid);
+
+    fprintpid(stream, z_hello_zid(hello));
     fprintf(stream, ", whatami: ");
-    fprintwhatami(stream, hello.whatami);
+    fprintwhatami(stream, z_hello_whatami(hello));
+
     fprintf(stream, ", locators: ");
-    fprintlocators(stream, &hello.locators);
+    z_owned_string_array_t locators;
+    z_hello_locators(hello, &locators);
+    fprintlocators(stream, z_loan(locators));
+    z_string_array_drop(z_move(locators));
+
     fprintf(stream, " }");
 }
 
-void callback(z_owned_hello_t *hello, void *context) {
-    z_hello_t lhello = z_loan(*hello);
-    fprinthello(stdout, lhello);
+void callback(z_loaned_hello_t *hello, void *context) {
+    fprinthello(stdout, hello);
     fprintf(stdout, "\n");
     (*(int *)context)++;
 }
@@ -78,12 +72,17 @@ void drop(void *context) {
 }
 
 int main(int argc, char **argv) {
+    zc_init_log_from_env_or("error");
+
     int *context = z_malloc(sizeof(int));
     *context = 0;
-    z_owned_scouting_config_t config = z_scouting_config_default();
-    z_owned_closure_hello_t closure = z_closure(callback, drop, context);
+    z_owned_config_t config;
+    z_config_default(&config);
+
+    z_owned_closure_hello_t closure;
+    z_closure(&closure, callback, drop, context);
     printf("Scouting...\n");
-    z_scout(z_move(config), z_move(closure));
+    z_scout(z_move(config), z_move(closure), NULL);
     z_sleep_s(1);
     return 0;
 }

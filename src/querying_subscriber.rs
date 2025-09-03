@@ -11,273 +11,290 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
+#![allow(deprecated)]
 
-use zenoh::prelude::sync::SyncResolve;
-use zenoh::prelude::KeyExpr;
-use zenoh::prelude::SessionDeclarations;
-use zenoh::prelude::SplitBuffer;
+use std::mem::MaybeUninit;
+
+use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
-use zenoh_protocol::core::SubInfo;
-use zenoh_util::core::zresult::ErrNo;
 
 use crate::{
-    impl_guarded_transmute, z_closure_sample_call, z_get_options_t, z_keyexpr_t,
-    z_owned_closure_sample_t, z_query_consolidation_none, z_query_consolidation_t,
-    z_query_target_default, z_query_target_t, z_reliability_t, z_sample_t, z_session_t,
-    zcu_locality_default, zcu_locality_t, zcu_reply_keyexpr_default, zcu_reply_keyexpr_t,
-    LOG_INVALID_SESSION,
+    opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
+    result,
+    transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
+    z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
+    z_query_consolidation_t, z_query_target_default, z_query_target_t, zc_locality_default,
+    zc_locality_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{zc_reply_keyexpr_default, zc_reply_keyexpr_t, ze_moved_querying_subscriber_t};
+decl_c_type!(
+    owned(
+        ze_owned_querying_subscriber_t,
+        option(zenoh_ext::FetchingSubscriber<()>, &'static Session),
+    ),
+    loaned(ze_loaned_querying_subscriber_t),
+);
 
-pub struct FetchingSubscriberWrapper {
-    fetching_subscriber: zenoh_ext::FetchingSubscriber<'static, ()>,
-    session: z_session_t,
-}
-type FetchingSubscriber = Option<Box<FetchingSubscriberWrapper>>;
-//type FetchingSubscriber = Option<Box<zenoh_ext::FetchingSubscriber<'static, ()>>>;
-
-/// An owned zenoh querying subscriber. Destroying the subscriber cancels the subscription.
-///
-/// Like most `ze_owned_X_t` types, you may obtain an instance of `z_X_t` by loaning it using `z_X_loan(&val)`.  
-/// The `z_loan(val)` macro, available if your compiler supports C11's `_Generic`, is equivalent to writing `z_X_loan(&val)`.  
-///
-/// Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-/// To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-/// After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.  
-///
-/// To check if `val` is still valid, you may use `z_X_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-#[repr(C)]
-pub struct ze_owned_querying_subscriber_t([usize; 1]);
-
-impl_guarded_transmute!(FetchingSubscriber, ze_owned_querying_subscriber_t);
-
-#[repr(C)]
-#[allow(non_camel_case_types)]
-pub struct ze_querying_subscriber_t<'a>(&'a ze_owned_querying_subscriber_t);
-
-impl<'a> AsRef<FetchingSubscriber> for ze_querying_subscriber_t<'a> {
-    fn as_ref(&self) -> &FetchingSubscriber {
-        self.0
-    }
-}
-
-impl ze_owned_querying_subscriber_t {
-    pub fn new(sub: zenoh_ext::FetchingSubscriber<'static, ()>, session: z_session_t) -> Self {
-        Some(Box::new(FetchingSubscriberWrapper {
-            fetching_subscriber: sub,
-            session,
-        }))
-        .into()
-    }
-    pub fn null() -> Self {
-        None.into()
-    }
-}
-
-/// Constructs a null safe-to-drop value of 'ze_owned_querying_subscriber_t' type
+/// Constructs a querying subscriber in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub extern "C" fn ze_querying_subscriber_null() -> ze_owned_querying_subscriber_t {
-    ze_owned_querying_subscriber_t::null()
+pub extern "C" fn ze_internal_querying_subscriber_null(
+    this: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
+) {
+    this.as_rust_type_mut_uninit().write(None);
 }
 
-/// Represents the set of options that can be applied to a querying subscriber,
-/// upon its declaration via :c:func:`ze_declare_querying_subscriber`.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief A set of options that can be applied to a querying subscriber,
+/// upon its declaration via `ze_declare_querying_subscriber()`.
 ///
-/// Members:
-///   z_reliability_t reliability: The subscription reliability.
-///   zcu_locality_t allowed_origin: The restriction for the matching publications that will be
-///                                  receive by this subscriber.
-///   z_keyexpr_t query_selector: The selector to be used for queries.
-///   z_query_target_t query_target: The target to be used for queries.
-///   z_query_consolidation_t query_consolidation: The consolidation mode to be used for queries.
-///   zcu_reply_keyexpr_t query_accept_replies: The accepted replies for queries.
-///   uint64_t query_timeout_ms: The timeout to be used for queries.
 #[repr(C)]
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
-    reliability: z_reliability_t,
-    allowed_origin: zcu_locality_t,
-    query_selector: z_keyexpr_t,
+    /// The restriction for the matching publications that will be receive by this subscriber.
+    allowed_origin: zc_locality_t,
+    /// The selector to be used for queries.
+    query_selector: Option<&'static z_loaned_keyexpr_t>,
+    /// The target to be used for queries.
     query_target: z_query_target_t,
+    /// The consolidation mode to be used for queries.
     query_consolidation: z_query_consolidation_t,
-    query_accept_replies: zcu_reply_keyexpr_t,
+    #[cfg(feature = "unstable")]
+    /// The accepted replies for queries.
+    query_accept_replies: zc_reply_keyexpr_t,
+    /// The timeout to be used for queries.
     query_timeout_ms: u64,
 }
 
-/// Constructs the default value for :c:type:`ze_querying_subscriber_options_t`.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Constructs the default value for `ze_querying_subscriber_options_t`.
 #[no_mangle]
-pub extern "C" fn ze_querying_subscriber_options_default() -> ze_querying_subscriber_options_t {
-    ze_querying_subscriber_options_t {
-        reliability: SubInfo::default().reliability.into(),
-        allowed_origin: zcu_locality_default(),
-        query_selector: z_keyexpr_t::null(),
+pub extern "C" fn ze_querying_subscriber_options_default(
+    this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
+) {
+    this.write(ze_querying_subscriber_options_t {
+        allowed_origin: zc_locality_default(),
+        query_selector: None,
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
-        query_accept_replies: zcu_reply_keyexpr_default(),
+        #[cfg(feature = "unstable")]
+        query_accept_replies: zc_reply_keyexpr_default(),
         query_timeout_ms: 0,
-    }
+    });
 }
 
-/// Declares a Querying Subscriber for a given key expression.
+unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
+    session: &'a z_loaned_session_t,
+    key_expr: &'b z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut ze_querying_subscriber_options_t>,
+) -> QueryingSubscriberBuilder<'a, 'b, UserSpace, Callback<Sample>> {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    let mut sub = session
+        .declare_subscriber(key_expr.as_rust_type_ref())
+        .querying();
+    if let Some(options) = options {
+        sub = sub
+            .query_target(options.query_target.into())
+            .query_consolidation(options.query_consolidation)
+            .allowed_origin(options.allowed_origin.into());
+        #[cfg(feature = "unstable")]
+        {
+            sub = sub.query_accept_replies(options.query_accept_replies.into());
+        }
+        if let Some(query_selector) = options.query_selector {
+            let query_selector = query_selector.as_rust_type_ref().clone();
+            sub = sub.query_selector(query_selector);
+        }
+        if options.query_timeout_ms != 0 {
+            sub = sub.query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
+        }
+    }
+    let sub = sub.callback(move |sample| {
+        let mut owned_sample = Some(sample);
+        z_closure_sample_call(
+            z_closure_sample_loan(&callback),
+            owned_sample
+                .as_mut()
+                .unwrap_unchecked()
+                .as_loaned_c_type_mut(),
+        );
+    });
+    sub
+}
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Constructs and declares a querying subscriber for a given key expression.
 ///
-/// Parameters:
-///     z_session_t session: The zenoh session.
-///     z_keyexpr_t keyexpr: The key expression to subscribe.
-///     z_owned_closure_sample_t callback: The callback function that will be called each time a data matching the subscribed expression is received.
-///     ze_querying_subscriber_options_t options: Additional options for the querying subscriber.
+/// @param session: A Zenoh session.
+/// @param querying_subscriber: An uninitialized memory location where querying subscriber will be constructed.
+/// @param key_expr: A key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+/// @param options: Additional options for the querying subscriber.
 ///
-/// Returns:
-///    :c:type:`ze_owned_subscriber_t`.
-///
-///    To check if the subscription succeeded and if the querying subscriber is still valid,
-///    you may use `ze_querying_subscriber_check(&val)` or `z_check(val)` if your compiler supports `_Generic`, which will return `true` if `val` is valid.
-///
-///    Like all `ze_owned_X_t`, an instance will be destroyed by any function which takes a mutable pointer to said instance, as this implies the instance's inners were moved.  
-///    To make this fact more obvious when reading your code, consider using `z_move(val)` instead of `&val` as the argument.  
-///    After a move, `val` will still exist, but will no longer be valid. The destructors are double-drop-safe, but other functions will still trust that your `val` is valid.
-///
-/// Example:
-///    Declaring a subscriber passing ``NULL`` for the options:
-///
-///    .. code-block:: C
-///
-///       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, NULL);
-///
-///    is equivalent to initializing and passing the default subscriber options:
-///
-///    .. code-block:: C
-///
-///       z_subscriber_options_t opts = z_subscriber_options_default();
-///       ze_owned_subscriber_t sub = ze_declare_querying_subscriber(z_loan(s), z_keyexpr(expr), callback, &opts);
+/// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_declare_querying_subscriber(
-    session: z_session_t,
-    keyexpr: z_keyexpr_t,
-    callback: &mut z_owned_closure_sample_t,
-    options: Option<&ze_querying_subscriber_options_t>,
-) -> ze_owned_querying_subscriber_t {
-    let mut closure = z_owned_closure_sample_t::empty();
-    std::mem::swap(callback, &mut closure);
-
-    match session.upgrade() {
-        Some(s) => {
-            let mut sub = s.declare_subscriber(keyexpr).querying();
-            if let Some(options) = options {
-                sub = sub
-                    .reliability(options.reliability.into())
-                    .allowed_origin(options.allowed_origin.into())
-                    .query_target(options.query_target.into())
-                    .query_consolidation(options.query_consolidation)
-                    .query_accept_replies(options.query_accept_replies.into());
-                if options.query_selector.is_some() {
-                    let query_selector = options
-                        .query_selector
-                        .as_ref()
-                        .map(|s| s.clone().into_owned());
-                    if let Some(query_selector) = query_selector {
-                        sub = sub.query_selector(query_selector)
-                    }
-                }
-                if options.query_timeout_ms != 0 {
-                    sub = sub
-                        .query_timeout(std::time::Duration::from_millis(options.query_timeout_ms));
-                }
-            }
-            match sub
-                .callback(move |sample| {
-                    let payload = sample.payload.contiguous();
-                    let owner = match payload {
-                        std::borrow::Cow::Owned(v) => zenoh::buffers::ZBuf::from(v),
-                        _ => sample.payload.clone(),
-                    };
-                    let sample = z_sample_t::new(&sample, &owner);
-                    z_closure_sample_call(&closure, &sample)
-                })
-                .res()
-            {
-                Ok(sub) => ze_owned_querying_subscriber_t::new(sub, session),
-                Err(e) => {
-                    log::debug!("{}", e);
-                    ze_owned_querying_subscriber_t::null()
-                }
-            }
+    session: &'static z_loaned_session_t,
+    querying_subscriber: &mut MaybeUninit<ze_owned_querying_subscriber_t>,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut ze_querying_subscriber_options_t>,
+) -> result::z_result_t {
+    let this = querying_subscriber.as_rust_type_mut_uninit();
+    let sub = _declare_querying_subscriber_inner(session, key_expr, callback, options);
+    match sub.wait() {
+        Ok(sub) => {
+            let session = session.as_rust_type_ref();
+            this.write(Some((sub, session)));
+            result::Z_OK
         }
-        None => {
-            log::debug!("{}", LOG_INVALID_SESSION);
-            ze_owned_querying_subscriber_t::null()
+        Err(e) => {
+            tracing::debug!("{}", e);
+            this.write(None);
+            result::Z_EGENERIC
         }
     }
 }
 
-/// Make a :c:type:`ze_owned_querying_subscriber_t` to perform an additional query on a specified selector.
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Declares a background querying subscriber for a given key expression. Subscriber callback will be called to process the messages,
+/// until the corresponding session is closed or dropped.
+///
+/// @param session: A Zenoh session.
+/// @param key_expr: A key expression to subscribe to.
+/// @param callback: The callback function that will be called each time a data matching the subscribed expression is received.
+/// @param options: Additional options for the querying subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_declare_background_querying_subscriber(
+    session: &'static z_loaned_session_t,
+    key_expr: &z_loaned_keyexpr_t,
+    callback: &mut z_moved_closure_sample_t,
+    options: Option<&mut ze_querying_subscriber_options_t>,
+) -> result::z_result_t {
+    let sub = _declare_querying_subscriber_inner(session, key_expr, callback, options);
+    match sub.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            tracing::debug!("{}", e);
+            result::Z_EGENERIC
+        }
+    }
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Make querying subscriber perform an additional query on a specified selector.
 /// The queried samples will be merged with the received publications and made available in the subscriber callback.
+/// @return 0 in case of success, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn ze_querying_subscriber_get(
-    sub: ze_querying_subscriber_t,
-    selector: z_keyexpr_t,
-    options: Option<&z_get_options_t>,
-) -> i8 {
-    unsafe impl Sync for z_get_options_t {}
+    this: &ze_loaned_querying_subscriber_t,
+    selector: &z_loaned_keyexpr_t,
+    options: Option<&mut z_get_options_t>,
+) -> result::z_result_t {
+    let sub = this.as_rust_type_ref();
+    let session = sub.1;
+    let selector = selector.as_rust_type_ref().clone();
+    if let Err(e) = sub
+        .0
+        .fetch({
+            move |cb| {
+                let mut get = session.get(selector);
 
-    if let Some(sub) = sub.as_ref() {
-        match sub.session.upgrade() {
-            Some(s) => {
-                if let Err(e) = sub
-                    .fetching_subscriber
-                    .fetch({
-                        let selector = KeyExpr::try_from(selector).unwrap();
-                        move |cb| match options {
-                            Some(options) => s
-                                .get(selector)
-                                .target(options.target.into())
-                                .consolidation(options.consolidation)
-                                .timeout(std::time::Duration::from_millis(options.timeout_ms))
-                                .callback(cb)
-                                .res_sync(),
-                            None => s.get(selector).callback(cb).res_sync(),
+                if let Some(options) = options {
+                    if let Some(payload) = options.payload.take() {
+                        get = get.payload(payload.take_rust_type());
+                    }
+                    if let Some(encoding) = options.encoding.take() {
+                        get = get.encoding(encoding.take_rust_type());
+                    }
+                    if let Some(attachment) = options.attachment.take() {
+                        get = get.attachment(attachment.take_rust_type());
+                    }
+
+                    get = get
+                        .consolidation(options.consolidation)
+                        .target(options.target.into())
+                        .congestion_control(options.congestion_control.into())
+                        .priority(options.priority.into())
+                        .express(options.is_express);
+
+                    #[cfg(feature = "unstable")]
+                    {
+                        if let Some(source_info) = options.source_info.take() {
+                            get = get.source_info(source_info.take_rust_type());
                         }
-                    })
-                    .res()
-                {
-                    log::debug!("{}", e);
-                    return -1;
+                        get = get
+                            .allowed_destination(options.allowed_destination.into())
+                            .accept_replies(options.accept_replies.into());
+                    }
+
+                    if options.timeout_ms != 0 {
+                        get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
+                    }
                 }
+
+                get.callback(cb).wait()
             }
-            None => {
-                log::debug!("{}", LOG_INVALID_SESSION);
-                return -1;
-            }
+        })
+        .wait()
+    {
+        tracing::debug!("{}", e);
+        return result::Z_EGENERIC;
+    }
+    result::Z_OK
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Undeclares querying subscriber callback and resets it to its gravestone state.
+/// This is equivalent to calling `ze_undeclare_querying_subscriber()` and discarding its return value.
+#[no_mangle]
+pub extern "C" fn ze_querying_subscriber_drop(this_: &mut ze_moved_querying_subscriber_t) {
+    std::mem::drop(this_.take_rust_type())
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Returns ``true`` if querying subscriber is valid, ``false`` otherwise.
+#[no_mangle]
+pub extern "C" fn ze_internal_querying_subscriber_check(
+    this_: &ze_owned_querying_subscriber_t,
+) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Borrows querying subscriber.
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn ze_querying_subscriber_loan(
+    this: &ze_owned_querying_subscriber_t,
+) -> &ze_loaned_querying_subscriber_t {
+    this.as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
+}
+
+/// @warning This API is deprecated. Please use ze_advanced_subscriber.
+/// @brief Undeclares the given querying subscriber.
+///
+/// @return 0 in case of success, negative error code otherwise.
+#[no_mangle]
+pub extern "C" fn ze_undeclare_querying_subscriber(
+    this_: &mut ze_moved_querying_subscriber_t,
+) -> result::z_result_t {
+    if let Some(s) = this_.take_rust_type() {
+        if let Err(e) = s.0.undeclare().wait() {
+            crate::report_error!("{}", e);
+            return result::Z_EGENERIC;
         }
     }
-    0
-}
-
-/// Undeclares the given :c:type:`ze_owned_querying_subscriber_t`, droping it and invalidating it for double-drop safety.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn ze_undeclare_querying_subscriber(sub: &mut ze_owned_querying_subscriber_t) -> i8 {
-    if let Some(s) = sub.take() {
-        if let Err(e) = s.fetching_subscriber.close().res_sync() {
-            log::warn!("{}", e);
-            return e.errno().get();
-        }
-    }
-    0
-}
-
-/// Returns ``true`` if `sub` is valid.
-#[allow(clippy::missing_safety_doc)]
-#[no_mangle]
-pub extern "C" fn ze_querying_subscriber_check(sub: &ze_owned_querying_subscriber_t) -> bool {
-    sub.as_ref().is_some()
-}
-
-/// Returns a :c:type:`ze_querying_subscriber_loan` loaned from `p`.
-#[no_mangle]
-pub extern "C" fn ze_querying_subscriber_loan(
-    p: &ze_owned_querying_subscriber_t,
-) -> ze_querying_subscriber_t {
-    ze_querying_subscriber_t(p)
+    result::Z_OK
 }
