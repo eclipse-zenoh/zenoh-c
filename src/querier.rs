@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, ops::Deref};
 
 use libc::c_char;
 use zenoh::{
@@ -32,7 +32,7 @@ use crate::{
     z_loaned_session_t, z_matching_status_t, z_moved_bytes_t, z_moved_closure_matching_status_t,
     z_moved_closure_reply_t, z_moved_encoding_t, z_moved_querier_t, z_owned_matching_listener_t,
     z_owned_querier_t, z_priority_t, z_query_consolidation_t, z_query_target_t,
-    zc_locality_default, zc_locality_t,
+    zc_locality_default, zc_locality_t, SgNotifier, SyncGroup, SyncObj,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -80,8 +80,21 @@ pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_op
     });
 }
 
+pub(crate) struct CQuerier {
+    querier: Querier<'static>,
+    sg: SyncGroup,
+}
+
+impl Deref for CQuerier {
+    type Target = Querier<'static>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.querier
+    }
+}
+
 decl_c_type!(
-    owned(z_owned_querier_t, option Querier<'static>),
+    owned(z_owned_querier_t, option CQuerier),
     loaned(z_loaned_querier_t),
 );
 
@@ -130,7 +143,10 @@ pub extern "C" fn z_declare_querier(
             result::Z_EGENERIC
         }
         Ok(querier) => {
-            this.write(Some(querier));
+            this.write(Some(CQuerier {
+                querier,
+                sg: SyncGroup::new(),
+            }));
             result::Z_OK
         }
     }
@@ -308,11 +324,12 @@ pub unsafe extern "C" fn z_querier_get_with_parameters_substr(
     if !p.is_empty() {
         get = get.parameters(p);
     }
+    let sync_callback = SyncObj::new(callback, querier.sg.notifier());
     match get
         .callback(move |response| {
             let mut owned_response = Some(response);
             z_closure_reply_call(
-                z_closure_reply_loan(&callback),
+                z_closure_reply_loan(&sync_callback),
                 owned_response
                     .as_mut()
                     .unwrap_unchecked()
@@ -347,16 +364,18 @@ pub extern "C" fn z_querier_keyexpr(querier: &z_loaned_querier_t) -> &z_loaned_k
 fn _querier_matching_listener_declare_inner<'a>(
     querier: &'a z_loaned_querier_t,
     callback: &mut z_moved_closure_matching_status_t,
+    notifier: SgNotifier,
 ) -> zenoh::matching::MatchingListenerBuilder<'a, Callback<MatchingStatus>> {
     let querier = querier.as_rust_type_ref();
     let callback = callback.take_rust_type();
+    let sync_callback = SyncObj::new(callback, notifier);
     let listener = querier
         .matching_listener()
         .callback_mut(move |matching_status| {
             let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
-            z_closure_matching_status_call(z_closure_matching_status_loan(&callback), &status);
+            z_closure_matching_status_call(z_closure_matching_status_loan(&sync_callback), &status);
         });
     listener
 }
@@ -374,11 +393,14 @@ pub extern "C" fn z_querier_declare_matching_listener(
     matching_listener: &mut MaybeUninit<z_owned_matching_listener_t>,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
+    use crate::CMatchingListener;
+
     let this = matching_listener.as_rust_type_mut_uninit();
-    let listener = _querier_matching_listener_declare_inner(querier, callback);
+    let sg = SyncGroup::new();
+    let listener = _querier_matching_listener_declare_inner(querier, callback, sg.notifier());
     match listener.wait() {
         Ok(listener) => {
-            this.write(Some(listener));
+            this.write(Some(CMatchingListener { listener, _sg: sg }));
             result::Z_OK
         }
         Err(e) => {
@@ -401,7 +423,11 @@ pub extern "C" fn z_querier_declare_background_matching_listener(
     querier: &'static z_loaned_querier_t,
     callback: &mut z_moved_closure_matching_status_t,
 ) -> result::z_result_t {
-    let listener = _querier_matching_listener_declare_inner(querier, callback);
+    let listener = _querier_matching_listener_declare_inner(
+        querier,
+        callback,
+        querier.as_rust_type_ref().sg.notifier(),
+    );
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
@@ -448,7 +474,7 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 #[no_mangle]
 pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
     if let Some(q) = this_.take_rust_type() {
-        if let Err(e) = q.undeclare().wait() {
+        if let Err(e) = q.querier.undeclare().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
