@@ -22,25 +22,37 @@
 #include <assert.h>
 z_owned_mutex_t mu;
 
-void data_handler(z_loaned_sample_t *sample, void *arg) {
-    int *val = (int *)arg;
+typedef struct z_val_t {
+    int val;
+    bool dropped;
+} z_val_t;
+
+void drop(void *arg) {
     z_mutex_lock(z_loan_mut(mu));
-    (*val)++;
+    z_val_t *val = (z_val_t *)arg;
+    val->dropped = true;
+    z_mutex_unlock(z_loan_mut(mu));
+}
+
+void data_handler(z_loaned_sample_t *sample, void *arg) {
+    z_val_t *val = (z_val_t *)arg;
+    z_mutex_lock(z_loan_mut(mu));
+    (val->val)++;
     z_mutex_unlock(z_loan_mut(mu));
     z_sleep_s(5);
     z_mutex_lock(z_loan_mut(mu));
-    (*val)++;
+    (val->val)++;
     z_mutex_unlock(z_loan_mut(mu));
 }
 
 void query_handler(z_loaned_query_t *query, void *arg) {
-    int *val = (int *)arg;
+    z_val_t *val = (z_val_t *)arg;
     z_mutex_lock(z_loan_mut(mu));
-    (*val)++;
+    (val->val)++;
     z_mutex_unlock(z_loan_mut(mu));
     z_sleep_s(5);
     z_mutex_lock(z_loan_mut(mu));
-    (*val)++;
+    (val->val)++;
     z_mutex_unlock(z_loan_mut(mu));
 
     z_view_keyexpr_t ke;
@@ -51,13 +63,13 @@ void query_handler(z_loaned_query_t *query, void *arg) {
 }
 
 void reply_handler(z_loaned_reply_t *reply, void *arg) {
-    int *val = (int *)arg;
+    z_val_t *val = (z_val_t *)arg;
     z_mutex_lock(z_loan_mut(mu));
-    (*val)++;
+    (val->val)++;
     z_mutex_unlock(z_loan_mut(mu));
     z_sleep_s(5);
     z_mutex_lock(z_loan_mut(mu));
-    (*val)++;
+    (val->val)++;
     z_mutex_unlock(z_loan_mut(mu));
 }
 
@@ -74,10 +86,10 @@ void test_pub_sub() {
     assert(z_open(&s1, z_move(c1), NULL) == Z_OK);
     assert(z_open(&s2, z_move(c2), NULL) == Z_OK);
 
-    int val = 0;
+    z_val_t val = {0, false};
     z_owned_subscriber_t sub;
     z_owned_closure_sample_t callback;
-    z_closure(&callback, data_handler, NULL, (void *)&val);
+    z_closure(&callback, data_handler, drop, (void *)&val);
     assert(z_declare_subscriber(z_loan(s1), &sub, z_loan(ke), z_move(callback), NULL) == Z_OK);
     z_sleep_s(1);
     z_owned_bytes_t p;
@@ -86,11 +98,10 @@ void test_pub_sub() {
 
     z_sleep_s(1);
     z_drop(z_move(sub));
-    int out = 0;
     z_mutex_lock(z_loan_mut(mu));
-    out = val;
+    assert(val.dropped);
+    assert(val.val == 2);
     z_mutex_unlock(z_loan_mut(mu));
-    assert(out == 2);
 
     z_drop(z_move(s1));
     z_drop(z_move(s2));
@@ -110,32 +121,33 @@ void test_query_reply() {
     assert(z_open(&s1, z_move(c1), NULL) == Z_OK);
     assert(z_open(&s2, z_move(c2), NULL) == Z_OK);
 
-    int val = 0;
+    z_val_t query_val = {0, false};
+    z_val_t reply_val = {0, false};
+
     z_owned_queryable_t q;
     z_owned_closure_query_t q_callback;
-    z_closure(&q_callback, query_handler, NULL, (void *)&val);
+    z_closure(&q_callback, query_handler, drop, (void *)&query_val);
 
     assert(z_declare_queryable(z_loan(s1), &q, z_loan(ke), z_move(q_callback), NULL) == Z_OK);
     z_sleep_s(1);
 
     z_owned_closure_reply_t r_callback;
-    z_closure(&r_callback, reply_handler, NULL, (void *)&val);
+    z_closure(&r_callback, reply_handler, drop, (void *)&reply_val);
     assert(z_get(z_loan(s2), z_loan(ke), "", z_move(r_callback), NULL) == Z_OK);
 
     z_sleep_s(1);
     z_drop(z_move(q));
-    int out = 0;
     z_mutex_lock(z_loan_mut(mu));
-    out = val;
+    assert(query_val.dropped);
+    assert(query_val.val == 2);
     z_mutex_unlock(z_loan_mut(mu));
-    assert(out == 2);
 
     z_sleep_s(1);
     z_drop(z_move(s2));
     z_mutex_lock(z_loan_mut(mu));
-    out = val;
+    assert(reply_val.dropped);
+    assert(reply_val.val == 2);
     z_mutex_unlock(z_loan_mut(mu));
-    assert(out == 4);
 
     z_drop(z_move(s1));
     z_drop(z_move(mu));
