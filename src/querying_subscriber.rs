@@ -24,13 +24,11 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
-    z_query_consolidation_t, z_query_target_default, z_query_target_t,
+    z_query_consolidation_t, z_query_target_default, z_query_target_t, zc_locality_default,
+    zc_locality_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{
-    zc_locality_default, zc_locality_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
-    ze_moved_querying_subscriber_t,
-};
+use crate::{zc_reply_keyexpr_default, zc_reply_keyexpr_t, ze_moved_querying_subscriber_t};
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
@@ -56,7 +54,6 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
     /// The restriction for the matching publications that will be receive by this subscriber.
-    #[cfg(feature = "unstable")]
     allowed_origin: zc_locality_t,
     /// The selector to be used for queries.
     query_selector: Option<&'static z_loaned_keyexpr_t>,
@@ -78,7 +75,6 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
 ) {
     this.write(ze_querying_subscriber_options_t {
-        #[cfg(feature = "unstable")]
         allowed_origin: zc_locality_default(),
         query_selector: None,
         query_target: z_query_target_default(),
@@ -103,12 +99,11 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
     if let Some(options) = options {
         sub = sub
             .query_target(options.query_target.into())
-            .query_consolidation(options.query_consolidation);
+            .query_consolidation(options.query_consolidation)
+            .allowed_origin(options.allowed_origin.into());
         #[cfg(feature = "unstable")]
         {
-            sub = sub
-                .query_accept_replies(options.query_accept_replies.into())
-                .allowed_origin(options.allowed_origin.into());
+            sub = sub.query_accept_replies(options.query_accept_replies.into());
         }
         if let Some(query_selector) = options.query_selector {
             let query_selector = query_selector.as_rust_type_ref().clone();
@@ -297,7 +292,7 @@ pub extern "C" fn ze_undeclare_querying_subscriber(
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
         if let Err(e) = s.0.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }

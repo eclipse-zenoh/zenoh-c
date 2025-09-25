@@ -20,13 +20,14 @@ use std::{
     str::{from_utf8, FromStr},
 };
 
-use libc::{c_char, strlen};
+use libc::c_char;
 use unwrap_infallible::UnwrapInfallible;
 use zenoh::bytes::Encoding;
 
 pub use crate::opaque_types::{z_loaned_encoding_t, z_owned_encoding_t};
 use crate::{
     result::{self, z_result_t},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_encoding_t, z_owned_string_t, z_string_copy_from_substr,
 };
@@ -66,7 +67,7 @@ pub unsafe extern "C" fn z_encoding_from_substr(
                 result::Z_OK
             }
             Err(e) => {
-                tracing::error!("Can not create encoding from non UTF-8 string: {}", e);
+                crate::report_error!("Can not create encoding from non UTF-8 string: {}", e);
                 encoding.write(Encoding::default());
                 result::Z_EINVAL
             }
@@ -88,6 +89,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
         *encoding = std::mem::take(encoding).with_schema(String::new());
         return result::Z_OK;
     } else if s.is_null() {
+        crate::report_error!("Non-zero length string should not be null");
         return result::Z_EINVAL;
     }
     #[allow(clippy::unnecessary_cast)]
@@ -98,7 +100,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EINVAL
         }
     }
@@ -112,7 +114,7 @@ pub unsafe extern "C" fn z_encoding_set_schema_from_str(
     this: &mut z_loaned_encoding_t,
     s: *const c_char,
 ) -> z_result_t {
-    z_encoding_set_schema_from_substr(this, s, strlen(s))
+    z_encoding_set_schema_from_substr(this, s, strlen_or_zero(s))
 }
 
 /// Constructs a `z_owned_encoding_t` from a specified string.
@@ -122,7 +124,7 @@ pub unsafe extern "C" fn z_encoding_from_str(
     this: &mut MaybeUninit<z_owned_encoding_t>,
     s: *const c_char,
 ) -> result::z_result_t {
-    z_encoding_from_substr(this, s, libc::strlen(s))
+    z_encoding_from_substr(this, s, strlen_or_zero(s))
 }
 
 /// Constructs an owned non-null-terminated string from encoding

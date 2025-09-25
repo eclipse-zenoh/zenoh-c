@@ -41,31 +41,41 @@ int main(int argc, char** argv) {
     z_condvar_init(&cond);
 
     z_owned_session_t session;
-    z_open(&session, z_move(config), NULL);
+    if (z_open(&session, z_move(config), NULL) < 0) {
+        printf("Unable to open session!\n");
+        exit(-1);
+    }
+
     z_view_keyexpr_t ping;
     z_view_keyexpr_from_str_unchecked(&ping, "test/ping");
     z_view_keyexpr_t pong;
     z_view_keyexpr_from_str_unchecked(&pong, "test/pong");
-    z_owned_publisher_t pub;
     z_publisher_options_t opts;
     z_publisher_options_default(&opts);
     opts.is_express = !args.no_express;
-    z_declare_publisher(z_loan(session), &pub, z_loan(ping), &opts);
+
+    z_owned_publisher_t pub;
+    if (z_declare_publisher(z_loan(session), &pub, z_loan(ping), &opts) < 0) {
+        printf("Unable to declare publisher for key expression!\n");
+        exit(-1);
+    }
+
     z_owned_closure_sample_t respond;
     z_closure(&respond, callback, drop, (void*)(&pub));
+
     z_owned_subscriber_t sub;
-    z_declare_subscriber(z_loan(session), &sub, z_loan(pong), z_move(respond), NULL);
+    if (z_declare_subscriber(z_loan(session), &sub, z_loan(pong), z_move(respond), NULL) < 0) {
+        printf("Unable to declare subscriber for key expression!\n");
+        exit(-1);
+    }
 
     // Create SHM Provider
-    z_alloc_alignment_t alignment = {0};
-    z_owned_memory_layout_t layout;
-    z_memory_layout_new(&layout, args.size, alignment);
     z_owned_shm_provider_t provider;
-    z_posix_shm_provider_new(&provider, z_loan(layout));
+    z_shm_provider_default_new(&provider, args.size);
 
     // Allocate SHM Buffer
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
+    z_shm_provider_alloc(&alloc, z_loan(provider), args.size);
     if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...");
         return -1;
@@ -126,7 +136,6 @@ int main(int argc, char** argv) {
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));
-    z_drop(z_move(layout));
 }
 
 void print_help() {

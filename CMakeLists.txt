@@ -31,6 +31,17 @@ declare_cache_var(ZENOHC_BUILD_WITH_SHARED_MEMORY FALSE BOOL "Enable shared-memo
 declare_cache_var(ZENOHC_BUILD_WITH_UNSTABLE_API FALSE BOOL "Enable unstable API feature")
 declare_cache_var(ZENOHC_BUILD_TESTS_WITH_CXX FALSE BOOL "Use C++ compiler for building tests to check API's C++ compatibility")
 declare_cache_var(ZENOHC_CUSTOM_TARGET "" STRING "Rust target for cross compilation, 'aarch64-unknown-linux-gnu' for example")
+message(STATUS "ENV{CARGO_BUILD_TARGET} = $ENV{CARGO_BUILD_TARGET}")
+if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
+	set(_INTERNAL_ZENOHC_BUILD_TARGET ${ZENOHC_CUSTOM_TARGET})
+	set(_INTERNAL_ZENOHC_BUILD_TARGET_SOURCE ZENOHC_CUSTOM_TARGET)
+elseif(NOT("$ENV{CARGO_BUILD_TARGET}" STREQUAL ""))
+	set(_INTERNAL_ZENOHC_BUILD_TARGET $ENV{CARGO_BUILD_TARGET})
+	set(_INTERNAL_ZENOHC_BUILD_TARGET_SOURCE ENV{CARGO_BUILD_TARGET})
+endif()
+if(NOT("${_INTERNAL_ZENOHC_BUILD_TARGET}" STREQUAL ""))
+	message(STATUS "Build target: ${_INTERNAL_ZENOHC_BUILD_TARGET} (from ${_INTERNAL_ZENOHC_BUILD_TARGET_SOURCE})")
+endif()
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
@@ -50,9 +61,9 @@ status_print(project_version)
 #
 # There are 3 possible variants of placement generated Cargo.toml files:
 # 1. Build in source tree (in IDE usually), using single config generator (Ninja, Makefiles)
-#    
+#
 #    In this case Cargo.toml is placed at the root of source tree to make it visible for rust-analyzer. When release or debug
-#    configuration is selected, Cargo.toml is updated accordingly 
+#    configuration is selected, Cargo.toml is updated accordingly
 #
 # 2. Build in source tree (in IDE usually), using multi config generator (Visual Studio, Ninja Multi-Config)
 #
@@ -98,9 +109,9 @@ set_genexpr_condition(cargo_generated_include_dir DEBUG $<CONFIG:Debug> ${cargo_
 
 set(cargo_target_dir_debug ${cargo_toml_dir_debug}/target)
 set(cargo_target_dir_release ${cargo_toml_dir_release}/target)
-if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
-	set(cargo_target_dir_debug ${cargo_target_dir_debug}/${ZENOHC_CUSTOM_TARGET})
-	set(cargo_target_dir_release ${cargo_target_dir_release}/${ZENOHC_CUSTOM_TARGET})
+if(NOT("${_INTERNAL_ZENOHC_BUILD_TARGET}" STREQUAL ""))
+	set(cargo_target_dir_debug ${cargo_target_dir_debug}/${_INTERNAL_ZENOHC_BUILD_TARGET})
+	set(cargo_target_dir_release ${cargo_target_dir_release}/${_INTERNAL_ZENOHC_BUILD_TARGET})
 endif()
 set(cargo_binary_dir_debug ${cargo_target_dir_debug}/debug)
 set(cargo_binary_dir_release ${cargo_target_dir_release}/release)
@@ -123,14 +134,14 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_constants.h
 			DESTINATION ${cargo_toml_dir}/include/)
-	endif()	
+	endif()
 	configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml.in" "${cargo_toml_dir}/Cargo.toml" @ONLY)
 endfunction()
 
 #
 # Configure Cargo.toml files
 #
-set(cargo_lib_name_debug zenohcd)
+set(cargo_lib_name_debug zenohc)
 set(cargo_lib_name_release zenohc)
 if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
 	# same Cargo.toml is for ide, debug and release configurations
@@ -178,28 +189,28 @@ endmacro()
 # get rust output library names from https://github.com/corrosion-rs/corrosion/blob/1c6974c2473765449e7c4649f9f96f1b751420c3/cmake/Corrosion.cmake#L331
 if(WIN32)
 	set_lib(dylibsr dylibr zenohc.dll)
-	set_lib(dylibsd dylibd zenohcd.dll)
+	set_lib(dylibsd dylibd zenohc.dll)
 	if(MSVC)
 		set_lib(staticlibsr staticlibr zenohc.lib)
-		set_lib(staticlibsd staticlibd zenohcd.lib)
+		set_lib(staticlibsd staticlibd zenohc.lib)
 		set_lib(dylibsr implibr zenohc.dll.lib)
-		set_lib(dylibsd implibd zenohcd.dll.lib)
+		set_lib(dylibsd implibd zenohc.dll.lib)
 	else() #gnu/mingw/msys ?
 		set_lib(staticlibsr staticlibr libzenohc.a)
-		set_lib(staticlibsd staticlibd libzenohcd.a)
+		set_lib(staticlibsd staticlibd libzenohc.a)
 		set_lib(dylibsr implibr libzenohc.dll.a)
-		set_lib(dylibsd implibd libzenohcd.dll.a)
+		set_lib(dylibsd implibd libzenohc.dll.a)
 	endif()
 elseif(APPLE)
 	set_lib(dylibsr dylibr libzenohc.dylib)
-	set_lib(dylibsd dylibd libzenohcd.dylib)
+	set_lib(dylibsd dylibd libzenohc.dylib)
 	set_lib(staticlibsr staticlibr libzenohc.a)
-	set_lib(staticlibsd staticlibd libzenohcd.a)
+	set_lib(staticlibsd staticlibd libzenohc.a)
 else() #UNIX
 	set_lib(dylibsr dylibr libzenohc.so)
-	set_lib(dylibsd dylibd libzenohcd.so)
+	set_lib(dylibsd dylibd libzenohc.so)
 	set_lib(staticlibsr staticlibr libzenohc.a)
-	set_lib(staticlibsd staticlibd libzenohcd.a)
+	set_lib(staticlibsd staticlibd libzenohc.a)
 endif()
 
 list(APPEND libsr ${dylibsr})
@@ -215,9 +226,9 @@ set_genexpr_condition(libs DEBUG $<CONFIG:Debug> "${libsd}" "${libsr}")
 #
 
 # Combine "--release" and "--manifest-path" options under DEBUG condition to avoid passing empty parameter to cargo command line in `add_custom_command`, causing build failure
-# This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on 
+# This empty item ($<IF:$<CONFIG:Debug>;,--release>) can't be filtered out by `list(FILTER ...)` because it becomes empty only on
 # build stage when generator expressions are evaluated.
-set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug> 
+set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
@@ -248,7 +259,7 @@ add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
-	COMMAND cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
@@ -261,24 +272,40 @@ add_custom_target(cargo ALL DEPENDS "${libs}")
 #
 
 function(set_target_imported_locations target libr libd)
+	set(_loc_debug  ${cargo_binary_dir_debug}/${libd})
+	set(_loc_release ${cargo_binary_dir_release}/${libr})
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(_loc "${_loc_debug}")
+	else()
+		set(_loc "${_loc_release}")
+	endif()
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_LOCATION_DEBUG ${cargo_binary_dir_debug}/${libd}
-		IMPORTED_LOCATION_RELEASE ${cargo_binary_dir_release}/${libr}
-		IMPORTED_LOCATION_MINSIZEREL ${cargo_binary_dir_release}/${libr}
-		IMPORTED_LOCATION_RELWITHDEBINFO ${cargo_binary_dir_release}/${libr}
+		IMPORTED_LOCATION ${_loc}
+		IMPORTED_LOCATION_DEBUG ${_loc_debug}
+		IMPORTED_LOCATION_RELEASE ${_loc_release}
+		IMPORTED_LOCATION_MINSIZEREL ${_loc_release}
+		IMPORTED_LOCATION_RELWITHDEBINFO ${_loc_release}
 	)
 endfunction()
 
 function(set_target_imported_implib target libr libd)
+	set(_loc_debug  ${cargo_binary_dir_debug}/${libd})
+	set(_loc_release ${cargo_binary_dir_release}/${libr})
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(_loc "${_loc_debug}")
+	else()
+		set(_loc "${_loc_release}")
+	endif()
 	set_target_properties(${target}
 		PROPERTIES
 		IMPORTED_GLOBAL TRUE
-		IMPORTED_IMPLIB_DEBUG ${cargo_binary_dir_debug}/${libd}
-		IMPORTED_IMPLIB_RELEASE ${cargo_binary_dir_release}/${libr}
-		IMPORTED_IMPLIB_MINSIZEREL ${cargo_binary_dir_release}/${libr}
-		IMPORTED_IMPLIB_RELWITHDEBINFO ${cargo_binary_dir_release}/${libr}
+		IMPORTED_IMPLIB ${_loc}
+		IMPORTED_IMPLIB_DEBUG ${_loc_debug}
+		IMPORTED_IMPLIB_RELEASE ${_loc_release}
+		IMPORTED_IMPLIB_MINSIZEREL ${_loc_release}
+		IMPORTED_IMPLIB_RELWITHDEBINFO ${_loc_release}
 	)
 endfunction()
 
@@ -291,10 +318,6 @@ add_library(zenohc_shared SHARED IMPORTED GLOBAL)
 add_library(zenohc::shared ALIAS zenohc_shared)
 add_dependencies(zenohc_shared cargo)
 target_compile_definitions(zenohc_shared INTERFACE ZENOHC_DYN_LIB)
-# Workaroud for https://github.com/rust-lang/cargo/issues/5045
-# mentioned in https://github.com/eclipse-zenoh/zenoh-c/issues/138
-# If it's fixed, do not forget to correct PackageConfig.cmake.in also
-set_target_properties(zenohc_shared PROPERTIES IMPORTED_NO_SONAME TRUE)
 set_target_imported_locations(zenohc_shared ${dylibr} ${dylibd})
 add_library(zenohc_static STATIC IMPORTED GLOBAL)
 add_library(zenohc::static ALIAS zenohc_static)
@@ -327,4 +350,3 @@ if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
 	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${cargo_binary_dir}/examples)
 	add_subdirectory(examples)
 endif()
-

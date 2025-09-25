@@ -436,8 +436,11 @@ Functions
 .. doxygenfunction:: z_config_default
 .. doxygenfunction:: zc_config_from_env
 .. doxygenfunction:: zc_config_from_file
+.. doxygenfunction:: zc_config_from_file_substr
 .. doxygenfunction:: zc_config_from_str
+.. doxygenfunction:: zc_config_from_substr
 .. doxygenfunction:: zc_config_insert_json5
+.. doxygenfunction:: zc_config_insert_json5_from_substr
 .. doxygenfunction:: zc_config_to_string
 
 Session management
@@ -629,6 +632,7 @@ Functions
 .. doxygenfunction:: z_undeclare_queryable
 .. doxygenfunction:: z_declare_background_queryable
 .. doxygenfunction:: z_queryable_id
+.. doxygenfunction:: z_queryable_keyexpr
 
 .. doxygenfunction:: z_queryable_options_default
 .. doxygenfunction:: z_query_reply_options_default
@@ -709,6 +713,7 @@ Functions
 ---------
 
 .. doxygenfunction:: z_get
+.. doxygenfunction:: z_get_with_parameters_substr
 .. doxygenfunction:: z_get_options_default
 
 .. doxygenfunction:: z_query_consolidation_default
@@ -726,6 +731,7 @@ Functions
 .. doxygenfunction:: z_querier_id
 .. doxygenfunction:: z_querier_keyexpr
 .. doxygenfunction:: z_querier_get
+.. doxygenfunction:: z_querier_get_with_parameters_substr
 .. doxygenfunction:: z_querier_get_matching_status
 .. doxygenfunction:: z_querier_declare_matching_listener
 .. doxygenfunction:: z_querier_declare_background_matching_listener
@@ -852,6 +858,7 @@ Functions
 ---------
 .. doxygenfunction:: zc_stop_z_runtime
 .. doxygenfunction:: zc_cleanup_orphaned_shm_segments 
+.. doxygenfunction:: zc_get_last_error
 
 Ext
 ===

@@ -33,7 +33,9 @@ pub struct z_owned_closure_sample_t {
 /// Loaned closure.
 #[repr(C)]
 pub struct z_loaned_closure_sample_t {
-    _0: [usize; 3],
+    _0: usize,
+    _1: usize,
+    _2: usize,
 }
 
 /// Moved closure.
@@ -97,7 +99,7 @@ pub extern "C" fn z_closure_sample_call(
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
         Some(call) => call(sample, closure._context),
-        None => tracing::error!("Attempted to call an uninitialized closure!"),
+        None => crate::report_error!("Attempted to call an uninitialized closure!"),
     }
 }
 

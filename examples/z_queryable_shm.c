@@ -63,9 +63,8 @@ void query_handler(z_loaned_query_t *query, void *context) {
 
     printf("Allocating Shared Memory Buffer...\n");
     size_t value_len = strlen(value) + 1;  // + NULL terminator
-    z_alloc_alignment_t alignment = {0};
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc_gc_defrag_blocking(&alloc, handler_context->provider, value_len, alignment);
+    z_shm_provider_alloc_gc_defrag_blocking(&alloc, handler_context->provider, value_len);
     if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         {
             uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
@@ -99,23 +98,20 @@ int main(int argc, char **argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config), NULL)) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    if (z_view_keyexpr_from_str(&ke, args.keyexpr)) {
+    if (z_view_keyexpr_from_str(&ke, args.keyexpr) < 0) {
         printf("%s is not a valid key expression", args.keyexpr);
         exit(-1);
     }
 
     printf("Creating POSIX SHM Provider...\n");
     const size_t total_size = 4096;
-    z_alloc_alignment_t alignment = {0};
-    z_owned_memory_layout_t layout;
-    z_memory_layout_new(&layout, total_size, alignment);
     z_owned_shm_provider_t provider;
-    z_posix_shm_provider_new(&provider, z_loan(layout));
+    z_shm_provider_default_new(&provider, total_size);
 
     printf("Declaring Queryable on '%s'...\n", args.keyexpr);
     z_owned_closure_query_t callback;
@@ -143,7 +139,6 @@ int main(int argc, char **argv) {
 
     z_drop(z_move(qable));
     z_drop(z_move(s));
-    z_drop(z_move(layout));
     z_drop(z_move(provider));
     return 0;
 }

@@ -13,6 +13,7 @@ use super::{
     common_helpers::{cargo_target_dir, split_type_name, test_feature},
     splitguide::{split_bindings, FuncArg, FunctionSignature},
 };
+use crate::get_out_rs_path;
 
 const BUGGY_GENERATION_PATH: &str = "include/zenoh-gen-buggy.h";
 const GENERATION_PATH: &str = "include/zenoh-gen.h";
@@ -35,7 +36,13 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
 };
 
 pub fn generate_c_headers() {
-    cbindgen::generate(std::env::var("CARGO_MANIFEST_DIR").unwrap())
+    let crate_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let config = cbindgen::Config::from_root_or_default(crate_dir.clone());
+    cbindgen::Builder::new()
+        .with_config(config)
+        .with_crate(crate_dir)
+        .with_src(get_out_rs_path().join("./opaque_types.rs"))
+        .generate()
         .expect("Unable to generate bindings")
         .write_to_file(BUGGY_GENERATION_PATH);
 
@@ -325,7 +332,10 @@ fn configure() {
     let major = version_parts[0];
     let minor = version_parts[1];
     let patch = version_parts[2];
-    let tweak = version_parts.get(3).unwrap_or(&"");
+    let tweak = version_parts
+        .get(3)
+        .map(|val| format!(" {val}"))
+        .unwrap_or("".to_string());
     file.write_all(
         format!(
             r#"#pragma once
@@ -333,7 +343,7 @@ fn configure() {
 #define ZENOH_C_MAJOR {}
 #define ZENOH_C_MINOR {}
 #define ZENOH_C_PATCH {}
-#define ZENOH_C_TWEAK {}
+#define ZENOH_C_TWEAK{}
 
 #define TARGET_ARCH_{}
 "#,

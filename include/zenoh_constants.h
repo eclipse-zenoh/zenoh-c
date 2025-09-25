@@ -32,3 +32,19 @@
 #define Z_CONFIG_SCOUTING_TIMEOUT_KEY "scouting/timeout"
 #define Z_CONFIG_ADD_TIMESTAMP_KEY "timestamping/enabled"
 #define Z_CONFIG_SHARED_MEMORY_KEY "transport/shared_memory/enabled"
+
+// shm
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A 1-byte alignment.
+#define ALIGN_1_BYTE (z_alloc_alignment_t{0})
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A 2-byte alignment.
+#define ALIGN_2_BYTES (z_alloc_alignment_t{1})
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A 4-byte alignment.
+#define ALIGN_4_BYTES (z_alloc_alignment_t{2})
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An 8-byte alignment.
+#define ALIGN_8_BYTES (z_alloc_alignment_t{3})
+#endif

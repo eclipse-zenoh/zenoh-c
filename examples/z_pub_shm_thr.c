@@ -47,21 +47,18 @@ int main(int argc, char** argv) {
     z_owned_publisher_t pub;
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
-    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), &options)) {
+    if (z_declare_publisher(z_loan(s), &pub, z_loan(ke), &options) < 0) {
         printf("Unable to declare publisher for key expression!\n");
         exit(-1);
     }
 
     printf("Creating POSIX SHM Provider...\n");
-    z_alloc_alignment_t alignment = {0};
-    z_owned_memory_layout_t layout;
-    z_memory_layout_new(&layout, args.shared_memory_size_mb * 1024 * 1024, alignment);
     z_owned_shm_provider_t provider;
-    z_posix_shm_provider_new(&provider, z_loan(layout));
+    z_shm_provider_default_new(&provider, args.shared_memory_size_mb * 1024 * 1024);
 
     printf("Allocating single SHM buffer\n");
     z_buf_layout_alloc_result_t alloc;
-    z_shm_provider_alloc(&alloc, z_loan(provider), args.size, alignment);
+    z_shm_provider_alloc(&alloc, z_loan(provider), args.size);
     if (alloc.status != ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         printf("Unexpected failure during SHM buffer allocation...\n");
         return -1;
@@ -87,7 +84,6 @@ int main(int argc, char** argv) {
 
     z_drop(z_move(shm));
     z_drop(z_move(provider));
-    z_drop(z_move(layout));
 }
 
 void print_help() {

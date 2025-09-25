@@ -52,7 +52,7 @@ int main(int argc, char** argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config), NULL)) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
@@ -67,8 +67,9 @@ int main(int argc, char** argv) {
     z_get(z_loan(s), z_loan(keyexpr), params, z_move(closure),
           &opts);  // here, the closure is moved and will be dropped by zenoh when adequate
     z_owned_reply_t reply;
-    for (z_result_t res = z_try_recv(z_loan(handler), &reply); res != Z_CHANNEL_DISCONNECTED;
-         res = z_try_recv(z_loan(handler), &reply)) {
+
+    z_result_t res;
+    while ((res = z_try_recv(z_loan(handler), &reply)) != Z_CHANNEL_DISCONNECTED) {
         if (res != Z_OK) {
             z_sleep_ms(50);
             continue;

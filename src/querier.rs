@@ -12,12 +12,12 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{ffi::CStr, mem::MaybeUninit, ops::Deref};
+use std::{mem::MaybeUninit, ops::Deref};
 
 use libc::c_char;
-#[cfg(feature = "unstable")]
-use zenoh::{handlers::Callback, matching::MatchingStatus};
 use zenoh::{
+    handlers::Callback,
+    matching::MatchingStatus,
     qos::{CongestionControl, Priority},
     query::{Querier, QueryConsolidation, QueryTarget},
     session::SessionClosedError,
@@ -25,22 +25,21 @@ use zenoh::{
 };
 
 use crate::{
-    result,
+    result, strlen_or_zero,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_loaned_keyexpr_t,
-    z_loaned_querier_t, z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t,
-    z_moved_encoding_t, z_moved_querier_t, z_owned_querier_t, z_priority_t,
-    z_query_consolidation_t, z_query_target_t, SgNotifier, SyncGroup, SyncObj,
+    z_closure_matching_status_call, z_closure_matching_status_loan, z_closure_reply_call,
+    z_closure_reply_loan, z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_querier_t,
+    z_loaned_session_t, z_matching_status_t, z_moved_bytes_t, z_moved_closure_matching_status_t,
+    z_moved_closure_reply_t, z_moved_encoding_t, z_moved_querier_t, z_owned_matching_listener_t,
+    z_owned_querier_t, z_priority_t, z_query_consolidation_t, z_query_target_t,
+    zc_locality_default, zc_locality_t, SgNotifier, SyncGroup, SyncObj,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_closure_matching_status_call, z_closure_matching_status_loan,
-    z_entity_global_id_t, z_matching_status_t, z_moved_closure_matching_status_t,
-    z_moved_source_info_t, z_owned_matching_listener_t, zc_locality_default, zc_locality_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_reply_keyexpr_default,
+    zc_reply_keyexpr_t,
 };
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `z_declare_querier()` function.
 #[repr(C)]
 pub struct z_querier_options_t {
@@ -52,9 +51,6 @@ pub struct z_querier_options_t {
     pub congestion_control: z_congestion_control_t,
     /// If set to ``true``, the querier queries will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The allowed destination for the querier queries.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
@@ -68,7 +64,6 @@ pub struct z_querier_options_t {
     pub timeout_ms: u64,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs the default value for `z_querier_options_t`.
 #[no_mangle]
 pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_options_t>) {
@@ -78,7 +73,6 @@ pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_op
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         priority: Priority::default().into(),
         is_express: false,
-        #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),
@@ -104,7 +98,6 @@ decl_c_type!(
     loaned(z_loaned_querier_t),
 );
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs and declares a querier on the given key expression.
 ///
 /// The queries can be send with the help of the `z_querier_get()` function.
@@ -133,20 +126,19 @@ pub extern "C" fn z_declare_querier(
             .priority(options.priority.into())
             .express(options.is_express)
             .target(options.target.into())
-            .consolidation(options.consolidation);
+            .consolidation(options.consolidation)
+            .allowed_destination(options.allowed_destination.into());
         if options.timeout_ms != 0 {
             q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
         }
         #[cfg(feature = "unstable")]
         {
-            q = q
-                .accept_replies(options.accept_replies.into())
-                .allowed_destination(options.allowed_destination.into());
+            q = q.accept_replies(options.accept_replies.into());
         }
     }
     match q.wait() {
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -160,7 +152,6 @@ pub extern "C" fn z_declare_querier(
     }
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs a querier in a gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -168,7 +159,6 @@ pub extern "C" fn z_internal_querier_null(this_: &mut MaybeUninit<z_owned_querie
     this_.as_rust_type_mut_uninit().write(None);
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if querier is valid, ``false`` otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
@@ -176,7 +166,6 @@ pub extern "C" fn z_internal_querier_check(this_: &z_owned_querier_t) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows querier.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -188,7 +177,6 @@ pub unsafe extern "C" fn z_querier_loan(this_: &z_owned_querier_t) -> &z_loaned_
         .as_loaned_c_type_ref()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Mutably borrows querier.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -201,7 +189,6 @@ pub unsafe extern "C" fn z_querier_loan_mut(
         .as_loaned_c_type_mut()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Options passed to the `z_querier_get()` function.
 #[repr(C)]
 pub struct z_querier_get_options_t {
@@ -218,7 +205,24 @@ pub struct z_querier_get_options_t {
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+impl z_querier_get_options_t {
+    fn clear(&mut self) {
+        if let Some(p) = self.payload.take() {
+            p.take_rust_type();
+        }
+        if let Some(e) = self.encoding.take() {
+            e.take_rust_type();
+        }
+        if let Some(a) = self.attachment.take() {
+            a.take_rust_type();
+        }
+        #[cfg(feature = "unstable")]
+        if let Some(si) = self.source_info.take() {
+            si.take_rust_type();
+        }
+    }
+}
+
 /// @brief Constructs the default value for `z_querier_get_options_t`.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -232,12 +236,11 @@ pub extern "C" fn z_querier_get_options_default(this: &mut MaybeUninit<z_querier
     });
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Query data from the matching queryables in the system.
 /// Replies are provided through a callback function.
 ///
 /// @param querier: The querier to make query from.
-/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param parameters: The query's parameters null-terminated string, similar to a url's query segment.
 /// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
 /// @param options: Additional options for the get. All owned fields will be consumed.
 ///
@@ -250,8 +253,58 @@ pub unsafe extern "C" fn z_querier_get(
     callback: &mut z_moved_closure_reply_t,
     options: Option<&mut z_querier_get_options_t>,
 ) -> result::z_result_t {
+    z_querier_get_with_parameters_substr(
+        querier,
+        parameters,
+        strlen_or_zero(parameters),
+        callback,
+        options,
+    )
+}
+
+/// @brief Query data from the matching queryables in the system.
+/// Replies are provided through a callback function.
+///
+/// @param querier: The querier to make query from.
+/// @param parameters: The query's parameters, similar to a url's query segment.
+/// @param parameters_len: The length of the query's parameters substring.
+/// @param callback: The callback function that will be called on reception of replies for this query. It will be automatically dropped once all replies are processed.
+/// @param options: Additional options for the get. All owned fields will be consumed.
+///
+/// @return 0 in case of success, a negative error value upon failure.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_querier_get_with_parameters_substr(
+    querier: &z_loaned_querier_t,
+    parameters: *const c_char,
+    parameters_len: usize,
+    callback: &mut z_moved_closure_reply_t,
+    options: Option<&mut z_querier_get_options_t>,
+) -> result::z_result_t {
     let querier = querier.as_rust_type_ref();
     let callback = callback.take_rust_type();
+
+    let pcs = match crate::CStringView::new_borrowed(parameters as *const c_char, parameters_len) {
+        Ok(cs) => cs,
+        Err(r) => {
+            if let Some(o) = options {
+                o.clear();
+            }
+            return r;
+        }
+    };
+
+    let p: &str = match (&pcs).try_into() {
+        Ok(s) => s,
+        Err(e) => {
+            if let Some(o) = options {
+                o.clear();
+            }
+            crate::report_error!("Parameters is not a valid utf-8 string: {e}");
+            return result::Z_EINVAL;
+        }
+    };
+
     let mut get = querier.get();
     if let Some(options) = options {
         if let Some(payload) = options.payload.take() {
@@ -268,8 +321,8 @@ pub unsafe extern "C" fn z_querier_get(
             get = get.attachment(attachment.take_rust_type());
         }
     }
-    if !parameters.is_null() {
-        get = get.parameters(CStr::from_ptr(parameters).to_str().unwrap());
+    if !p.is_empty() {
+        get = get.parameters(p);
     }
     let sync_callback = SyncObj::new(callback, querier.sg.notifier());
     match get
@@ -288,7 +341,7 @@ pub unsafe extern "C" fn z_querier_get(
         Ok(()) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -302,14 +355,12 @@ pub extern "C" fn z_querier_id(querier: &z_loaned_querier_t) -> z_entity_global_
     querier.as_rust_type_ref().id().into_c_type()
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the key expression of the querier.
 #[no_mangle]
 pub extern "C" fn z_querier_keyexpr(querier: &z_loaned_querier_t) -> &z_loaned_keyexpr_t {
     querier.as_rust_type_ref().key_expr().as_loaned_c_type_ref()
 }
 
-#[cfg(feature = "unstable")]
 fn _querier_matching_listener_declare_inner<'a>(
     querier: &'a z_loaned_querier_t,
     callback: &mut z_moved_closure_matching_status_t,
@@ -329,8 +380,6 @@ fn _querier_matching_listener_declare_inner<'a>(
     listener
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs matching listener, registering a callback for notifying queryables matching with a given querier's key expression and target.
 ///
 /// @param querier: A querier to associate with matching listener.
@@ -356,14 +405,12 @@ pub extern "C" fn z_querier_declare_matching_listener(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a matching listener, registering a callback for notifying queryables matching the given querier key expression and target.
 /// The callback will be run in the background until the corresponding querier is dropped.
 ///
@@ -384,14 +431,12 @@ pub extern "C" fn z_querier_declare_background_matching_listener(
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets querier matching status - i.e. if there are any queryables matching its key expression and target.
 ///
 /// @return 0 in case of success, negative error code otherwise (in this case matching_status is not updated).
@@ -409,12 +454,12 @@ pub extern "C" fn z_querier_get_matching_status(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_ENETWORK
         }
     }
 }
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+
 /// @brief Frees memory and resets querier to its gravestone state.
 /// This is equivalent to calling `z_undeclare_querier()` and discarding its return value.
 #[no_mangle]
@@ -423,7 +468,6 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
     std::mem::drop(this.take_rust_type())
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Undeclares the given querier.
 ///
 /// @return 0 in case of success, negative error code otherwise.
@@ -431,7 +475,7 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
     if let Some(q) = this_.take_rust_type() {
         if let Err(e) = q.querier.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }

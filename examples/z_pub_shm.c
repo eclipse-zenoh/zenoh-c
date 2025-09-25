@@ -27,7 +27,6 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-#if defined(Z_FEATURE_UNSTABLE_API)
 void matching_status_handler(const z_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Publisher has matching subscribers.\n");
@@ -35,7 +34,6 @@ void matching_status_handler(const z_matching_status_t* matching_status, void* a
         printf("Publisher has NO MORE matching subscribers.\n");
     }
 }
-#endif
 
 int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
@@ -58,30 +56,28 @@ int main(int argc, char** argv) {
         printf("Unable to declare Publisher for key expression!\n");
         exit(-1);
     }
-#if defined(Z_FEATURE_UNSTABLE_API)
+
     if (args.add_matching_listener) {
         z_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        z_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback));
+        if (z_publisher_declare_background_matching_listener(z_loan(pub), z_move(callback)) < 0) {
+            printf("Unable to declare background matching listener for key expression!\n");
+            exit(-1);
+        }
     }
-#endif
 
     printf("Creating POSIX SHM Provider...\n");
     const size_t total_size = 4096;
     const size_t buf_ok_size = total_size / 4;
 
-    z_alloc_alignment_t alignment = {0};
-    z_owned_memory_layout_t layout;
-    z_memory_layout_new(&layout, total_size, alignment);
-
     z_owned_shm_provider_t provider;
-    z_posix_shm_provider_new(&provider, z_loan(layout));
+    z_shm_provider_default_new(&provider, total_size);
 
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
 
         z_buf_layout_alloc_result_t alloc;
-        z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size, alignment);
+        z_shm_provider_alloc_gc_defrag_blocking(&alloc, z_loan(provider), buf_ok_size);
         if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
             {
                 uint8_t* buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
@@ -105,7 +101,6 @@ int main(int argc, char** argv) {
     z_drop(z_move(pub));
     z_drop(z_move(s));
     z_drop(z_move(provider));
-    z_drop(z_move(layout));
 
     return 0;
 }
@@ -116,11 +111,8 @@ void print_help() {
     Usage: z_pub_shm [OPTIONS]\n\n\
     Options:\n\
         -k, --key <KEYEXPR> (optional, string, default='%s'): The key expression to write to\n\
-        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n"
-#if defined(Z_FEATURE_UNSTABLE_API)
-        "       --add-matching-listener (optional): Add matching listener\n"
-#endif
-        ,
+        -p, --payload <PAYLOAD> (optional, string, default='%s'): The value to write\n\
+        --add-matching-listener (optional): Add matching listener\n",
         DEFAULT_KEYEXPR, DEFAULT_VALUE);
     printf(COMMON_HELP);
 }
@@ -130,9 +122,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     struct args_t args;
     _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
     _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
-#if defined(Z_FEATURE_UNSTABLE_API)
     args.add_matching_listener = _Z_CHECK_FLAG("add-matching-listener");
-#endif
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
     if (arg) {

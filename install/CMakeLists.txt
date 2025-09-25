@@ -27,6 +27,7 @@ function(install_zenohc_lib configurations property_postfix package_name)
     endif()
     if((APPLE OR UNIX))
         get_filename_component(LIBNAME ${DYLIB} NAME_WE)
+        string(REGEX REPLACE "^lib" "" LIBNAME ${LIBNAME})
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc @ONLY)
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc 
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" 

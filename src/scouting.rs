@@ -24,7 +24,8 @@ use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
-    z_owned_string_array_t, z_view_string_t, CString, CStringView, SyncGroup, SyncObj, ZVector,
+    z_owned_string_array_t, z_view_string_t, CStringInner, CStringView, SyncGroup, SyncObj,
+    ZVector,
 };
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
@@ -119,7 +120,7 @@ pub extern "C" fn z_hello_locators(
     let this = this.as_rust_type_ref();
     let mut locators = ZVector::with_capacity(this.locators().len());
     for l in this.locators().iter() {
-        locators.push(CString::new_borrowed_from_slice(l.as_str().as_bytes()));
+        locators.push(CStringInner::new_borrowed_from_slice(l.as_str().as_bytes()));
     }
     locators_out.as_rust_type_mut_uninit().write(locators);
 }
@@ -159,10 +160,10 @@ pub enum z_what_t {
     ROUTER = 0x01,
     PEER = 0x02,
     CLIENT = 0x04,
-    ROUTER_PEER = 0x01 | 0x02,
-    ROUTER_CLIENT = 0x01 | 0x04,
-    PEER_CLIENT = 0x02 | 0x04,
-    ROUTER_PEER_CLIENT = 0x01 | 0x02 | 0x04,
+    ROUTER_PEER = 0x03,        // 0x01 | 0x02,
+    ROUTER_CLIENT = 0x05,      // 0x01 | 0x04,
+    PEER_CLIENT = 0x06,        // 0x02 | 0x04,
+    ROUTER_PEER_CLIENT = 0x07, // 0x01 | 0x02 | 0x04,
 }
 
 pub const DEFAULT_SCOUTING_WHAT: z_what_t = z_what_t::ROUTER_PEER;
@@ -192,14 +193,14 @@ pub extern "C" fn z_scout(
     let options = options.cloned().unwrap_or_default();
 
     let Ok(what) = WhatAmIMatcher::try_from(options.what as u8) else {
-        tracing::error!("Invalid WhatAmIMatcher value: {:?}", options.what);
+        crate::report_error!("Invalid WhatAmIMatcher value: {:?}", options.what);
         return result::Z_EINVAL;
     };
 
     #[allow(clippy::unnecessary_cast)] // Required for multi-target
     let timeout = options.timeout_ms;
     let Some(config) = config.take_rust_type() else {
-        tracing::error!("Config not provided");
+        crate::report_error!("Config not provided");
         return result::Z_EINVAL;
     };
 
@@ -221,7 +222,7 @@ pub extern "C" fn z_scout(
                 result::Z_OK
             }
             Err(e) => {
-                tracing::error!("{}", e);
+                crate::report_error!("{}", e);
                 result::Z_EGENERIC
             }
         }

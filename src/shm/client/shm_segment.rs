@@ -12,11 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::sync::atomic::AtomicPtr;
-
 use libc::c_void;
 use zenoh::{
-    internal::zerror,
     shm::{ChunkID, ShmSegment},
     Result,
 };
@@ -60,13 +57,14 @@ impl DynamicShmSegment {
 }
 
 impl ShmSegment for DynamicShmSegment {
-    fn map(&self, chunk: ChunkID) -> Result<AtomicPtr<u8>> {
+    fn map(&self, chunk: ChunkID) -> Result<*mut u8> {
         unsafe {
             let cb_result = (self.callbacks.map_fn)(chunk, self.context.get());
-            cb_result
-                .as_mut()
-                .map(|p| AtomicPtr::new(p))
-                .ok_or_else(|| zerror!("C callback returned null pointer!").into())
+            if cb_result.is_null() {
+                Err("C callback returned null pointer!".into())
+            } else {
+                Ok(cb_result)
+            }
         }
     }
 }

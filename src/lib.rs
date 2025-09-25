@@ -45,9 +45,7 @@ mod info;
 pub use crate::info::*;
 mod get;
 pub use crate::get::*;
-#[cfg(feature = "unstable")]
 mod querier;
-#[cfg(feature = "unstable")]
 pub use crate::querier::*;
 mod queryable;
 pub use crate::queryable::*;
@@ -67,9 +65,7 @@ pub mod platform;
 pub use platform::*;
 mod liveliness;
 pub use liveliness::*;
-#[cfg(feature = "unstable")]
 mod matching;
-#[cfg(feature = "unstable")]
 pub use matching::*;
 #[cfg(feature = "unstable")]
 mod publication_cache;
@@ -230,4 +226,12 @@ impl CopyableToCArray for &str {
 #[no_mangle]
 pub extern "C" fn zc_stop_z_runtime() {
     let _z = zenoh_runtime::ZRuntimePoolGuard;
+}
+
+#[allow(clippy::missing_safety_doc)]
+pub(crate) unsafe fn strlen_or_zero(ptr: *const libc::c_char) -> usize {
+    match ptr.is_null() {
+        true => 0,
+        false => libc::strlen(ptr),
+    }
 }

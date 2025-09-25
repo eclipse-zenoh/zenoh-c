@@ -80,17 +80,17 @@ jobs:
       fail-fast: false
       matrix:
         build:
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-24.04 }
-          - { target: x86_64-unknown-linux-musl, os: ubuntu-24.04 }
-          - { target: arm-unknown-linux-gnueabi, os: ubuntu-24.04 }
-          - { target: arm-unknown-linux-gnueabihf, os: ubuntu-24.04 }
-          - { target: armv7-unknown-linux-gnueabihf, os: macos-14 }
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04 }
-          - { target: aarch64-unknown-linux-musl, os: ubuntu-24.04 }
-          - { target: x86_64-apple-darwin, os: macos-14 }
-          - { target: aarch64-apple-darwin, os: macos-14 }
-          - { target: x86_64-pc-windows-msvc, os: windows-2019 }
-          - { target: x86_64-pc-windows-gnu, os: ubuntu-24.04 }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest }
+          - { target: x86_64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: arm-unknown-linux-gnueabi, os: ubuntu-latest }
+          - { target: arm-unknown-linux-gnueabihf, os: ubuntu-latest }
+          - { target: armv7-unknown-linux-gnueabihf, os: macos-latest }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-latest }
+          - { target: aarch64-unknown-linux-musl, os: ubuntu-latest }
+          - { target: x86_64-apple-darwin, os: macos-latest }
+          - { target: aarch64-apple-darwin, os: macos-latest }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest}
+          - { target: x86_64-pc-windows-gnu, os: ubuntu-latest }
     needs: tag
     steps:
       - name: Checkout this repository
@@ -107,7 +107,7 @@ jobs:
         if: ${{ matrix.build.target == 'x86_64-unknown-linux-musl'}}
         run: |
           sudo apt-get install -y musl-tools
-          wget https://musl.cc/x86_64-linux-musl-cross.tgz
+          wget https://github.com/ZettaScaleLabs/muslcc/raw/refs/heads/main/x86_64-linux-musl-cross.tgz?download= -O x86_64-linux-musl-cross.tgz
           tar xvfz x86_64-linux-musl-cross.tgz
           echo "$(readlink -f x86_64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
 
@@ -133,7 +133,7 @@ jobs:
       - name: Install build deps
         if: ${{ matrix.build.target == 'aarch64-unknown-linux-musl'}}
         run: |
-          wget https://musl.cc/aarch64-linux-musl-cross.tgz
+          wget https://github.com/ZettaScaleLabs/muslcc/raw/refs/heads/main/aarch64-linux-musl-cross.tgz?download= -O aarch64-linux-musl-cross.tgz
           tar xvfz aarch64-linux-musl-cross.tgz
           echo "$(readlink -f aarch64-linux-musl-cross)/bin" >> "$GITHUB_PATH"
 

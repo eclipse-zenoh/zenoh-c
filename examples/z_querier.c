@@ -30,7 +30,6 @@ struct args_t {
 };
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-#if defined(Z_FEATURE_UNSTABLE_API)
 void matching_status_handler(const z_matching_status_t* matching_status, void* arg) {
     if (matching_status->matching) {
         printf("Querier has matching queryables.\n");
@@ -38,7 +37,6 @@ void matching_status_handler(const z_matching_status_t* matching_status, void* a
         printf("Querier has NO MORE matching queryables.\n");
     }
 }
-#endif
 
 int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
@@ -80,16 +78,17 @@ int main(int argc, char** argv) {
         exit(-1);
     }
 
-#if defined(Z_FEATURE_UNSTABLE_API)
     if (args.add_matching_listener) {
         z_owned_closure_matching_status_t callback;
         z_closure(&callback, matching_status_handler, NULL, NULL);
-        z_querier_declare_background_matching_listener(z_loan(querier), z_move(callback));
+        if (z_querier_declare_background_matching_listener(z_loan(querier), z_move(callback)) < 0) {
+            printf("Unable to declare background matching listener for key expression!\n");
+            exit(-1);
+        }
     }
-#endif
 
     printf("Press CTRL-C to quit...\n");
-    char buf[256] = {};
+    char buf[256] = {0};
     for (int idx = 0; 1; ++idx) {
         z_sleep_s(1);
         sprintf(buf, "[%4d] %s", idx, args.value ? args.value : "");
@@ -145,11 +144,8 @@ void print_help() {
         -s, --selector <SELECTOR> (optional, string, default='%s'): The selection of resources to query\n\
         -p, --payload <PAYLOAD> (optional, string): An optional value to put in the query\n\
         -t, --target <TARGET> (optional, BEST_MATCHING | ALL | ALL_COMPLETE): Query target\n\
-        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n"
-#if defined(Z_FEATURE_UNSTABLE_API)
-        "       --add-matching-listener (optional): Add matching listener\n"
-#endif
-        ,
+        -o, --timeout <TIMEOUT_MS> (optional, number, default = '%d'): Query timeout in milliseconds\n\
+        --add-matching-listener (optional): Add matching listener\n",
         DEFAULT_SELECTOR, DEFAULT_TIMEOUT_MS);
     printf(COMMON_HELP);
 }
@@ -161,9 +157,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
     _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
     _Z_PARSE_ARG(args.target, "t", "target", parse_query_target, z_query_target_default());
-#if defined(Z_FEATURE_UNSTABLE_API)
     args.add_matching_listener = _Z_CHECK_FLAG("add-matching-listener");
-#endif
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

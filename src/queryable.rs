@@ -28,13 +28,11 @@ use crate::{
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
     z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t, SgNotifier, SyncGroup, SyncObj,
+    z_view_string_from_substr, z_view_string_t, zc_locality_default, zc_locality_t, SgNotifier,
+    SyncGroup, SyncObj,
 };
 #[cfg(feature = "unstable")]
-use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_locality_default,
-    zc_locality_t,
-};
+use crate::{transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t};
 
 pub(crate) struct CQueryable {
     pub(crate) queryable: Queryable<()>,
@@ -145,8 +143,6 @@ pub extern "C" fn z_query_clone(dst: &mut MaybeUninit<z_owned_query_t>, this_: &
 pub struct z_queryable_options_t {
     /// The completeness of the Queryable.
     pub complete: bool,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     /// Restricts the matching requests that will be received by this Queryable to the ones
     /// that have the compatible allowed_destination.
     pub allowed_origin: zc_locality_t,
@@ -157,7 +153,6 @@ pub struct z_queryable_options_t {
 pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
     this_.write(z_queryable_options_t {
         complete: false,
-        #[cfg(feature = "unstable")]
         allowed_origin: zc_locality_default(),
     });
 }
@@ -272,11 +267,9 @@ fn _declare_queryable_inner<'a, 'b>(
     let sync_callback = SyncObj::new(callback, notifier);
     let mut builder = session.declare_queryable(keyexpr);
     if let Some(options) = options {
-        builder = builder.complete(options.complete);
-        #[cfg(feature = "unstable")]
-        {
-            builder = builder.allowed_origin(options.allowed_origin.into())
-        }
+        builder = builder
+            .complete(options.complete)
+            .allowed_origin(options.allowed_origin.into());
     }
     let queryable = builder.callback(move |query| {
         let mut owned_query = Some(query);
@@ -319,7 +312,7 @@ pub extern "C" fn z_declare_queryable(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -352,7 +345,7 @@ pub extern "C" fn z_declare_background_queryable(
     match queryable.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -425,7 +418,7 @@ pub extern "C" fn z_query_reply(
     }
 
     if let Err(e) = reply.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         return result::Z_EGENERIC;
     }
     result::Z_OK
@@ -460,7 +453,7 @@ pub unsafe extern "C" fn z_query_reply_err(
     );
 
     if let Err(e) = reply.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         return result::Z_EGENERIC;
     }
     result::Z_OK
@@ -506,7 +499,7 @@ pub unsafe extern "C" fn z_query_reply_del(
     }
 
     if let Err(e) = reply.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         return result::Z_EGENERIC;
     }
     result::Z_OK
@@ -596,9 +589,19 @@ pub extern "C" fn z_query_attachment_mut(
 pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
     if let Some(qable) = this_.take_rust_type() {
         if let Err(e) = qable.queryable.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
     }
     result::Z_OK
+}
+
+/// @brief Returns the key expression of the queryable.
+#[no_mangle]
+pub extern "C" fn z_queryable_keyexpr(queryable: &z_loaned_queryable_t) -> &z_loaned_keyexpr_t {
+    queryable
+        .as_rust_type_ref()
+        .queryable
+        .key_expr()
+        .as_loaned_c_type_ref()
 }

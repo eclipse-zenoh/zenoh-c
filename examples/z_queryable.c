@@ -73,12 +73,12 @@ int main(int argc, char **argv) {
 
     printf("Opening session...\n");
     z_owned_session_t s;
-    if (z_open(&s, z_move(config), NULL)) {
+    if (z_open(&s, z_move(config), NULL) < 0) {
         printf("Unable to open session!\n");
         exit(-1);
     }
 
-    if (z_view_keyexpr_from_str(&ke, args.keyexpr)) {
+    if (z_view_keyexpr_from_str(&ke, args.keyexpr) < 0) {
         printf("%s is not a valid key expression", args.keyexpr);
         exit(-1);
     }

@@ -89,7 +89,9 @@ pub struct zc_owned_closure_log_t {
 /// Loaned closure.
 #[repr(C)]
 pub struct zc_loaned_closure_log_t {
-    _0: [usize; 3],
+    _0: usize,
+    _1: usize,
+    _2: usize,
 }
 
 /// Moved closure.
@@ -140,9 +142,9 @@ impl Drop for zc_owned_closure_log_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn zc_internal_closure_log_null(
-    this_: *mut MaybeUninit<zc_owned_closure_log_t>,
+    this_: &mut MaybeUninit<zc_owned_closure_log_t>,
 ) {
-    (*this_).write(zc_owned_closure_log_t::default());
+    this_.write(zc_owned_closure_log_t::default());
 }
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
@@ -155,7 +157,7 @@ pub extern "C" fn zc_closure_log_call(
     match closure._call {
         Some(call) => call(severity, msg, closure._context),
         None => {
-            tracing::error!("Attempted to call an uninitialized closure!");
+            crate::report_error!("Attempted to call an uninitialized closure!");
         }
     }
 }

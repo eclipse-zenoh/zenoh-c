@@ -34,7 +34,9 @@ pub struct ze_owned_closure_miss_t {
 /// @brief Loaned closure.
 #[repr(C)]
 pub struct ze_loaned_closure_miss_t {
-    _0: [usize; 3],
+    _0: usize,
+    _1: usize,
+    _2: usize,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -79,9 +81,9 @@ impl Drop for ze_owned_closure_miss_t {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn ze_internal_closure_miss_null(
-    this: *mut MaybeUninit<ze_owned_closure_miss_t>,
+    this: &mut MaybeUninit<ze_owned_closure_miss_t>,
 ) {
-    (*this).write(ze_owned_closure_miss_t::default());
+    this.write(ze_owned_closure_miss_t::default());
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -102,7 +104,7 @@ pub extern "C" fn ze_closure_miss_call(
     match closure._call {
         Some(call) => call(mathing_status, closure._context),
         None => {
-            tracing::error!("Attempted to call an uninitialized closure!");
+            crate::report_error!("Attempted to call an uninitialized closure!");
         }
     }
 }

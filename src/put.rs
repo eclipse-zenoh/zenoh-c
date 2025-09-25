@@ -26,6 +26,7 @@ use crate::{
     result,
     transmute::{IntoRustType, RustTypeRef, TakeRustType},
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
+    zc_locality_default, zc_locality_t,
 };
 
 /// Options passed to the `z_put()` function.
@@ -47,9 +48,6 @@ pub struct z_put_options_t {
     ///
     /// The put operation reliability.
     reliability: z_reliability_t,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
     #[cfg(feature = "unstable")]
@@ -73,7 +71,6 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
         timestamp: None,
         #[cfg(feature = "unstable")]
         reliability: z_reliability_default(),
-        #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
         #[cfg(feature = "unstable")]
         source_info: None,
@@ -129,7 +126,7 @@ pub extern "C" fn z_put(
         Ok(_) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -152,9 +149,6 @@ pub struct z_delete_options_t {
     ///
     /// The delete operation reliability.
     pub reliability: z_reliability_t,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The allowed destination of this message.
     pub allowed_destination: zc_locality_t,
 }
@@ -170,7 +164,6 @@ pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_dele
         timestamp: None,
         #[cfg(feature = "unstable")]
         reliability: z_reliability_default(),
-        #[cfg(feature = "unstable")]
         allowed_destination: zc_locality_default(),
     });
 }
@@ -211,7 +204,7 @@ pub extern "C" fn z_delete(
 
     match del.wait() {
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
         Ok(()) => result::Z_OK,

@@ -15,7 +15,6 @@
 use core::str;
 use std::{mem::MaybeUninit, slice::from_raw_parts};
 
-use libc::strlen;
 use zenoh::bytes::ZBytes;
 use zenoh_ext::{
     z_deserialize, z_serialize, Deserialize, Serialize, VarInt, ZDeserializer, ZSerializer,
@@ -26,6 +25,7 @@ pub use crate::opaque_types::{
 };
 use crate::{
     result::{self, z_result_t},
+    strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
@@ -121,7 +121,7 @@ where
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            crate::report_error!("Failed to deserialize the payload: {:?}", e);
             result::Z_EPARSE
         }
     }
@@ -356,7 +356,7 @@ pub extern "C" fn ze_deserialize_slice(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             slice
                 .as_rust_type_mut_uninit()
                 .write(CSliceOwned::gravestone());
@@ -381,7 +381,7 @@ pub extern "C" fn ze_serialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.as_rust_type_mut_uninit().write(ZBytes::new());
             result::Z_EUTF8
         }
@@ -407,7 +407,7 @@ pub unsafe extern "C" fn ze_serialize_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.as_rust_type_mut_uninit().write(ZBytes::new());
             result::Z_EUTF8
         }
@@ -424,7 +424,7 @@ pub unsafe extern "C" fn ze_serialize_str(
     this: &mut MaybeUninit<z_owned_bytes_t>,
     str: *const libc::c_char,
 ) -> z_result_t {
-    unsafe { ze_serialize_substr(this, str, strlen(str)) }
+    unsafe { ze_serialize_substr(this, str, strlen_or_zero(str)) }
 }
 
 /// @brief Deserializes into a UTF-8 string.
@@ -441,7 +441,7 @@ pub unsafe extern "C" fn ze_deserialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             str.as_rust_type_mut_uninit()
                 .write(CStringOwned::gravestone());
             result::Z_EDESERIALIZE
@@ -484,7 +484,7 @@ where
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {:?}", e);
+            crate::report_error!("Failed to deserialize the payload: {:?}", e);
             result::Z_EDESERIALIZE
         }
     }
@@ -748,7 +748,7 @@ pub extern "C" fn ze_deserializer_deserialize_slice(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             slice
                 .as_rust_type_mut_uninit()
                 .write(CSliceOwned::gravestone());
@@ -771,7 +771,7 @@ pub extern "C" fn ze_serializer_serialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EUTF8
         }
     }
@@ -793,7 +793,7 @@ pub extern "C" fn ze_serializer_serialize_substr(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EUTF8
         }
     }
@@ -807,7 +807,7 @@ pub extern "C" fn ze_serializer_serialize_str(
     this: &mut ze_loaned_serializer_t,
     str: *const libc::c_char,
 ) -> z_result_t {
-    ze_serializer_serialize_substr(this, str, unsafe { strlen(str) })
+    ze_serializer_serialize_substr(this, str, unsafe { strlen_or_zero(str) })
 }
 
 /// @brief Deserializes into a string.
@@ -822,7 +822,7 @@ pub extern "C" fn ze_deserializer_deserialize_string(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to deserialize the payload: {}", e);
+            crate::report_error!("Failed to deserialize the payload: {}", e);
             str.as_rust_type_mut_uninit()
                 .write(CStringOwned::gravestone());
             result::Z_EDESERIALIZE
@@ -857,7 +857,7 @@ pub extern "C" fn ze_deserializer_deserialize_sequence_length(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("Failed to read the sequence length: {}", e);
+            crate::report_error!("Failed to read the sequence length: {}", e);
             *len = 0;
             result::Z_EDESERIALIZE
         }

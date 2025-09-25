@@ -89,14 +89,14 @@ impl From<&ze_advanced_publisher_cache_options_t> for CacheConfig {
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum ze_advanced_publisher_heartbeat_mode_t {
     /// Disable heartbeat-based last sample miss detection.
-    NONE,
+    NONE = 0,
     /// Allow last sample miss detection through periodic heartbeat.
     /// Periodically send the last published Sample's sequence number to allow last sample recovery.
-    PERIODIC,
+    PERIODIC = 1,
     /// Allow last sample miss detection through sporadic heartbeat.
     /// Each period, the last published Sample's sequence number is sent with `z_congestion_control_t::BLOCK`
     /// but only if it changed since last period.
-    SPORADIC,
+    SPORADIC = 2,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -252,7 +252,7 @@ pub extern "C" fn ze_declare_advanced_publisher(
     }
     match p.wait() {
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             this.write(None);
             result::Z_EGENERIC
         }
@@ -360,7 +360,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_put(
         Ok(_) => result::Z_OK,
         Err(e) if e.downcast_ref::<SessionClosedError>().is_some() => result::Z_ESESSION_CLOSED,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -403,7 +403,7 @@ pub extern "C" fn ze_advanced_publisher_delete(
         del = _apply_pubisher_delete_options(del, &mut options.delete_options)
     }
     if let Err(e) = del.wait() {
-        tracing::error!("{}", e);
+        crate::report_error!("{}", e);
         result::Z_EGENERIC
     } else {
         result::Z_OK
@@ -481,7 +481,7 @@ pub extern "C" fn ze_advanced_publisher_declare_matching_listener(
         }
         Err(e) => {
             this.write(None);
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -509,7 +509,7 @@ pub extern "C" fn ze_advanced_publisher_declare_background_matching_listener(
     match listener.background().wait() {
         Ok(_) => result::Z_OK,
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_EGENERIC
         }
     }
@@ -534,7 +534,7 @@ pub extern "C" fn ze_advanced_publisher_get_matching_status(
             result::Z_OK
         }
         Err(e) => {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             result::Z_ENETWORK
         }
     }
@@ -559,7 +559,7 @@ pub extern "C" fn ze_undeclare_advanced_publisher(
 ) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
         if let Err(e) = p.publisher.undeclare().wait() {
-            tracing::error!("{}", e);
+            crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
     }

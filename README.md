@@ -25,8 +25,6 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 
 ## How to build it
 
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in maintaining compatibility between the various git repositories in the Zenoh project.
-
 1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
    Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
    If you already have the Rust toolchain installed, make sure it is up-to-date with:
@@ -101,8 +99,6 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    - `zenohc::shared` for linking dynamic library
    - `zenohc::static` for linking static library
    - `zenohc::lib` for linking static or dynamic library depending on boolean variable `BUILD_SHARED_LIBS`
-
-   For `Debug` configuration suffix `d` is added to names of library files (libzenohc**d**.so).
 
 5. VScode
 
