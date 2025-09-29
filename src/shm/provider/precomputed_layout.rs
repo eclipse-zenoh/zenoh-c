@@ -16,74 +16,79 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::shm::{
-    AllocLayout, BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc, MemoryLayout,
+    BlockOn, ConstUsize, Deallocate, Defragment, GarbageCollect, JustAlloc, MemoryLayout,
+    PrecomputedLayout,
 };
 
 use super::{
-    alloc_layout_impl::{alloc, alloc_async, alloc_layout_new, alloc_layout_with_alignment_new},
+    precomputed_layout_impl::{alloc, alloc_async, alloc_layout},
     shm_provider_backend::DynamicShmProviderBackend,
     types::{z_alloc_alignment_t, z_buf_alloc_result_t},
 };
 use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
-    shm::protocol_implementations::posix::posix_shm_provider::PosixAllocLayout,
+    shm::protocol_implementations::posix::posix_shm_provider::PosixPrecomputedLayout,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_loaned_alloc_layout_t, z_loaned_shm_provider_t, z_moved_alloc_layout_t,
-    z_owned_alloc_layout_t,
+    z_loaned_precomputed_layout_t, z_loaned_shm_provider_t, z_moved_precomputed_layout_t,
+    z_owned_precomputed_layout_t,
 };
 
-pub type DynamicAllocLayout =
-    AllocLayout<'static, DynamicShmProviderBackend<Context>, MemoryLayout>;
+pub type DynamicPrecomputedLayout =
+    PrecomputedLayout<'static, DynamicShmProviderBackend<Context>, MemoryLayout>;
 
-pub type DynamicAllocLayoutThreadsafe =
-    AllocLayout<'static, DynamicShmProviderBackend<ThreadsafeContext>, MemoryLayout>;
+pub type DynamicPrecomputedLayoutThreadsafe =
+    PrecomputedLayout<'static, DynamicShmProviderBackend<ThreadsafeContext>, MemoryLayout>;
 
 pub enum CSHMLayout {
-    Posix(PosixAllocLayout),
-    Dynamic(DynamicAllocLayout),
-    DynamicThreadsafe(DynamicAllocLayoutThreadsafe),
+    Posix(PosixPrecomputedLayout),
+    Dynamic(DynamicPrecomputedLayout),
+    DynamicThreadsafe(DynamicPrecomputedLayoutThreadsafe),
 }
 
 decl_c_type!(
-    owned(z_owned_alloc_layout_t, option CSHMLayout),
-    loaned(z_loaned_alloc_layout_t),
+    owned(z_owned_precomputed_layout_t, option CSHMLayout),
+    loaned(z_loaned_precomputed_layout_t),
 );
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Alloc Layout for SHM Provider.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_new(
-    this: &mut MaybeUninit<z_owned_alloc_layout_t>,
+pub extern "C" fn z_shm_provider_alloc_layout(
+    this: &mut MaybeUninit<z_owned_precomputed_layout_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
 ) -> z_result_t {
-    alloc_layout_new(this, provider, size)
+    alloc_layout(this, provider, size, z_alloc_alignment_t { pow: 0 })
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new Alloc Layout for SHM Provider specifying the exact alignment.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_with_alignment_new(
-    this: &mut MaybeUninit<z_owned_alloc_layout_t>,
+pub extern "C" fn z_shm_provider_alloc_layout_aligned(
+    this: &mut MaybeUninit<z_owned_precomputed_layout_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) -> z_result_t {
-    alloc_layout_with_alignment_new(this, provider, size, alignment)
+    alloc_layout(this, provider, size, alignment)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs Alloc Layout in its gravestone value.
 #[no_mangle]
-pub extern "C" fn z_internal_alloc_layout_null(this_: &mut MaybeUninit<z_owned_alloc_layout_t>) {
+pub extern "C" fn z_internal_precomputed_layout_null(
+    this_: &mut MaybeUninit<z_owned_precomputed_layout_t>,
+) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if `this` is valid.
 #[no_mangle]
-pub extern "C" fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
+pub extern "C" fn z_internal_precomputed_layout_check(
+    this_: &z_owned_precomputed_layout_t,
+) -> bool {
     this_.as_rust_type_ref().is_some()
 }
 
@@ -91,9 +96,9 @@ pub extern "C" fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) 
 /// @brief Borrows Alloc Layout.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_alloc_layout_loan(
-    this: &z_owned_alloc_layout_t,
-) -> &z_loaned_alloc_layout_t {
+pub unsafe extern "C" fn z_precomputed_layout_loan(
+    this: &z_owned_precomputed_layout_t,
+) -> &z_loaned_precomputed_layout_t {
     this.as_rust_type_ref()
         .as_ref()
         .unwrap_unchecked()
@@ -103,16 +108,16 @@ pub unsafe extern "C" fn z_alloc_layout_loan(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Deletes Alloc Layout.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_drop(this_: &mut z_moved_alloc_layout_t) {
+pub extern "C" fn z_precomputed_layout_drop(this_: &mut z_moved_precomputed_layout_t) {
     let _ = this_.take_rust_type();
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation without any additional actions.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc(
+pub extern "C" fn z_precomputed_layout_alloc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &z_loaned_alloc_layout_t,
+    layout: &z_loaned_precomputed_layout_t,
 ) {
     alloc::<JustAlloc>(out_result, layout);
 }
@@ -120,9 +125,9 @@ pub extern "C" fn z_alloc_layout_alloc(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection if needed.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc(
+pub extern "C" fn z_precomputed_layout_alloc_gc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &z_loaned_alloc_layout_t,
+    layout: &z_loaned_precomputed_layout_t,
 ) {
     alloc::<GarbageCollect>(out_result, layout);
 }
@@ -130,9 +135,9 @@ pub extern "C" fn z_alloc_layout_alloc_gc(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation if needed.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc_defrag(
+pub extern "C" fn z_precomputed_layout_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &z_loaned_alloc_layout_t,
+    layout: &z_loaned_precomputed_layout_t,
 ) {
     alloc::<Defragment<GarbageCollect>>(out_result, layout);
 }
@@ -140,19 +145,19 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation and/or forced deallocation if needed.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc_defrag_dealloc(
+pub extern "C" fn z_precomputed_layout_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &z_loaned_alloc_layout_t,
+    layout: &z_loaned_precomputed_layout_t,
 ) {
-    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, layout);
+    alloc::<Deallocate<ConstUsize<100>, Defragment<GarbageCollect>>>(out_result, layout);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Make allocation performing garbage collection and/or defragmentation and/or blocking if needed.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_alloc_gc_defrag_blocking(
+pub extern "C" fn z_precomputed_layout_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &z_loaned_alloc_layout_t,
+    layout: &z_loaned_precomputed_layout_t,
 ) {
     alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, layout);
 }
@@ -161,9 +166,9 @@ pub extern "C" fn z_alloc_layout_alloc_gc_defrag_blocking(
 /// @brief Make allocation performing garbage collection and/or defragmentation in async manner. Will return Z_EINVAL
 /// if used with non-threadsafe SHM Provider.
 #[no_mangle]
-pub extern "C" fn z_alloc_layout_threadsafe_alloc_gc_defrag_async(
+pub extern "C" fn z_precomputed_layout_threadsafe_alloc_gc_defrag_async(
     out_result: &'static mut MaybeUninit<z_buf_alloc_result_t>,
-    layout: &'static z_loaned_alloc_layout_t,
+    layout: &'static z_loaned_precomputed_layout_t,
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
 ) -> z_result_t {
