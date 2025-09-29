@@ -17,7 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        AllocPolicy, AsyncAllocPolicy, BlockOn, ConstPolicy, Deallocate, Defragment,
+        AllocPolicy, AsyncAllocPolicy, BlockOn, ConstBool, ConstPolicy, Deallocate, Defragment,
         GarbageCollect, JustAlloc, PolicyValue, PosixShmProviderBackend, ShmProvider,
         ShmProviderBackend,
     },
@@ -90,6 +90,8 @@ where
     type AsyncAllocPolicy<Backend: ShmProviderBackend + Sync> =
         BlockOn<InnerPolicy::AllocPolicy<Backend>>;
 }
+
+pub(crate) type UnsafeGarbageCollect = GarbageCollect<JustAlloc, JustAlloc, ConstBool<false>>;
 
 pub(crate) fn alloc<Policy: GenericAllocPolicy>(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -167,6 +169,20 @@ pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
             provider.garbage_collect()
         }
+    }
+}
+
+pub(crate) unsafe fn garbage_collect_unsafe(provider: &z_loaned_shm_provider_t) -> usize {
+    match provider.as_rust_type_ref() {
+        super::shm_provider::CSHMProvider::Posix(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
+        super::shm_provider::CSHMProvider::Dynamic(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
+        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
     }
 }
 
