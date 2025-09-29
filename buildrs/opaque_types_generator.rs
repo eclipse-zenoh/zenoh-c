@@ -14,7 +14,7 @@ pub fn generate_opaque_types() {
     let data_in = std::fs::read_to_string(path_in)
         .unwrap()
         // The first error may only be preceded by a `\r`,
-        // so this ensure it will be included in `total_error_count`
+        // so this ensures it will be included in `total_error_count`
         .replace('\r', "\n");
 
     // Check for cargo-level errors (dependency resolution, manifest parsing, etc.)
