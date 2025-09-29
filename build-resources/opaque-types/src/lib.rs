@@ -478,11 +478,11 @@ enum CSHMLayout {
 }
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An owned ShmProvider's AllocLayout.
+/// @brief An owned ShmProvider's PrecomputedLayout.
 get_opaque_type_data!(Option<CSHMLayout>, z_owned_precomputed_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A loaned ShmProvider's AllocLayout.
+/// @brief A loaned ShmProvider's PrecomputedLayout.
 get_opaque_type_data!(CSHMLayout, z_loaned_precomputed_layout_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
