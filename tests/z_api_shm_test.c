@@ -91,13 +91,13 @@ int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
     return 0;
 }
 
-int test_layouted_allocation(const z_loaned_alloc_layout_t* alloc_layout) {
+int test_layouted_allocation(const z_loaned_precomputed_layout_t* precomputed_layout) {
     z_buf_alloc_result_t alloc;
 
     z_owned_shm_mut_t shm_buf;
     z_alloc_error_t shm_error;
 
-    z_alloc_layout_alloc_gc(&alloc, alloc_layout);
+    z_precomputed_layout_alloc_gc(&alloc, precomputed_layout);
     if (alloc.status == ZC_BUF_ALLOC_STATUS_OK) {
         ASSERT_CHECK(alloc.buf);
         ASSERT_OK(test_shm_buffer(z_move(alloc.buf)));
@@ -138,27 +138,27 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
     // OK layouted allocations
     {
         // make OK allocation layout
-        z_owned_alloc_layout_t alloc_layout;
-        ASSERT_OK(z_alloc_layout_with_alignment_new(&alloc_layout, z_loan(*provider), buf_ok_size, alignment));
-        ASSERT_CHECK(alloc_layout);
+        z_owned_precomputed_layout_t precomputed_layout;
+        ASSERT_OK(z_shm_provider_alloc_layout_aligned(&precomputed_layout, z_loan(*provider), buf_ok_size, alignment));
+        ASSERT_CHECK(precomputed_layout);
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
-            ASSERT_OK(test_layouted_allocation(z_loan(alloc_layout)));
+            ASSERT_OK(test_layouted_allocation(z_loan(precomputed_layout)));
         }
-        z_drop(z_move(alloc_layout));
-        ASSERT_CHECK_ERR(alloc_layout);
+        z_drop(z_move(precomputed_layout));
+        ASSERT_CHECK_ERR(precomputed_layout);
     }
 
     // ERR layouted allocation
     if (buf_err_size) {
         // make ERR allocation layout
-        z_owned_alloc_layout_t alloc_layout;
-        ASSERT_OK(z_alloc_layout_with_alignment_new(&alloc_layout, z_loan(*provider), buf_err_size, alignment));
-        ASSERT_CHECK(alloc_layout);
+        z_owned_precomputed_layout_t precomputed_layout;
+        ASSERT_OK(z_shm_provider_alloc_layout_aligned(&precomputed_layout, z_loan(*provider), buf_err_size, alignment));
+        ASSERT_CHECK(precomputed_layout);
         // test layouted allocation ERROR
-        ASSERT_ERR(test_layouted_allocation(z_loan(alloc_layout)));
-        z_drop(z_move(alloc_layout));
-        ASSERT_CHECK_ERR(alloc_layout);
+        ASSERT_ERR(test_layouted_allocation(z_loan(precomputed_layout)));
+        z_drop(z_move(precomputed_layout));
+        ASSERT_CHECK_ERR(precomputed_layout);
     }
 
     // additional functions

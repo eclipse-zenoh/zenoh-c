@@ -11,8 +11,8 @@ use std::{
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::shm::{
-    zshm, zshmmut, AllocLayout, ChunkAllocResult, ChunkDescriptor, MemoryLayout,
-    PosixShmProviderBackend, ProtocolID, PtrInSegment, ShmClient, ShmClientStorage, ShmProvider,
+    zshm, zshmmut, ChunkAllocResult, ChunkDescriptor, MemoryLayout, PosixShmProviderBackend,
+    PrecomputedLayout, ProtocolID, PtrInSegment, ShmClient, ShmClientStorage, ShmProvider,
     ShmProviderBackend, WithProtocolID, ZLayoutError, ZShm, ZShmMut,
 };
 use zenoh::{
@@ -460,24 +460,30 @@ get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type PosixAllocLayout = AllocLayout<'static, PosixShmProviderBackend, MemoryLayout>;
+type PosixPrecomputedLayout = PrecomputedLayout<'static, PosixShmProviderBackend, MemoryLayout>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type DummyDynamicAllocLayout = AllocLayout<'static, DummySHMProviderBackend, MemoryLayout>;
+type DummyDynamicPrecomputedLayout =
+    PrecomputedLayout<'static, DummySHMProviderBackend, MemoryLayout>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type DummyDynamicPrecomputedLayoutThreadSafe =
+    PrecomputedLayout<'static, DummySHMProviderBackend, MemoryLayout>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CSHMLayout {
-    Posix(PosixAllocLayout),
-    Dynamic(DummyDynamicAllocLayout),
+    Posix(PosixPrecomputedLayout),
+    Dynamic(DummyDynamicPrecomputedLayout),
+    DynamicThreadSafe(DummyDynamicPrecomputedLayout),
 }
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An owned ShmProvider's AllocLayout.
-get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
+/// @brief An owned ShmProvider's PrecomputedLayout.
+get_opaque_type_data!(Option<CSHMLayout>, z_owned_precomputed_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A loaned ShmProvider's AllocLayout.
-get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
+/// @brief A loaned ShmProvider's PrecomputedLayout.
+get_opaque_type_data!(CSHMLayout, z_loaned_precomputed_layout_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
