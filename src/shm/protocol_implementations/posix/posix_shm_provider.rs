@@ -15,9 +15,7 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    shm::{
-        MemoryLayout, PosixShmProviderBackend, PrecomputedLayout, ShmProvider, ShmProviderBuilder,
-    },
+    shm::{AllocLayout, MemoryLayout, PosixShmProviderBackend, ShmProvider, ShmProviderBuilder},
     Wait,
 };
 
@@ -30,7 +28,7 @@ use crate::{
 
 pub type PosixShmProvider = ShmProvider<PosixShmProviderBackend>;
 
-pub type PosixPrecomputedLayout = PrecomputedLayout<'static, PosixShmProviderBackend, MemoryLayout>;
+pub type PosixAllocLayout = AllocLayout<'static, PosixShmProviderBackend, MemoryLayout>;
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates a new POSIX SHM Provider.

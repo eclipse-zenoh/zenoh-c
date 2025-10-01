@@ -17,9 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        AllocPolicy, AsyncAllocPolicy, BlockOn, ConstPolicy, Deallocate, Defragment,
-        GarbageCollect, JustAlloc, PolicyValue, PosixShmProviderBackend, ShmProvider,
-        ShmProviderBackend,
+        AllocPolicy, AsyncAllocPolicy, PosixShmProviderBackend, ShmProvider, ShmProviderBackend,
     },
     Wait,
 };
@@ -36,62 +34,7 @@ use crate::{
     z_loaned_shm_provider_t, z_owned_shm_mut_t,
 };
 
-pub(crate) trait GenericAllocPolicy {
-    type AllocPolicy<Backend: ShmProviderBackend>: AllocPolicy<Backend> + ConstPolicy + Send + Sync;
-}
-
-impl GenericAllocPolicy for JustAlloc {
-    type AllocPolicy<Backend: ShmProviderBackend> = JustAlloc;
-}
-impl<InnerPolicy> GenericAllocPolicy for BlockOn<InnerPolicy>
-where
-    InnerPolicy: GenericAllocPolicy,
-{
-    type AllocPolicy<Backend: ShmProviderBackend> = BlockOn<InnerPolicy::AllocPolicy<Backend>>;
-}
-impl<InnerPolicy, AltPolicy, Safe> GenericAllocPolicy
-    for GarbageCollect<InnerPolicy, AltPolicy, Safe>
-where
-    InnerPolicy: GenericAllocPolicy,
-    AltPolicy: GenericAllocPolicy,
-    Safe: PolicyValue<bool> + ConstPolicy + Send + Sync,
-{
-    type AllocPolicy<Backend: ShmProviderBackend> =
-        GarbageCollect<InnerPolicy::AllocPolicy<Backend>, AltPolicy::AllocPolicy<Backend>, Safe>;
-}
-impl<InnerPolicy, AltPolicy> GenericAllocPolicy for Defragment<InnerPolicy, AltPolicy>
-where
-    InnerPolicy: GenericAllocPolicy,
-    AltPolicy: GenericAllocPolicy,
-{
-    type AllocPolicy<Backend: ShmProviderBackend> =
-        Defragment<InnerPolicy::AllocPolicy<Backend>, AltPolicy::AllocPolicy<Backend>>;
-}
-impl<Limit, InnerPolicy, AltPolicy> GenericAllocPolicy for Deallocate<Limit, InnerPolicy, AltPolicy>
-where
-    Limit: PolicyValue<usize> + ConstPolicy + Send + Sync,
-    InnerPolicy: GenericAllocPolicy,
-    AltPolicy: GenericAllocPolicy,
-{
-    type AllocPolicy<Backend: ShmProviderBackend> =
-        Deallocate<Limit, InnerPolicy::AllocPolicy<Backend>, AltPolicy::AllocPolicy<Backend>>;
-}
-
-pub(crate) trait GenericAsyncAllocPolicy {
-    type AsyncAllocPolicy<Backend: ShmProviderBackend + Sync>: AsyncAllocPolicy<Backend>
-        + ConstPolicy
-        + Sync;
-}
-
-impl<InnerPolicy> GenericAsyncAllocPolicy for BlockOn<InnerPolicy>
-where
-    InnerPolicy: GenericAllocPolicy,
-{
-    type AsyncAllocPolicy<Backend: ShmProviderBackend + Sync> =
-        BlockOn<InnerPolicy::AllocPolicy<Backend>>;
-}
-
-pub(crate) fn alloc<Policy: GenericAllocPolicy>(
+pub(crate) fn alloc<Policy: AllocPolicy>(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -114,7 +57,7 @@ pub(crate) fn alloc<Policy: GenericAllocPolicy>(
     }
 }
 
-pub(crate) fn alloc_async<Policy: GenericAsyncAllocPolicy>(
+pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
@@ -208,24 +151,22 @@ pub(crate) fn map(
     }
 }
 
-fn alloc_impl<Policy: GenericAllocPolicy, TBackend: ShmProviderBackend>(
+fn alloc_impl<Policy: AllocPolicy, TBackend: ShmProviderBackend>(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &ShmProvider<TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) {
-    let result = unsafe {
-        provider
-            .alloc((size, alignment.into_rust_type()))
-            .with_unsafe_policy::<Policy::AllocPolicy<TBackend>>()
-            .wait()
-    };
+    let result = provider
+        .alloc((size, alignment.into_rust_type()))
+        .with_policy::<Policy>()
+        .wait();
 
     out_result.write(result.into());
 }
 
 pub(crate) fn alloc_async_impl<
-    Policy: GenericAsyncAllocPolicy,
+    Policy: AsyncAllocPolicy,
     TBackend: ShmProviderBackend + Send + Sync,
 >(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -239,12 +180,10 @@ pub(crate) fn alloc_async_impl<
     ),
 ) {
     zenoh_runtime::ZRuntime::Application.spawn(async move {
-        let result = unsafe {
-            provider
-                .alloc((size, alignment.into_rust_type()))
-                .with_unsafe_policy::<Policy::AsyncAllocPolicy<TBackend>>()
-                .await
-        };
+        let result = provider
+            .alloc((size, alignment.into_rust_type()))
+            .with_policy::<Policy>()
+            .await;
         out_result.write(result.into());
         unsafe {
             (result_callback)(result_context.get(), out_result);

@@ -11,11 +11,7 @@ pub fn generate_opaque_types() {
     let (command, path_in) = produce_opaque_types_data();
     let path_out = current_folder.join("./opaque_types.rs");
 
-    let data_in = std::fs::read_to_string(path_in)
-        .unwrap()
-        // The first error may only be preceded by a `\r`,
-        // so this ensures it will be included in `total_error_count`
-        .replace('\r', "\n");
+    let data_in = std::fs::read_to_string(path_in).unwrap();
 
     // Check for cargo-level errors (dependency resolution, manifest parsing, etc.)
     if data_in.contains("error: failed to") || data_in.contains("Caused by:") {

@@ -17,8 +17,7 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        BlockOn, ConstUsize, Deallocate, Defragment, GarbageCollect, JustAlloc, ShmProvider,
-        ShmProviderBuilder,
+        BlockOn, Deallocate, Defragment, GarbageCollect, JustAlloc, ShmProvider, ShmProviderBuilder,
     },
     Wait,
 };
@@ -180,7 +179,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc(
     provider: &z_loaned_shm_provider_t,
     size: usize,
 ) {
-    alloc::<Deallocate<ConstUsize<100>, Defragment<GarbageCollect>>>(
+    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(
         out_result,
         provider,
         size,
@@ -273,9 +272,7 @@ pub extern "C" fn z_shm_provider_alloc_gc_defrag_dealloc_aligned(
     size: usize,
     alignment: z_alloc_alignment_t,
 ) {
-    alloc::<Deallocate<ConstUsize<100>, Defragment<GarbageCollect>>>(
-        out_result, provider, size, alignment,
-    )
+    alloc::<Deallocate<100, Defragment<GarbageCollect>>>(out_result, provider, size, alignment)
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

@@ -4,6 +4,7 @@
 
 #ifndef __cplusplus
 
+static inline z_moved_alloc_layout_t* z_alloc_layout_move(z_owned_alloc_layout_t* x) { return (z_moved_alloc_layout_t*)(x); }
 static inline z_moved_bytes_t* z_bytes_move(z_owned_bytes_t* x) { return (z_moved_bytes_t*)(x); }
 static inline z_moved_bytes_writer_t* z_bytes_writer_move(z_owned_bytes_writer_t* x) { return (z_moved_bytes_writer_t*)(x); }
 static inline z_moved_chunk_alloc_result_t* z_chunk_alloc_result_move(z_owned_chunk_alloc_result_t* x) { return (z_moved_chunk_alloc_result_t*)(x); }
@@ -25,7 +26,6 @@ static inline z_moved_liveliness_token_t* z_liveliness_token_move(z_owned_liveli
 static inline z_moved_matching_listener_t* z_matching_listener_move(z_owned_matching_listener_t* x) { return (z_moved_matching_listener_t*)(x); }
 static inline z_moved_memory_layout_t* z_memory_layout_move(z_owned_memory_layout_t* x) { return (z_moved_memory_layout_t*)(x); }
 static inline z_moved_mutex_t* z_mutex_move(z_owned_mutex_t* x) { return (z_moved_mutex_t*)(x); }
-static inline z_moved_precomputed_layout_t* z_precomputed_layout_move(z_owned_precomputed_layout_t* x) { return (z_moved_precomputed_layout_t*)(x); }
 static inline z_moved_ptr_in_segment_t* z_ptr_in_segment_move(z_owned_ptr_in_segment_t* x) { return (z_moved_ptr_in_segment_t*)(x); }
 static inline z_moved_publisher_t* z_publisher_move(z_owned_publisher_t* x) { return (z_moved_publisher_t*)(x); }
 static inline z_moved_querier_t* z_querier_move(z_owned_querier_t* x) { return (z_moved_querier_t*)(x); }
@@ -63,6 +63,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
 
 #define z_loan(this_) \
     _Generic((this_), \
+        z_owned_alloc_layout_t : z_alloc_layout_loan, \
         z_owned_bytes_t : z_bytes_loan, \
         z_owned_bytes_writer_t : z_bytes_writer_loan, \
         z_owned_closure_hello_t : z_closure_hello_loan, \
@@ -81,7 +82,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_keyexpr_t : z_keyexpr_loan, \
         z_owned_liveliness_token_t : z_liveliness_token_loan, \
         z_owned_memory_layout_t : z_memory_layout_loan, \
-        z_owned_precomputed_layout_t : z_precomputed_layout_loan, \
         z_owned_ptr_in_segment_t : z_ptr_in_segment_loan, \
         z_owned_publisher_t : z_publisher_loan, \
         z_owned_querier_t : z_querier_loan, \
@@ -146,6 +146,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
 
 #define z_drop(this_) \
     _Generic((this_), \
+        z_moved_alloc_layout_t* : z_alloc_layout_drop, \
         z_moved_bytes_t* : z_bytes_drop, \
         z_moved_bytes_writer_t* : z_bytes_writer_drop, \
         z_moved_chunk_alloc_result_t* : z_chunk_alloc_result_drop, \
@@ -167,7 +168,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_moved_matching_listener_t* : z_matching_listener_drop, \
         z_moved_memory_layout_t* : z_memory_layout_drop, \
         z_moved_mutex_t* : z_mutex_drop, \
-        z_moved_precomputed_layout_t* : z_precomputed_layout_drop, \
         z_moved_ptr_in_segment_t* : z_ptr_in_segment_drop, \
         z_moved_publisher_t* : z_publisher_drop, \
         z_moved_querier_t* : z_querier_drop, \
@@ -205,6 +205,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
 
 #define z_move(this_) \
     _Generic((this_), \
+        z_owned_alloc_layout_t : z_alloc_layout_move, \
         z_owned_bytes_t : z_bytes_move, \
         z_owned_bytes_writer_t : z_bytes_writer_move, \
         z_owned_chunk_alloc_result_t : z_chunk_alloc_result_move, \
@@ -226,7 +227,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_matching_listener_t : z_matching_listener_move, \
         z_owned_memory_layout_t : z_memory_layout_move, \
         z_owned_mutex_t : z_mutex_move, \
-        z_owned_precomputed_layout_t : z_precomputed_layout_move, \
         z_owned_ptr_in_segment_t : z_ptr_in_segment_move, \
         z_owned_publisher_t : z_publisher_move, \
         z_owned_querier_t : z_querier_move, \
@@ -264,6 +264,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
 
 #define z_internal_null(this_) \
     _Generic((this_), \
+        z_owned_alloc_layout_t* : z_internal_alloc_layout_null, \
         z_owned_bytes_t* : z_internal_bytes_null, \
         z_owned_bytes_writer_t* : z_internal_bytes_writer_null, \
         z_owned_chunk_alloc_result_t* : z_internal_chunk_alloc_result_null, \
@@ -285,7 +286,6 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_matching_listener_t* : z_internal_matching_listener_null, \
         z_owned_memory_layout_t* : z_internal_memory_layout_null, \
         z_owned_mutex_t* : z_internal_mutex_null, \
-        z_owned_precomputed_layout_t* : z_internal_precomputed_layout_null, \
         z_owned_ptr_in_segment_t* : z_internal_ptr_in_segment_null, \
         z_owned_publisher_t* : z_internal_publisher_null, \
         z_owned_querier_t* : z_internal_querier_null, \
@@ -321,6 +321,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         ze_owned_serializer_t* : ze_internal_serializer_null \
     )(this_)
 
+static inline void z_alloc_layout_take(z_owned_alloc_layout_t* this_, z_moved_alloc_layout_t* x) { *this_ = x->_this; z_internal_alloc_layout_null(&x->_this); }
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) { *this_ = x->_this; z_internal_bytes_null(&x->_this); }
 static inline void z_bytes_writer_take(z_owned_bytes_writer_t* this_, z_moved_bytes_writer_t* x) { *this_ = x->_this; z_internal_bytes_writer_null(&x->_this); }
 static inline void z_chunk_alloc_result_take(z_owned_chunk_alloc_result_t* this_, z_moved_chunk_alloc_result_t* x) { *this_ = x->_this; z_internal_chunk_alloc_result_null(&x->_this); }
@@ -342,7 +343,6 @@ static inline void z_liveliness_token_take(z_owned_liveliness_token_t* this_, z_
 static inline void z_matching_listener_take(z_owned_matching_listener_t* this_, z_moved_matching_listener_t* x) { *this_ = x->_this; z_internal_matching_listener_null(&x->_this); }
 static inline void z_memory_layout_take(z_owned_memory_layout_t* this_, z_moved_memory_layout_t* x) { *this_ = x->_this; z_internal_memory_layout_null(&x->_this); }
 static inline void z_mutex_take(z_owned_mutex_t* this_, z_moved_mutex_t* x) { *this_ = x->_this; z_internal_mutex_null(&x->_this); }
-static inline void z_precomputed_layout_take(z_owned_precomputed_layout_t* this_, z_moved_precomputed_layout_t* x) { *this_ = x->_this; z_internal_precomputed_layout_null(&x->_this); }
 static inline void z_ptr_in_segment_take(z_owned_ptr_in_segment_t* this_, z_moved_ptr_in_segment_t* x) { *this_ = x->_this; z_internal_ptr_in_segment_null(&x->_this); }
 static inline void z_publisher_take(z_owned_publisher_t* this_, z_moved_publisher_t* x) { *this_ = x->_this; z_internal_publisher_null(&x->_this); }
 static inline void z_querier_take(z_owned_querier_t* this_, z_moved_querier_t* x) { *this_ = x->_this; z_internal_querier_null(&x->_this); }
@@ -380,6 +380,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
 
 #define z_take(this_, x) \
     _Generic((this_), \
+        z_owned_alloc_layout_t* : z_alloc_layout_take, \
         z_owned_bytes_t* : z_bytes_take, \
         z_owned_bytes_writer_t* : z_bytes_writer_take, \
         z_owned_chunk_alloc_result_t* : z_chunk_alloc_result_take, \
@@ -401,7 +402,6 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_matching_listener_t* : z_matching_listener_take, \
         z_owned_memory_layout_t* : z_memory_layout_take, \
         z_owned_mutex_t* : z_mutex_take, \
-        z_owned_precomputed_layout_t* : z_precomputed_layout_take, \
         z_owned_ptr_in_segment_t* : z_ptr_in_segment_take, \
         z_owned_publisher_t* : z_publisher_take, \
         z_owned_querier_t* : z_querier_take, \
@@ -447,6 +447,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
 
 #define z_internal_check(this_) \
     _Generic((this_), \
+        z_owned_alloc_layout_t : z_internal_alloc_layout_check, \
         z_owned_bytes_t : z_internal_bytes_check, \
         z_owned_bytes_writer_t : z_internal_bytes_writer_check, \
         z_owned_chunk_alloc_result_t : z_internal_chunk_alloc_result_check, \
@@ -468,7 +469,6 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_matching_listener_t : z_internal_matching_listener_check, \
         z_owned_memory_layout_t : z_internal_memory_layout_check, \
         z_owned_mutex_t : z_internal_mutex_check, \
-        z_owned_precomputed_layout_t : z_internal_precomputed_layout_check, \
         z_owned_ptr_in_segment_t : z_internal_ptr_in_segment_check, \
         z_owned_publisher_t : z_internal_publisher_check, \
         z_owned_querier_t : z_internal_querier_check, \
@@ -578,6 +578,7 @@ typedef void(*ze_closure_miss_callback_t)(const ze_miss_t *matching_status, void
 #else  // #ifndef __cplusplus
 
 
+static inline z_moved_alloc_layout_t* z_alloc_layout_move(z_owned_alloc_layout_t* x) { return reinterpret_cast<z_moved_alloc_layout_t*>(x); }
 static inline z_moved_bytes_t* z_bytes_move(z_owned_bytes_t* x) { return reinterpret_cast<z_moved_bytes_t*>(x); }
 static inline z_moved_bytes_writer_t* z_bytes_writer_move(z_owned_bytes_writer_t* x) { return reinterpret_cast<z_moved_bytes_writer_t*>(x); }
 static inline z_moved_chunk_alloc_result_t* z_chunk_alloc_result_move(z_owned_chunk_alloc_result_t* x) { return reinterpret_cast<z_moved_chunk_alloc_result_t*>(x); }
@@ -599,7 +600,6 @@ static inline z_moved_liveliness_token_t* z_liveliness_token_move(z_owned_liveli
 static inline z_moved_matching_listener_t* z_matching_listener_move(z_owned_matching_listener_t* x) { return reinterpret_cast<z_moved_matching_listener_t*>(x); }
 static inline z_moved_memory_layout_t* z_memory_layout_move(z_owned_memory_layout_t* x) { return reinterpret_cast<z_moved_memory_layout_t*>(x); }
 static inline z_moved_mutex_t* z_mutex_move(z_owned_mutex_t* x) { return reinterpret_cast<z_moved_mutex_t*>(x); }
-static inline z_moved_precomputed_layout_t* z_precomputed_layout_move(z_owned_precomputed_layout_t* x) { return reinterpret_cast<z_moved_precomputed_layout_t*>(x); }
 static inline z_moved_ptr_in_segment_t* z_ptr_in_segment_move(z_owned_ptr_in_segment_t* x) { return reinterpret_cast<z_moved_ptr_in_segment_t*>(x); }
 static inline z_moved_publisher_t* z_publisher_move(z_owned_publisher_t* x) { return reinterpret_cast<z_moved_publisher_t*>(x); }
 static inline z_moved_querier_t* z_querier_move(z_owned_querier_t* x) { return reinterpret_cast<z_moved_querier_t*>(x); }
@@ -636,6 +636,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
 
 
 
+inline const z_loaned_alloc_layout_t* z_loan(const z_owned_alloc_layout_t& this_) { return z_alloc_layout_loan(&this_); };
 inline const z_loaned_bytes_t* z_loan(const z_owned_bytes_t& this_) { return z_bytes_loan(&this_); };
 inline const z_loaned_bytes_writer_t* z_loan(const z_owned_bytes_writer_t& this_) { return z_bytes_writer_loan(&this_); };
 inline const z_loaned_closure_hello_t* z_loan(const z_owned_closure_hello_t& closure) { return z_closure_hello_loan(&closure); };
@@ -654,7 +655,6 @@ inline const z_loaned_hello_t* z_loan(const z_owned_hello_t& this_) { return z_h
 inline const z_loaned_keyexpr_t* z_loan(const z_owned_keyexpr_t& this_) { return z_keyexpr_loan(&this_); };
 inline const z_loaned_liveliness_token_t* z_loan(const z_owned_liveliness_token_t& this_) { return z_liveliness_token_loan(&this_); };
 inline const z_loaned_memory_layout_t* z_loan(const z_owned_memory_layout_t& this_) { return z_memory_layout_loan(&this_); };
-inline const z_loaned_precomputed_layout_t* z_loan(const z_owned_precomputed_layout_t& this_) { return z_precomputed_layout_loan(&this_); };
 inline const z_loaned_ptr_in_segment_t* z_loan(const z_owned_ptr_in_segment_t& this_) { return z_ptr_in_segment_loan(&this_); };
 inline const z_loaned_publisher_t* z_loan(const z_owned_publisher_t& this_) { return z_publisher_loan(&this_); };
 inline const z_loaned_querier_t* z_loan(const z_owned_querier_t& this_) { return z_querier_loan(&this_); };
@@ -715,6 +715,7 @@ inline ze_loaned_advanced_publisher_t* z_loan_mut(ze_owned_advanced_publisher_t&
 inline ze_loaned_serializer_t* z_loan_mut(ze_owned_serializer_t& this_) { return ze_serializer_loan_mut(&this_); };
 
 
+inline void z_drop(z_moved_alloc_layout_t* this_) { z_alloc_layout_drop(this_); };
 inline void z_drop(z_moved_bytes_t* this_) { z_bytes_drop(this_); };
 inline void z_drop(z_moved_bytes_writer_t* this_) { z_bytes_writer_drop(this_); };
 inline void z_drop(z_moved_chunk_alloc_result_t* this_) { z_chunk_alloc_result_drop(this_); };
@@ -736,7 +737,6 @@ inline void z_drop(z_moved_liveliness_token_t* this_) { z_liveliness_token_drop(
 inline void z_drop(z_moved_matching_listener_t* this_) { z_matching_listener_drop(this_); };
 inline void z_drop(z_moved_memory_layout_t* this_) { z_memory_layout_drop(this_); };
 inline void z_drop(z_moved_mutex_t* this_) { z_mutex_drop(this_); };
-inline void z_drop(z_moved_precomputed_layout_t* this_) { z_precomputed_layout_drop(this_); };
 inline void z_drop(z_moved_ptr_in_segment_t* this_) { z_ptr_in_segment_drop(this_); };
 inline void z_drop(z_moved_publisher_t* this_) { z_publisher_drop(this_); };
 inline void z_drop(z_moved_querier_t* this_) { z_querier_drop(this_); };
@@ -772,6 +772,7 @@ inline void z_drop(ze_moved_sample_miss_listener_t* this_) { ze_sample_miss_list
 inline void z_drop(ze_moved_serializer_t* this_) { ze_serializer_drop(this_); };
 
 
+inline z_moved_alloc_layout_t* z_move(z_owned_alloc_layout_t& this_) { return z_alloc_layout_move(&this_); };
 inline z_moved_bytes_t* z_move(z_owned_bytes_t& this_) { return z_bytes_move(&this_); };
 inline z_moved_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return z_bytes_writer_move(&this_); };
 inline z_moved_chunk_alloc_result_t* z_move(z_owned_chunk_alloc_result_t& this_) { return z_chunk_alloc_result_move(&this_); };
@@ -793,7 +794,6 @@ inline z_moved_liveliness_token_t* z_move(z_owned_liveliness_token_t& this_) { r
 inline z_moved_matching_listener_t* z_move(z_owned_matching_listener_t& this_) { return z_matching_listener_move(&this_); };
 inline z_moved_memory_layout_t* z_move(z_owned_memory_layout_t& this_) { return z_memory_layout_move(&this_); };
 inline z_moved_mutex_t* z_move(z_owned_mutex_t& this_) { return z_mutex_move(&this_); };
-inline z_moved_precomputed_layout_t* z_move(z_owned_precomputed_layout_t& this_) { return z_precomputed_layout_move(&this_); };
 inline z_moved_ptr_in_segment_t* z_move(z_owned_ptr_in_segment_t& this_) { return z_ptr_in_segment_move(&this_); };
 inline z_moved_publisher_t* z_move(z_owned_publisher_t& this_) { return z_publisher_move(&this_); };
 inline z_moved_querier_t* z_move(z_owned_querier_t& this_) { return z_querier_move(&this_); };
@@ -829,6 +829,7 @@ inline ze_moved_sample_miss_listener_t* z_move(ze_owned_sample_miss_listener_t& 
 inline ze_moved_serializer_t* z_move(ze_owned_serializer_t& this_) { return ze_serializer_move(&this_); };
 
 
+inline void z_internal_null(z_owned_alloc_layout_t* this_) { z_internal_alloc_layout_null(this_); };
 inline void z_internal_null(z_owned_bytes_t* this_) { z_internal_bytes_null(this_); };
 inline void z_internal_null(z_owned_bytes_writer_t* this_) { z_internal_bytes_writer_null(this_); };
 inline void z_internal_null(z_owned_chunk_alloc_result_t* this_) { z_internal_chunk_alloc_result_null(this_); };
@@ -850,7 +851,6 @@ inline void z_internal_null(z_owned_liveliness_token_t* this_) { z_internal_live
 inline void z_internal_null(z_owned_matching_listener_t* this_) { z_internal_matching_listener_null(this_); };
 inline void z_internal_null(z_owned_memory_layout_t* this_) { z_internal_memory_layout_null(this_); };
 inline void z_internal_null(z_owned_mutex_t* this_) { z_internal_mutex_null(this_); };
-inline void z_internal_null(z_owned_precomputed_layout_t* this_) { z_internal_precomputed_layout_null(this_); };
 inline void z_internal_null(z_owned_ptr_in_segment_t* this_) { z_internal_ptr_in_segment_null(this_); };
 inline void z_internal_null(z_owned_publisher_t* this_) { z_internal_publisher_null(this_); };
 inline void z_internal_null(z_owned_querier_t* this_) { z_internal_querier_null(this_); };
@@ -885,6 +885,7 @@ inline void z_internal_null(ze_owned_querying_subscriber_t* this_) { ze_internal
 inline void z_internal_null(ze_owned_sample_miss_listener_t* this_) { ze_internal_sample_miss_listener_null(this_); };
 inline void z_internal_null(ze_owned_serializer_t* this_) { ze_internal_serializer_null(this_); };
 
+static inline void z_alloc_layout_take(z_owned_alloc_layout_t* this_, z_moved_alloc_layout_t* x) { *this_ = x->_this; z_internal_alloc_layout_null(&x->_this); }
 static inline void z_bytes_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) { *this_ = x->_this; z_internal_bytes_null(&x->_this); }
 static inline void z_bytes_writer_take(z_owned_bytes_writer_t* this_, z_moved_bytes_writer_t* x) { *this_ = x->_this; z_internal_bytes_writer_null(&x->_this); }
 static inline void z_chunk_alloc_result_take(z_owned_chunk_alloc_result_t* this_, z_moved_chunk_alloc_result_t* x) { *this_ = x->_this; z_internal_chunk_alloc_result_null(&x->_this); }
@@ -906,7 +907,6 @@ static inline void z_liveliness_token_take(z_owned_liveliness_token_t* this_, z_
 static inline void z_matching_listener_take(z_owned_matching_listener_t* this_, z_moved_matching_listener_t* x) { *this_ = x->_this; z_internal_matching_listener_null(&x->_this); }
 static inline void z_memory_layout_take(z_owned_memory_layout_t* this_, z_moved_memory_layout_t* x) { *this_ = x->_this; z_internal_memory_layout_null(&x->_this); }
 static inline void z_mutex_take(z_owned_mutex_t* this_, z_moved_mutex_t* x) { *this_ = x->_this; z_internal_mutex_null(&x->_this); }
-static inline void z_precomputed_layout_take(z_owned_precomputed_layout_t* this_, z_moved_precomputed_layout_t* x) { *this_ = x->_this; z_internal_precomputed_layout_null(&x->_this); }
 static inline void z_ptr_in_segment_take(z_owned_ptr_in_segment_t* this_, z_moved_ptr_in_segment_t* x) { *this_ = x->_this; z_internal_ptr_in_segment_null(&x->_this); }
 static inline void z_publisher_take(z_owned_publisher_t* this_, z_moved_publisher_t* x) { *this_ = x->_this; z_internal_publisher_null(&x->_this); }
 static inline void z_querier_take(z_owned_querier_t* this_, z_moved_querier_t* x) { *this_ = x->_this; z_internal_querier_null(&x->_this); }
@@ -943,6 +943,9 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
 
 
 
+inline void z_take(z_owned_alloc_layout_t* this_, z_moved_alloc_layout_t* x) {
+    z_alloc_layout_take(this_, x);
+};
 inline void z_take(z_owned_bytes_t* this_, z_moved_bytes_t* x) {
     z_bytes_take(this_, x);
 };
@@ -1005,9 +1008,6 @@ inline void z_take(z_owned_memory_layout_t* this_, z_moved_memory_layout_t* x) {
 };
 inline void z_take(z_owned_mutex_t* this_, z_moved_mutex_t* x) {
     z_mutex_take(this_, x);
-};
-inline void z_take(z_owned_precomputed_layout_t* this_, z_moved_precomputed_layout_t* x) {
-    z_precomputed_layout_take(this_, x);
 };
 inline void z_take(z_owned_ptr_in_segment_t* this_, z_moved_ptr_in_segment_t* x) {
     z_ptr_in_segment_take(this_, x);
@@ -1124,6 +1124,7 @@ inline void z_take_from_loaned(z_owned_sample_t* dst, z_loaned_sample_t* src) {
 };
 
 
+inline bool z_internal_check(const z_owned_alloc_layout_t& this_) { return z_internal_alloc_layout_check(&this_); };
 inline bool z_internal_check(const z_owned_bytes_t& this_) { return z_internal_bytes_check(&this_); };
 inline bool z_internal_check(const z_owned_bytes_writer_t& this_) { return z_internal_bytes_writer_check(&this_); };
 inline bool z_internal_check(const z_owned_chunk_alloc_result_t& this_) { return z_internal_chunk_alloc_result_check(&this_); };
@@ -1145,7 +1146,6 @@ inline bool z_internal_check(const z_owned_liveliness_token_t& this_) { return z
 inline bool z_internal_check(const z_owned_matching_listener_t& this_) { return z_internal_matching_listener_check(&this_); };
 inline bool z_internal_check(const z_owned_memory_layout_t& this_) { return z_internal_memory_layout_check(&this_); };
 inline bool z_internal_check(const z_owned_mutex_t& this_) { return z_internal_mutex_check(&this_); };
-inline bool z_internal_check(const z_owned_precomputed_layout_t& this_) { return z_internal_precomputed_layout_check(&this_); };
 inline bool z_internal_check(const z_owned_ptr_in_segment_t& this_) { return z_internal_ptr_in_segment_check(&this_); };
 inline bool z_internal_check(const z_owned_publisher_t& this_) { return z_internal_publisher_check(&this_); };
 inline bool z_internal_check(const z_owned_querier_t& this_) { return z_internal_querier_check(&this_); };
@@ -1335,6 +1335,8 @@ inline void z_clone(z_owned_string_t* dst, z_loaned_string_t* this_) {
 
 template<class T> struct z_loaned_to_owned_type_t {};
 template<class T> struct z_owned_to_loaned_type_t {};
+template<> struct z_loaned_to_owned_type_t<z_loaned_alloc_layout_t> { typedef z_owned_alloc_layout_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_alloc_layout_t> { typedef z_loaned_alloc_layout_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_t> { typedef z_owned_bytes_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_bytes_t> { typedef z_loaned_bytes_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_bytes_writer_t> { typedef z_owned_bytes_writer_t type; };
@@ -1371,8 +1373,6 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_liveliness_token_t> { typede
 template<> struct z_owned_to_loaned_type_t<z_owned_liveliness_token_t> { typedef z_loaned_liveliness_token_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_memory_layout_t> { typedef z_owned_memory_layout_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_memory_layout_t> { typedef z_loaned_memory_layout_t type; };
-template<> struct z_loaned_to_owned_type_t<z_loaned_precomputed_layout_t> { typedef z_owned_precomputed_layout_t type; };
-template<> struct z_owned_to_loaned_type_t<z_owned_precomputed_layout_t> { typedef z_loaned_precomputed_layout_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_ptr_in_segment_t> { typedef z_owned_ptr_in_segment_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_ptr_in_segment_t> { typedef z_loaned_ptr_in_segment_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_publisher_t> { typedef z_owned_publisher_t type; };
