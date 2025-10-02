@@ -16,8 +16,7 @@ use std::mem::MaybeUninit;
 
 use libc::c_void;
 use zenoh::shm::{
-    BlockOn, ConstUsize, Deallocate, Defragment, GarbageCollect, JustAlloc, MemoryLayout,
-    PrecomputedLayout,
+    BlockOn, ConstUsize, Deallocate, Defragment, JustAlloc, MemoryLayout, PrecomputedLayout,
 };
 
 use super::{
@@ -28,7 +27,10 @@ use super::{
 use crate::{
     context::{zc_threadsafe_context_t, Context, ThreadsafeContext},
     result::z_result_t,
-    shm::protocol_implementations::posix::posix_shm_provider::PosixPrecomputedLayout,
+    shm::{
+        protocol_implementations::posix::posix_shm_provider::PosixPrecomputedLayout,
+        provider::shm_provider_impl::UnsafeGarbageCollect,
+    },
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_precomputed_layout_t, z_loaned_shm_provider_t, z_moved_precomputed_layout_t,
     z_owned_precomputed_layout_t,
@@ -129,7 +131,7 @@ pub extern "C" fn z_precomputed_layout_alloc_gc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_precomputed_layout_t,
 ) {
-    alloc::<GarbageCollect>(out_result, layout);
+    alloc::<UnsafeGarbageCollect>(out_result, layout);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -139,7 +141,7 @@ pub extern "C" fn z_precomputed_layout_alloc_gc_defrag(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_precomputed_layout_t,
 ) {
-    alloc::<Defragment<GarbageCollect>>(out_result, layout);
+    alloc::<Defragment<UnsafeGarbageCollect>>(out_result, layout);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -149,7 +151,7 @@ pub extern "C" fn z_precomputed_layout_alloc_gc_defrag_dealloc(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_precomputed_layout_t,
 ) {
-    alloc::<Deallocate<ConstUsize<100>, Defragment<GarbageCollect>>>(out_result, layout);
+    alloc::<Deallocate<ConstUsize<100>, Defragment<UnsafeGarbageCollect>>>(out_result, layout);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -159,7 +161,7 @@ pub extern "C" fn z_precomputed_layout_alloc_gc_defrag_blocking(
     out_result: &mut MaybeUninit<z_buf_alloc_result_t>,
     layout: &z_loaned_precomputed_layout_t,
 ) {
-    alloc::<BlockOn<Defragment<GarbageCollect>>>(out_result, layout);
+    alloc::<BlockOn<Defragment<UnsafeGarbageCollect>>>(out_result, layout);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -172,7 +174,7 @@ pub extern "C" fn z_precomputed_layout_threadsafe_alloc_gc_defrag_async(
     result_context: zc_threadsafe_context_t,
     result_callback: unsafe extern "C" fn(*mut c_void, &mut MaybeUninit<z_buf_alloc_result_t>),
 ) -> z_result_t {
-    alloc_async::<BlockOn<Defragment<GarbageCollect>>>(
+    alloc_async::<BlockOn<Defragment<UnsafeGarbageCollect>>>(
         out_result,
         layout,
         result_context,
