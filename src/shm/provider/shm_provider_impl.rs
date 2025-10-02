@@ -162,16 +162,6 @@ pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) -> usize {
     }
 }
 
-pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
-    match provider.as_rust_type_ref() {
-        super::shm_provider::CSHMProvider::Posix(provider) => provider.garbage_collect(),
-        super::shm_provider::CSHMProvider::Dynamic(provider) => provider.garbage_collect(),
-        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            provider.garbage_collect()
-        }
-    }
-}
-
 pub(crate) unsafe fn garbage_collect_unsafe(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => unsafe {

@@ -25,7 +25,7 @@ use zenoh::{
 use super::{
     chunk::z_allocated_chunk_t,
     shm_provider_backend::{zc_shm_provider_backend_callbacks_t, DynamicShmProviderBackend},
-    shm_provider_impl::{alloc, alloc_async, available, defragment, garbage_collect, map},
+    shm_provider_impl::{alloc, alloc_async, available, defragment, map},
     types::z_alloc_alignment_t,
 };
 use crate::{
@@ -334,16 +334,6 @@ pub extern "C" fn z_shm_provider_defragment(provider: &z_loaned_shm_provider_t) 
 /// @brief Perform memory garbage collection and reclaim all dereferenced SHM buffers.
 #[no_mangle]
 pub extern "C" fn z_shm_provider_garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
-    garbage_collect(provider)
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Perform memory garbage collection and reclaim all dereferenced SHM buffers.
-/// User must ensure there is no data races with collected chunks, as some of them may still be in-use.
-#[no_mangle]
-pub extern "C" fn z_shm_provider_garbage_collect_unsafe(
-    provider: &z_loaned_shm_provider_t,
-) -> usize {
     unsafe { garbage_collect_unsafe(provider) }
 }
 

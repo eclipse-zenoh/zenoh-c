@@ -4816,15 +4816,6 @@ size_t z_shm_provider_garbage_collect(const struct z_loaned_shm_provider_t *prov
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Perform memory garbage collection and reclaim all dereferenced SHM buffers.
- * User must ensure there is no data races with collected chunks, as some of them may still be in-use.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-size_t z_shm_provider_garbage_collect_unsafe(const struct z_loaned_shm_provider_t *provider);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Borrows SHM Provider.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
