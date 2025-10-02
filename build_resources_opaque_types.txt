@@ -1,0 +1,546 @@
+Computing main repo mapping: 
+Loading: 
+Loading: 0 packages loaded
+Analyzing: target @@zenoh-c+//:opaque_types (0 packages loaded, 0 targets configured)
+Analyzing: target @@zenoh-c+//:opaque_types (0 packages loaded, 0 targets configured)
+
+INFO: Analyzed target @@zenoh-c+//:opaque_types (0 packages loaded, 0 targets configured).
+ERROR: /home/ros/.cache/bazel/_bazel_ros/a069810e271e52a16b0aa8e6ff5833f9/external/zenoh-c+/BUILD.bazel:26:13: Compiling Rust rlib opaque_types (1 files) failed: (Exit 1): process_wrapper failed: error executing Rustc command (from target @@zenoh-c+//:opaque_types) bazel-out/k8-opt-exec-ST-d57f47055a04/bin/external/rules_rust+/util/process_wrapper/process_wrapper --arg-file ... (remaining 348 arguments skipped)
+
+Use --sandbox_debug to see verbose messages from the sandbox and retain the sandbox build root for debugging
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:57:1
+   |
+57 | get_opaque_type_data!(ZBytes, z_owned_bytes_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_bytes_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:57:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:59:1
+   |
+59 | get_opaque_type_data!(ZBytes, z_loaned_bytes_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_bytes_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:59:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:68:1
+   |
+68 | get_opaque_type_data!(CSlice, z_owned_slice_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_slice_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:68:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:70:1
+   |
+70 | get_opaque_type_data!(CSlice, z_view_slice_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_view_slice_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:70:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:72:1
+   |
+72 | get_opaque_type_data!(CSlice, z_loaned_slice_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_slice_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:72:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:75:1
+   |
+75 | get_opaque_type_data!(CSlice, z_owned_string_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_string_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:75:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:77:1
+   |
+77 | get_opaque_type_data!(CSlice, z_view_string_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_view_string_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:77:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:79:1
+   |
+79 | get_opaque_type_data!(CSlice, z_loaned_string_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_string_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:79:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:83:1
+   |
+83 | get_opaque_type_data!(Vec<CSlice>, z_owned_string_array_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_string_array_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:83:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:85:1
+   |
+85 | get_opaque_type_data!(Vec<CSlice>, z_loaned_string_array_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_string_array_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:85:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:91:1
+   |
+91 | get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_sample_t, align: 8, size: 184', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:91:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:93:1
+   |
+93 | get_opaque_type_data!(Sample, z_loaned_sample_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_sample_t, align: 8, size: 184', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:93:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:96:1
+   |
+96 | get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_bytes_reader_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:96:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+  --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:99:1
+   |
+99 | get_opaque_type_data!(Option<ZBytesWriter>, z_owned_bytes_writer_t);
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_bytes_writer_t, align: 8, size: 56', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:99:1
+   |
+   = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:101:1
+    |
+101 | get_opaque_type_data!(ZBytesWriter, z_loaned_bytes_writer_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_bytes_writer_t, align: 8, size: 56', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:101:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:104:1
+    |
+104 | get_opaque_type_data!(ZBytesSliceIterator<'static>, z_bytes_slice_iterator_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_bytes_slice_iterator_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:104:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:107:1
+    |
+107 | get_opaque_type_data!(Encoding, z_owned_encoding_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_encoding_t, align: 8, size: 40', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:107:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:109:1
+    |
+109 | get_opaque_type_data!(Encoding, z_loaned_encoding_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_encoding_t, align: 8, size: 40', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:109:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:112:1
+    |
+112 | get_opaque_type_data!(Option<Reply>, z_owned_reply_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_reply_t, align: 8, size: 184', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:112:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:114:1
+    |
+114 | get_opaque_type_data!(Reply, z_loaned_reply_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_reply_t, align: 8, size: 184', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:114:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:117:1
+    |
+117 | get_opaque_type_data!(ReplyError, z_owned_reply_err_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_reply_err_t, align: 8, size: 72', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:117:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:119:1
+    |
+119 | get_opaque_type_data!(ReplyError, z_loaned_reply_err_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_reply_err_t, align: 8, size: 72', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:119:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:124:1
+    |
+124 | get_opaque_type_data!(Option<Query>, z_owned_query_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_query_t, align: 8, size: 136', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:124:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:126:1
+    |
+126 | get_opaque_type_data!(Query, z_loaned_query_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_query_t, align: 8, size: 136', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:126:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:131:1
+    |
+131 | get_opaque_type_data!(Option<Queryable<()>>, z_owned_queryable_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_queryable_t, align: 8, size: 48', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:131:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:133:1
+    |
+133 | get_opaque_type_data!(Queryable<()>, z_loaned_queryable_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_queryable_t, align: 8, size: 48', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:133:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:222:1
+    |
+222 | get_opaque_type_data!(Option<KeyExpr<'static>>, z_owned_keyexpr_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_keyexpr_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:222:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:224:1
+    |
+224 | get_opaque_type_data!(Option<KeyExpr<'static>>, z_view_keyexpr_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_view_keyexpr_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:224:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:236:1
+    |
+236 | get_opaque_type_data!(KeyExpr<'static>, z_loaned_keyexpr_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_keyexpr_t, align: 8, size: 32', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:236:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:239:1
+    |
+239 | get_opaque_type_data!(Option<Session>, z_owned_session_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_session_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:239:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:241:1
+    |
+241 | get_opaque_type_data!(Session, z_loaned_session_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_session_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:241:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:251:1
+    |
+251 | get_opaque_type_data!(Option<Config>, z_owned_config_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_config_t, align: 8, size: 1976', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:251:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:253:1
+    |
+253 | get_opaque_type_data!(Config, z_loaned_config_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_config_t, align: 8, size: 1976', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:253:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:258:1
+    |
+258 | get_opaque_type_data!(ZenohId, z_id_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_id_t, align: 1, size: 16', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:258:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:263:1
+    |
+263 | get_opaque_type_data!(Timestamp, z_timestamp_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_timestamp_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:263:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:266:1
+    |
+266 | get_opaque_type_data!(Option<Publisher<'static>>, z_owned_publisher_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_publisher_t, align: 8, size: 96', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:266:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:268:1
+    |
+268 | get_opaque_type_data!(Publisher<'static>, z_loaned_publisher_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_publisher_t, align: 8, size: 96', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:268:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:282:1
+    |
+282 | get_opaque_type_data!(Option<Subscriber<()>>, z_owned_subscriber_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_subscriber_t, align: 8, size: 48', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:282:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:284:1
+    |
+284 | get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_subscriber_t, align: 8, size: 48', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:284:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:291:1
+    |
+291 | get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_liveliness_token_t, align: 8, size: 16', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:291:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:292:1
+    |
+292 | get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_liveliness_token_t, align: 8, size: 16', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:292:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:310:1
+    |
+310 | / get_opaque_type_data!(
+311 | |     Option<(Mutex<()>, Option<MutexGuard<'static, ()>>)>,
+312 | |     z_owned_mutex_t
+313 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_mutex_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:310:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:315:1
+    |
+315 | / get_opaque_type_data!(
+316 | |     (Mutex<()>, Option<MutexGuard<'static, ()>>),
+317 | |     z_loaned_mutex_t
+318 | | );
+    | |_^ the evaluated program panicked at 'type: z_loaned_mutex_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:315:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:323:1
+    |
+323 | get_opaque_type_data!(Option<Condvar>, z_owned_condvar_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_condvar_t, align: 4, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:323:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:325:1
+    |
+325 | get_opaque_type_data!(Condvar, z_loaned_condvar_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_condvar_t, align: 4, size: 4', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:325:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:328:1
+    |
+328 | get_opaque_type_data!(Option<JoinHandle<()>>, z_owned_task_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_task_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:328:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:331:1
+    |
+331 | get_opaque_type_data!(Option<Hello>, z_owned_hello_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_owned_hello_t, align: 8, size: 48', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:331:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:333:1
+    |
+333 | get_opaque_type_data!(Hello, z_loaned_hello_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_hello_t, align: 8, size: 48', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:333:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:488:1
+    |
+488 | / get_opaque_type_data!(
+489 | |     Option<FifoChannelHandler<Sample>>,
+490 | |     z_owned_fifo_handler_sample_t
+491 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_fifo_handler_sample_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:488:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:493:1
+    |
+493 | get_opaque_type_data!(FifoChannelHandler<Sample>, z_loaned_fifo_handler_sample_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_fifo_handler_sample_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:493:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:496:1
+    |
+496 | / get_opaque_type_data!(
+497 | |     Option<RingChannelHandler<Sample>>,
+498 | |     z_owned_ring_handler_sample_t
+499 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_ring_handler_sample_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:496:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:501:1
+    |
+501 | get_opaque_type_data!(RingChannelHandler<Sample>, z_loaned_ring_handler_sample_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_ring_handler_sample_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:501:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:504:1
+    |
+504 | / get_opaque_type_data!(
+505 | |     Option<FifoChannelHandler<Query>>,
+506 | |     z_owned_fifo_handler_query_t
+507 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_fifo_handler_query_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:504:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:509:1
+    |
+509 | get_opaque_type_data!(FifoChannelHandler<Query>, z_loaned_fifo_handler_query_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_fifo_handler_query_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:509:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:512:1
+    |
+512 | / get_opaque_type_data!(
+513 | |     Option<RingChannelHandler<Query>>,
+514 | |     z_owned_ring_handler_query_t
+515 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_ring_handler_query_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:512:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:517:1
+    |
+517 | get_opaque_type_data!(RingChannelHandler<Query>, z_loaned_ring_handler_query_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_ring_handler_query_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:517:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:520:1
+    |
+520 | / get_opaque_type_data!(
+521 | |     Option<FifoChannelHandler<Reply>>,
+522 | |     z_owned_fifo_handler_reply_t
+523 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_fifo_handler_reply_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:520:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:525:1
+    |
+525 | get_opaque_type_data!(FifoChannelHandler<Reply>, z_loaned_fifo_handler_reply_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_fifo_handler_reply_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:525:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:528:1
+    |
+528 | / get_opaque_type_data!(
+529 | |     Option<RingChannelHandler<Reply>>,
+530 | |     z_owned_ring_handler_reply_t
+531 | | );
+    | |_^ the evaluated program panicked at 'type: z_owned_ring_handler_reply_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:528:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:533:1
+    |
+533 | get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: z_loaned_ring_handler_reply_t, align: 8, size: 8', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:533:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:549:1
+    |
+549 | get_opaque_type_data!(Option<zenoh_ext::ZSerializer>, ze_owned_serializer_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: ze_owned_serializer_t, align: 8, size: 56', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:549:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:551:1
+    |
+551 | get_opaque_type_data!(zenoh_ext::ZSerializer, ze_loaned_serializer_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: ze_loaned_serializer_t, align: 8, size: 56', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:551:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0080]: evaluation of constant value failed
+   --> external/zenoh-c+/build-resources/opaque-types/src/lib.rs:553:1
+    |
+553 | get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the evaluated program panicked at 'type: ze_deserializer_t, align: 8, size: 24', external/zenoh-c+/build-resources/opaque-types/src/lib.rs:553:1
+    |
+    = note: this error originates in the macro `$crate::panic::panic_2021` which comes from the expansion of the macro `get_opaque_type_data` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: aborting due to 63 previous errors
+
+For more information about this error, try `rustc --explain E0080`.
+Target @@zenoh-c+//:opaque_types failed to build
+Use --verbose_failures to see the command lines of failed build steps.
+INFO: Elapsed time: 0.949s, Critical Path: 0.42s
+INFO: 2 processes: 2 internal.
+ERROR: Build did NOT complete successfully

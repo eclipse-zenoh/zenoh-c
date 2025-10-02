@@ -81,3 +81,7 @@ src/opaque_types/mod.rs
 CMakeFiles/
 debug/
 release/
+
+# Bazel
+bazel-*
+*.bazel.lock

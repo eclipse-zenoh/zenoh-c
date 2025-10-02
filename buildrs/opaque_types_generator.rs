@@ -1,15 +1,14 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 use regex::Regex;
 
-use super::common_helpers::{features, split_type_name};
-use crate::get_build_rs_path;
+use super::common_helpers::split_type_name;
+use crate::{get_build_rs_path, get_out_rs_path};
 
 pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
-    let current_folder = get_build_rs_path();
-    let path_in = produce_opaque_types_data();
-    let path_out = current_folder.join("./src/opaque_types/mod.rs");
+    let path_in = get_build_rs_path().join("build_resources_opaque_types.txt");
+    let path_out = get_out_rs_path().join("opaque_types.rs");
 
     let data_in = std::fs::read_to_string(path_in).unwrap();
     let mut data_out = String::new();
@@ -72,42 +71,6 @@ impl Drop for {type_name} {{
         data_out += &s;
     }
     std::fs::write(path_out, data_out).unwrap();
-}
-
-fn produce_opaque_types_data() -> PathBuf {
-    let target = std::env::var("TARGET").unwrap();
-    let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let current_folder = get_build_rs_path();
-    let manifest_path = current_folder.join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = current_folder.join("./.build_resources_opaque_types.txt");
-    let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
-    let stdio = std::process::Stdio::from(out_file);
-
-    let mut linker_args = Vec::<String>::new();
-    if !linker.is_empty() {
-        linker_args.push("--config".to_string());
-        linker_args.push(format!("target.{target}.linker=\"{linker}\""));
-    }
-    #[allow(unused_mut)]
-    let mut feature_args: Vec<&str> = vec!["-F", "panic"];
-    for feature in features() {
-        feature_args.push("-F");
-        feature_args.push(feature);
-    }
-
-    let _ = std::process::Command::new("cargo")
-        .arg("build")
-        .args(feature_args)
-        .args(linker_args)
-        .arg("--target")
-        .arg(target)
-        .arg("--manifest-path")
-        .arg(manifest_path)
-        .stderr(stdio)
-        .output()
-        .unwrap();
-
-    output_file_path
 }
 
 fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {

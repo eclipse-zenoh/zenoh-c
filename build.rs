@@ -1,3 +1,5 @@
+use std::env;
+
 mod buildrs;
 
 pub fn get_build_rs_path() -> std::path::PathBuf {
@@ -5,6 +7,11 @@ pub fn get_build_rs_path() -> std::path::PathBuf {
     let mut path_buf = std::path::PathBuf::new();
     path_buf.push(file_path);
     path_buf.parent().unwrap().to_path_buf()
+}
+
+pub fn get_out_rs_path() -> std::path::PathBuf {
+    let out_dir = env::var_os("OUT_DIR").unwrap();
+    std::path::Path::new(&out_dir).to_path_buf()
 }
 
 fn main() {
