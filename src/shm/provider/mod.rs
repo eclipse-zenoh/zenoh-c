@@ -12,6 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
+pub mod alloc_layout;
 pub mod chunk;
 pub mod precomputed_layout;
 pub(crate) mod precomputed_layout_impl;
