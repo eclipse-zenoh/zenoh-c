@@ -4057,7 +4057,7 @@ dependencies = [
 
 [[package]]
 name = "zenoh-c"
-version = "1.5.1"
+version = "1.6.1"
 dependencies = [
  "cbindgen",
  "chrono",
