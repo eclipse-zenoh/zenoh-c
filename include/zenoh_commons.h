@@ -161,6 +161,14 @@ typedef enum z_sample_kind_t {
    */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef enum z_shm_provider_state {
+  Z_SHM_PROVIDER_STATE_DISABLED,
+  Z_SHM_PROVIDER_STATE_INITIALIZING,
+  Z_SHM_PROVIDER_STATE_READY,
+  Z_SHM_PROVIDER_STATE_ERROR,
+} z_shm_provider_state;
+#endif
 typedef enum z_what_t {
   Z_WHAT_ROUTER = 1,
   Z_WHAT_PEER = 2,
@@ -945,6 +953,9 @@ typedef struct z_scout_options_t {
 typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
+typedef struct z_moved_shared_shm_provider_t {
+  struct z_owned_shared_shm_provider_t _this;
+} z_moved_shared_shm_provider_t;
 typedef struct z_moved_shm_client_t {
   struct z_owned_shm_client_t _this;
 } z_moved_shm_client_t;
@@ -2755,6 +2766,17 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs and opens a new Zenoh session with specified client storage.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+enum z_shm_provider_state z_get_shm_provider(const struct z_loaned_session_t *this_,
+                                             struct z_owned_shared_shm_provider_t *out_provider);
+#endif
+/**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
@@ -2844,6 +2866,17 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
  * to pass it a valid session.
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs and opens a new Zenoh session with specified client storage.
+ *
+ * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+ */
+#if ((defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)) && (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)))
+ZENOHC_API
+void z_inner_shm_provider(const struct z_loaned_shared_shm_provider_t *this_,
+                          struct z_owned_shm_provider_t *out_provider);
+#endif
 /**
  * @warning This API has been marked as deprecated, use `z_internal_precomputed_layout_check` instead.
  */
@@ -3187,6 +3220,22 @@ ZENOHC_API bool z_internal_session_check(const struct z_owned_session_t *this_);
  * Constructs a Zenoh session in its gravestone state.
  */
 ZENOHC_API void z_internal_session_null(struct z_owned_session_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if `this` is valid.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+bool z_internal_shared_shm_provider_check(const struct z_owned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs Shared SHM Provider in its gravestone value.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_internal_shared_shm_provider_null(struct z_owned_shared_shm_provider_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @return ``true`` if `this` is valid.
@@ -4535,6 +4584,22 @@ ZENOHC_API bool z_session_is_closed(const struct z_loaned_session_t *session);
  */
 ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
 ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Deletes Shared SHM Provider.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_shared_shm_provider_drop(struct z_moved_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows Shared SHM Provider.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+const struct z_loaned_shared_shm_provider_t *z_shared_shm_provider_loan(const struct z_owned_shared_shm_provider_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes SHM Client.

@@ -103,6 +103,9 @@ pub(crate) fn alloc<Policy: GenericAllocPolicy>(
         super::shm_provider::CSHMProvider::Posix(provider) => {
             alloc_impl::<Policy, PosixShmProviderBackend>(out_result, provider, size, alignment)
         }
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => {
+            alloc_impl::<Policy, PosixShmProviderBackend>(out_result, provider, size, alignment)
+        }
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
             alloc_impl::<Policy, DynamicShmProviderBackend<Context>>(
                 out_result, provider, size, alignment,
@@ -139,6 +142,17 @@ pub(crate) fn alloc_async<Policy: GenericAsyncAllocPolicy>(
             );
             Z_OK
         }
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => {
+            alloc_async_impl::<Policy, PosixShmProviderBackend>(
+                out_result,
+                provider,
+                size,
+                alignment,
+                result_context,
+                result_callback,
+            );
+            Z_OK
+        }
         super::shm_provider::CSHMProvider::Dynamic(_) => Z_EINVAL,
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
             alloc_async_impl::<Policy, DynamicShmProviderBackend<ThreadsafeContext>>(
@@ -157,6 +171,7 @@ pub(crate) fn alloc_async<Policy: GenericAsyncAllocPolicy>(
 pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.defragment(),
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => provider.defragment(),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.defragment(),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.defragment(),
     }
@@ -165,6 +180,9 @@ pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) -> usize {
 pub(crate) unsafe fn garbage_collect_unsafe(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => unsafe {
             provider.garbage_collect_unsafe()
         },
         super::shm_provider::CSHMProvider::Dynamic(provider) => unsafe {
@@ -179,6 +197,7 @@ pub(crate) unsafe fn garbage_collect_unsafe(provider: &z_loaned_shm_provider_t) 
 pub(crate) fn available(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.available(),
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => provider.available(),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.available(),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.available(),
     }
@@ -198,6 +217,7 @@ pub(crate) fn map(
 
     let mapping = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.map(chunk, len),
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => provider.map(chunk, len),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.map(chunk, len),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.map(chunk, len),
     };

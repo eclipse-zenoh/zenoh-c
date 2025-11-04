@@ -34,6 +34,7 @@ use crate::{
     shm::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::{
+            shared_shm_provider::SharedShmProvider,
             shm_provider_impl::{garbage_collect_unsafe, UnsafeGarbageCollect},
             types::z_buf_layout_alloc_result_t,
         },
@@ -48,6 +49,7 @@ pub type DynamicShmProviderThreadsafe = ShmProvider<DynamicShmProviderBackend<Th
 
 pub enum CSHMProvider {
     Posix(PosixShmProvider),
+    SharedPosix(SharedShmProvider),
     Dynamic(DynamicShmProvider),
     DynamicThreadsafe(DynamicShmProviderThreadsafe),
 }

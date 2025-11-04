@@ -77,6 +77,15 @@ pub(crate) fn alloc_layout(
                 }
             }
         }
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => {
+            match provider.alloc_layout(mem_layout) {
+                Ok(layout) => CSHMLayout::Posix(layout),
+                Err(e) => {
+                    crate::report_error!("{:?}", e);
+                    return Z_EINVAL;
+                }
+            }
+        }
     };
     this.as_rust_type_mut_uninit().write(Some(layout));
     Z_OK

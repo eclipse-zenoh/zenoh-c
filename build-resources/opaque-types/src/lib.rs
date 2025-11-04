@@ -444,8 +444,12 @@ type DummySHMProvider = ShmProvider<DummySHMProviderBackend>;
 type PosixSHMProvider = ShmProvider<PosixShmProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type SharedPosixSHMProvider = Arc<PosixSHMProvider>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CDummySHMProvider {
     Posix(PosixSHMProvider),
+    SharedPosix(SharedPosixSHMProvider),
     Dynamic(DummySHMProvider),
     DynamicThreadsafe(DummySHMProvider),
 }
@@ -458,6 +462,15 @@ get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned ShmProvider.
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned shared ShmProvider.
+get_opaque_type_data!(Option<SharedPosixSHMProvider>, z_owned_shared_shm_provider_t);
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned shared ShmProvider.
+get_opaque_type_data!(SharedPosixSHMProvider, z_loaned_shared_shm_provider_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 type PosixPrecomputedLayout = PrecomputedLayout<'static, PosixShmProviderBackend, MemoryLayout>;

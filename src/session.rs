@@ -16,8 +16,6 @@ use std::mem::MaybeUninit;
 
 use zenoh::{Session, Wait};
 
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::z_loaned_shm_client_storage_t;
 #[cfg(feature = "unstable")]
 use crate::zc_owned_concurrent_close_handle_t;
 use crate::{
@@ -26,6 +24,10 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t,
 };
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::{z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t};
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use zenoh::shm::ShmProviderState;
 decl_c_type!(
     owned(z_owned_session_t, option Session),
     loaned(z_loaned_session_t),
@@ -100,6 +102,39 @@ pub extern "C" fn z_open(
             this.write(None);
             result::Z_ENETWORK
         }
+    }
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum z_shm_provider_state {
+    DISABLED,
+    INITIALIZING,
+    READY,
+    ERROR,
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs and opens a new Zenoh session with specified client storage.
+///
+/// @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub extern "C" fn z_get_shm_provider(
+    this: &z_loaned_session_t,
+    out_provider: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
+) -> z_shm_provider_state {
+    let s = this.as_rust_type_ref();
+    match s.get_shm_provider() {
+        ShmProviderState::Disabled => z_shm_provider_state::DISABLED,
+        ShmProviderState::Initializing => z_shm_provider_state::INITIALIZING,
+        ShmProviderState::Ready(provider) => {
+            out_provider.as_rust_type_mut_uninit().write(Some(provider));
+            z_shm_provider_state::READY
+        }
+        ShmProviderState::Error => z_shm_provider_state::ERROR,
     }
 }
 
