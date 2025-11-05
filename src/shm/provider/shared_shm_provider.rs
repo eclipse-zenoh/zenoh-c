@@ -12,12 +12,13 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
-use std::sync::Arc;
+use std::{mem::MaybeUninit, sync::Arc};
 
 use crate::{
-    shm::protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
-    shm::provider::shm_provider::CSHMProvider,
+    shm::{
+        protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
+        provider::shm_provider::CSHMProvider,
+    },
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_loaned_shared_shm_provider_t, z_moved_shared_shm_provider_t, z_owned_shared_shm_provider_t,
     z_owned_shm_provider_t,
