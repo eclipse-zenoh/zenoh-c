@@ -14,6 +14,8 @@
 
 use std::mem::MaybeUninit;
 
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use zenoh::shm::ShmProviderState;
 use zenoh::{Session, Wait};
 
 #[cfg(feature = "unstable")]
@@ -26,8 +28,6 @@ use crate::{
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t};
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use zenoh::shm::ShmProviderState;
 decl_c_type!(
     owned(z_owned_session_t, option Session),
     loaned(z_loaned_session_t),
