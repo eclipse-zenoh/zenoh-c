@@ -52,14 +52,18 @@ int test_shm_buffer(z_moved_shm_mut_t* mbuf) {
     ASSERT_CHECK_ERR(mbuf->_this);
     ASSERT_CHECK(buf);
 
-    { z_loaned_shm_mut_t* loaned = z_loan_mut(buf); }
+    {
+        z_loaned_shm_mut_t* loaned = z_loan_mut(buf);
+    }
 
     z_owned_shm_t immut;
     z_shm_from_mut(&immut, z_move(buf));
     ASSERT_CHECK(immut);
     ASSERT_CHECK_ERR(buf);
 
-    { const z_loaned_shm_t* loaned = z_loan(immut); }
+    {
+        const z_loaned_shm_t* loaned = z_loan(immut);
+    }
 
     {
         z_loaned_shm_t* loaned_immut = z_loan_mut(immut);
@@ -468,6 +472,34 @@ int run_cleanup() {
     return Z_OK;
 }
 
+int run_transport_provider() {
+    z_owned_config_t config;
+    ASSERT_OK(z_config_default(&config));
+
+    z_owned_session_t session;
+    ASSERT_OK(z_open(&session, z_move(config), NULL) < 0);
+
+    z_owned_shared_shm_provider_t shared_provider;
+    z_shm_provider_state state = z_get_shm_provider(&shared_provider, z_loan(session));
+    ASSERT_TRUE(state == Z_SHM_PROVIDER_STATE_INITIALIZING);
+
+    while (state == Z_SHM_PROVIDER_STATE_INITIALIZING) {
+        z_sleep_ms(100);
+        state = z_get_shm_provider(&shared_provider, z_loan(session));
+    }
+
+    ASSERT_TRUE(state == Z_SHM_PROVIDER_STATE_READY);
+
+    z_owned_shm_provider_t provider;
+    z_inner_shm_provider(&provider, z_loan(shared_provider));
+
+    z_drop(z_move(provider));
+    z_drop(z_move(shared_provider));
+    z_drop(z_move(session));
+
+    return Z_OK;
+}
+
 int main() {
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
@@ -476,5 +508,6 @@ int main() {
     ASSERT_OK(run_client_storage());
     ASSERT_OK(run_c_client());
     ASSERT_OK(run_cleanup());
+    ASSERT_OK(run_transport_provider());
     return Z_OK;
 }

@@ -161,11 +161,27 @@ typedef enum z_sample_kind_t {
    */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Session's provider state.
+ */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 typedef enum z_shm_provider_state {
+  /**
+   * Provider is disabled by configuration.
+   */
   Z_SHM_PROVIDER_STATE_DISABLED,
+  /**
+   * Provider is concurrently-initializing.
+   */
   Z_SHM_PROVIDER_STATE_INITIALIZING,
+  /**
+   * Provider is ready.
+   */
   Z_SHM_PROVIDER_STATE_READY,
+  /**
+   * Error initializing provider.
+   */
   Z_SHM_PROVIDER_STATE_ERROR,
 } z_shm_provider_state;
 #endif
@@ -2767,14 +2783,21 @@ z_result_t z_get(const struct z_loaned_session_t *session,
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs and opens a new Zenoh session with specified client storage.
+ * @brief Each session's runtime may create its own provider to manage internal optimizations.
+ * This method exposes that provider so it can also be accessed at the application level.
  *
- * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+ * Note that the provider may not be immediately available or may be disabled via configuration.
+ * Provider initialization is concurrent and triggered by access events (both transport-internal and through this API).
+ *
+ * To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
+ *
+ * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be initialized from Session's provider if it exists.
+ * @return [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-enum z_shm_provider_state z_get_shm_provider(const struct z_loaned_session_t *this_,
-                                             struct z_owned_shared_shm_provider_t *out_provider);
+enum z_shm_provider_state z_get_shm_provider(struct z_owned_shared_shm_provider_t *out_provider,
+                                             const struct z_loaned_session_t *this_);
 #endif
 /**
  * Query data from the matching queryables in the system.
@@ -2868,14 +2891,13 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs and opens a new Zenoh session with specified client storage.
- *
- * @return 0 in case of success, negative error code otherwise (in this case the session will be in its gravestone state).
+ * @brief Performs a shallow copy of contained SHM provider. The resulting provider object is **semantically**
+ * similar to threadsafe provider wrapped into C++'s shared_ptr.
  */
 #if ((defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)) && (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)))
 ZENOHC_API
-void z_inner_shm_provider(const struct z_loaned_shared_shm_provider_t *this_,
-                          struct z_owned_shm_provider_t *out_provider);
+void z_inner_shm_provider(struct z_owned_shm_provider_t *out,
+                          const struct z_loaned_shared_shm_provider_t *this_);
 #endif
 /**
  * @warning This API has been marked as deprecated, use `z_internal_precomputed_layout_check` instead.
