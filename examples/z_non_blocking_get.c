@@ -60,7 +60,15 @@ int main(int argc, char** argv) {
     printf("Sending Query '%s'...\n", args.selector);
     z_get_options_t opts;
     z_get_options_default(&opts);
-    opts.target = Z_QUERY_TARGET_ALL;
+    opts.target = args.target;
+    opts.timeout_ms = args.timeout_ms;
+
+    z_owned_bytes_t payload;
+    if (args.value != NULL) {
+        z_bytes_from_static_str(&payload, args.value);
+        opts.payload = z_move(payload);
+    }
+
     z_owned_fifo_handler_reply_t handler;
     z_owned_closure_reply_t closure;
     z_fifo_channel_reply_new(&closure, &handler, 16);
