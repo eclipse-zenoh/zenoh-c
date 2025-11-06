@@ -733,7 +733,7 @@ fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
             "z_".to_string() + func_name + "_clone",
             vec![
                 FuncArg::new(&(dst_type.to_string() + "*"), dst_name),
-                FuncArg::new(&(src_type.to_string() + "*"), src_name),
+                FuncArg::new(&("const ".to_string() + src_type + "*"), src_name),
             ],
         );
         res.push(f);
