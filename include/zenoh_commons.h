@@ -299,6 +299,9 @@ typedef struct ALIGN(8) z_bytes_slice_iterator_t {
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t _this;
 } z_moved_bytes_writer_t;
+typedef struct z_moved_cancellation_token_t {
+  struct z_owned_cancellation_token_t _this;
+} z_moved_cancellation_token_t;
 typedef struct z_moved_chunk_alloc_result_t {
   struct z_owned_chunk_alloc_result_t _this;
 } z_moved_chunk_alloc_result_t;
@@ -659,6 +662,14 @@ typedef struct z_get_options_t {
    * The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint64_t timeout_ms;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   *
+   * Cancellation token to interrupt the query.
+   */
+  struct z_moved_cancellation_token_t *cancellation_token;
+#endif
 } z_get_options_t;
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
@@ -689,6 +700,14 @@ typedef struct z_liveliness_get_options_t {
    * The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint64_t timeout_ms;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   *
+   * Cancellation token to interrupt the query.
+   */
+  struct z_moved_cancellation_token_t *cancellation_token;
+#endif
 } z_liveliness_get_options_t;
 typedef struct z_moved_liveliness_token_t {
   struct z_owned_liveliness_token_t _this;
@@ -822,6 +841,14 @@ typedef struct z_querier_get_options_t {
    * An optional attachment to attach to the query.
    */
   struct z_moved_bytes_t *attachment;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   *
+   * Cancellation token to interrupt the query.
+   */
+  struct z_moved_cancellation_token_t *cancellation_token;
+#endif
 } z_querier_get_options_t;
 typedef struct z_moved_query_t {
   struct z_owned_query_t _this;
@@ -1739,6 +1766,69 @@ ZENOHC_API
 z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Interrupts all associated GET queries. If the query callback is being executed, the call blocks until execution of callback is finished.
+ * In case of failure, some operations might not be cancelled.
+ * Once cancelled, all newly added GET queries will cancel automatically.
+ *
+ * @return 0 in case of success, negative error code in case of failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_cancellation_token_cancel(struct z_loaned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Clones the cancellation token into provided uninitialized memory location.
+ *
+ * Cancelling token also cancels all of its clones.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_cancellation_token_clone(struct z_owned_cancellation_token_t *dst,
+                                const struct z_loaned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Frees cancellation_token, and resets it to its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_cancellation_token_drop(struct z_moved_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if cancellation token was cancelled (i .e. if `z_cancellation_token_cancel()` was called), ``false`` otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_cancellation_token_is_cancelled(const struct z_loaned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows cancellation token.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_cancellation_token_t *z_cancellation_token_loan(const struct z_owned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Mutably borrows cancellation token.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_loaned_cancellation_token_t *z_cancellation_token_loan_mut(struct z_owned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a new cancellation token.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_cancellation_token_new(struct z_owned_cancellation_token_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes Chunk Alloc Result.
@@ -2874,6 +2964,22 @@ ZENOHC_API bool z_internal_bytes_writer_check(const struct z_owned_bytes_writer_
  * Constructs a writer in a gravestone state.
  */
 ZENOHC_API void z_internal_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if cancellation_token is valid, ``false`` if it is in a gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_cancellation_token_check(const struct z_owned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs cancellation token in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_cancellation_token_null(struct z_owned_cancellation_token_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @return ``true`` if `this` is valid.

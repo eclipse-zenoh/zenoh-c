@@ -37,8 +37,8 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_reply_keyexpr_default,
-    zc_reply_keyexpr_t,
+    transmute::IntoCType, z_entity_global_id_t, z_moved_cancellation_token_t,
+    z_moved_source_info_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyError),
@@ -239,6 +239,11 @@ pub struct z_get_options_t {
     pub attachment: Option<&'static mut z_moved_bytes_t>,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Cancellation token to interrupt the query.
+    pub cancellation_token: Option<&'static mut z_moved_cancellation_token_t>,
 }
 
 impl z_get_options_t {
@@ -255,6 +260,10 @@ impl z_get_options_t {
         #[cfg(feature = "unstable")]
         if let Some(si) = self.source_info.take() {
             si.take_rust_type();
+        }
+        #[cfg(feature = "unstable")]
+        if let Some(ct) = self.cancellation_token.take() {
+            ct.take_rust_type();
         }
     }
 }
@@ -277,6 +286,8 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
         #[cfg(feature = "unstable")]
         source_info: None,
         attachment: None,
+        #[cfg(feature = "unstable")]
+        cancellation_token: None,
     });
 }
 
@@ -385,6 +396,15 @@ pub unsafe extern "C" fn z_get_with_parameters_substr(
 
         if options.timeout_ms != 0 {
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
+        }
+
+        #[cfg(feature = "unstable")]
+        if let Some(ct) = options
+            .cancellation_token
+            .take()
+            .and_then(|ct| ct.take_rust_type())
+        {
+            get = get.with_cancellation_token(ct);
         }
     }
     match get
