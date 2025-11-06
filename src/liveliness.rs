@@ -283,7 +283,7 @@ pub extern "C" fn z_liveliness_get(
             .take()
             .and_then(|ct| ct.take_rust_type())
         {
-            builder = builder.with_cancellation_token(ct);
+            builder = builder.cancellation_token(ct);
         }
     }
     match builder.wait() {

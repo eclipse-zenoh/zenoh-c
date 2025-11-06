@@ -404,7 +404,7 @@ pub unsafe extern "C" fn z_get_with_parameters_substr(
             .take()
             .and_then(|ct| ct.take_rust_type())
         {
-            get = get.with_cancellation_token(ct);
+            get = get.cancellation_token(ct);
         }
     }
     match get
