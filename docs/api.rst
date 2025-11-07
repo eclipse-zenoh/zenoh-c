@@ -828,6 +828,25 @@ Functions
 .. doxygenfunction:: z_liveliness_token_options_default
 .. doxygenfunction:: z_liveliness_get_options_default
 
+Cancellation Token
+==================
+
+Types
+-----
+
+.. doxygenstruct:: z_owned_cancellation_token_t
+.. doxygenstruct:: z_loaned_cancellation_token_t
+
+Functions
+---------
+.. doxygenfunction:: z_cancellation_token_new
+.. doxygenfunction:: z_cancellation_token_cancel
+.. doxygenfunction:: z_cancellation_token_is_cancelled
+.. doxygenfunction:: z_cancellation_token_loan
+.. doxygenfunction:: z_cancellation_token_loan_mut
+.. doxygenfunction:: z_cancellation_token_clone
+.. doxygenfunction:: z_cancellation_token_drop
+
 Logging
 =======
 
