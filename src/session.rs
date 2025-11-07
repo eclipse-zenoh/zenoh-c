@@ -27,7 +27,7 @@ use crate::{
     z_moved_config_t, z_moved_session_t,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::{z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t};
+use crate::{result::z_result_t, z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t};
 decl_c_type!(
     owned(z_owned_session_t, option Session),
     loaned(z_loaned_session_t),
@@ -131,23 +131,37 @@ pub enum z_shm_provider_state {
 ///
 /// To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
 ///
-/// @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be initialized from Session's provider if it exists.
-/// @return [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+/// @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+/// Always initialized by this function.
+/// @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
+/// initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
+/// @return 0 in case if provider is avalable, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_get_shm_provider(
+    out_state: &mut MaybeUninit<z_shm_provider_state>,
     out_provider: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
     this: &z_loaned_session_t,
-) -> z_shm_provider_state {
+) -> z_result_t {
     let s = this.as_rust_type_ref();
     match s.get_shm_provider() {
-        ShmProviderState::Disabled => z_shm_provider_state::DISABLED,
-        ShmProviderState::Initializing => z_shm_provider_state::INITIALIZING,
-        ShmProviderState::Ready(provider) => {
-            out_provider.as_rust_type_mut_uninit().write(Some(provider));
-            z_shm_provider_state::READY
+        ShmProviderState::Disabled => {
+            out_state.write(z_shm_provider_state::DISABLED);
+            result::Z_EUNAVAILABLE
         }
-        ShmProviderState::Error => z_shm_provider_state::ERROR,
+        ShmProviderState::Initializing => {
+            out_state.write(z_shm_provider_state::INITIALIZING);
+            result::Z_EUNAVAILABLE
+        }
+        ShmProviderState::Ready(provider) => {
+            out_state.write(z_shm_provider_state::READY);
+            out_provider.as_rust_type_mut_uninit().write(Some(provider));
+            result::Z_OK
+        }
+        ShmProviderState::Error => {
+            out_state.write(z_shm_provider_state::ERROR);
+            result::Z_EUNAVAILABLE
+        }
     }
 }
 

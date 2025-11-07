@@ -2796,8 +2796,9 @@ ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
-enum z_shm_provider_state z_get_shm_provider(struct z_owned_shared_shm_provider_t *out_provider,
-                                             const struct z_loaned_session_t *this_);
+z_result_t z_get_shm_provider(enum z_shm_provider_state *out_state,
+                              struct z_owned_shared_shm_provider_t *out_provider,
+                              const struct z_loaned_session_t *this_);
 #endif
 /**
  * Query data from the matching queryables in the system.
