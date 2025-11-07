@@ -473,7 +473,7 @@ int run_transport_provider() {
     ASSERT_OK(z_config_default(&config));
 
     z_owned_session_t session;
-    ASSERT_OK(z_open(&session, z_move(config), NULL) < 0);
+    ASSERT_OK(z_open(&session, z_move(config), NULL));
 
     z_owned_shared_shm_provider_t shared_provider;
     z_shm_provider_state state = z_get_shm_provider(&shared_provider, z_loan(session));
@@ -497,6 +497,8 @@ int run_transport_provider() {
 }
 
 int main() {
+    zc_init_log_from_env_or("debug");
+
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
     ASSERT_OK(run_default_client_storage());
