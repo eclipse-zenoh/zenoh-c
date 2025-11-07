@@ -2791,8 +2791,11 @@ ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
  *
  * To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
  *
- * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be initialized from Session's provider if it exists.
- * @return [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+ * @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+ * Always initialized by this function.
+ * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
+ * initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
+ * @return 0 in case if provider is avalable, negative error code otherwise.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
