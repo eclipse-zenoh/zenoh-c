@@ -497,8 +497,6 @@ int run_transport_provider() {
 }
 
 int main() {
-    zc_init_log_from_env_or("debug");
-
     ASSERT_OK(run_posix_provider());
     ASSERT_OK(run_c_provider());
     ASSERT_OK(run_default_client_storage());
