@@ -33,7 +33,7 @@ use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
-    z_query_target_t, zc_locality_default, zc_locality_t, CStringView,
+    z_query_target_t, zc_locality_default, zc_locality_t, CStringView, SyncObj,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -407,11 +407,12 @@ pub unsafe extern "C" fn z_get_with_parameters_substr(
             get = get.cancellation_token(ct);
         }
     }
+    let sync_callback = SyncObj::new(callback, session.notifier());
     match get
         .callback(move |response| {
             let mut owned_response = Some(response);
             z_closure_reply_call(
-                z_closure_reply_loan(&callback),
+                z_closure_reply_loan(&sync_callback),
                 owned_response
                     .as_mut()
                     .unwrap_unchecked()
