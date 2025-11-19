@@ -31,7 +31,8 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    internal::builders::close::NolocalJoinHandle, sample::SourceInfo, session::EntityGlobalId,
+    cancellation::CancellationToken, internal::builders::close::NolocalJoinHandle,
+    sample::SourceInfo, session::EntityGlobalId,
 };
 
 #[macro_export]
@@ -574,3 +575,13 @@ get_opaque_type_data!(Option<zenoh_ext::ZSerializer>, ze_owned_serializer_t);
 get_opaque_type_data!(zenoh_ext::ZSerializer, ze_loaned_serializer_t);
 /// @brief A Zenoh serializer.
 get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned cancellation token, which can be used to interrupt GET queries.
+get_opaque_type_data!(Option<CancellationToken>, z_owned_cancellation_token_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned cancellation token, which can be used to interrupt GET queries.
+get_opaque_type_data!(CancellationToken, z_loaned_cancellation_token_t);

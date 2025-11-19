@@ -16,6 +16,23 @@
 #define ALIGN(n)
 #define ZENOHC_API
 #endif
+/**
+ * The locality of samples to be received by subscribers or targeted by publishers.
+ */
+typedef enum zc_locality_t {
+  /**
+   * Any
+   */
+  ZC_LOCALITY_ANY = 0,
+  /**
+   * Only from local sessions.
+   */
+  ZC_LOCALITY_SESSION_LOCAL = 1,
+  /**
+   * Only from remote sessions.
+   */
+  ZC_LOCALITY_REMOTE = 2,
+} zc_locality_t;
 typedef enum z_congestion_control_t {
   /**
    * Messages are not dropped in case of congestion.
@@ -32,57 +49,6 @@ typedef enum z_congestion_control_t {
   Z_CONGESTION_CONTROL_BLOCK_FIRST = 2,
 #endif
 } z_congestion_control_t;
-/**
- * Consolidation mode values.
- */
-typedef enum z_consolidation_mode_t {
-  /**
-   * Let Zenoh decide the best consolidation mode depending on the query selector.
-   * If the selector contains time range properties, consolidation mode `NONE` is used.
-   * Otherwise the `LATEST` consolidation mode is used.
-   */
-  Z_CONSOLIDATION_MODE_AUTO = -1,
-  /**
-   *  No consolidation is applied. Replies may come in any order and any number.
-   */
-  Z_CONSOLIDATION_MODE_NONE = 0,
-  /**
-   * It guarantees that any reply for a given key expression will be monotonic in time
-   * w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
-   * replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
-   * ts2 > ts1. It optimizes latency.
-   */
-  Z_CONSOLIDATION_MODE_MONOTONIC = 1,
-  /**
-   * It guarantees unicity of replies for the same key expression.
-   * It optimizes bandwidth.
-   */
-  Z_CONSOLIDATION_MODE_LATEST = 2,
-} z_consolidation_mode_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Intersection level of 2 key expressions.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum z_keyexpr_intersection_level_t {
-  /**
-   * 2 key expressions do not intersect.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
-  /**
-   * 2 key expressions intersect, i.e. there exists at least one key expression that is included by both.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
-  /**
-   * First key expression is the superset of second one.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
-  /**
-   * 2 key expressions are equal.
-   */
-  Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
-} z_keyexpr_intersection_level_t;
-#endif
 /**
  * The priority of zenoh messages.
  */
@@ -117,6 +83,24 @@ typedef enum z_priority_t {
   Z_PRIORITY_BACKGROUND = 7,
 } z_priority_t;
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief The publisher reliability.
+ * @note Currently `reliability` does not trigger any data retransmission on the wire.
+ * It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef enum z_reliability_t {
+  /**
+   * Defines reliability as ``BEST_EFFORT``
+   */
+  Z_RELIABILITY_BEST_EFFORT = 0,
+  /**
+   * Defines reliability as ``RELIABLE``
+   */
+  Z_RELIABILITY_RELIABLE = 1,
+} z_reliability_t;
+#endif
+/**
  * The Queryables that should be target of a `z_get()`.
  */
 typedef enum z_query_target_t {
@@ -134,22 +118,76 @@ typedef enum z_query_target_t {
   Z_QUERY_TARGET_ALL_COMPLETE = 2,
 } z_query_target_t;
 /**
+ * Consolidation mode values.
+ */
+typedef enum z_consolidation_mode_t {
+  /**
+   * Let Zenoh decide the best consolidation mode depending on the query selector.
+   * If the selector contains time range properties, consolidation mode `NONE` is used.
+   * Otherwise the `LATEST` consolidation mode is used.
+   */
+  Z_CONSOLIDATION_MODE_AUTO = -1,
+  /**
+   *  No consolidation is applied. Replies may come in any order and any number.
+   */
+  Z_CONSOLIDATION_MODE_NONE = 0,
+  /**
+   * It guarantees that any reply for a given key expression will be monotonic in time
+   * w.r.t. the previous received replies for the same key expression. I.e., for the same key expression multiple
+   * replies may be received. It is guaranteed that two replies received at t1 and t2 will have timestamp
+   * ts2 > ts1. It optimizes latency.
+   */
+  Z_CONSOLIDATION_MODE_MONOTONIC = 1,
+  /**
+   * It guarantees unicity of replies for the same key expression.
+   * It optimizes bandwidth.
+   */
+  Z_CONSOLIDATION_MODE_LATEST = 2,
+} z_consolidation_mode_t;
+/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief The publisher reliability.
- * @note Currently `reliability` does not trigger any data retransmission on the wire.
- * It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
+ * @brief Key expressions types to which Queryable should reply to.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum z_reliability_t {
+typedef enum zc_reply_keyexpr_t {
   /**
-   * Defines reliability as ``BEST_EFFORT``
+   * Replies to any key expression queries.
    */
-  Z_RELIABILITY_BEST_EFFORT = 0,
+  ZC_REPLY_KEYEXPR_ANY = 0,
   /**
-   * Defines reliability as ``RELIABLE``
+   * Replies only to queries with intersecting key expressions.
    */
-  Z_RELIABILITY_RELIABLE = 1,
-} z_reliability_t;
+  ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
+} zc_reply_keyexpr_t;
+#endif
+typedef enum z_whatami_t {
+  Z_WHATAMI_ROUTER = 1,
+  Z_WHATAMI_PEER = 2,
+  Z_WHATAMI_CLIENT = 4,
+} z_whatami_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Intersection level of 2 key expressions.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef enum z_keyexpr_intersection_level_t {
+  /**
+   * 2 key expressions do not intersect.
+   */
+  Z_KEYEXPR_INTERSECTION_LEVEL_DISJOINT = 0,
+  /**
+   * 2 key expressions intersect, i.e. there exists at least one key expression that is included by both.
+   */
+  Z_KEYEXPR_INTERSECTION_LEVEL_INTERSECTS = 1,
+  /**
+   * First key expression is the superset of second one.
+   */
+  Z_KEYEXPR_INTERSECTION_LEVEL_INCLUDES = 2,
+  /**
+   * 2 key expressions are equal.
+   */
+  Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
+} z_keyexpr_intersection_level_t;
 #endif
 typedef enum z_sample_kind_t {
   /**
@@ -194,28 +232,6 @@ typedef enum z_what_t {
   Z_WHAT_PEER_CLIENT = 6,
   Z_WHAT_ROUTER_PEER_CLIENT = 7,
 } z_what_t;
-typedef enum z_whatami_t {
-  Z_WHATAMI_ROUTER = 1,
-  Z_WHATAMI_PEER = 2,
-  Z_WHATAMI_CLIENT = 4,
-} z_whatami_t;
-/**
- * The locality of samples to be received by subscribers or targeted by publishers.
- */
-typedef enum zc_locality_t {
-  /**
-   * Any
-   */
-  ZC_LOCALITY_ANY = 0,
-  /**
-   * Only from local sessions.
-   */
-  ZC_LOCALITY_SESSION_LOCAL = 1,
-  /**
-   * Only from remote sessions.
-   */
-  ZC_LOCALITY_REMOTE = 2,
-} zc_locality_t;
 /**
  * Severity level of Zenoh log message.
  */
@@ -251,22 +267,6 @@ typedef enum zc_log_severity_t {
    */
   ZC_LOG_SEVERITY_ERROR = 4,
 } zc_log_severity_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Key expressions types to which Queryable should reply to.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef enum zc_reply_keyexpr_t {
-  /**
-   * Replies to any key expression queries.
-   */
-  ZC_REPLY_KEYEXPR_ANY = 0,
-  /**
-   * Replies only to queries with intersecting key expressions.
-   */
-  ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
-} zc_reply_keyexpr_t;
-#endif
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef enum ze_advanced_publisher_heartbeat_mode_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -323,6 +323,9 @@ typedef struct ALIGN(8) z_bytes_slice_iterator_t {
 typedef struct z_moved_bytes_writer_t {
   struct z_owned_bytes_writer_t _this;
 } z_moved_bytes_writer_t;
+typedef struct z_moved_cancellation_token_t {
+  struct z_owned_cancellation_token_t _this;
+} z_moved_cancellation_token_t;
 typedef struct z_moved_chunk_alloc_result_t {
   struct z_owned_chunk_alloc_result_t _this;
 } z_moved_chunk_alloc_result_t;
@@ -683,6 +686,14 @@ typedef struct z_get_options_t {
    * The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint64_t timeout_ms;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   *
+   * Cancellation token to interrupt the query.
+   */
+  struct z_moved_cancellation_token_t *cancellation_token;
+#endif
 } z_get_options_t;
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
@@ -713,6 +724,14 @@ typedef struct z_liveliness_get_options_t {
    * The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
    */
   uint64_t timeout_ms;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   *
+   * Cancellation token to interrupt the query.
+   */
+  struct z_moved_cancellation_token_t *cancellation_token;
+#endif
 } z_liveliness_get_options_t;
 typedef struct z_moved_liveliness_token_t {
   struct z_owned_liveliness_token_t _this;
@@ -846,6 +865,14 @@ typedef struct z_querier_get_options_t {
    * An optional attachment to attach to the query.
    */
   struct z_moved_bytes_t *attachment;
+#if defined(Z_FEATURE_UNSTABLE_API)
+  /**
+   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+   *
+   * Cancellation token to interrupt the query.
+   */
+  struct z_moved_cancellation_token_t *cancellation_token;
+#endif
 } z_querier_get_options_t;
 typedef struct z_moved_query_t {
   struct z_owned_query_t _this;
@@ -1766,6 +1793,69 @@ ZENOHC_API
 z_result_t z_bytes_writer_write_all(struct z_loaned_bytes_writer_t *this_,
                                     const uint8_t *src,
                                     size_t len);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Interrupts all associated GET queries. If the query callback is being executed, the call blocks until execution of callback is finished.
+ * In case of failure, some operations might not be cancelled.
+ * Once cancelled, all newly added GET queries will cancel automatically.
+ *
+ * @return 0 in case of success, negative error code in case of failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_cancellation_token_cancel(struct z_loaned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Clones the cancellation token into provided uninitialized memory location.
+ *
+ * Cancelling token also cancels all of its clones.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_cancellation_token_clone(struct z_owned_cancellation_token_t *dst,
+                                const struct z_loaned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Frees cancellation_token, and resets it to its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_cancellation_token_drop(struct z_moved_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if cancellation token was cancelled (i .e. if `z_cancellation_token_cancel()` was called), ``false`` otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_cancellation_token_is_cancelled(const struct z_loaned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows cancellation token.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_cancellation_token_t *z_cancellation_token_loan(const struct z_owned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Mutably borrows cancellation token.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_loaned_cancellation_token_t *z_cancellation_token_loan_mut(struct z_owned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a new cancellation token.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_cancellation_token_new(struct z_owned_cancellation_token_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes Chunk Alloc Result.
@@ -2933,6 +3023,22 @@ ZENOHC_API bool z_internal_bytes_writer_check(const struct z_owned_bytes_writer_
  * Constructs a writer in a gravestone state.
  */
 ZENOHC_API void z_internal_bytes_writer_null(struct z_owned_bytes_writer_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if cancellation_token is valid, ``false`` if it is in a gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_cancellation_token_check(const struct z_owned_cancellation_token_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs cancellation token in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_cancellation_token_null(struct z_owned_cancellation_token_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @return ``true`` if `this` is valid.
