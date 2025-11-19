@@ -160,6 +160,30 @@ typedef enum zc_reply_keyexpr_t {
   ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zc_reply_keyexpr_t;
 #endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Session's provider state.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef enum z_shm_provider_state {
+  /**
+   * Provider is disabled by configuration.
+   */
+  Z_SHM_PROVIDER_STATE_DISABLED,
+  /**
+   * Provider is concurrently-initializing.
+   */
+  Z_SHM_PROVIDER_STATE_INITIALIZING,
+  /**
+   * Provider is ready.
+   */
+  Z_SHM_PROVIDER_STATE_READY,
+  /**
+   * Error initializing provider.
+   */
+  Z_SHM_PROVIDER_STATE_ERROR,
+} z_shm_provider_state;
+#endif
 typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
   Z_WHATAMI_PEER = 2,
@@ -199,30 +223,6 @@ typedef enum z_sample_kind_t {
    */
   Z_SAMPLE_KIND_DELETE = 1,
 } z_sample_kind_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Session's provider state.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef enum z_shm_provider_state {
-  /**
-   * Provider is disabled by configuration.
-   */
-  Z_SHM_PROVIDER_STATE_DISABLED,
-  /**
-   * Provider is concurrently-initializing.
-   */
-  Z_SHM_PROVIDER_STATE_INITIALIZING,
-  /**
-   * Provider is ready.
-   */
-  Z_SHM_PROVIDER_STATE_READY,
-  /**
-   * Error initializing provider.
-   */
-  Z_SHM_PROVIDER_STATE_ERROR,
-} z_shm_provider_state;
-#endif
 typedef enum z_what_t {
   Z_WHAT_ROUTER = 1,
   Z_WHAT_PEER = 2,
