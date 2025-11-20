@@ -12,8 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
-use std::sync::Arc;
+use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
