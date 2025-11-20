@@ -123,23 +123,23 @@ int test_allocation(const z_loaned_shm_provider_t* provider, size_t size, z_allo
         return Z_ENULL;
 }
 
-int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignment, size_t buf_ok_size,
+int test_provider(const z_loaned_shm_provider_t* provider, z_alloc_alignment_t alignment, size_t buf_ok_size,
                   size_t buf_err_size) {
     // test allocation OK
     for (int i = 0; i < 100; ++i) {
-        ASSERT_OK(test_allocation(z_loan(*provider), buf_ok_size, alignment));
+        ASSERT_OK(test_allocation(provider, buf_ok_size, alignment));
     }
 
     // test allocation ERROR
     if (buf_err_size) {
-        ASSERT_ERR(test_allocation(z_loan(*provider), buf_err_size, alignment));
+        ASSERT_ERR(test_allocation(provider, buf_err_size, alignment));
     }
 
     // OK layouted allocations
     {
         // make OK allocation layout
         z_owned_precomputed_layout_t precomputed_layout;
-        ASSERT_OK(z_shm_provider_alloc_layout_aligned(&precomputed_layout, z_loan(*provider), buf_ok_size, alignment));
+        ASSERT_OK(z_shm_provider_alloc_layout_aligned(&precomputed_layout, provider, buf_ok_size, alignment));
         ASSERT_CHECK(precomputed_layout);
         // test layouted allocation OK
         for (int i = 0; i < 100; ++i) {
@@ -153,7 +153,7 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
     if (buf_err_size) {
         // make ERR allocation layout
         z_owned_precomputed_layout_t precomputed_layout;
-        ASSERT_OK(z_shm_provider_alloc_layout_aligned(&precomputed_layout, z_loan(*provider), buf_err_size, alignment));
+        ASSERT_OK(z_shm_provider_alloc_layout_aligned(&precomputed_layout, provider, buf_err_size, alignment));
         ASSERT_CHECK(precomputed_layout);
         // test layouted allocation ERROR
         ASSERT_ERR(test_layouted_allocation(z_loan(precomputed_layout)));
@@ -162,8 +162,8 @@ int test_provider(z_owned_shm_provider_t* provider, z_alloc_alignment_t alignmen
     }
 
     // additional functions
-    z_shm_provider_defragment(z_loan(*provider));
-    z_shm_provider_garbage_collect(z_loan(*provider));
+    z_shm_provider_defragment(provider);
+    z_shm_provider_garbage_collect(provider);
 
     return Z_OK;
 }
@@ -294,7 +294,7 @@ int run_c_provider() {
 
     // test provider
     z_alloc_alignment_t alignment = {0};
-    ASSERT_OK(test_provider(&provider, alignment, 1, 0));
+    ASSERT_OK(test_provider(z_loan(provider), alignment, 1, 0));
 
     // drop provider
     z_drop(z_move(provider));
@@ -322,7 +322,7 @@ int run_posix_provider() {
     ASSERT_OK(z_posix_shm_provider_with_layout_new(&provider, z_loan(layout)));
     ASSERT_CHECK(provider);
 
-    ASSERT_OK(test_provider(&provider, alignment, buf_ok_size, buf_err_size));
+    ASSERT_OK(test_provider(z_loan(provider), alignment, buf_ok_size, buf_err_size));
 
     z_drop(z_move(provider));
     ASSERT_CHECK_ERR(provider);
@@ -486,10 +486,14 @@ int run_transport_provider() {
 
     ASSERT_TRUE(state == Z_SHM_PROVIDER_STATE_READY);
 
-    z_owned_shm_provider_t provider;
-    z_inner_shm_provider(&provider, z_loan(shared_provider));
+    const z_loaned_shm_provider_t *provider = z_shared_shm_provider_loan_as(z_loan(shared_provider));
 
-    z_drop(z_move(provider));
+    const size_t total_size = 4096;
+    const size_t buf_ok_size = total_size / 4;
+    const size_t buf_err_size = total_size * 1024 * 1024;
+    z_alloc_alignment_t alignment = {0};
+    ASSERT_OK(test_provider(provider, alignment, buf_ok_size, buf_err_size));
+
     z_drop(z_move(shared_provider));
     z_drop(z_move(session));
 

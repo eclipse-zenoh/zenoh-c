@@ -2962,16 +2962,6 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
  */
 ZENOHC_API struct z_id_t z_info_zid(const struct z_loaned_session_t *session);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Performs a shallow copy of contained SHM provider. The resulting provider object is **semantically**
- * similar to threadsafe provider wrapped into C++'s shared_ptr.
- */
-#if ((defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)) && (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)))
-ZENOHC_API
-void z_inner_shm_provider(struct z_owned_shm_provider_t *out,
-                          const struct z_loaned_shared_shm_provider_t *this_);
-#endif
-/**
  * @warning This API has been marked as deprecated, use `z_internal_precomputed_layout_check` instead.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -4718,6 +4708,15 @@ ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_
 ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * Constructs a shallow copy of shared SHM provider.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_shared_shm_provider_clone(struct z_owned_shared_shm_provider_t *dst,
+                                 const struct z_loaned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes Shared SHM Provider.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -4731,6 +4730,14 @@ void z_shared_shm_provider_drop(struct z_moved_shared_shm_provider_t *this_);
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
 ZENOHC_API
 const struct z_loaned_shared_shm_provider_t *z_shared_shm_provider_loan(const struct z_owned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Loan as SHM Provider. Provides access to the underlying SHM Provider to be used where SHM Provider is expected.
+ */
+#if ((defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)) && (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)))
+ZENOHC_API
+const struct z_loaned_shm_provider_t *z_shared_shm_provider_loan_as(const struct z_loaned_shared_shm_provider_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

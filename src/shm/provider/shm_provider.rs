@@ -13,6 +13,7 @@
 //
 
 use std::mem::MaybeUninit;
+use std::sync::Arc;
 
 use libc::c_void;
 use zenoh::{
@@ -34,7 +35,6 @@ use crate::{
     shm::{
         protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
         provider::{
-            shared_shm_provider::SharedShmProvider,
             shm_provider_impl::{garbage_collect_unsafe, UnsafeGarbageCollect},
             types::z_buf_layout_alloc_result_t,
         },
@@ -47,9 +47,11 @@ pub type DynamicShmProvider = ShmProvider<DynamicShmProviderBackend<Context>>;
 
 pub type DynamicShmProviderThreadsafe = ShmProvider<DynamicShmProviderBackend<ThreadsafeContext>>;
 
+pub type SharedPosixShmProvider = Arc<PosixShmProvider>;
+
 pub enum CSHMProvider {
     Posix(PosixShmProvider),
-    SharedPosix(SharedShmProvider),
+    SharedPosix(SharedPosixShmProvider),
     Dynamic(DynamicShmProvider),
     DynamicThreadsafe(DynamicShmProviderThreadsafe),
 }

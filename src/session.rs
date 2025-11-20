@@ -27,7 +27,12 @@ use crate::{
     z_moved_config_t, z_moved_session_t,
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::{result::z_result_t, z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t};
+use crate::{
+    result::z_result_t,
+    shm::provider::{shared_shm_provider::SharedShmProvider, shm_provider::CSHMProvider},
+    z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t,
+};
+
 decl_c_type!(
     owned(z_owned_session_t, option Session),
     loaned(z_loaned_session_t),
@@ -155,7 +160,9 @@ pub extern "C" fn z_obtain_shm_provider(
         }
         ShmProviderState::Ready(provider) => {
             out_state.write(z_shm_provider_state::READY);
-            out_provider.as_rust_type_mut_uninit().write(Some(provider));
+            out_provider
+                .as_rust_type_mut_uninit()
+                .write(Some(SharedShmProvider(CSHMProvider::SharedPosix(provider))));
             result::Z_OK
         }
         ShmProviderState::Error => {

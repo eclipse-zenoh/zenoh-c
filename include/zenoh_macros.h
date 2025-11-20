@@ -587,6 +587,7 @@ typedef void(*ze_closure_miss_callback_t)(const ze_miss_t *matching_status, void
         z_owned_reply_t* : z_reply_clone, \
         z_owned_reply_err_t* : z_reply_err_clone, \
         z_owned_sample_t* : z_sample_clone, \
+        z_owned_shared_shm_provider_t* : z_shared_shm_provider_clone, \
         z_owned_shm_client_storage_t* : z_shm_client_storage_clone, \
         z_owned_shm_t* : z_shm_clone, \
         z_owned_slice_t* : z_slice_clone, \
@@ -1358,6 +1359,9 @@ inline void z_clone(z_owned_reply_err_t* dst, const z_loaned_reply_err_t* this_)
 };
 inline void z_clone(z_owned_sample_t* dst, const z_loaned_sample_t* this_) {
     z_sample_clone(dst, this_);
+};
+inline void z_clone(z_owned_shared_shm_provider_t* dst, const z_loaned_shared_shm_provider_t* this_) {
+    z_shared_shm_provider_clone(dst, this_);
 };
 inline void z_clone(z_owned_shm_client_storage_t* this_, const z_loaned_shm_client_storage_t* from) {
     z_shm_client_storage_clone(this_, from);

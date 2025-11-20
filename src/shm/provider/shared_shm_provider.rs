@@ -12,19 +12,17 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
+use std::mem::MaybeUninit;
 
 use crate::{
-    shm::{
-        protocol_implementations::posix::posix_shm_provider::PosixShmProvider,
-        provider::shm_provider::CSHMProvider,
-    },
+    shm::provider::shm_provider::CSHMProvider,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_loaned_shared_shm_provider_t, z_moved_shared_shm_provider_t, z_owned_shared_shm_provider_t,
-    z_owned_shm_provider_t,
+    z_loaned_shared_shm_provider_t, z_loaned_shm_provider_t, z_moved_shared_shm_provider_t,
+    z_owned_shared_shm_provider_t,
 };
 
-pub type SharedShmProvider = Arc<PosixShmProvider>;
+pub struct SharedShmProvider(pub CSHMProvider);
+
 decl_c_type!(
     owned(z_owned_shared_shm_provider_t, option SharedShmProvider),
     loaned(z_loaned_shared_shm_provider_t),
@@ -68,17 +66,31 @@ pub extern "C" fn z_shared_shm_provider_drop(this_: &mut z_moved_shared_shm_prov
     let _ = this_.take_rust_type();
 }
 
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Performs a shallow copy of contained SHM provider. The resulting provider object is **semantically**
-/// similar to threadsafe provider wrapped into C++'s shared_ptr.
-#[allow(clippy::missing_safety_doc)]
+/// Constructs a shallow copy of shared SHM provider.
 #[no_mangle]
-pub extern "C" fn z_inner_shm_provider(
-    out: &mut MaybeUninit<z_owned_shm_provider_t>,
+extern "C" fn z_shared_shm_provider_clone(
+    dst: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
     this: &z_loaned_shared_shm_provider_t,
 ) {
-    let shared_provider = this.as_rust_type_ref().clone();
-    out.as_rust_type_mut_uninit()
-        .write(Some(CSHMProvider::SharedPosix(shared_provider)));
+    match &this.as_rust_type_ref().0 {
+        CSHMProvider::SharedPosix(provider) => {
+            dst.as_rust_type_mut_uninit().write(Some(SharedShmProvider(
+                CSHMProvider::SharedPosix(provider.clone()),
+            )));
+        }
+        _ => {
+            unreachable!("Unsupported SHM provider variant");
+        }
+    }
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Loan as SHM Provider. Provides access to the underlying SHM Provider to be used where SHM Provider is expected.
+#[no_mangle]
+pub extern "C" fn z_shared_shm_provider_loan_as(
+    this: &z_loaned_shared_shm_provider_t,
+) -> &z_loaned_shm_provider_t {
+    &this.as_rust_type_ref().0.as_loaned_c_type_ref()
 }
