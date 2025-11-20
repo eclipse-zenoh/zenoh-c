@@ -160,30 +160,6 @@ typedef enum zc_reply_keyexpr_t {
   ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zc_reply_keyexpr_t;
 #endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Session's provider state.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-typedef enum z_shm_provider_state {
-  /**
-   * Provider is disabled by configuration.
-   */
-  Z_SHM_PROVIDER_STATE_DISABLED,
-  /**
-   * Provider is concurrently-initializing.
-   */
-  Z_SHM_PROVIDER_STATE_INITIALIZING,
-  /**
-   * Provider is ready.
-   */
-  Z_SHM_PROVIDER_STATE_READY,
-  /**
-   * Error initializing provider.
-   */
-  Z_SHM_PROVIDER_STATE_ERROR,
-} z_shm_provider_state;
-#endif
 typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
   Z_WHATAMI_PEER = 2,
@@ -212,6 +188,30 @@ typedef enum z_keyexpr_intersection_level_t {
    */
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Session's provider state.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef enum z_shm_provider_state {
+  /**
+   * Provider is disabled by configuration.
+   */
+  Z_SHM_PROVIDER_STATE_DISABLED,
+  /**
+   * Provider is concurrently-initializing.
+   */
+  Z_SHM_PROVIDER_STATE_INITIALIZING,
+  /**
+   * Provider is ready.
+   */
+  Z_SHM_PROVIDER_STATE_READY,
+  /**
+   * Error initializing provider.
+   */
+  Z_SHM_PROVIDER_STATE_ERROR,
+} z_shm_provider_state;
 #endif
 typedef enum z_sample_kind_t {
   /**
@@ -2872,28 +2872,6 @@ z_result_t z_get(const struct z_loaned_session_t *session,
  */
 ZENOHC_API void z_get_options_default(struct z_get_options_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Each session's runtime may create its own provider to manage internal optimizations.
- * This method exposes that provider so it can also be accessed at the application level.
- *
- * Note that the provider may not be immediately available or may be disabled via configuration.
- * Provider initialization is concurrent and triggered by access events (both transport-internal and through this API).
- *
- * To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
- *
- * @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
- * Always initialized by this function.
- * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
- * initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
- * @return 0 in case if provider is avalable, negative error code otherwise.
- */
-#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
-ZENOHC_API
-z_result_t z_get_shm_provider(enum z_shm_provider_state *out_state,
-                              struct z_owned_shared_shm_provider_t *out_provider,
-                              const struct z_loaned_session_t *this_);
-#endif
-/**
  * Query data from the matching queryables in the system.
  * Replies are provided through a callback function.
  *
@@ -3797,6 +3775,28 @@ ZENOHC_API z_result_t z_mutex_try_lock(struct z_loaned_mutex_t *this_);
  */
 ZENOHC_API
 z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Each session's runtime may create its own provider to manage internal optimizations.
+ * This method exposes that provider so it can also be accessed at the application level.
+ *
+ * Note that the provider may not be immediately available or may be disabled via configuration.
+ * Provider initialization is concurrent and triggered by access events (both transport-internal and through this API).
+ *
+ * To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
+ *
+ * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
+ * initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
+ * @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+ * Always initialized by this function.
+ * @return 0 in case if provider is avalable, negative error code otherwise.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_obtain_shm_provider(const struct z_loaned_session_t *this_,
+                                 struct z_owned_shared_shm_provider_t *out_provider,
+                                 enum z_shm_provider_state *out_state);
+#endif
 /**
  * Constructs and opens a new Zenoh session.
  *

@@ -131,17 +131,17 @@ pub enum z_shm_provider_state {
 ///
 /// To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
 ///
-/// @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
-/// Always initialized by this function.
 /// @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
 /// initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
+/// @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+/// Always initialized by this function.
 /// @return 0 in case if provider is avalable, negative error code otherwise.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_get_shm_provider(
-    out_state: &mut MaybeUninit<z_shm_provider_state>,
-    out_provider: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
+pub extern "C" fn z_obtain_shm_provider(
     this: &z_loaned_session_t,
+    out_provider: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
+    out_state: &mut MaybeUninit<z_shm_provider_state>,
 ) -> z_result_t {
     let s = this.as_rust_type_ref();
     match s.get_shm_provider() {
