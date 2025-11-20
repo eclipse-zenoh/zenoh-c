@@ -486,7 +486,7 @@ int run_transport_provider() {
 
     ASSERT_TRUE(state == Z_SHM_PROVIDER_STATE_READY);
 
-    const z_loaned_shm_provider_t *provider = z_shared_shm_provider_loan_as(z_loan(shared_provider));
+    const z_loaned_shm_provider_t* provider = z_shared_shm_provider_loan_as(z_loan(shared_provider));
 
     const size_t total_size = 4096;
     const size_t buf_ok_size = total_size / 4;
