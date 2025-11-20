@@ -92,5 +92,5 @@ extern "C" fn z_shared_shm_provider_clone(
 pub extern "C" fn z_shared_shm_provider_loan_as(
     this: &z_loaned_shared_shm_provider_t,
 ) -> &z_loaned_shm_provider_t {
-    &this.as_rust_type_ref().0.as_loaned_c_type_ref()
+    this.as_rust_type_ref().0.as_loaned_c_type_ref()
 }
