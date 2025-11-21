@@ -189,6 +189,30 @@ typedef enum z_keyexpr_intersection_level_t {
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
 #endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Session's provider state.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+typedef enum z_shm_provider_state {
+  /**
+   * Provider is disabled by configuration.
+   */
+  Z_SHM_PROVIDER_STATE_DISABLED,
+  /**
+   * Provider is concurrently-initializing.
+   */
+  Z_SHM_PROVIDER_STATE_INITIALIZING,
+  /**
+   * Provider is ready.
+   */
+  Z_SHM_PROVIDER_STATE_READY,
+  /**
+   * Error initializing provider.
+   */
+  Z_SHM_PROVIDER_STATE_ERROR,
+} z_shm_provider_state;
+#endif
 typedef enum z_sample_kind_t {
   /**
    * The Sample was issued by a ``put`` operation.
@@ -972,6 +996,9 @@ typedef struct z_scout_options_t {
 typedef struct z_moved_session_t {
   struct z_owned_session_t _this;
 } z_moved_session_t;
+typedef struct z_moved_shared_shm_provider_t {
+  struct z_owned_shared_shm_provider_t _this;
+} z_moved_shared_shm_provider_t;
 typedef struct z_moved_shm_client_t {
   struct z_owned_shm_client_t _this;
 } z_moved_shm_client_t;
@@ -3295,6 +3322,22 @@ ZENOHC_API bool z_internal_session_check(const struct z_owned_session_t *this_);
 ZENOHC_API void z_internal_session_null(struct z_owned_session_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if `this` is valid.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+bool z_internal_shared_shm_provider_check(const struct z_owned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs Shared SHM Provider in its gravestone value.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_internal_shared_shm_provider_null(struct z_owned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @return ``true`` if `this` is valid.
  */
 #if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
@@ -3722,6 +3765,28 @@ ZENOHC_API z_result_t z_mutex_try_lock(struct z_loaned_mutex_t *this_);
  */
 ZENOHC_API
 z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Each session's runtime may create its own provider to manage internal optimizations.
+ * This method exposes that provider so it can also be accessed at the application level.
+ *
+ * Note that the provider may not be immediately available or may be disabled via configuration.
+ * Provider initialization is concurrent and triggered by access events (both transport-internal and through this API).
+ *
+ * To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
+ *
+ * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
+ * initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
+ * @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+ * Always initialized by this function.
+ * @return 0 in case if provider is avalable, negative error code otherwise.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+z_result_t z_obtain_shm_provider(const struct z_loaned_session_t *this_,
+                                 struct z_owned_shared_shm_provider_t *out_provider,
+                                 enum z_shm_provider_state *out_state);
+#endif
 /**
  * Constructs and opens a new Zenoh session.
  *
@@ -4641,6 +4706,39 @@ ZENOHC_API bool z_session_is_closed(const struct z_loaned_session_t *session);
  */
 ZENOHC_API const struct z_loaned_session_t *z_session_loan(const struct z_owned_session_t *this_);
 ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * Constructs a shallow copy of shared SHM provider.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_shared_shm_provider_clone(struct z_owned_shared_shm_provider_t *dst,
+                                 const struct z_loaned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Deletes Shared SHM Provider.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+void z_shared_shm_provider_drop(struct z_moved_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows Shared SHM Provider.
+ */
+#if (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API))
+ZENOHC_API
+const struct z_loaned_shared_shm_provider_t *z_shared_shm_provider_loan(const struct z_owned_shared_shm_provider_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Loan as SHM Provider. Provides access to the underlying SHM Provider to be used where SHM Provider is expected.
+ */
+#if ((defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)) && (defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)))
+ZENOHC_API
+const struct z_loaned_shm_provider_t *z_shared_shm_provider_loan_as(const struct z_loaned_shared_shm_provider_t *this_);
+#endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Deletes SHM Client.

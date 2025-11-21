@@ -14,10 +14,10 @@
 
 use std::mem::MaybeUninit;
 
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use zenoh::shm::ShmProviderState;
 use zenoh::{Session, Wait};
 
-#[cfg(all(feature = "shared-memory", feature = "unstable"))]
-use crate::z_loaned_shm_client_storage_t;
 #[cfg(feature = "unstable")]
 use crate::zc_owned_concurrent_close_handle_t;
 use crate::{
@@ -26,6 +26,13 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t,
 };
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+use crate::{
+    result::z_result_t,
+    shm::provider::{shared_shm_provider::SharedShmProvider, shm_provider::CSHMProvider},
+    z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t,
+};
+
 decl_c_type!(
     owned(z_owned_session_t, option Session),
     loaned(z_loaned_session_t),
@@ -99,6 +106,68 @@ pub extern "C" fn z_open(
             crate::report_error!("Error opening session: {}", e);
             this.write(None);
             result::Z_ENETWORK
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Session's provider state.
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub enum z_shm_provider_state {
+    /// Provider is disabled by configuration.
+    DISABLED,
+    /// Provider is concurrently-initializing.
+    INITIALIZING,
+    /// Provider is ready.
+    READY,
+    /// Error initializing provider.
+    ERROR,
+}
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Each session's runtime may create its own provider to manage internal optimizations.  
+/// This method exposes that provider so it can also be accessed at the application level.
+///
+/// Note that the provider may not be immediately available or may be disabled via configuration.
+/// Provider initialization is concurrent and triggered by access events (both transport-internal and through this API).
+///
+/// To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
+///
+/// @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
+/// initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
+/// @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
+/// Always initialized by this function.
+/// @return 0 in case if provider is avalable, negative error code otherwise.
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub extern "C" fn z_obtain_shm_provider(
+    this: &z_loaned_session_t,
+    out_provider: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
+    out_state: &mut MaybeUninit<z_shm_provider_state>,
+) -> z_result_t {
+    let s = this.as_rust_type_ref();
+    match s.get_shm_provider() {
+        ShmProviderState::Disabled => {
+            out_state.write(z_shm_provider_state::DISABLED);
+            result::Z_EUNAVAILABLE
+        }
+        ShmProviderState::Initializing => {
+            out_state.write(z_shm_provider_state::INITIALIZING);
+            result::Z_EUNAVAILABLE
+        }
+        ShmProviderState::Ready(provider) => {
+            out_state.write(z_shm_provider_state::READY);
+            out_provider
+                .as_rust_type_mut_uninit()
+                .write(Some(SharedShmProvider(CSHMProvider::SharedPosix(provider))));
+            result::Z_OK
+        }
+        ShmProviderState::Error => {
+            out_state.write(z_shm_provider_state::ERROR);
+            result::Z_EUNAVAILABLE
         }
     }
 }

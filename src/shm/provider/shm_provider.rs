@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::mem::MaybeUninit;
+use std::{mem::MaybeUninit, sync::Arc};
 
 use libc::c_void;
 use zenoh::{
@@ -46,8 +46,11 @@ pub type DynamicShmProvider = ShmProvider<DynamicShmProviderBackend<Context>>;
 
 pub type DynamicShmProviderThreadsafe = ShmProvider<DynamicShmProviderBackend<ThreadsafeContext>>;
 
+pub type SharedPosixShmProvider = Arc<PosixShmProvider>;
+
 pub enum CSHMProvider {
     Posix(PosixShmProvider),
+    SharedPosix(SharedPosixShmProvider),
     Dynamic(DynamicShmProvider),
     DynamicThreadsafe(DynamicShmProviderThreadsafe),
 }

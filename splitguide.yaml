@@ -130,5 +130,7 @@ zenoh_opaque.h:
   - z_owned_ring_handler_reply_t!
   - z_loaned_ring_handler_reply_t!
   - zc_owned_concurrent_close_handle_t!#unstable
+  - z_owned_shared_shm_provider_t!#shared-memory#unstable
+  - z_loaned_shared_shm_provider_t!#shared-memory#unstable
   - z_owned_cancellation_token_t!#unstable
   - z_loaned_cancellation_token_t!#unstable
