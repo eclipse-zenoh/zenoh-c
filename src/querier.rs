@@ -29,10 +29,10 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_matching_status_call, z_closure_matching_status_loan, z_closure_reply_call,
     z_closure_reply_loan, z_congestion_control_t, z_loaned_keyexpr_t, z_loaned_querier_t,
-    z_loaned_session_t, z_matching_status_t, z_moved_bytes_t, z_moved_closure_matching_status_t,
-    z_moved_closure_reply_t, z_moved_encoding_t, z_moved_querier_t, z_owned_matching_listener_t,
-    z_owned_querier_t, z_priority_t, z_query_consolidation_t, z_query_target_t,
-    zc_locality_default, zc_locality_t,
+    z_loaned_session_t, z_locality_default, z_locality_t, z_matching_status_t, z_moved_bytes_t,
+    z_moved_closure_matching_status_t, z_moved_closure_reply_t, z_moved_encoding_t,
+    z_moved_querier_t, z_owned_matching_listener_t, z_owned_querier_t, z_priority_t,
+    z_query_consolidation_t, z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -52,7 +52,7 @@ pub struct z_querier_options_t {
     /// If set to ``true``, the querier queries will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The allowed destination for the querier queries.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
@@ -73,7 +73,7 @@ pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_op
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         priority: Priority::default().into(),
         is_express: false,
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
         #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),
         timeout_ms: 0,

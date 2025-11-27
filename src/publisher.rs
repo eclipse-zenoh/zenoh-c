@@ -28,9 +28,9 @@ use crate::{
     result::{self},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
-    z_loaned_keyexpr_t, z_loaned_session_t, z_matching_status_t, z_moved_bytes_t,
-    z_moved_closure_matching_status_t, z_moved_encoding_t, z_owned_matching_listener_t,
-    z_priority_t, z_timestamp_t, zc_locality_default, zc_locality_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t, z_matching_status_t,
+    z_moved_bytes_t, z_moved_closure_matching_status_t, z_moved_encoding_t,
+    z_owned_matching_listener_t, z_priority_t, z_timestamp_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -54,7 +54,7 @@ pub struct z_publisher_options_t {
     /// The publisher reliability.
     pub reliability: z_reliability_t,
     /// The allowed destination for this publisher.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
 }
 
 impl Default for z_publisher_options_t {
@@ -66,7 +66,7 @@ impl Default for z_publisher_options_t {
             is_express: false,
             #[cfg(feature = "unstable")]
             reliability: z_reliability_default(),
-            allowed_destination: zc_locality_default(),
+            allowed_destination: z_locality_default(),
         }
     }
 }

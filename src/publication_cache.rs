@@ -21,7 +21,7 @@ use zenoh_ext::{PublicationCacheBuilder, SessionExt};
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_loaned_keyexpr_t, z_loaned_session_t, zc_locality_default, zc_locality_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t,
 };
 
 /// @warning This API is deprecated. Please use ze_advanced_publisher.
@@ -31,7 +31,7 @@ pub struct ze_publication_cache_options_t {
     /// The suffix used for queryable.
     pub queryable_suffix: *const z_loaned_keyexpr_t,
     /// The restriction for the matching queries that will be receive by this publication cache.
-    pub queryable_origin: zc_locality_t,
+    pub queryable_origin: z_locality_t,
     /// The `complete` option for the queryable.
     pub queryable_complete: bool,
     /// The the history size (i.e. maximum number of messages to store).
@@ -48,7 +48,7 @@ pub extern "C" fn ze_publication_cache_options_default(
 ) {
     this.write(ze_publication_cache_options_t {
         queryable_suffix: null(),
-        queryable_origin: zc_locality_default(),
+        queryable_origin: z_locality_default(),
         queryable_complete: false,
         history: 1,
         resources_limit: 0,

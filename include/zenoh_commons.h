@@ -19,20 +19,20 @@
 /**
  * The locality of samples to be received by subscribers or targeted by publishers.
  */
-typedef enum zc_locality_t {
+typedef enum z_locality_t {
   /**
    * Any
    */
-  ZC_LOCALITY_ANY = 0,
+  Z_LOCALITY_ANY = 0,
   /**
    * Only from local sessions.
    */
-  ZC_LOCALITY_SESSION_LOCAL = 1,
+  Z_LOCALITY_SESSION_LOCAL = 1,
   /**
    * Only from remote sessions.
    */
-  ZC_LOCALITY_REMOTE = 2,
-} zc_locality_t;
+  Z_LOCALITY_REMOTE = 2,
+} z_locality_t;
 typedef enum z_congestion_control_t {
   /**
    * Messages are not dropped in case of congestion.
@@ -486,7 +486,7 @@ typedef struct z_queryable_options_t {
    * Restricts the matching requests that will be received by this Queryable to the ones
    * that have the compatible allowed_destination.
    */
-  enum zc_locality_t allowed_origin;
+  enum z_locality_t allowed_origin;
 } z_queryable_options_t;
 /**
  * Options passed to the `z_declare_subscriber()` function.
@@ -496,7 +496,7 @@ typedef struct z_subscriber_options_t {
    * Restricts the matching publications that will be received by this Subscriber to the ones
    * that have the compatible allowed_destination.
    */
-  enum zc_locality_t allowed_origin;
+  enum z_locality_t allowed_origin;
 } z_subscriber_options_t;
 typedef struct z_moved_encoding_t {
   struct z_owned_encoding_t _this;
@@ -532,7 +532,7 @@ typedef struct z_publisher_options_t {
   /**
    * The allowed destination for this publisher.
    */
-  enum zc_locality_t allowed_destination;
+  enum z_locality_t allowed_destination;
 } z_publisher_options_t;
 /**
  * The replies consolidation strategy to apply on replies to a `z_get()`.
@@ -563,7 +563,7 @@ typedef struct z_querier_options_t {
   /**
    * The allowed destination for the querier queries.
    */
-  enum zc_locality_t allowed_destination;
+  enum z_locality_t allowed_destination;
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -612,7 +612,7 @@ typedef struct z_delete_options_t {
   /**
    * The allowed destination of this message.
    */
-  enum zc_locality_t allowed_destination;
+  enum z_locality_t allowed_destination;
 } z_delete_options_t;
 typedef struct z_moved_fifo_handler_query_t {
   struct z_owned_fifo_handler_query_t _this;
@@ -657,7 +657,7 @@ typedef struct z_get_options_t {
   /**
    * The allowed destination for the query.
    */
-  enum zc_locality_t allowed_destination;
+  enum z_locality_t allowed_destination;
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -824,7 +824,7 @@ typedef struct z_put_options_t {
   /**
    * The allowed destination of this message.
    */
-  enum zc_locality_t allowed_destination;
+  enum z_locality_t allowed_destination;
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1336,7 +1336,7 @@ typedef struct ze_publication_cache_options_t {
   /**
    * The restriction for the matching queries that will be receive by this publication cache.
    */
-  enum zc_locality_t queryable_origin;
+  enum z_locality_t queryable_origin;
   /**
    * The `complete` option for the queryable.
    */
@@ -1362,7 +1362,7 @@ typedef struct ze_querying_subscriber_options_t {
   /**
    * The restriction for the matching publications that will be receive by this subscriber.
    */
-  enum zc_locality_t allowed_origin;
+  enum z_locality_t allowed_origin;
   /**
    * The selector to be used for queries.
    */
@@ -3697,6 +3697,10 @@ ZENOHC_API void z_liveliness_token_options_default(struct z_liveliness_token_opt
  */
 ZENOHC_API z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_token_t *this_);
 /**
+ * @brief Returns default value of `z_locality_t`
+ */
+ZENOHC_API enum z_locality_t z_locality_default(void);
+/**
  * @brief Undeclares the given matching listener, droping and invalidating it.
  */
 ZENOHC_API void z_matching_listener_drop(struct z_moved_matching_listener_t *this_);
@@ -5901,9 +5905,10 @@ ZENOHC_API
 void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
 #endif
 /**
- * @brief Returns default value of `zc_locality_t`
+ * @warning This API is deprecated. Please use `z_locality_default().
+ * @brief Returns default value of `z_locality_t`
  */
-ZENOHC_API enum zc_locality_t zc_locality_default(void);
+ZENOHC_API enum z_locality_t zc_locality_default(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the default value of #zc_reply_keyexpr_t.

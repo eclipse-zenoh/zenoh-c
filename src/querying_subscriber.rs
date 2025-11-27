@@ -23,9 +23,8 @@ use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
-    z_loaned_session_t, z_moved_closure_sample_t, z_query_consolidation_none,
-    z_query_consolidation_t, z_query_target_default, z_query_target_t, zc_locality_default,
-    zc_locality_t,
+    z_loaned_session_t, z_locality_default, z_locality_t, z_moved_closure_sample_t,
+    z_query_consolidation_none, z_query_consolidation_t, z_query_target_default, z_query_target_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{zc_reply_keyexpr_default, zc_reply_keyexpr_t, ze_moved_querying_subscriber_t};
@@ -54,7 +53,7 @@ pub extern "C" fn ze_internal_querying_subscriber_null(
 #[allow(non_camel_case_types)]
 pub struct ze_querying_subscriber_options_t {
     /// The restriction for the matching publications that will be receive by this subscriber.
-    allowed_origin: zc_locality_t,
+    allowed_origin: z_locality_t,
     /// The selector to be used for queries.
     query_selector: Option<&'static z_loaned_keyexpr_t>,
     /// The target to be used for queries.
@@ -75,7 +74,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
     this: &mut MaybeUninit<ze_querying_subscriber_options_t>,
 ) {
     this.write(ze_querying_subscriber_options_t {
-        allowed_origin: zc_locality_default(),
+        allowed_origin: z_locality_default(),
         query_selector: None,
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),

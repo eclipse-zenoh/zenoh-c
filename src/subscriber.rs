@@ -26,8 +26,8 @@ use crate::{
     keyexpr::*,
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_moved_closure_sample_t,
-    zc_locality_default, zc_locality_t,
+    z_closure_sample_call, z_closure_sample_loan, z_loaned_session_t, z_locality_default,
+    z_locality_t, z_moved_closure_sample_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t};
@@ -60,13 +60,13 @@ pub unsafe extern "C" fn z_subscriber_loan(this_: &z_owned_subscriber_t) -> &z_l
 pub struct z_subscriber_options_t {
     /// Restricts the matching publications that will be received by this Subscriber to the ones
     /// that have the compatible allowed_destination.
-    pub allowed_origin: zc_locality_t,
+    pub allowed_origin: z_locality_t,
 }
 
 impl Default for z_subscriber_options_t {
     fn default() -> Self {
         Self {
-            allowed_origin: zc_locality_default(),
+            allowed_origin: z_locality_default(),
         }
     }
 }

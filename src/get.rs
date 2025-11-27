@@ -32,8 +32,8 @@ use crate::{
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
-    z_query_target_t, zc_locality_default, zc_locality_t, CStringView,
+    z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t, z_moved_closure_reply_t,
+    z_moved_encoding_t, z_priority_t, z_query_target_t, CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -222,7 +222,7 @@ pub struct z_get_options_t {
     /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The allowed destination for the query.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
@@ -275,7 +275,7 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
         #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),
         priority: Priority::default().into(),
