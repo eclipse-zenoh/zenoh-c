@@ -48,15 +48,3 @@
 /// @brief An 8-byte alignment.
 #define ALIGN_8_BYTES (z_alloc_alignment_t{3})
 #endif
-
-// deprecated
-
-/// @warning This API has been marked as deprecated, use `Z_LOCALITY_ANY` instead.
-#define ZC_LOCALITY_ANY Z_LOCALITY_ANY
-/// @warning This API has been marked as deprecated, use `Z_LOCALITY_SESSION_LOCAL` instead.
-#define ZC_LOCALITY_SESSION_LOCAL Z_LOCALITY_SESSION_LOCAL
-/// @warning This API has been marked as deprecated, use `Z_LOCALITY_REMOTE` instead.
-#define ZC_LOCALITY_REMOTE Z_LOCALITY_REMOTE
-
-/// @warning This API has been marked as deprecated, use `z_locality_t` instead.
-typedef z_locality_t zc_locality_t;

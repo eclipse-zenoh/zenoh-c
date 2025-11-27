@@ -25,14 +25,30 @@ typedef enum z_locality_t {
    */
   Z_LOCALITY_ANY = 0,
   /**
+  * @warning This API is deprecated. Please use `Z_LOCALITY_ANY`.
+  */
+  ZC_LOCALITY_ANY = 0,
+  /**
    * Only from local sessions.
    */
   Z_LOCALITY_SESSION_LOCAL = 1,
   /**
+  * @warning This API is deprecated. Please use `Z_LOCALITY_SESSION_LOCAL`.
+  */
+  ZC_LOCALITY_SESSION_LOCAL = 1,
+  /**
    * Only from remote sessions.
    */
   Z_LOCALITY_REMOTE = 2,
+  /**
+  * @warning This API is deprecated. Please use `Z_LOCALITY_REMOTE`.
+  */
+  ZC_LOCALITY_REMOTE = 2,
 } z_locality_t;
+/**
+* @warning This API is deprecated. Please use `z_locality_t`.
+*/
+typedef z_locality_t zc_locality_t;
 typedef enum z_congestion_control_t {
   /**
    * Messages are not dropped in case of congestion.

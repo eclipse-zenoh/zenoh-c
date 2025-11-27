@@ -65,9 +65,37 @@ pub fn generate_c_headers() {
     .expect("include should be copied to CARGO_TARGET_DIR");
 }
 
+fn add_deprecated_z_locality_enum_values(bindings: String) -> String {
+    let re = Regex::new(r"(\s*)Z_LOCALITY_(\w+)(\s*)=(\s*)(\d)(,*)").unwrap();
+
+    let bindings = re
+        .replace_all(
+            &bindings,
+            "${1}Z_LOCALITY_$2$3=$4$5,".to_string()
+                + "${1}/**"
+                + "${1}* @warning This API is deprecated. Please use `Z_LOCALITY_$2`."
+                + "${1}*/"
+                + "${1}ZC_LOCALITY_$2$3=$4$5$6",
+        )
+        .to_string();
+
+    let re = Regex::new(r"(\s*)}(\s*)z_locality_t;").unwrap();
+    re.replace_all(
+        &bindings,
+        "${1}}${2}z_locality_t;".to_string()
+            + "${1}/**"
+            + "${1}* @warning This API is deprecated. Please use `z_locality_t`."
+            + "${1}*/"
+            + "${1}typedef z_locality_t zc_locality_t;",
+    )
+    .to_string()
+}
+
 fn fix_cbindgen(input: &str, output: &str) {
     let bindings = std::fs::read_to_string(input).expect("failed to open input file");
     let bindings = bindings.replace("\n#endif\n  ;", ";\n#endif");
+
+    let bindings = add_deprecated_z_locality_enum_values(bindings);
 
     let mut out = File::create(output).expect("failed to open output file");
     out.write_all(bindings.as_bytes()).unwrap();
