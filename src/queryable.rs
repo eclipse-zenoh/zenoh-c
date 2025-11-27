@@ -26,9 +26,9 @@ use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
-    z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t, zc_locality_default, zc_locality_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t,
+    z_moved_bytes_t, z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t,
+    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t};
@@ -130,7 +130,7 @@ pub struct z_queryable_options_t {
     pub complete: bool,
     /// Restricts the matching requests that will be received by this Queryable to the ones
     /// that have the compatible allowed_destination.
-    pub allowed_origin: zc_locality_t,
+    pub allowed_origin: z_locality_t,
 }
 /// Constructs the default value for `z_query_reply_options_t`.
 #[no_mangle]
@@ -138,7 +138,7 @@ pub struct z_queryable_options_t {
 pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
     this_.write(z_queryable_options_t {
         complete: false,
-        allowed_origin: zc_locality_default(),
+        allowed_origin: z_locality_default(),
     });
 }
 

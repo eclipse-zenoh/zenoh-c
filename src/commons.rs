@@ -254,7 +254,7 @@ pub extern "C" fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_
 /// The locality of samples to be received by subscribers or targeted by publishers.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum zc_locality_t {
+pub enum z_locality_t {
     /// Any
     ANY = 0,
     /// Only from local sessions.
@@ -263,29 +263,36 @@ pub enum zc_locality_t {
     REMOTE = 2,
 }
 
-impl From<Locality> for zc_locality_t {
+impl From<Locality> for z_locality_t {
     fn from(k: Locality) -> Self {
         match k {
-            Locality::Any => zc_locality_t::ANY,
-            Locality::SessionLocal => zc_locality_t::SESSION_LOCAL,
-            Locality::Remote => zc_locality_t::REMOTE,
+            Locality::Any => z_locality_t::ANY,
+            Locality::SessionLocal => z_locality_t::SESSION_LOCAL,
+            Locality::Remote => z_locality_t::REMOTE,
         }
     }
 }
 
-impl From<zc_locality_t> for Locality {
-    fn from(k: zc_locality_t) -> Self {
+impl From<z_locality_t> for Locality {
+    fn from(k: z_locality_t) -> Self {
         match k {
-            zc_locality_t::ANY => Locality::Any,
-            zc_locality_t::SESSION_LOCAL => Locality::SessionLocal,
-            zc_locality_t::REMOTE => Locality::Remote,
+            z_locality_t::ANY => Locality::Any,
+            z_locality_t::SESSION_LOCAL => Locality::SessionLocal,
+            z_locality_t::REMOTE => Locality::Remote,
         }
     }
 }
 
-/// @brief Returns default value of `zc_locality_t`
+/// @brief Returns default value of `z_locality_t`
 #[no_mangle]
-pub extern "C" fn zc_locality_default() -> zc_locality_t {
+pub extern "C" fn z_locality_default() -> z_locality_t {
+    Locality::default().into()
+}
+
+/// @warning This API is deprecated. Please use `z_locality_default().
+/// @brief Returns default value of `z_locality_t`
+#[no_mangle]
+pub extern "C" fn zc_locality_default() -> z_locality_t {
     Locality::default().into()
 }
 

@@ -25,8 +25,8 @@ use crate::{
     commons::*,
     result,
     transmute::{IntoRustType, RustTypeRef, TakeRustType},
-    z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t, z_moved_encoding_t, z_timestamp_t,
-    zc_locality_default, zc_locality_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t,
+    z_moved_encoding_t, z_timestamp_t,
 };
 
 /// Options passed to the `z_put()` function.
@@ -49,7 +49,7 @@ pub struct z_put_options_t {
     /// The put operation reliability.
     reliability: z_reliability_t,
     /// The allowed destination of this message.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
@@ -71,7 +71,7 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
         timestamp: None,
         #[cfg(feature = "unstable")]
         reliability: z_reliability_default(),
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
         #[cfg(feature = "unstable")]
         source_info: None,
         attachment: None,
@@ -150,7 +150,7 @@ pub struct z_delete_options_t {
     /// The delete operation reliability.
     pub reliability: z_reliability_t,
     /// The allowed destination of this message.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -164,7 +164,7 @@ pub unsafe extern "C" fn z_delete_options_default(this_: &mut MaybeUninit<z_dele
         timestamp: None,
         #[cfg(feature = "unstable")]
         reliability: z_reliability_default(),
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
     });
 }
 

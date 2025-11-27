@@ -508,6 +508,7 @@ Types
 .. doxygenenum:: z_congestion_control_t
 .. doxygenenum:: z_priority_t
 .. doxygenenum:: z_reliability_t
+.. doxygenenum:: z_locality_t
 
 .. doxygenstruct:: z_put_options_t
     :members:
@@ -541,6 +542,7 @@ Functions
 .. doxygenfunction:: z_publisher_put_options_default
 .. doxygenfunction:: z_publisher_delete_options_default
 
+.. doxygenfunction:: z_locality_default
 .. doxygenfunction:: z_reliability_default
 
 .. doxygenfunction:: z_publisher_get_matching_status
@@ -1048,7 +1050,6 @@ Types
 .. doxygenstruct:: ze_loaned_publication_cache_t
 .. doxygenstruct:: ze_publication_cache_options_t
     :members:
-.. doxygenenum:: zc_locality_t
 
 Functions
 ^^^^^^^^^
