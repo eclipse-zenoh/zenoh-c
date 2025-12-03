@@ -227,8 +227,8 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
 
                     #[cfg(feature = "unstable")]
                     {
-                        if let Some(source_info) = options.source_info.take() {
-                            get = get.source_info(source_info.take_rust_type());
+                        if let Some(source_info) = options.source_info {
+                            get = get.source_info(source_info.as_rust_type_ref().clone());
                         }
                         get = get
                             .allowed_destination(options.allowed_destination.into())

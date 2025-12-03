@@ -20,7 +20,7 @@ use zenoh::{
 };
 
 #[cfg(feature = "unstable")]
-use crate::z_moved_source_info_t;
+use crate::z_source_info_t;
 use crate::{
     commons::*,
     result,
@@ -54,7 +54,7 @@ pub struct z_put_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the message.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to this message.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
@@ -117,8 +117,8 @@ pub extern "C" fn z_put(
             put = put
                 .reliability(options.reliability.into())
                 .allowed_destination(options.allowed_destination.into());
-            if let Some(source_info) = options.source_info.take() {
-                put = put.source_info(source_info.take_rust_type());
+            if let Some(source_info) = options.source_info {
+                put = put.source_info(source_info.as_rust_type_ref().clone());
             };
         }
     }

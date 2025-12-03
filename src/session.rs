@@ -18,8 +18,6 @@ use std::mem::MaybeUninit;
 use zenoh::shm::ShmProviderState;
 use zenoh::{Session, Wait};
 
-#[cfg(feature = "unstable")]
-use crate::zc_owned_concurrent_close_handle_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
@@ -32,6 +30,8 @@ use crate::{
     shm::provider::{shared_shm_provider::SharedShmProvider, shm_provider::CSHMProvider},
     z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{z_entity_global_id_t, zc_owned_concurrent_close_handle_t};
 
 decl_c_type!(
     owned(z_owned_session_t, option Session),
@@ -295,4 +295,13 @@ pub extern "C" fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
 #[no_mangle]
 pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
     let _ = this_.take_rust_type();
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the ID of the session.
+#[no_mangle]
+pub extern "C" fn z_session_id(session: &z_loaned_session_t) -> z_entity_global_id_t {
+    use crate::transmute::IntoCType;
+    session.as_rust_type_ref().id().into_c_type()
 }

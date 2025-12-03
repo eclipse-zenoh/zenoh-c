@@ -274,6 +274,24 @@ Functions
 .. doxygenfunction:: z_timestamp_id
 .. doxygenfunction:: z_timestamp_ntp64_time
 
+Source Info
+-----------
+Types
+^^^^^
+.. doxygenstruct:: z_source_info_t
+.. doxygenstruct:: z_entity_global_id_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_source_info_new
+.. doxygenfunction:: z_source_info_id
+.. doxygenfunction:: z_source_info_sn
+
+.. doxygenfunction:: z_entity_global_id_zid
+.. doxygenfunction:: z_entity_global_id_eid
+
+
+
 
 Payload
 -------
@@ -460,10 +478,12 @@ Functions
 .. doxygenfunction:: z_open
 .. doxygenfunction:: z_close
 .. doxygenfunction:: z_session_is_closed
+.. doxygenfunction:: z_session_id
 
 .. doxygenfunction:: z_session_loan
 .. doxygenfunction:: z_session_loan_mut
 .. doxygenfunction:: z_session_drop
+
 
 .. doxygenfunction:: z_info_zid
 .. doxygenfunction:: z_info_routers_zid
@@ -659,6 +679,7 @@ Functions
 .. doxygenfunction:: z_query_reply
 .. doxygenfunction:: z_query_reply_err
 .. doxygenfunction:: z_query_reply_del
+.. doxygenfunction:: z_query_source_info
 
 .. doxygenfunction:: z_closure_query_call
 .. doxygenfunction:: z_closure_query_loan

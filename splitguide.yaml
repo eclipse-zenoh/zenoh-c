@@ -50,8 +50,7 @@ zenoh_opaque.h:
   - z_loaned_session_t!
   - z_owned_config_t!
   - z_loaned_config_t!
-  - z_owned_source_info_t!#unstable
-  - z_loaned_source_info_t!#unstable
+  - z_source_info_t!#unstable
   - z_entity_global_id_t!#unstable
   - z_id_t!
   - z_timestamp_t!
