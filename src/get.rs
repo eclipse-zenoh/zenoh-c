@@ -37,8 +37,8 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_cancellation_token_t,
-    z_moved_source_info_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    transmute::IntoCType, z_entity_global_id_t, z_moved_cancellation_token_t, z_source_info_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyError),
@@ -234,7 +234,7 @@ pub struct z_get_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the query.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// An optional attachment to attach to the query.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
@@ -256,10 +256,6 @@ impl z_get_options_t {
         }
         if let Some(a) = self.attachment.take() {
             a.take_rust_type();
-        }
-        #[cfg(feature = "unstable")]
-        if let Some(si) = self.source_info.take() {
-            si.take_rust_type();
         }
         #[cfg(feature = "unstable")]
         if let Some(ct) = self.cancellation_token.take() {
@@ -374,8 +370,8 @@ pub unsafe extern "C" fn z_get_with_parameters_substr(
             get = get.encoding(encoding.take_rust_type());
         }
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            get = get.source_info(source_info.take_rust_type());
+        if let Some(source_info) = options.source_info {
+            get = get.source_info(source_info.as_rust_type_ref().clone());
         }
         if let Some(attachment) = options.attachment.take() {
             get = get.attachment(attachment.take_rust_type());

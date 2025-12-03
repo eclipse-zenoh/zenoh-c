@@ -34,8 +34,8 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, z_reliability_default,
-    z_reliability_t,
+    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
+    z_source_info_t,
 };
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
@@ -188,7 +188,7 @@ pub struct z_publisher_put_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the publication.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to attach to the publication.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
@@ -219,8 +219,8 @@ pub(crate) fn _apply_pubisher_put_options<
         builder = builder.encoding(encoding.take_rust_type());
     };
     #[cfg(feature = "unstable")]
-    if let Some(source_info) = options.source_info.take() {
-        builder = builder.source_info(source_info.take_rust_type());
+    if let Some(source_info) = options.source_info {
+        builder = builder.source_info(source_info.as_rust_type_ref().clone());
     };
     if let Some(attachment) = options.attachment.take() {
         builder = builder.attachment(attachment.take_rust_type());

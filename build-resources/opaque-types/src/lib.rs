@@ -470,7 +470,10 @@ get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An owned shared ShmProvider.
-get_opaque_type_data!(Option<DummySharedShmProvider>, z_owned_shared_shm_provider_t);
+get_opaque_type_data!(
+    Option<DummySharedShmProvider>,
+    z_owned_shared_shm_provider_t
+);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned shared ShmProvider.
@@ -561,12 +564,8 @@ get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An owned Zenoh-allocated source info`.
-get_opaque_type_data!(SourceInfo, z_owned_source_info_t);
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A loaned source info.
-get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
+/// @brief A source info.
+get_opaque_type_data!(SourceInfo, z_source_info_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An entity gloabal id.

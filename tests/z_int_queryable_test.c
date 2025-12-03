@@ -39,14 +39,6 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_query_reply_options_t options;
     z_query_reply_options_default(&options);
 
-    // See https://github.com/eclipse-zenoh/zenoh/issues/1203
-    // z_entity_global_id_t entity_global_id;
-    // z_entity_global_id_new(&entity_global_id, &self_id, TEST_EID);
-    // z_owned_source_info_t source_info;
-    // z_source_info_new(&source_info, &entity_global_id, TEST_SN);
-
-    // options.source_info = z_move(source_info);
-
     z_owned_bytes_t payload;
     z_bytes_from_static_str(&payload, values[value_num]);
 
@@ -122,11 +114,8 @@ int run_get() {
             }
 
 #if defined(Z_FEATURE_UNSTABLE_API)
-            const z_loaned_source_info_t *source_info = z_sample_source_info(sample);
-            if (source_info == NULL) {
-                perror("Unexpected null source_info");
-                exit(-1);
-            }
+            const z_source_info_t *source_info = z_sample_source_info(sample);
+            assert(source_info == NULL);
 #endif
             // See https://github.com/eclipse-zenoh/zenoh/issues/1203
             // const uint64_t sn = z_source_info_sn(source_info);

@@ -25,11 +25,9 @@ use zenoh::{
 };
 
 #[cfg(feature = "unstable")]
-use crate::transmute::Gravestone;
-#[cfg(feature = "unstable")]
 use crate::transmute::IntoCType;
 #[cfg(feature = "unstable")]
-use crate::z_moved_source_info_t;
+use crate::z_source_info_t;
 use crate::{
     result,
     transmute::{CTypeRef, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -153,13 +151,13 @@ pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loa
 }
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Returns the sample source_info.
+/// @brief Returns the sample source_info. Will return NULL, if source info is not set.
 #[no_mangle]
-pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> &z_loaned_source_info_t {
+pub extern "C" fn z_sample_source_info(this_: &z_loaned_sample_t) -> Option<&z_source_info_t> {
     this_
         .as_rust_type_ref()
         .source_info()
-        .as_loaned_c_type_ref()
+        .map(|si| si.as_ctype_ref())
 }
 
 /// Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
@@ -594,87 +592,37 @@ pub extern "C" fn z_entity_global_id_zid(this_: &z_entity_global_id_t) -> z_id_t
 pub extern "C" fn z_entity_global_id_eid(this_: &z_entity_global_id_t) -> u32 {
     this_.as_rust_type_ref().eid()
 }
-#[cfg(feature = "unstable")]
-pub use crate::opaque_types::{z_loaned_source_info_t, z_owned_source_info_t};
-#[cfg(feature = "unstable")]
-decl_c_type!(
-    owned(z_owned_source_info_t, SourceInfo),
-    loaned(z_loaned_source_info_t, SourceInfo),
-);
 
 #[cfg(feature = "unstable")]
-impl Gravestone for SourceInfo {
-    fn gravestone() -> Self {
-        SourceInfo::default()
-    }
-    fn is_gravestone(&self) -> bool {
-        self.source_id().is_none() && self.source_sn().is_none()
-    }
-}
+decl_c_type!(copy(z_source_info_t, SourceInfo));
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Creates source info.
+///
+/// @param source_id: Non-null pointer to source entity global id.
+/// @param source_sn: Source sequence number.
 #[no_mangle]
 pub extern "C" fn z_source_info_new(
-    this: &mut MaybeUninit<z_owned_source_info_t>,
     source_id: &z_entity_global_id_t,
     source_sn: u32,
-) -> result::z_result_t {
-    let this = this.as_rust_type_mut_uninit();
-    let source_info = SourceInfo::new(Some(*source_id.as_rust_type_ref()), Some(source_sn));
-    this.write(source_info);
-    result::Z_OK
+) -> z_source_info_t {
+    let source_info = SourceInfo::new(*source_id.as_rust_type_ref(), source_sn);
+    source_info.into_c_type()
 }
 
 #[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Returns the source_id of the source info.
 #[no_mangle]
-pub extern "C" fn z_source_info_id(this_: &z_loaned_source_info_t) -> z_entity_global_id_t {
-    match this_.as_rust_type_ref().source_id() {
-        Some(source_id) => *source_id,
-        None => EntityGlobalId::default(),
-    }
-    .into_c_type()
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the source id of the source info.
+pub extern "C" fn z_source_info_id(this_: &z_source_info_t) -> z_entity_global_id_t {
+    this_.as_rust_type_ref().source_id().into_c_type()
 }
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the source_sn of the source info.
 #[no_mangle]
-pub extern "C" fn z_source_info_sn(this_: &z_loaned_source_info_t) -> u32 {
-    this_.as_rust_type_ref().source_sn().unwrap_or_default()
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_source_info_check(this_: &z_owned_source_info_t) -> bool {
-    this_.as_rust_type_ref().source_id().is_some() || this_.as_rust_type_ref().source_sn().is_some()
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Borrows source info.
-#[no_mangle]
-pub extern "C" fn z_source_info_loan(this_: &z_owned_source_info_t) -> &z_loaned_source_info_t {
-    this_.as_rust_type_ref().as_loaned_c_type_ref()
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Frees the memory and invalidates the source info, resetting it to a gravestone state.
-#[no_mangle]
-pub extern "C" fn z_source_info_drop(this_: &mut z_moved_source_info_t) {
-    let _ = this_.take_rust_type();
-}
-
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs source info in its gravestone state.
-#[no_mangle]
-pub extern "C" fn z_internal_source_info_null(this_: &mut MaybeUninit<z_owned_source_info_t>) {
-    this_.as_rust_type_mut_uninit().write(SourceInfo::default());
+pub extern "C" fn z_source_info_sn(this_: &z_source_info_t) -> u32 {
+    this_.as_rust_type_ref().source_sn()
 }

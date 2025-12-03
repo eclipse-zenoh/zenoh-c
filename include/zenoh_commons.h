@@ -639,9 +639,6 @@ typedef struct z_moved_fifo_handler_reply_t {
 typedef struct z_moved_fifo_handler_sample_t {
   struct z_owned_fifo_handler_sample_t _this;
 } z_moved_fifo_handler_sample_t;
-typedef struct z_moved_source_info_t {
-  struct z_owned_source_info_t _this;
-} z_moved_source_info_t;
 /**
  * Options passed to the `z_get()` function.
  */
@@ -692,7 +689,7 @@ typedef struct z_get_options_t {
    *
    * The source info for the query.
    */
-  struct z_moved_source_info_t *source_info;
+  const struct z_source_info_t *source_info;
 #endif
   /**
    * An optional attachment to attach to the query.
@@ -798,7 +795,7 @@ typedef struct z_publisher_put_options_t {
    *
    * The source info for the publication.
    */
-  struct z_moved_source_info_t *source_info;
+  const struct z_source_info_t *source_info;
 #endif
   /**
    * The attachment to attach to the publication.
@@ -847,7 +844,7 @@ typedef struct z_put_options_t {
    *
    * The source info for the message.
    */
-  struct z_moved_source_info_t *source_info;
+  const struct z_source_info_t *source_info;
 #endif
   /**
    * The attachment to this message.
@@ -875,7 +872,7 @@ typedef struct z_querier_get_options_t {
    *
    * The source info for the query.
    */
-  struct z_moved_source_info_t *source_info;
+  const struct z_source_info_t *source_info;
 #endif
   /**
    * An optional attachment to attach to the query.
@@ -924,7 +921,7 @@ typedef struct z_query_reply_options_t {
    *
    * The source info for the reply.
    */
-  struct z_moved_source_info_t *source_info;
+  const struct z_source_info_t *source_info;
 #endif
   /**
    * The attachment to this reply.
@@ -958,7 +955,7 @@ typedef struct z_query_reply_del_options_t {
    *
    * The source info for the reply.
    */
-  struct z_moved_source_info_t *source_info;
+  const struct z_source_info_t *source_info;
 #endif
   /**
    * The attachment to this reply.
@@ -3441,22 +3438,6 @@ ZENOHC_API bool z_internal_slice_check(const struct z_owned_slice_t *this_);
  */
 ZENOHC_API void z_internal_slice_null(struct z_owned_slice_t *this_);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if source info is valid, ``false`` if it is in gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-bool z_internal_source_info_check(const struct z_owned_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs source info in its gravestone state.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_internal_source_info_null(struct z_owned_source_info_t *this_);
-#endif
-/**
  * @return ``true`` if the string array is valid, ``false`` if it is in a gravestone state.
  */
 ZENOHC_API bool z_internal_string_array_check(const struct z_owned_string_array_t *this_);
@@ -4352,6 +4333,14 @@ ZENOHC_API void z_query_reply_err_options_default(struct z_query_reply_err_optio
  */
 ZENOHC_API void z_query_reply_options_default(struct z_query_reply_options_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns the query source_info. Will return NULL, if source info is not set.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_source_info_t *z_query_source_info(const struct z_loaned_query_t *this_);
+#endif
+/**
  * Takes ownership of the mutably borrowed query
  */
 ZENOHC_API void z_query_take_from_loaned(struct z_owned_query_t *dst, struct z_loaned_query_t *src);
@@ -4676,11 +4665,11 @@ enum z_reliability_t z_sample_reliability(const struct z_loaned_sample_t *this_)
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the sample source_info.
+ * @brief Returns the sample source_info. Will return NULL, if source info is not set.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-const struct z_loaned_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
+const struct z_source_info_t *z_sample_source_info(const struct z_loaned_sample_t *this_);
 #endif
 /**
  * Takes ownership of the mutably borrowed sample.
@@ -4715,6 +4704,14 @@ ZENOHC_API void z_scout_options_default(struct z_scout_options_t *this_);
  * Closes and invalidates the session.
  */
 ZENOHC_API void z_session_drop(struct z_moved_session_t *this_);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns the ID of the session.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_entity_global_id_t z_session_id(const struct z_loaned_session_t *session);
+#endif
 /**
  * Checks if zenoh session is closed.
  *
@@ -5262,37 +5259,23 @@ ZENOHC_API size_t z_slice_len(const struct z_loaned_slice_t *this_);
 ZENOHC_API const struct z_loaned_slice_t *z_slice_loan(const struct z_owned_slice_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Frees the memory and invalidates the source info, resetting it to a gravestone state.
+ * @brief Returns the source id of the source info.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_source_info_drop(struct z_moved_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns the source_id of the source info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_entity_global_id_t z_source_info_id(const struct z_loaned_source_info_t *this_);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Borrows source info.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-const struct z_loaned_source_info_t *z_source_info_loan(const struct z_owned_source_info_t *this_);
+struct z_entity_global_id_t z_source_info_id(const struct z_source_info_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Creates source info.
+ *
+ * @param source_id: Non-null pointer to source entity global id.
+ * @param source_sn: Source sequence number.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-z_result_t z_source_info_new(struct z_owned_source_info_t *this_,
-                             const struct z_entity_global_id_t *source_id,
-                             uint32_t source_sn);
+struct z_source_info_t z_source_info_new(const struct z_entity_global_id_t *source_id,
+                                         uint32_t source_sn);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -5300,7 +5283,7 @@ z_result_t z_source_info_new(struct z_owned_source_info_t *this_,
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-uint32_t z_source_info_sn(const struct z_loaned_source_info_t *this_);
+uint32_t z_source_info_sn(const struct z_source_info_t *this_);
 #endif
 /**
  * Constructs an owned copy of a string array.
