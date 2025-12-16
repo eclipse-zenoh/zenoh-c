@@ -13,16 +13,41 @@
 //
 use std::mem::MaybeUninit;
 
+#[cfg(feature = "unstable")]
+use zenoh::session::{
+    Link, LinkEvent, LinkEventsListener, Transport, TransportEvent, TransportEventsListener,
+};
 use zenoh::{session::ZenohId, Wait};
 
 pub use crate::opaque_types::z_id_t;
 use crate::{
     result,
     transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
-    z_owned_string_t,
+    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t, z_owned_string_t
 };
 decl_c_type!(copy(z_id_t, ZenohId));
+
+#[cfg(feature = "unstable")]
+use crate::{
+    z_loaned_link_event_t, z_loaned_link_t, z_loaned_transport_event_t,
+    z_loaned_transport_events_listener_t, z_loaned_transport_t, z_owned_link_event_t,
+    z_owned_link_t, z_owned_transport_event_t, z_owned_transport_events_listener_t,
+    z_owned_link_events_listener_t, z_loaned_link_events_listener_t,
+    z_owned_transport_t,
+};
+
+#[cfg(feature = "unstable")]
+decl_c_type!(owned(z_owned_transport_t, option Transport), loaned(z_loaned_transport_t, Transport));
+#[cfg(feature = "unstable")]
+decl_c_type!(owned(z_owned_link_t, option Link), loaned(z_loaned_link_t, Link));
+#[cfg(feature = "unstable")]
+decl_c_type!(owned(z_owned_transport_event_t, option TransportEvent), loaned(z_loaned_transport_event_t, TransportEvent));
+#[cfg(feature = "unstable")]
+decl_c_type!(owned(z_owned_link_event_t, option LinkEvent), loaned(z_loaned_link_event_t, LinkEvent));
+#[cfg(feature = "unstable")]
+decl_c_type!(owned(z_owned_transport_events_listener_t, option TransportEventsListener<()>), loaned(z_loaned_transport_events_listener_t, TransportEventsListener<()>));
+#[cfg(feature = "unstable")]
+decl_c_type!(owned(z_owned_link_events_listener_t, option LinkEventsListener<()>), loaned(z_loaned_link_events_listener_t, LinkEventsListener<()>));
 
 impl From<[u8; 16]> for z_id_t {
     fn from(value: [u8; 16]) -> Self {
