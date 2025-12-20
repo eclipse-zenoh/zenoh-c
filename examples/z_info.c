@@ -23,6 +23,14 @@ void print_zid(const z_id_t* id, void* ctx) {
     z_drop(z_move(str));
 }
 
+#if defined(Z_FEATURE_UNSTABLE_API)
+void print_transport(z_loaned_transport_t* transport, void* ctx) {
+    z_id_t zid = z_transport_zid(transport);
+    printf(" transport to zid: ");
+    print_zid(&zid, NULL);
+}
+#endif
+
 void parse_args(int argc, char** argv, z_owned_config_t* config);
 
 int main(int argc, char** argv) {
@@ -53,6 +61,14 @@ int main(int argc, char** argv) {
     z_owned_closure_zid_t callback2;
     z_closure(&callback2, print_zid, NULL, NULL);
     z_info_peers_zid(z_loan(s), z_move(callback2));
+
+    #if defined(Z_FEATURE_UNSTABLE_API)
+    // Get transports
+    printf("transports:\n");
+    z_owned_closure_transport_t callback3;
+    z_closure(&callback3, print_transport, NULL, NULL);
+    z_info_transports(z_loan(s), z_move(callback3));
+    #endif
 
     z_drop(z_move(s));
 }

@@ -23,17 +23,19 @@ pub use crate::opaque_types::z_id_t;
 use crate::{
     result,
     transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t, z_owned_string_t
+    z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
+    z_owned_string_t,
 };
 decl_c_type!(copy(z_id_t, ZenohId));
 
 #[cfg(feature = "unstable")]
 use crate::{
-    z_loaned_link_event_t, z_loaned_link_t, z_loaned_transport_event_t,
-    z_loaned_transport_events_listener_t, z_loaned_transport_t, z_owned_link_event_t,
+    transmute::LoanedCTypeRef,
+    z_loaned_link_event_t, z_loaned_link_events_listener_t, z_loaned_link_t,
+    z_loaned_transport_event_t, z_loaned_transport_events_listener_t, z_loaned_transport_t,
+    z_moved_closure_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t,
     z_owned_link_t, z_owned_transport_event_t, z_owned_transport_events_listener_t,
-    z_owned_link_events_listener_t, z_loaned_link_events_listener_t,
-    z_owned_transport_t,
+    z_owned_transport_t, z_closure_transport_call, z_closure_transport_loan
 };
 
 #[cfg(feature = "unstable")]
@@ -113,3 +115,43 @@ pub unsafe extern "C" fn z_info_routers_zid(
     }
     result::Z_OK
 }
+
+/// @brief Get the zenoh id from the `z_loaned_transport_t`.
+/// 
+/// Returns the zenoh id of the transport.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_zid(transport: &z_loaned_transport_t) -> z_id_t {
+    let transport = transport.as_rust_type_ref();
+    transport.zid().into_c_type()
+}
+
+/// @brief Get the transports `z_loaned_transport_t` used by the session.
+///
+/// The tranport is a connection to another zenoh node. The `z_owned_transport_t`
+/// contains the common information related to that connection. The information specific
+/// to concrete network protocols are in the muttiple `z_owned_link_t` associated to each transport
+/// rereieved by `z_info_links`.
+/// 
+/// Callback will be called once for each transport, is guaranteed to never be called concurrently,
+/// and is guaranteed to be dropped before this function exits.
+/// 
+/// Returns 0 on success, negative values on failure.
+#[cfg(feature = "unstable")]
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_info_transports(
+    session: &z_loaned_session_t,
+    callback: &mut z_moved_closure_transport_t,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    for mut transport in session.info().transports().wait() {
+        z_closure_transport_call(
+            z_closure_transport_loan(&callback),
+            transport.as_loaned_ctype_mut(),
+        );
+    }
+    result::Z_OK
+}
+
