@@ -25,7 +25,6 @@ use std::{
 use prebindgen_proc_macro::prebindgen;
 
 use crate::{
-    decl_c_type,
     result::{self, z_result_t},
     strlen_or_zero,
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},

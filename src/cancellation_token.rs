@@ -15,13 +15,12 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{cancellation::CancellationToken, Wait};
-
-use crate::opaque_types::{
+use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_cancellation_token_t, z_moved_cancellation_token_t, z_owned_cancellation_token_t,
 };
 
 decl_c_type!(
-    owned(z_owned_cancellation_token_t, option CancellationToken),
+    owned(z_owned_cancellation_token_t, z_moved_cancellation_token_t,option CancellationToken),
     loaned(z_loaned_cancellation_token_t, CancellationToken),
 );
 

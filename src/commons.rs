@@ -258,7 +258,7 @@ pub fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_t>) {
 #[prebindgen]
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum zc_locality_t {
+pub enum z_locality_t {
     /// Any
     ANY = 0,
     /// Only from local sessions.
@@ -615,10 +615,7 @@ decl_c_type!(copy(z_source_info_t, SourceInfo));
 /// @param source_id: Non-null pointer to source entity global id.
 /// @param source_sn: Source sequence number.
 #[prebindgen]
-pub fn z_source_info_new(
-    source_id: &z_entity_global_id_t,
-    source_sn: u32,
-) -> z_source_info_t {
+pub fn z_source_info_new(source_id: &z_entity_global_id_t, source_sn: u32) -> z_source_info_t {
     let source_info = SourceInfo::new(*source_id.as_rust_type_ref(), source_sn);
     source_info.into_c_type()
 }

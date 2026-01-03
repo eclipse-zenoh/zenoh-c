@@ -75,9 +75,7 @@ pub fn z_internal_alloc_layout_check(this_: &z_owned_alloc_layout_t) -> bool {
 /// @warning This API has been marked as deprecated, use `z_precomputed_layout_loan` instead.
 #[prebindgen]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe fn z_alloc_layout_loan(
-    this: &z_owned_alloc_layout_t,
-) -> &z_loaned_alloc_layout_t {
+pub unsafe fn z_alloc_layout_loan(this: &z_owned_alloc_layout_t) -> &z_loaned_alloc_layout_t {
     unsafe { z_precomputed_layout_loan(this) }
 }
 

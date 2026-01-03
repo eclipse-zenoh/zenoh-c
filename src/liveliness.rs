@@ -21,12 +21,12 @@ use zenoh::{
     sample::Sample,
     Wait,
 };
+#[cfg(feature = "unstable")]
+use zenoh_ffi_opaque_types::opaque_types::z_moved_cancellation_token_t;
 use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_liveliness_token_t, z_owned_liveliness_token_t,
 };
 
-#[cfg(feature = "unstable")]
-use crate::opaque_types::z_moved_cancellation_token_t;
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -248,9 +248,7 @@ pub struct z_liveliness_get_options_t {
 
 /// @brief Constructs default value `z_liveliness_get_options_t`.
 #[prebindgen]
-pub fn z_liveliness_get_options_default(
-    this: &mut MaybeUninit<z_liveliness_get_options_t>,
-) {
+pub fn z_liveliness_get_options_default(this: &mut MaybeUninit<z_liveliness_get_options_t>) {
     this.write(z_liveliness_get_options_t {
         timeout_ms: 10000,
         #[cfg(feature = "unstable")]

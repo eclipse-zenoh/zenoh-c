@@ -12,8 +12,6 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 use prebindgen_proc_macro::prebindgen;
-use std::mem::MaybeUninit;
-
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::shm::ShmProviderState;
 use zenoh::{Session, Wait};
@@ -26,7 +24,6 @@ use crate::{
 };
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{
-    result::z_result_t,
     shm::provider::{shared_shm_provider::SharedShmProvider, shm_provider::CSHMProvider},
     z_loaned_shm_client_storage_t, z_owned_shared_shm_provider_t,
 };
