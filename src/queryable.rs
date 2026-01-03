@@ -27,12 +27,12 @@ use crate::{
     result,
     transmute::{IntoRustType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
-    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_moved_bytes_t,
-    z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t, z_priority_t, z_timestamp_t,
-    z_view_string_from_substr, z_view_string_t, zc_locality_default, zc_locality_t,
+    z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t,
+    z_moved_bytes_t, z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t,
+    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t};
+use crate::{transmute::IntoCType, z_entity_global_id_t, z_source_info_t};
 decl_c_type!(
     owned(z_owned_queryable_t, z_moved_queryable_t, option Queryable<()>),
     loaned(z_loaned_queryable_t),
@@ -147,7 +147,7 @@ pub struct z_queryable_options_t {
     pub complete: bool,
     /// Restricts the matching requests that will be received by this Queryable to the ones
     /// that have the compatible allowed_destination.
-    pub allowed_origin: zc_locality_t,
+    pub allowed_origin: z_locality_t,
 }
 /// Constructs the default value for `z_query_reply_options_t`.
 #[prebindgen]
@@ -155,7 +155,7 @@ pub struct z_queryable_options_t {
 pub fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryable_options_t>) {
     this_.write(z_queryable_options_t {
         complete: false,
-        allowed_origin: zc_locality_default(),
+        allowed_origin: z_locality_default(),
     });
 }
 
@@ -179,7 +179,7 @@ pub struct z_query_reply_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the reply.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to this reply.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
@@ -235,7 +235,7 @@ pub struct z_query_reply_del_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the reply.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to this reply.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
@@ -392,8 +392,8 @@ pub fn z_query_reply(
             reply = reply.encoding(encoding.take_rust_type());
         };
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            reply = reply.source_info(source_info.take_rust_type());
+        if let Some(source_info) = options.source_info {
+            reply = reply.source_info(source_info.as_rust_type_ref().clone());
         };
         if let Some(attachment) = options.attachment.take() {
             reply = reply.attachment(attachment.take_rust_type());
@@ -473,8 +473,8 @@ pub unsafe fn z_query_reply_del(
     let mut reply = query.reply_del(key_expr);
     if let Some(options) = options {
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            reply = reply.source_info(source_info.take_rust_type());
+        if let Some(source_info) = options.source_info {
+            reply = reply.source_info(source_info.as_rust_type_ref().clone());
         };
         if let Some(attachment) = options.attachment.take() {
             reply = reply.attachment(attachment.take_rust_type());
@@ -566,6 +566,19 @@ pub fn z_query_attachment_mut(this_: &mut z_loaned_query_t) -> Option<&mut z_loa
         .as_rust_type_mut()
         .attachment_mut()
         .map(|a| a.as_loaned_c_type_mut())
+}
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns the query source_info. Will return NULL, if source info is not set.
+#[no_mangle]
+pub extern "C" fn z_query_source_info(this_: &z_loaned_query_t) -> Option<&z_source_info_t> {
+    use crate::transmute::CTypeRef;
+
+    this_
+        .as_rust_type_ref()
+        .source_info()
+        .map(|si| si.as_ctype_ref())
 }
 
 /// Undeclares a `z_owned_queryable_t`.

@@ -11,8 +11,8 @@ use std::{
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use zenoh::shm::{
-    zshm, zshmmut, AllocLayout, ChunkAllocResult, ChunkDescriptor, MemoryLayout,
-    PosixShmProviderBackend, ProtocolID, PtrInSegment, ShmClient, ShmClientStorage, ShmProvider,
+    zshm, zshmmut, ChunkAllocResult, ChunkDescriptor, MemoryLayout, PosixShmProviderBackend,
+    PrecomputedLayout, ProtocolID, PtrInSegment, ShmClient, ShmClientStorage, ShmProvider,
     ShmProviderBackend, WithProtocolID, ZLayoutError, ZShm, ZShmMut,
 };
 use zenoh::{
@@ -31,7 +31,8 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    internal::builders::close::NolocalJoinHandle, sample::SourceInfo, session::EntityGlobalId,
+    cancellation::CancellationToken, internal::builders::close::NolocalJoinHandle,
+    sample::SourceInfo, session::EntityGlobalId,
 };
 
 #[macro_export]
@@ -444,11 +445,18 @@ type DummySHMProvider = ShmProvider<DummySHMProviderBackend>;
 type PosixSHMProvider = ShmProvider<PosixShmProviderBackend>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type SharedPosixSHMProvider = Arc<PosixSHMProvider>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CDummySHMProvider {
     Posix(PosixSHMProvider),
+    SharedPosix(SharedPosixSHMProvider),
     Dynamic(DummySHMProvider),
     DynamicThreadsafe(DummySHMProvider),
 }
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+struct DummySharedShmProvider(CDummySHMProvider);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -460,24 +468,42 @@ get_opaque_type_data!(Option<CDummySHMProvider>, z_owned_shm_provider_t);
 get_opaque_type_data!(CDummySHMProvider, z_loaned_shm_provider_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type PosixAllocLayout = AllocLayout<'static, PosixShmProviderBackend>;
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned shared ShmProvider.
+get_opaque_type_data!(
+    Option<DummySharedShmProvider>,
+    z_owned_shared_shm_provider_t
+);
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned shared ShmProvider.
+get_opaque_type_data!(DummySharedShmProvider, z_loaned_shared_shm_provider_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
-type DummyDynamicAllocLayout = AllocLayout<'static, DummySHMProviderBackend>;
+type PosixPrecomputedLayout = PrecomputedLayout<'static, PosixShmProviderBackend, MemoryLayout>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type DummyDynamicPrecomputedLayout =
+    PrecomputedLayout<'static, DummySHMProviderBackend, MemoryLayout>;
+
+#[cfg(all(feature = "shared-memory", feature = "unstable"))]
+type DummyDynamicPrecomputedLayoutThreadSafe =
+    PrecomputedLayout<'static, DummySHMProviderBackend, MemoryLayout>;
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 enum CSHMLayout {
-    Posix(PosixAllocLayout),
-    Dynamic(DummyDynamicAllocLayout),
+    Posix(PosixPrecomputedLayout),
+    Dynamic(DummyDynamicPrecomputedLayout),
+    DynamicThreadSafe(DummyDynamicPrecomputedLayout),
 }
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An owned ShmProvider's AllocLayout.
-get_opaque_type_data!(Option<CSHMLayout>, z_owned_alloc_layout_t);
+/// @brief An owned ShmProvider's PrecomputedLayout.
+get_opaque_type_data!(Option<CSHMLayout>, z_owned_precomputed_layout_t);
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A loaned ShmProvider's AllocLayout.
-get_opaque_type_data!(CSHMLayout, z_loaned_alloc_layout_t);
+/// @brief A loaned ShmProvider's PrecomputedLayout.
+get_opaque_type_data!(CSHMLayout, z_loaned_precomputed_layout_t);
 
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -538,12 +564,8 @@ get_opaque_type_data!(RingChannelHandler<Reply>, z_loaned_ring_handler_reply_t);
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief An owned Zenoh-allocated source info`.
-get_opaque_type_data!(SourceInfo, z_owned_source_info_t);
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief A loaned source info.
-get_opaque_type_data!(SourceInfo, z_loaned_source_info_t);
+/// @brief A source info.
+get_opaque_type_data!(SourceInfo, z_source_info_t);
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An entity gloabal id.
@@ -555,3 +577,13 @@ get_opaque_type_data!(Option<zenoh_ext::ZSerializer>, ze_owned_serializer_t);
 get_opaque_type_data!(zenoh_ext::ZSerializer, ze_loaned_serializer_t);
 /// @brief A Zenoh serializer.
 get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned cancellation token, which can be used to interrupt GET queries.
+get_opaque_type_data!(Option<CancellationToken>, z_owned_cancellation_token_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned cancellation token, which can be used to interrupt GET queries.
+get_opaque_type_data!(CancellationToken, z_loaned_cancellation_token_t);

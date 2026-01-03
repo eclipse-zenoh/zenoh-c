@@ -17,7 +17,9 @@ use std::mem::MaybeUninit;
 use libc::c_void;
 use zenoh::{
     shm::{
-        AllocPolicy, AsyncAllocPolicy, PosixShmProviderBackend, ShmProvider, ShmProviderBackend,
+        AllocPolicy, AsyncAllocPolicy, BlockOn, ConstBool, ConstPolicy, Deallocate, Defragment,
+        GarbageCollect, JustAlloc, PolicyValue, PosixShmProviderBackend, ShmProvider,
+        ShmProviderBackend,
     },
     Wait,
 };
@@ -34,7 +36,64 @@ use crate::{
     z_loaned_shm_provider_t, z_owned_shm_mut_t,
 };
 
-pub(crate) fn alloc<Policy: AllocPolicy>(
+pub(crate) trait GenericAllocPolicy {
+    type AllocPolicy<Backend: ShmProviderBackend>: AllocPolicy<Backend> + ConstPolicy + Send + Sync;
+}
+
+impl GenericAllocPolicy for JustAlloc {
+    type AllocPolicy<Backend: ShmProviderBackend> = JustAlloc;
+}
+impl<InnerPolicy> GenericAllocPolicy for BlockOn<InnerPolicy>
+where
+    InnerPolicy: GenericAllocPolicy,
+{
+    type AllocPolicy<Backend: ShmProviderBackend> = BlockOn<InnerPolicy::AllocPolicy<Backend>>;
+}
+impl<InnerPolicy, AltPolicy, Safe> GenericAllocPolicy
+    for GarbageCollect<InnerPolicy, AltPolicy, Safe>
+where
+    InnerPolicy: GenericAllocPolicy,
+    AltPolicy: GenericAllocPolicy,
+    Safe: PolicyValue<bool> + ConstPolicy + Send + Sync,
+{
+    type AllocPolicy<Backend: ShmProviderBackend> =
+        GarbageCollect<InnerPolicy::AllocPolicy<Backend>, AltPolicy::AllocPolicy<Backend>, Safe>;
+}
+impl<InnerPolicy, AltPolicy> GenericAllocPolicy for Defragment<InnerPolicy, AltPolicy>
+where
+    InnerPolicy: GenericAllocPolicy,
+    AltPolicy: GenericAllocPolicy,
+{
+    type AllocPolicy<Backend: ShmProviderBackend> =
+        Defragment<InnerPolicy::AllocPolicy<Backend>, AltPolicy::AllocPolicy<Backend>>;
+}
+impl<Limit, InnerPolicy, AltPolicy> GenericAllocPolicy for Deallocate<Limit, InnerPolicy, AltPolicy>
+where
+    Limit: PolicyValue<usize> + ConstPolicy + Send + Sync,
+    InnerPolicy: GenericAllocPolicy,
+    AltPolicy: GenericAllocPolicy,
+{
+    type AllocPolicy<Backend: ShmProviderBackend> =
+        Deallocate<Limit, InnerPolicy::AllocPolicy<Backend>, AltPolicy::AllocPolicy<Backend>>;
+}
+
+pub(crate) trait GenericAsyncAllocPolicy {
+    type AsyncAllocPolicy<Backend: ShmProviderBackend + Sync>: AsyncAllocPolicy<Backend>
+        + ConstPolicy
+        + Sync;
+}
+
+impl<InnerPolicy> GenericAsyncAllocPolicy for BlockOn<InnerPolicy>
+where
+    InnerPolicy: GenericAllocPolicy,
+{
+    type AsyncAllocPolicy<Backend: ShmProviderBackend + Sync> =
+        BlockOn<InnerPolicy::AllocPolicy<Backend>>;
+}
+
+pub(crate) type UnsafeGarbageCollect = GarbageCollect<JustAlloc, JustAlloc, ConstBool<false>>;
+
+pub(crate) fn alloc<Policy: GenericAllocPolicy>(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &z_loaned_shm_provider_t,
     size: usize,
@@ -42,6 +101,9 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
 ) {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
+            alloc_impl::<Policy, PosixShmProviderBackend>(out_result, provider, size, alignment)
+        }
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => {
             alloc_impl::<Policy, PosixShmProviderBackend>(out_result, provider, size, alignment)
         }
         super::shm_provider::CSHMProvider::Dynamic(provider) => {
@@ -57,7 +119,7 @@ pub(crate) fn alloc<Policy: AllocPolicy>(
     }
 }
 
-pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
+pub(crate) fn alloc_async<Policy: GenericAsyncAllocPolicy>(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &'static z_loaned_shm_provider_t,
     size: usize,
@@ -70,6 +132,17 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 ) -> z_result_t {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => {
+            alloc_async_impl::<Policy, PosixShmProviderBackend>(
+                out_result,
+                provider,
+                size,
+                alignment,
+                result_context,
+                result_callback,
+            );
+            Z_OK
+        }
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => {
             alloc_async_impl::<Policy, PosixShmProviderBackend>(
                 out_result,
                 provider,
@@ -98,24 +171,33 @@ pub(crate) fn alloc_async<Policy: AsyncAllocPolicy>(
 pub(crate) fn defragment(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.defragment(),
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => provider.defragment(),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.defragment(),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.defragment(),
     }
 }
 
-pub(crate) fn garbage_collect(provider: &z_loaned_shm_provider_t) -> usize {
+pub(crate) unsafe fn garbage_collect_unsafe(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
-        super::shm_provider::CSHMProvider::Posix(provider) => provider.garbage_collect(),
-        super::shm_provider::CSHMProvider::Dynamic(provider) => provider.garbage_collect(),
-        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => {
-            provider.garbage_collect()
-        }
+        super::shm_provider::CSHMProvider::Posix(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
+        super::shm_provider::CSHMProvider::Dynamic(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
+        super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => unsafe {
+            provider.garbage_collect_unsafe()
+        },
     }
 }
 
 pub(crate) fn available(provider: &z_loaned_shm_provider_t) -> usize {
     match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.available(),
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => provider.available(),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.available(),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.available(),
     }
@@ -134,6 +216,7 @@ pub(crate) fn map(
 
     let mapping = match provider.as_rust_type_ref() {
         super::shm_provider::CSHMProvider::Posix(provider) => provider.map(chunk, len),
+        super::shm_provider::CSHMProvider::SharedPosix(provider) => provider.map(chunk, len),
         super::shm_provider::CSHMProvider::Dynamic(provider) => provider.map(chunk, len),
         super::shm_provider::CSHMProvider::DynamicThreadsafe(provider) => provider.map(chunk, len),
     };
@@ -150,23 +233,24 @@ pub(crate) fn map(
     }
 }
 
-fn alloc_impl<Policy: AllocPolicy, TBackend: ShmProviderBackend>(
+fn alloc_impl<Policy: GenericAllocPolicy, TBackend: ShmProviderBackend>(
     out_result: &mut MaybeUninit<z_buf_layout_alloc_result_t>,
     provider: &ShmProvider<TBackend>,
     size: usize,
     alignment: z_alloc_alignment_t,
 ) {
-    let result = provider
-        .alloc(size)
-        .with_alignment(alignment.into_rust_type())
-        .with_policy::<Policy>()
-        .wait();
+    let result = unsafe {
+        provider
+            .alloc((size, alignment.into_rust_type()))
+            .with_unsafe_policy::<Policy::AllocPolicy<TBackend>>()
+            .wait()
+    };
 
     out_result.write(result.into());
 }
 
 pub(crate) fn alloc_async_impl<
-    Policy: AsyncAllocPolicy,
+    Policy: GenericAsyncAllocPolicy,
     TBackend: ShmProviderBackend + Send + Sync,
 >(
     out_result: &'static mut MaybeUninit<z_buf_layout_alloc_result_t>,
@@ -180,11 +264,12 @@ pub(crate) fn alloc_async_impl<
     ),
 ) {
     zenoh_runtime::ZRuntime::Application.spawn(async move {
-        let result = provider
-            .alloc(size)
-            .with_alignment(alignment.into_rust_type())
-            .with_policy::<Policy>()
-            .await;
+        let result = unsafe {
+            provider
+                .alloc((size, alignment.into_rust_type()))
+                .with_unsafe_policy::<Policy::AsyncAllocPolicy<TBackend>>()
+                .await
+        };
         out_result.write(result.into());
         unsafe {
             (result_callback)(result_context.get(), out_result);

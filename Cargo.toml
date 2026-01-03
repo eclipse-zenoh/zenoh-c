@@ -15,7 +15,7 @@
 members = [".", "zenoh-ffi-opaque-types", "prebindgen-project-root"]
 
 [workspace.package]
-version = "1.5.0"
+version = "1.7.1"
 repository = "https://github.com/eclipse-zenoh/zenoh-ffi"
 homepage = "http://zenoh.io"
 authors = ["ZettaScale Zenoh Team, <zenoh@zettascale.tech>"]
@@ -53,6 +53,7 @@ transport_udp = ["zenoh-ffi-opaque-types/transport_udp"]
 transport_unixsock-stream = ["zenoh-ffi-opaque-types/transport_unixsock-stream"]
 transport_ws = ["zenoh-ffi-opaque-types/transport_ws"]
 transport_vsock = ["zenoh-ffi-opaque-types/transport_vsock"]
+stats = ["zenoh-ffi-opaque-types/stats"]
 default = [
     "auth_pubkey",
     "auth_usrpwd",
@@ -80,14 +81,10 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
-    "internal",
-] }
-zenoh-ext = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
-    "internal",
-] }
-zenoh-runtime = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-zenoh-util = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
+zenoh-runtime = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh-util = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
 prebindgen-proc-macro = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 zenoh-ffi-opaque-types = { path = "zenoh-ffi-opaque-types" }
@@ -96,13 +93,17 @@ zenoh-ffi-opaque-types = { path = "zenoh-ffi-opaque-types" }
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { version = "1.5.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
-    "internal",
-] }
-regex = "1.7.1"
+zenoh = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
 prebindgen = { version = "0.4.0", git = "https://github.com/milyin/prebindgen.git", branch = "main" }
 project-root = "0.2.2"
 serde_json = "1.0"
+cbindgen = "0.29.0"
+fs2 = "0.4.3"
+regex = "1.11.1"
+serde_yaml = "0.9.19"
+fs_extra = "1.3.0"
+evalexpr = "11.3.0" # Bumping to 12.x.x will cause 1.75 check fails
+phf = { version = "0.11.2", features = ["macros"] }
 
 [patch]
 

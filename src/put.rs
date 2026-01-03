@@ -24,12 +24,13 @@ use zenoh_ffi_opaque_types::opaque_types::{
 };
 
 #[cfg(feature = "unstable")]
-use crate::z_moved_source_info_t;
+use crate::z_source_info_t;
 use crate::{
     commons::*,
     result,
     transmute::{IntoRustType, RustTypeRef, TakeRustType},
-    zc_locality_default, zc_locality_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t,
+    z_moved_encoding_t, z_timestamp_t,
 };
 
 /// Options passed to the `z_put()` function.
@@ -53,12 +54,12 @@ pub struct z_put_options_t {
     /// The put operation reliability.
     reliability: z_reliability_t,
     /// The allowed destination of this message.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the message.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to this message.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
@@ -75,7 +76,7 @@ pub fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>) {
         timestamp: None,
         #[cfg(feature = "unstable")]
         reliability: z_reliability_default(),
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
         #[cfg(feature = "unstable")]
         source_info: None,
         attachment: None,
@@ -121,8 +122,8 @@ pub fn z_put(
             put = put
                 .reliability(options.reliability.into())
                 .allowed_destination(options.allowed_destination.into());
-            if let Some(source_info) = options.source_info.take() {
-                put = put.source_info(source_info.take_rust_type());
+            if let Some(source_info) = options.source_info {
+                put = put.source_info(source_info.as_rust_type_ref().clone());
             };
         }
     }
@@ -155,7 +156,7 @@ pub struct z_delete_options_t {
     /// The delete operation reliability.
     pub reliability: z_reliability_t,
     /// The allowed destination of this message.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
 }
 
 /// Constructs the default value for `z_delete_options_t`.
@@ -169,7 +170,7 @@ pub unsafe fn z_delete_options_default(this_: &mut MaybeUninit<z_delete_options_
         timestamp: None,
         #[cfg(feature = "unstable")]
         reliability: z_reliability_default(),
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
     });
 }
 

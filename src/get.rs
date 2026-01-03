@@ -35,13 +35,13 @@ use crate::{
     transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
-    z_loaned_session_t, z_moved_bytes_t, z_moved_closure_reply_t, z_moved_encoding_t, z_priority_t,
-    z_query_target_t, zc_locality_default, zc_locality_t, CStringView,
+    z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t, z_moved_closure_reply_t,
+    z_moved_encoding_t, z_priority_t, z_query_target_t, CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, zc_reply_keyexpr_default,
-    zc_reply_keyexpr_t,
+    transmute::IntoCType, z_entity_global_id_t, z_moved_cancellation_token_t, z_source_info_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, z_moved_reply_err_t, ReplyError),
@@ -227,7 +227,7 @@ pub struct z_get_options_t {
     /// If set to ``true``, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
     /// The allowed destination for the query.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
     #[cfg(feature = "unstable")]
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
@@ -239,11 +239,16 @@ pub struct z_get_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the query.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// An optional attachment to attach to the query.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
     /// The timeout for the query in milliseconds. 0 means default query timeout from zenoh configuration.
     pub timeout_ms: u64,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Cancellation token to interrupt the query.
+    pub cancellation_token: Option<&'static mut z_moved_cancellation_token_t>,
 }
 
 impl z_get_options_t {
@@ -258,8 +263,8 @@ impl z_get_options_t {
             a.take_rust_type();
         }
         #[cfg(feature = "unstable")]
-        if let Some(si) = self.source_info.take() {
-            si.take_rust_type();
+        if let Some(ct) = self.cancellation_token.take() {
+            ct.take_rust_type();
         }
     }
 }
@@ -271,7 +276,7 @@ pub fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
         target: QueryTarget::default().into(),
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
-        allowed_destination: zc_locality_default(),
+        allowed_destination: z_locality_default(),
         #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),
         priority: Priority::default().into(),
@@ -282,6 +287,8 @@ pub fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>) {
         #[cfg(feature = "unstable")]
         source_info: None,
         attachment: None,
+        #[cfg(feature = "unstable")]
+        cancellation_token: None,
     });
 }
 
@@ -368,8 +375,8 @@ pub unsafe fn z_get_with_parameters_substr(
             get = get.encoding(encoding.take_rust_type());
         }
         #[cfg(feature = "unstable")]
-        if let Some(source_info) = options.source_info.take() {
-            get = get.source_info(source_info.take_rust_type());
+        if let Some(source_info) = options.source_info {
+            get = get.source_info(source_info.as_rust_type_ref().clone());
         }
         if let Some(attachment) = options.attachment.take() {
             get = get.attachment(attachment.take_rust_type());
@@ -390,6 +397,15 @@ pub unsafe fn z_get_with_parameters_substr(
 
         if options.timeout_ms != 0 {
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));
+        }
+
+        #[cfg(feature = "unstable")]
+        if let Some(ct) = options
+            .cancellation_token
+            .take()
+            .and_then(|ct| ct.take_rust_type())
+        {
+            get = get.cancellation_token(ct);
         }
     }
     match get

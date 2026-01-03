@@ -100,6 +100,9 @@ pub use shm::*;
 mod serialization;
 pub use serialization::*;
 
+#[cfg(feature = "unstable")]
+mod cancellation_token;
+
 // This is the entry point for zenoh-c
 // When compiling normal Rust executable, it includes rusty entry point `lang_start` that internally
 // calls `std::rt::init()` that is intended to initialize some of the internals for Rust and std.

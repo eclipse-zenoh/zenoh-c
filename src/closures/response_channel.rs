@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
@@ -54,7 +54,9 @@ pub fn z_internal_fifo_handler_reply_check(this_: &z_owned_fifo_handler_reply_t)
 
 extern "C" fn __z_handler_reply_send(reply: &mut z_loaned_reply_t, context: *mut c_void) {
     unsafe {
-        let f = &mut *(context as *mut Callback<Reply>);
+        let f = (context as *mut Callback<Reply>)
+            .as_mut()
+            .unwrap_unchecked();
         let owned_ref: &mut Option<Reply> = std::mem::transmute(reply);
         f.call(std::mem::take(owned_ref).unwrap_unchecked());
     }
@@ -62,7 +64,7 @@ extern "C" fn __z_handler_reply_send(reply: &mut z_loaned_reply_t, context: *mut
 
 extern "C" fn __z_handler_reply_drop(context: *mut c_void) {
     unsafe {
-        let f = Box::from_raw(context as *mut Arc<dyn Fn(Reply) + Send + Sync>);
+        let f = Box::from_raw(context as *mut Callback<Reply>);
         std::mem::drop(f);
     }
 }

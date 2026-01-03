@@ -16,8 +16,8 @@ use std::mem::MaybeUninit;
 
 use prebindgen_proc_macro::prebindgen;
 use zenoh::shm::{
-    AllocAlignment, BufAllocResult, BufLayoutAllocResult, ChunkAllocResult, MemoryLayout,
-    ZAllocError, ZLayoutError,
+    AllocAlignment, ChunkAllocResult, MemoryLayout, ZAllocError, ZLayoutAllocError, ZLayoutError,
+    ZShmMut,
 };
 
 use super::chunk::z_allocated_chunk_t;
@@ -277,8 +277,8 @@ pub struct z_buf_alloc_result_t {
     error: z_alloc_error_t,
 }
 
-impl From<BufAllocResult> for z_buf_alloc_result_t {
-    fn from(value: BufAllocResult) -> Self {
+impl From<Result<ZShmMut, ZAllocError>> for z_buf_alloc_result_t {
+    fn from(value: Result<ZShmMut, ZAllocError>) -> Self {
         let mut buf: MaybeUninit<z_owned_shm_mut_t> = MaybeUninit::uninit();
         match value {
             Ok(val) => {
@@ -328,8 +328,8 @@ pub struct z_buf_layout_alloc_result_t {
     layout_error: z_layout_error_t,
 }
 
-impl From<BufLayoutAllocResult> for z_buf_layout_alloc_result_t {
-    fn from(value: BufLayoutAllocResult) -> Self {
+impl From<Result<ZShmMut, ZLayoutAllocError>> for z_buf_layout_alloc_result_t {
+    fn from(value: Result<ZShmMut, ZLayoutAllocError>) -> Self {
         let mut buf: MaybeUninit<z_owned_shm_mut_t> = MaybeUninit::uninit();
         match value {
             Ok(val) => {

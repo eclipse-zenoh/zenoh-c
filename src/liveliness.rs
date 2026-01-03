@@ -25,6 +25,8 @@ use zenoh_ffi_opaque_types::opaque_types::{
     z_loaned_liveliness_token_t, z_owned_liveliness_token_t,
 };
 
+#[cfg(feature = "unstable")]
+use crate::opaque_types::z_moved_cancellation_token_t;
 use crate::{
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
@@ -32,6 +34,7 @@ use crate::{
     z_loaned_keyexpr_t, z_loaned_session_t, z_moved_closure_reply_t, z_moved_closure_sample_t,
     z_moved_liveliness_token_t, z_owned_subscriber_t,
 };
+
 decl_c_type!(
     owned(z_owned_liveliness_token_t, z_moved_liveliness_token_t, option LivelinessToken),
     loaned(z_loaned_liveliness_token_t),
@@ -236,12 +239,23 @@ pub fn z_liveliness_declare_background_subscriber(
 pub struct z_liveliness_get_options_t {
     /// The timeout for the liveliness query in milliseconds. 0 means default query timeout from zenoh configuration.
     timeout_ms: u64,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Cancellation token to interrupt the query.
+    pub cancellation_token: Option<&'static mut z_moved_cancellation_token_t>,
 }
 
 /// @brief Constructs default value `z_liveliness_get_options_t`.
 #[prebindgen]
-pub fn z_liveliness_get_options_default(this: &mut MaybeUninit<z_liveliness_get_options_t>) {
-    this.write(z_liveliness_get_options_t { timeout_ms: 10000 });
+pub fn z_liveliness_get_options_default(
+    this: &mut MaybeUninit<z_liveliness_get_options_t>,
+) {
+    this.write(z_liveliness_get_options_t {
+        timeout_ms: 10000,
+        #[cfg(feature = "unstable")]
+        cancellation_token: None,
+    });
 }
 
 /// @brief Queries liveliness tokens currently on the network with a key expression intersecting with `key_expr`.
@@ -272,6 +286,14 @@ pub fn z_liveliness_get(
     });
     if let Some(options) = options {
         builder = builder.timeout(core::time::Duration::from_millis(options.timeout_ms));
+        #[cfg(feature = "unstable")]
+        if let Some(ct) = options
+            .cancellation_token
+            .take()
+            .and_then(|ct| ct.take_rust_type())
+        {
+            builder = builder.cancellation_token(ct);
+        }
     }
     match builder.wait() {
         Ok(()) => result::Z_OK,

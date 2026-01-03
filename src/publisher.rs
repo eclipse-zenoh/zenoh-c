@@ -29,14 +29,14 @@ use crate::{
     result::{self},
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
-    z_loaned_keyexpr_t, z_loaned_session_t, z_matching_status_t, z_moved_bytes_t,
-    z_moved_closure_matching_status_t, z_moved_encoding_t, z_owned_matching_listener_t,
-    z_priority_t, z_timestamp_t, zc_locality_default, zc_locality_t,
+    z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t, z_matching_status_t,
+    z_moved_bytes_t, z_moved_closure_matching_status_t, z_moved_encoding_t,
+    z_owned_matching_listener_t, z_priority_t, z_timestamp_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_moved_source_info_t, z_reliability_default,
-    z_reliability_t,
+    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
+    z_source_info_t,
 };
 /// Options passed to the `z_declare_publisher()` function.
 #[prebindgen]
@@ -56,7 +56,7 @@ pub struct z_publisher_options_t {
     /// The publisher reliability.
     pub reliability: z_reliability_t,
     /// The allowed destination for this publisher.
-    pub allowed_destination: zc_locality_t,
+    pub allowed_destination: z_locality_t,
 }
 
 impl Default for z_publisher_options_t {
@@ -68,7 +68,7 @@ impl Default for z_publisher_options_t {
             is_express: false,
             #[cfg(feature = "unstable")]
             reliability: z_reliability_default(),
-            allowed_destination: zc_locality_default(),
+            allowed_destination: z_locality_default(),
         }
     }
 }
@@ -198,7 +198,7 @@ pub struct z_publisher_put_options_t {
     /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
     ///
     /// The source info for the publication.
-    pub source_info: Option<&'static mut z_moved_source_info_t>,
+    pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to attach to the publication.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
 }
@@ -227,8 +227,8 @@ pub(crate) fn _apply_pubisher_put_options<
         builder = builder.encoding(encoding.take_rust_type());
     };
     #[cfg(feature = "unstable")]
-    if let Some(source_info) = options.source_info.take() {
-        builder = builder.source_info(source_info.take_rust_type());
+    if let Some(source_info) = options.source_info {
+        builder = builder.source_info(source_info.as_rust_type_ref().clone());
     };
     if let Some(attachment) = options.attachment.take() {
         builder = builder.attachment(attachment.take_rust_type());

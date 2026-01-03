@@ -12,12 +12,12 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, sync::Arc};
+use std::mem::MaybeUninit;
 
 use libc::c_void;
 use prebindgen_proc_macro::prebindgen;
 use zenoh::{
-    handlers::{self, FifoChannelHandler, IntoHandler, RingChannelHandler},
+    handlers::{self, Callback, FifoChannelHandler, IntoHandler, RingChannelHandler},
     query::Query,
 };
 pub use zenoh_ffi_opaque_types::opaque_types::{
@@ -54,17 +54,17 @@ pub fn z_internal_fifo_handler_query_check(this_: &z_owned_fifo_handler_query_t)
 
 extern "C" fn __z_handler_query_send(query: &mut z_loaned_query_t, context: *mut c_void) {
     unsafe {
-        let f = (context as *mut std::sync::Arc<dyn Fn(Query) + Send + Sync>)
+        let f = (context as *mut Callback<Query>)
             .as_mut()
             .unwrap_unchecked();
         let owned_ref: &mut Option<Query> = std::mem::transmute(query);
-        (f)(std::mem::take(owned_ref).unwrap_unchecked());
+        f.call(std::mem::take(owned_ref).unwrap_unchecked());
     }
 }
 
 extern "C" fn __z_handler_query_drop(context: *mut c_void) {
     unsafe {
-        let f = Box::from_raw(context as *mut Arc<dyn Fn(Query) + Send + Sync>);
+        let f = Box::from_raw(context as *mut Callback<Query>);
         std::mem::drop(f);
     }
 }
