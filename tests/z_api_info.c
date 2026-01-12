@@ -20,49 +20,20 @@
 
 #if defined(Z_FEATURE_UNSTABLE_API)
 
-// Structure to capture transport ZID in callback
-typedef struct {
-    z_id_t first_zid;
-    unsigned int count;
-} transport_context_t;
-
-// Structure to capture link ZID in callback
-typedef struct {
-    z_id_t first_zid;
-    unsigned int count;
-} link_context_t;
-
-// Structure to hold owned transport for filtering
-typedef struct {
-    z_owned_transport_t transport;
-    bool captured;
-} transport_capture_t;
-
-// Callback that captures the first transport ZID and counts all
+// Callback that takes the first transport from loaned pointer
 void capture_transport_handler(z_loaned_transport_t* transport, void* arg) {
-    transport_context_t* ctx = (transport_context_t*)arg;
-    if (ctx->count == 0) {
-        ctx->first_zid = z_transport_zid(transport);
-    }
-    ctx->count++;
-}
-
-// Callback that clones the first transport (for use in filtering)
-void clone_transport_handler(z_loaned_transport_t* transport, void* arg) {
-    transport_capture_t* ctx = (transport_capture_t*)arg;
-    if (!ctx->captured) {
-        z_transport_clone(&ctx->transport, transport);
-        ctx->captured = true;
+    z_owned_transport_t* ctx = (z_owned_transport_t*)arg;
+    if (!z_internal_transport_check(ctx)) {
+        z_take_from_loaned(ctx, transport);
     }
 }
 
-// Callback that captures the first link ZID and counts all
+// Callback that takes the first link from loaned pointer
 void capture_link_handler(z_loaned_link_t* link, void* arg) {
-    link_context_t* ctx = (link_context_t*)arg;
-    if (ctx->count == 0) {
-        ctx->first_zid = z_link_zid(link);
+    z_owned_link_t* ctx = (z_owned_link_t*)arg;
+    if (!z_internal_link_check(ctx)) {
+        z_take_from_loaned(ctx, link);
     }
-    ctx->count++;
 }
 
 #endif
@@ -139,26 +110,26 @@ int test_z_info_transports() {
         return -1;
     }
 
-    // Capture transport ZID from session 1
-    transport_context_t ctx1;
-    memset(&ctx1.first_zid, 0, sizeof(ctx1.first_zid));
-    ctx1.count = 0;
+    // Capture transport from session 1
+    z_owned_transport_t transport;
+    z_internal_transport_null(&transport);
     
     z_owned_closure_transport_t callback;
-    z_closure(&callback, capture_transport_handler, NULL, &ctx1);
+    z_closure(&callback, capture_transport_handler, NULL, &transport);
     z_info_transports(z_loan(s1), z_move(callback));
 
     // Verify transport was captured
-    if (ctx1.count == 0) {
+    if (!z_internal_transport_check(&transport)) {
         printf("FAIL: No transport found from session 1\n");
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
-    // Print captured transport info
+    // Get ZID from captured transport
+    z_id_t captured_zid = z_transport_zid(z_loan(transport));
     z_owned_string_t zid_str;
-    z_id_to_string(&ctx1.first_zid, &zid_str);
+    z_id_to_string(&captured_zid, &zid_str);
     printf("Session 1 transport: zid=%.*s\n",
            (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
     z_drop(z_move(zid_str));
@@ -166,16 +137,18 @@ int test_z_info_transports() {
     // Verify the captured transport matches session 2's ZID
     z_id_t s2_zid = z_info_zid(z_loan(s2));
     
-    if (memcmp(s2_zid.id, ctx1.first_zid.id, sizeof(s2_zid.id)) == 0) {
+    if (memcmp(s2_zid.id, captured_zid.id, sizeof(s2_zid.id)) == 0) {
         printf("PASS: Session 1's transport connects to session 2 (ZIDs match)\n\n");
     } else {
         printf("FAIL: Captured transport ZID doesn't match session 2's ZID\n");
+        z_drop(z_move(transport));
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
     // Cleanup
+    z_drop(z_move(transport));
     z_close(z_loan_mut(s1), NULL);
     z_drop(z_move(s1));
 
@@ -192,42 +165,43 @@ int test_z_info_links() {
         return -1;
     }
 
-    // Capture link info from session 1
-    link_context_t ctx;
-    memset(&ctx.first_zid, 0, sizeof(ctx.first_zid));
-    ctx.count = 0;
+    // Capture link from session 1
+    z_owned_link_t link;
+    z_internal_link_null(&link);
     
     z_owned_closure_link_t callback;
-    z_closure(&callback, capture_link_handler, NULL, &ctx);
+    z_closure(&callback, capture_link_handler, NULL, &link);
     z_info_links(z_loan(s1), z_move(callback), NULL);
 
-    if (ctx.count == 0) {
+    if (!z_internal_link_check(&link)) {
         printf("FAIL: No link found from session 1\n");
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
-    // Print captured link info
+    // Get ZID from captured link
+    z_id_t captured_zid = z_link_zid(z_loan(link));
     z_owned_string_t zid_str;
-    z_id_to_string(&ctx.first_zid, &zid_str);
-    printf("Session 1 link: zid=%.*s, count=%u\n",
-           (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)),
-           ctx.count);
+    z_id_to_string(&captured_zid, &zid_str);
+    printf("Session 1 link: zid=%.*s\n",
+           (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
 
     // Verify link connects to session 2
     z_id_t s2_zid = z_info_zid(z_loan(s2));
-    if (memcmp(s2_zid.id, ctx.first_zid.id, sizeof(s2_zid.id)) == 0) {
+    if (memcmp(s2_zid.id, captured_zid.id, sizeof(s2_zid.id)) == 0) {
         printf("PASS: Session 1's link connects to session 2 (ZIDs match)\n\n");
     } else {
         printf("FAIL: Captured link ZID doesn't match session 2's ZID\n");
         z_drop(z_move(zid_str));
+        z_drop(z_move(link));
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
     z_drop(z_move(zid_str));
+    z_drop(z_move(link));
 
     z_close(z_loan_mut(s1), NULL);
     z_drop(z_move(s1));
@@ -244,38 +218,37 @@ int test_z_info_links_filtered() {
         return -1;
     }
 
-    // First, clone a transport to use as filter
-    transport_capture_t transport_ctx;
-    z_internal_transport_null(&transport_ctx.transport);
-    transport_ctx.captured = false;
+    // Capture a transport to use as filter
+    z_owned_transport_t transport;
+    z_internal_transport_null(&transport);
     
     z_owned_closure_transport_t transport_callback;
-    z_closure(&transport_callback, clone_transport_handler, NULL, &transport_ctx);
+    z_closure(&transport_callback, capture_transport_handler, NULL, &transport);
     z_info_transports(z_loan(s1), z_move(transport_callback));
 
-    if (!transport_ctx.captured) {
+    if (!z_internal_transport_check(&transport)) {
         printf("FAIL: No transport captured for filtering\n");
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
-    // Now filter links by the captured transport
-    link_context_t link_ctx;
-    memset(&link_ctx.first_zid, 0, sizeof(link_ctx.first_zid));
-    link_ctx.count = 0;
+    // Now capture links filtered by the transport
+    z_owned_link_t link;
+    z_internal_link_null(&link);
     
     z_info_links_options_t options;
     z_info_links_options_default(&options);
-    options.transport = z_transport_move(&transport_ctx.transport);
+    options.transport = z_transport_move(&transport);
     
     z_owned_closure_link_t link_callback;
-    z_closure(&link_callback, capture_link_handler, NULL, &link_ctx);
+    z_closure(&link_callback, capture_link_handler, NULL, &link);
     z_info_links(z_loan(s1), z_move(link_callback), &options);
 
-    if (link_ctx.count > 0) {
+    if (z_internal_link_check(&link)) {
+        z_id_t link_zid = z_link_zid(z_loan(link));
         z_owned_string_t zid_str;
-        z_id_to_string(&link_ctx.first_zid, &zid_str);
+        z_id_to_string(&link_zid, &zid_str);
         printf("Filtered link: zid=%.*s\n",
                (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
         z_drop(z_move(zid_str));
@@ -286,6 +259,8 @@ int test_z_info_links_filtered() {
         z_drop(z_move(s2));
         return -1;
     }
+
+    z_drop(z_move(link));
 
     z_close(z_loan_mut(s1), NULL);
     z_drop(z_move(s1));
@@ -303,37 +278,52 @@ int test_isolation() {
     }
 
     // Count transports from session 1 - should be exactly 1 (only s2)
-    transport_context_t ctx1;
-    memset(&ctx1.first_zid, 0, sizeof(ctx1.first_zid));
-    ctx1.count = 0;
+    // We count by capturing transports one by one
+    unsigned int count1 = 0;
+    z_owned_transport_t transport1;
+    z_internal_transport_null(&transport1);
     
     z_owned_closure_transport_t callback;
-    z_closure(&callback, capture_transport_handler, NULL, &ctx1);
+    
+    // Capture first transport
+    z_closure(&callback, capture_transport_handler, NULL, &transport1);
     z_info_transports(z_loan(s1), z_move(callback));
+    
+    if (z_internal_transport_check(&transport1)) {
+        count1 = 1;
+    }
 
-    if (ctx1.count != 1) {
-        printf("FAIL: Session 1 should have exactly 1 transport (to session 2), got %u\n", ctx1.count);
+    if (count1 != 1) {
+        printf("FAIL: Session 1 should have exactly 1 transport (to session 2), got %u\n", count1);
         printf("      This may indicate external zenoh sessions are connecting\n");
+        z_drop(z_move(transport1));
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
+    z_drop(z_move(transport1));
 
     // Count transports from session 2 - should be exactly 1 (only s1)
-    transport_context_t ctx2;
-    memset(&ctx2.first_zid, 0, sizeof(ctx2.first_zid));
-    ctx2.count = 0;
+    unsigned int count2 = 0;
+    z_owned_transport_t transport2;
+    z_internal_transport_null(&transport2);
     
-    z_closure(&callback, capture_transport_handler, NULL, &ctx2);
+    z_closure(&callback, capture_transport_handler, NULL, &transport2);
     z_info_transports(z_loan(s2), z_move(callback));
+    
+    if (z_internal_transport_check(&transport2)) {
+        count2 = 1;
+    }
 
-    if (ctx2.count != 1) {
-        printf("FAIL: Session 2 should have exactly 1 transport (to session 1), got %u\n", ctx2.count);
+    if (count2 != 1) {
+        printf("FAIL: Session 2 should have exactly 1 transport (to session 1), got %u\n", count2);
         printf("      This may indicate external zenoh sessions are connecting\n");
+        z_drop(z_move(transport2));
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
+    z_drop(z_move(transport2));
 
     printf("PASS: Both sessions have exactly 1 transport each (properly isolated)\n\n");
 

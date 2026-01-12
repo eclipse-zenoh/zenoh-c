@@ -967,9 +967,20 @@ typedef struct z_info_links_options_t {
   struct z_moved_transport_t *transport;
 } z_info_links_options_t;
 #endif
+/**
+ * @brief A Zenoh link structure returned by Zenoh connectivity API.
+ *
+ * Represents an actual data link with a remote zenoh node over a specific protocol.
+ */
+typedef struct ALIGN(8) z_owned_link_t {
+  uint8_t _0[144];
+} z_owned_link_t;
 typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t _this;
 } z_moved_keyexpr_t;
+typedef struct z_moved_link_t {
+  struct z_owned_link_t _this;
+} z_moved_link_t;
 /**
  * @brief The options for `z_liveliness_declare_subscriber()`
  */
@@ -3679,6 +3690,18 @@ ZENOHC_API bool z_internal_keyexpr_check(const struct z_owned_keyexpr_t *this_);
  */
 ZENOHC_API void z_internal_keyexpr_null(struct z_owned_keyexpr_t *this_);
 /**
+ * Returns ``true`` if link is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API bool z_internal_link_check(const struct z_owned_link_t *this_);
+#endif
+/**
+ * Constructs a link in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_internal_link_null(struct z_owned_link_t *this_);
+#endif
+/**
  * @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
  */
 ZENOHC_API bool z_internal_liveliness_token_check(const struct z_owned_liveliness_token_t *this_);
@@ -4137,6 +4160,14 @@ void z_link_auth_identifier(const struct z_loaned_link_t *link,
                             struct z_owned_string_t *str_out);
 #endif
 /**
+ * @brief Drops the owned link.
+ *
+ * @param this_: The link to drop.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_link_drop(struct z_moved_link_t *this_);
+#endif
+/**
  * @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
  *
  * Stores the destination locator string in `str_out`.
@@ -4169,6 +4200,24 @@ void z_link_interfaces(const struct z_loaned_link_t *link,
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API bool z_link_is_streamed(const struct z_loaned_link_t *link);
+#endif
+/**
+ * @brief Gets a loaned reference from an owned link.
+ *
+ * @param this_: The owned link.
+ * @return A loaned link reference.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API const struct z_loaned_link_t *z_link_loan(const struct z_owned_link_t *this_);
+#endif
+/**
+ * @brief Gets a mutable loaned reference from an owned link.
+ *
+ * @param this_: The owned link.
+ * @return A mutable loaned link reference.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API struct z_loaned_link_t *z_link_loan_mut(struct z_owned_link_t *this_);
 #endif
 /**
  * @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
@@ -4208,6 +4257,21 @@ bool z_link_reliability(const struct z_loaned_link_t *link,
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API void z_link_src(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+#endif
+/**
+ * @brief Move link data from loaned pointer to owned object.
+ *
+ * Moves the link referenced by `src` into the `dst` owned object.
+ * The source loaned object is still owned by the caller and must be dropped.
+ * The destination must be uninitialized (in gravestone state).
+ *
+ * @param dst: The destination owned link (must be uninitialized).
+ * @param src: The source loaned link.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_take_from_loaned(struct z_owned_link_t *dst,
+                             const struct z_loaned_link_t *src);
 #endif
 /**
  * @brief Get the zenoh id from the `z_loaned_link_t`.
@@ -6148,6 +6212,40 @@ ZENOHC_API bool z_transport_is_qos(const struct z_loaned_transport_t *transport)
  */
 #if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_SHARED_MEMORY))
 ZENOHC_API bool z_transport_is_shm(const struct z_loaned_transport_t *transport);
+#endif
+/**
+ * @brief Gets a loaned reference from an owned transport.
+ *
+ * @param this_: The owned transport.
+ * @return A loaned transport reference.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_transport_t *z_transport_loan(const struct z_owned_transport_t *this_);
+#endif
+/**
+ * @brief Gets a mutable loaned reference from an owned transport.
+ *
+ * @param this_: The owned transport.
+ * @return A mutable loaned transport reference.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API struct z_loaned_transport_t *z_transport_loan_mut(struct z_owned_transport_t *this_);
+#endif
+/**
+ * @brief Move transport data from loaned pointer to owned object.
+ *
+ * Moves the transport referenced by `src` into the `dst` owned object.
+ * The source loaned object is still owned by the caller and must be dropped.
+ * The destination must be uninitialized (in gravestone state).
+ *
+ * @param dst: The destination owned transport (must be uninitialized).
+ * @param src: The source loaned transport.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_transport_take_from_loaned(struct z_owned_transport_t *dst,
+                                  const struct z_loaned_transport_t *src);
 #endif
 /**
  * @brief Get the whatami from the `z_loaned_transport_t`.

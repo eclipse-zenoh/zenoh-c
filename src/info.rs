@@ -42,8 +42,8 @@ use crate::{
     z_closure_transport_loan, z_loaned_link_event_t, z_loaned_link_events_listener_t,
     z_loaned_link_t, z_loaned_transport_event_t, z_loaned_transport_events_listener_t,
     z_loaned_transport_t, z_moved_closure_link_t, z_moved_closure_transport_t,
-    z_moved_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t, z_owned_link_t,
-    z_owned_transport_event_t, z_owned_transport_events_listener_t, z_owned_transport_t,
+    z_moved_link_t, z_moved_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t,
+    z_owned_link_t, z_owned_transport_event_t, z_owned_transport_events_listener_t, z_owned_transport_t,
 };
 
 #[cfg(feature = "unstable")]
@@ -217,6 +217,70 @@ pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_own
 #[no_mangle]
 pub extern "C" fn z_internal_transport_check(this_: &z_owned_transport_t) -> bool {
     this_.as_rust_type_ref().is_some()
+}
+
+/// Constructs a link in its gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_internal_link_null(this_: &mut MaybeUninit<z_owned_link_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// Returns ``true`` if link is valid, ``false`` if it is in gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_internal_link_check(this_: &z_owned_link_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// @brief Drops the owned link.
+///
+/// @param this_: The link to drop.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_drop(this_: &mut z_moved_link_t) {
+    let _ = this_.take_rust_type();
+}
+
+/// @brief Gets a loaned reference from an owned transport.
+///
+/// @param this_: The owned transport.
+/// @return A loaned transport reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> *const z_loaned_transport_t {
+    this_ as *const z_owned_transport_t as *const z_loaned_transport_t
+}
+
+/// @brief Gets a mutable loaned reference from an owned transport.
+///
+/// @param this_: The owned transport.
+/// @return A mutable loaned transport reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_loan_mut(this_: &mut z_owned_transport_t) -> *mut z_loaned_transport_t {
+    this_ as *mut z_owned_transport_t as *mut z_loaned_transport_t
+}
+
+/// @brief Gets a loaned reference from an owned link.
+///
+/// @param this_: The owned link.
+/// @return A loaned link reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_loan(this_: &z_owned_link_t) -> *const z_loaned_link_t {
+    this_ as *const z_owned_link_t as *const z_loaned_link_t
+}
+
+/// @brief Gets a mutable loaned reference from an owned link.
+///
+/// @param this_: The owned link.
+/// @return A mutable loaned link reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_loan_mut(this_: &mut z_owned_link_t) -> *mut z_loaned_link_t {
+    this_ as *mut z_owned_link_t as *mut z_loaned_link_t
 }
 
 /// @brief Get the transports `z_loaned_transport_t` used by the session.
@@ -465,4 +529,40 @@ pub extern "C" fn z_link_reliability(
     } else {
         false
     }
+}
+
+/// @brief Move transport data from loaned pointer to owned object.
+///
+/// Moves the transport referenced by `src` into the `dst` owned object.
+/// The source loaned object is still owned by the caller and must be dropped.
+/// The destination must be uninitialized (in gravestone state).
+///
+/// @param dst: The destination owned transport (must be uninitialized).
+/// @param src: The source loaned transport.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_transport_t>,
+    src: &z_loaned_transport_t,
+) {
+    let transport = src.as_rust_type_ref();
+    dst.as_rust_type_mut_uninit().write(Some(transport.clone()));
+}
+
+/// @brief Move link data from loaned pointer to owned object.
+///
+/// Moves the link referenced by `src` into the `dst` owned object.
+/// The source loaned object is still owned by the caller and must be dropped.
+/// The destination must be uninitialized (in gravestone state).
+///
+/// @param dst: The destination owned link (must be uninitialized).
+/// @param src: The source loaned link.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_link_t>,
+    src: &z_loaned_link_t,
+) {
+    let link = src.as_rust_type_ref();
+    dst.as_rust_type_mut_uninit().write(Some(link.clone()));
 }
