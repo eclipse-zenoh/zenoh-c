@@ -55,3 +55,8 @@ mod link_closure;
 pub use miss_closure::*;
 #[cfg(feature = "unstable")]
 mod miss_closure;
+
+#[cfg(feature = "unstable")]
+pub use transport_event_closure::*;
+#[cfg(feature = "unstable")]
+mod transport_event_closure;

@@ -14,6 +14,7 @@ static inline z_moved_closure_query_t* z_closure_query_move(z_owned_closure_quer
 static inline z_moved_closure_reply_t* z_closure_reply_move(z_owned_closure_reply_t* x) { return (z_moved_closure_reply_t*)(x); }
 static inline z_moved_closure_sample_t* z_closure_sample_move(z_owned_closure_sample_t* x) { return (z_moved_closure_sample_t*)(x); }
 static inline z_moved_closure_transport_t* z_closure_transport_move(z_owned_closure_transport_t* x) { return (z_moved_closure_transport_t*)(x); }
+static inline z_moved_closure_transport_event_t* z_closure_transport_event_move(z_owned_closure_transport_event_t* x) { return (z_moved_closure_transport_event_t*)(x); }
 static inline z_moved_closure_zid_t* z_closure_zid_move(z_owned_closure_zid_t* x) { return (z_moved_closure_zid_t*)(x); }
 static inline z_moved_condvar_t* z_condvar_move(z_owned_condvar_t* x) { return (z_moved_condvar_t*)(x); }
 static inline z_moved_config_t* z_config_move(z_owned_config_t* x) { return (z_moved_config_t*)(x); }
@@ -44,6 +45,8 @@ static inline z_moved_string_t* z_string_move(z_owned_string_t* x) { return (z_m
 static inline z_moved_subscriber_t* z_subscriber_move(z_owned_subscriber_t* x) { return (z_moved_subscriber_t*)(x); }
 static inline z_moved_task_t* z_task_move(z_owned_task_t* x) { return (z_moved_task_t*)(x); }
 static inline z_moved_transport_t* z_transport_move(z_owned_transport_t* x) { return (z_moved_transport_t*)(x); }
+static inline z_moved_transport_event_t* z_transport_event_move(z_owned_transport_event_t* x) { return (z_moved_transport_event_t*)(x); }
+static inline z_moved_transport_events_listener_t* z_transport_events_listener_move(z_owned_transport_events_listener_t* x) { return (z_moved_transport_events_listener_t*)(x); }
 static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t* x) { return (zc_moved_closure_log_t*)(x); }
 static inline zc_moved_concurrent_close_handle_t* zc_concurrent_close_handle_move(zc_owned_concurrent_close_handle_t* x) { return (zc_moved_concurrent_close_handle_t*)(x); }
 static inline ze_moved_advanced_publisher_t* ze_advanced_publisher_move(ze_owned_advanced_publisher_t* x) { return (ze_moved_advanced_publisher_t*)(x); }
@@ -66,6 +69,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_closure_query_t : z_closure_query_loan, \
         z_owned_closure_reply_t : z_closure_reply_loan, \
         z_owned_closure_sample_t : z_closure_sample_loan, \
+        z_owned_closure_transport_event_t : z_closure_transport_event_loan, \
         z_owned_closure_transport_t : z_closure_transport_loan, \
         z_owned_closure_zid_t : z_closure_zid_loan, \
         z_owned_condvar_t : z_condvar_loan, \
@@ -93,6 +97,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_string_array_t : z_string_array_loan, \
         z_owned_string_t : z_string_loan, \
         z_owned_subscriber_t : z_subscriber_loan, \
+        z_owned_transport_events_listener_t : z_transport_events_listener_loan, \
         z_owned_transport_t : z_transport_loan, \
         z_view_keyexpr_t : z_view_keyexpr_loan, \
         z_view_slice_t : z_view_slice_loan, \
@@ -148,6 +153,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_moved_closure_reply_t* : z_closure_reply_drop, \
         z_moved_closure_sample_t* : z_closure_sample_drop, \
         z_moved_closure_transport_t* : z_closure_transport_drop, \
+        z_moved_closure_transport_event_t* : z_closure_transport_event_drop, \
         z_moved_closure_zid_t* : z_closure_zid_drop, \
         z_moved_condvar_t* : z_condvar_drop, \
         z_moved_config_t* : z_config_drop, \
@@ -178,6 +184,8 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_moved_subscriber_t* : z_subscriber_drop, \
         z_moved_task_t* : z_task_drop, \
         z_moved_transport_t* : z_transport_drop, \
+        z_moved_transport_event_t* : z_transport_event_drop, \
+        z_moved_transport_events_listener_t* : z_transport_events_listener_drop, \
         zc_moved_closure_log_t* : zc_closure_log_drop, \
         zc_moved_concurrent_close_handle_t* : zc_concurrent_close_handle_drop, \
         ze_moved_advanced_publisher_t* : ze_advanced_publisher_drop, \
@@ -201,6 +209,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_closure_reply_t : z_closure_reply_move, \
         z_owned_closure_sample_t : z_closure_sample_move, \
         z_owned_closure_transport_t : z_closure_transport_move, \
+        z_owned_closure_transport_event_t : z_closure_transport_event_move, \
         z_owned_closure_zid_t : z_closure_zid_move, \
         z_owned_condvar_t : z_condvar_move, \
         z_owned_config_t : z_config_move, \
@@ -231,6 +240,8 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_subscriber_t : z_subscriber_move, \
         z_owned_task_t : z_task_move, \
         z_owned_transport_t : z_transport_move, \
+        z_owned_transport_event_t : z_transport_event_move, \
+        z_owned_transport_events_listener_t : z_transport_events_listener_move, \
         zc_owned_closure_log_t : zc_closure_log_move, \
         zc_owned_concurrent_close_handle_t : zc_concurrent_close_handle_move, \
         ze_owned_advanced_publisher_t : ze_advanced_publisher_move, \
@@ -253,6 +264,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_closure_query_t* : z_internal_closure_query_null, \
         z_owned_closure_reply_t* : z_internal_closure_reply_null, \
         z_owned_closure_sample_t* : z_internal_closure_sample_null, \
+        z_owned_closure_transport_event_t* : z_internal_closure_transport_event_null, \
         z_owned_closure_transport_t* : z_internal_closure_transport_null, \
         z_owned_closure_zid_t* : z_internal_closure_zid_null, \
         z_owned_condvar_t* : z_internal_condvar_null, \
@@ -283,6 +295,8 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_owned_string_t* : z_internal_string_null, \
         z_owned_subscriber_t* : z_internal_subscriber_null, \
         z_owned_task_t* : z_internal_task_null, \
+        z_owned_transport_event_t* : z_internal_transport_event_null, \
+        z_owned_transport_events_listener_t* : z_internal_transport_events_listener_null, \
         z_owned_transport_t* : z_internal_transport_null, \
         zc_owned_closure_log_t* : zc_internal_closure_log_null, \
         zc_owned_concurrent_close_handle_t* : zc_internal_concurrent_close_handle_null, \
@@ -305,6 +319,7 @@ static inline void z_closure_query_take(z_owned_closure_query_t* closure_, z_mov
 static inline void z_closure_reply_take(z_owned_closure_reply_t* closure_, z_moved_closure_reply_t* x) { *closure_ = x->_this; z_internal_closure_reply_null(&x->_this); }
 static inline void z_closure_sample_take(z_owned_closure_sample_t* closure_, z_moved_closure_sample_t* x) { *closure_ = x->_this; z_internal_closure_sample_null(&x->_this); }
 static inline void z_closure_transport_take(z_owned_closure_transport_t* closure_, z_moved_closure_transport_t* x) { *closure_ = x->_this; z_internal_closure_transport_null(&x->_this); }
+static inline void z_closure_transport_event_take(z_owned_closure_transport_event_t* closure_, z_moved_closure_transport_event_t* x) { *closure_ = x->_this; z_internal_closure_transport_event_null(&x->_this); }
 static inline void z_closure_zid_take(z_owned_closure_zid_t* closure_, z_moved_closure_zid_t* x) { *closure_ = x->_this; z_internal_closure_zid_null(&x->_this); }
 static inline void z_condvar_take(z_owned_condvar_t* this_, z_moved_condvar_t* x) { *this_ = x->_this; z_internal_condvar_null(&x->_this); }
 static inline void z_config_take(z_owned_config_t* this_, z_moved_config_t* x) { *this_ = x->_this; z_internal_config_null(&x->_this); }
@@ -335,6 +350,8 @@ static inline void z_string_take(z_owned_string_t* this_, z_moved_string_t* x) {
 static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscriber_t* x) { *this_ = x->_this; z_internal_subscriber_null(&x->_this); }
 static inline void z_task_take(z_owned_task_t* this_, z_moved_task_t* x) { *this_ = x->_this; z_internal_task_null(&x->_this); }
 static inline void z_transport_take(z_owned_transport_t* this_, z_moved_transport_t* x) { *this_ = x->_this; z_internal_transport_null(&x->_this); }
+static inline void z_transport_event_take(z_owned_transport_event_t* this_, z_moved_transport_event_t* x) { *this_ = x->_this; z_internal_transport_event_null(&x->_this); }
+static inline void z_transport_events_listener_take(z_owned_transport_events_listener_t* this_, z_moved_transport_events_listener_t* x) { *this_ = x->_this; z_internal_transport_events_listener_null(&x->_this); }
 static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) { *closure_ = x->_this; zc_internal_closure_log_null(&x->_this); }
 static inline void zc_concurrent_close_handle_take(zc_owned_concurrent_close_handle_t* this_, zc_moved_concurrent_close_handle_t* x) { *this_ = x->_this; zc_internal_concurrent_close_handle_null(&x->_this); }
 static inline void ze_advanced_publisher_take(ze_owned_advanced_publisher_t* this_, ze_moved_advanced_publisher_t* x) { *this_ = x->_this; ze_internal_advanced_publisher_null(&x->_this); }
@@ -358,6 +375,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_closure_reply_t* : z_closure_reply_take, \
         z_owned_closure_sample_t* : z_closure_sample_take, \
         z_owned_closure_transport_t* : z_closure_transport_take, \
+        z_owned_closure_transport_event_t* : z_closure_transport_event_take, \
         z_owned_closure_zid_t* : z_closure_zid_take, \
         z_owned_condvar_t* : z_condvar_take, \
         z_owned_config_t* : z_config_take, \
@@ -388,6 +406,8 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_subscriber_t* : z_subscriber_take, \
         z_owned_task_t* : z_task_take, \
         z_owned_transport_t* : z_transport_take, \
+        z_owned_transport_event_t* : z_transport_event_take, \
+        z_owned_transport_events_listener_t* : z_transport_events_listener_take, \
         zc_owned_closure_log_t* : zc_closure_log_take, \
         zc_owned_concurrent_close_handle_t* : zc_concurrent_close_handle_take, \
         ze_owned_advanced_publisher_t* : ze_advanced_publisher_take, \
@@ -421,6 +441,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_closure_reply_t : z_internal_closure_reply_check, \
         z_owned_closure_sample_t : z_internal_closure_sample_check, \
         z_owned_closure_transport_t : z_internal_closure_transport_check, \
+        z_owned_closure_transport_event_t : z_internal_closure_transport_event_check, \
         z_owned_closure_zid_t : z_internal_closure_zid_check, \
         z_owned_condvar_t : z_internal_condvar_check, \
         z_owned_config_t : z_internal_config_check, \
@@ -451,6 +472,8 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         z_owned_subscriber_t : z_internal_subscriber_check, \
         z_owned_task_t : z_internal_task_check, \
         z_owned_transport_t : z_internal_transport_check, \
+        z_owned_transport_event_t : z_internal_transport_event_check, \
+        z_owned_transport_events_listener_t : z_internal_transport_events_listener_check, \
         zc_owned_closure_log_t : zc_internal_closure_log_check, \
         zc_owned_concurrent_close_handle_t : zc_internal_concurrent_close_handle_check, \
         ze_owned_advanced_publisher_t : ze_internal_advanced_publisher_check, \
@@ -471,6 +494,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         const z_loaned_closure_reply_t* : z_closure_reply_call, \
         const z_loaned_closure_sample_t* : z_closure_sample_call, \
         const z_loaned_closure_transport_t* : z_closure_transport_call, \
+        const z_loaned_closure_transport_event_t* : z_closure_transport_event_call, \
         const z_loaned_closure_zid_t* : z_closure_zid_call, \
         const ze_loaned_closure_miss_t* : ze_closure_miss_call \
     )(closure, hello)
@@ -483,6 +507,7 @@ typedef void(*z_closure_query_callback_t)(z_loaned_query_t *query, void *context
 typedef void(*z_closure_reply_callback_t)(z_loaned_reply_t *reply, void *context);
 typedef void(*z_closure_sample_callback_t)(z_loaned_sample_t *sample, void *context);
 typedef void(*z_closure_transport_callback_t)(z_loaned_transport_t *transport, void *context);
+typedef void(*z_closure_transport_event_callback_t)(const z_loaned_transport_event_t *event, void *context);
 typedef void(*z_closure_zid_callback_t)(const z_id_t *z_id, void *context);
 typedef void(*zc_closure_log_callback_t)(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
 typedef void(*ze_closure_miss_callback_t)(const ze_miss_t *matching_status, void *context);
@@ -496,6 +521,7 @@ typedef void(*ze_closure_miss_callback_t)(const ze_miss_t *matching_status, void
         z_owned_closure_reply_t* : z_closure_reply, \
         z_owned_closure_sample_t* : z_closure_sample, \
         z_owned_closure_transport_t* : z_closure_transport, \
+        z_owned_closure_transport_event_t* : z_closure_transport_event, \
         z_owned_closure_zid_t* : z_closure_zid, \
         zc_owned_closure_log_t* : zc_closure_log, \
         ze_owned_closure_miss_t* : ze_closure_miss \
@@ -551,6 +577,7 @@ static inline z_moved_closure_query_t* z_closure_query_move(z_owned_closure_quer
 static inline z_moved_closure_reply_t* z_closure_reply_move(z_owned_closure_reply_t* x) { return reinterpret_cast<z_moved_closure_reply_t*>(x); }
 static inline z_moved_closure_sample_t* z_closure_sample_move(z_owned_closure_sample_t* x) { return reinterpret_cast<z_moved_closure_sample_t*>(x); }
 static inline z_moved_closure_transport_t* z_closure_transport_move(z_owned_closure_transport_t* x) { return reinterpret_cast<z_moved_closure_transport_t*>(x); }
+static inline z_moved_closure_transport_event_t* z_closure_transport_event_move(z_owned_closure_transport_event_t* x) { return reinterpret_cast<z_moved_closure_transport_event_t*>(x); }
 static inline z_moved_closure_zid_t* z_closure_zid_move(z_owned_closure_zid_t* x) { return reinterpret_cast<z_moved_closure_zid_t*>(x); }
 static inline z_moved_condvar_t* z_condvar_move(z_owned_condvar_t* x) { return reinterpret_cast<z_moved_condvar_t*>(x); }
 static inline z_moved_config_t* z_config_move(z_owned_config_t* x) { return reinterpret_cast<z_moved_config_t*>(x); }
@@ -581,6 +608,8 @@ static inline z_moved_string_t* z_string_move(z_owned_string_t* x) { return rein
 static inline z_moved_subscriber_t* z_subscriber_move(z_owned_subscriber_t* x) { return reinterpret_cast<z_moved_subscriber_t*>(x); }
 static inline z_moved_task_t* z_task_move(z_owned_task_t* x) { return reinterpret_cast<z_moved_task_t*>(x); }
 static inline z_moved_transport_t* z_transport_move(z_owned_transport_t* x) { return reinterpret_cast<z_moved_transport_t*>(x); }
+static inline z_moved_transport_event_t* z_transport_event_move(z_owned_transport_event_t* x) { return reinterpret_cast<z_moved_transport_event_t*>(x); }
+static inline z_moved_transport_events_listener_t* z_transport_events_listener_move(z_owned_transport_events_listener_t* x) { return reinterpret_cast<z_moved_transport_events_listener_t*>(x); }
 static inline zc_moved_closure_log_t* zc_closure_log_move(zc_owned_closure_log_t* x) { return reinterpret_cast<zc_moved_closure_log_t*>(x); }
 static inline zc_moved_concurrent_close_handle_t* zc_concurrent_close_handle_move(zc_owned_concurrent_close_handle_t* x) { return reinterpret_cast<zc_moved_concurrent_close_handle_t*>(x); }
 static inline ze_moved_advanced_publisher_t* ze_advanced_publisher_move(ze_owned_advanced_publisher_t* x) { return reinterpret_cast<ze_moved_advanced_publisher_t*>(x); }
@@ -602,6 +631,7 @@ inline const z_loaned_closure_matching_status_t* z_loan(const z_owned_closure_ma
 inline const z_loaned_closure_query_t* z_loan(const z_owned_closure_query_t& closure) { return z_closure_query_loan(&closure); };
 inline const z_loaned_closure_reply_t* z_loan(const z_owned_closure_reply_t& closure) { return z_closure_reply_loan(&closure); };
 inline const z_loaned_closure_sample_t* z_loan(const z_owned_closure_sample_t& closure) { return z_closure_sample_loan(&closure); };
+inline const z_loaned_closure_transport_event_t* z_loan(const z_owned_closure_transport_event_t& closure) { return z_closure_transport_event_loan(&closure); };
 inline const z_loaned_closure_transport_t* z_loan(const z_owned_closure_transport_t& closure) { return z_closure_transport_loan(&closure); };
 inline const z_loaned_closure_zid_t* z_loan(const z_owned_closure_zid_t& closure) { return z_closure_zid_loan(&closure); };
 inline const z_loaned_condvar_t* z_loan(const z_owned_condvar_t& this_) { return z_condvar_loan(&this_); };
@@ -629,6 +659,7 @@ inline const z_loaned_slice_t* z_loan(const z_owned_slice_t& this_) { return z_s
 inline const z_loaned_string_array_t* z_loan(const z_owned_string_array_t& this_) { return z_string_array_loan(&this_); };
 inline const z_loaned_string_t* z_loan(const z_owned_string_t& this_) { return z_string_loan(&this_); };
 inline const z_loaned_subscriber_t* z_loan(const z_owned_subscriber_t& this_) { return z_subscriber_loan(&this_); };
+inline const z_loaned_transport_events_listener_t* z_loan(const z_owned_transport_events_listener_t& this_) { return z_transport_events_listener_loan(&this_); };
 inline const z_loaned_transport_t* z_loan(const z_owned_transport_t& this_) { return z_transport_loan(&this_); };
 inline const z_loaned_keyexpr_t* z_loan(const z_view_keyexpr_t& this_) { return z_view_keyexpr_loan(&this_); };
 inline const z_loaned_slice_t* z_loan(const z_view_slice_t& this_) { return z_view_slice_loan(&this_); };
@@ -680,6 +711,7 @@ inline void z_drop(z_moved_closure_query_t* closure_) { z_closure_query_drop(clo
 inline void z_drop(z_moved_closure_reply_t* closure_) { z_closure_reply_drop(closure_); };
 inline void z_drop(z_moved_closure_sample_t* closure_) { z_closure_sample_drop(closure_); };
 inline void z_drop(z_moved_closure_transport_t* closure_) { z_closure_transport_drop(closure_); };
+inline void z_drop(z_moved_closure_transport_event_t* closure_) { z_closure_transport_event_drop(closure_); };
 inline void z_drop(z_moved_closure_zid_t* closure_) { z_closure_zid_drop(closure_); };
 inline void z_drop(z_moved_condvar_t* this_) { z_condvar_drop(this_); };
 inline void z_drop(z_moved_config_t* this_) { z_config_drop(this_); };
@@ -710,6 +742,8 @@ inline void z_drop(z_moved_string_t* this_) { z_string_drop(this_); };
 inline void z_drop(z_moved_subscriber_t* this_) { z_subscriber_drop(this_); };
 inline void z_drop(z_moved_task_t* this_) { z_task_drop(this_); };
 inline void z_drop(z_moved_transport_t* this_) { z_transport_drop(this_); };
+inline void z_drop(z_moved_transport_event_t* this_) { z_transport_event_drop(this_); };
+inline void z_drop(z_moved_transport_events_listener_t* this_) { z_transport_events_listener_drop(this_); };
 inline void z_drop(zc_moved_closure_log_t* closure_) { zc_closure_log_drop(closure_); };
 inline void z_drop(zc_moved_concurrent_close_handle_t* this_) { zc_concurrent_close_handle_drop(this_); };
 inline void z_drop(ze_moved_advanced_publisher_t* this_) { ze_advanced_publisher_drop(this_); };
@@ -731,6 +765,7 @@ inline z_moved_closure_query_t* z_move(z_owned_closure_query_t& closure_) { retu
 inline z_moved_closure_reply_t* z_move(z_owned_closure_reply_t& closure_) { return z_closure_reply_move(&closure_); };
 inline z_moved_closure_sample_t* z_move(z_owned_closure_sample_t& closure_) { return z_closure_sample_move(&closure_); };
 inline z_moved_closure_transport_t* z_move(z_owned_closure_transport_t& closure_) { return z_closure_transport_move(&closure_); };
+inline z_moved_closure_transport_event_t* z_move(z_owned_closure_transport_event_t& closure_) { return z_closure_transport_event_move(&closure_); };
 inline z_moved_closure_zid_t* z_move(z_owned_closure_zid_t& closure_) { return z_closure_zid_move(&closure_); };
 inline z_moved_condvar_t* z_move(z_owned_condvar_t& this_) { return z_condvar_move(&this_); };
 inline z_moved_config_t* z_move(z_owned_config_t& this_) { return z_config_move(&this_); };
@@ -761,6 +796,8 @@ inline z_moved_string_t* z_move(z_owned_string_t& this_) { return z_string_move(
 inline z_moved_subscriber_t* z_move(z_owned_subscriber_t& this_) { return z_subscriber_move(&this_); };
 inline z_moved_task_t* z_move(z_owned_task_t& this_) { return z_task_move(&this_); };
 inline z_moved_transport_t* z_move(z_owned_transport_t& this_) { return z_transport_move(&this_); };
+inline z_moved_transport_event_t* z_move(z_owned_transport_event_t& this_) { return z_transport_event_move(&this_); };
+inline z_moved_transport_events_listener_t* z_move(z_owned_transport_events_listener_t& this_) { return z_transport_events_listener_move(&this_); };
 inline zc_moved_closure_log_t* z_move(zc_owned_closure_log_t& closure_) { return zc_closure_log_move(&closure_); };
 inline zc_moved_concurrent_close_handle_t* z_move(zc_owned_concurrent_close_handle_t& this_) { return zc_concurrent_close_handle_move(&this_); };
 inline ze_moved_advanced_publisher_t* z_move(ze_owned_advanced_publisher_t& this_) { return ze_advanced_publisher_move(&this_); };
@@ -781,6 +818,7 @@ inline void z_internal_null(z_owned_closure_matching_status_t* this_) { z_intern
 inline void z_internal_null(z_owned_closure_query_t* this_) { z_internal_closure_query_null(this_); };
 inline void z_internal_null(z_owned_closure_reply_t* this_) { z_internal_closure_reply_null(this_); };
 inline void z_internal_null(z_owned_closure_sample_t* this_) { z_internal_closure_sample_null(this_); };
+inline void z_internal_null(z_owned_closure_transport_event_t* this_) { z_internal_closure_transport_event_null(this_); };
 inline void z_internal_null(z_owned_closure_transport_t* this_) { z_internal_closure_transport_null(this_); };
 inline void z_internal_null(z_owned_closure_zid_t* this_) { z_internal_closure_zid_null(this_); };
 inline void z_internal_null(z_owned_condvar_t* this_) { z_internal_condvar_null(this_); };
@@ -811,6 +849,8 @@ inline void z_internal_null(z_owned_string_array_t* this_) { z_internal_string_a
 inline void z_internal_null(z_owned_string_t* this_) { z_internal_string_null(this_); };
 inline void z_internal_null(z_owned_subscriber_t* this_) { z_internal_subscriber_null(this_); };
 inline void z_internal_null(z_owned_task_t* this_) { z_internal_task_null(this_); };
+inline void z_internal_null(z_owned_transport_event_t* this_) { z_internal_transport_event_null(this_); };
+inline void z_internal_null(z_owned_transport_events_listener_t* this_) { z_internal_transport_events_listener_null(this_); };
 inline void z_internal_null(z_owned_transport_t* this_) { z_internal_transport_null(this_); };
 inline void z_internal_null(zc_owned_closure_log_t* this_) { zc_internal_closure_log_null(this_); };
 inline void z_internal_null(zc_owned_concurrent_close_handle_t* this_) { zc_internal_concurrent_close_handle_null(this_); };
@@ -832,6 +872,7 @@ static inline void z_closure_query_take(z_owned_closure_query_t* closure_, z_mov
 static inline void z_closure_reply_take(z_owned_closure_reply_t* closure_, z_moved_closure_reply_t* x) { *closure_ = x->_this; z_internal_closure_reply_null(&x->_this); }
 static inline void z_closure_sample_take(z_owned_closure_sample_t* closure_, z_moved_closure_sample_t* x) { *closure_ = x->_this; z_internal_closure_sample_null(&x->_this); }
 static inline void z_closure_transport_take(z_owned_closure_transport_t* closure_, z_moved_closure_transport_t* x) { *closure_ = x->_this; z_internal_closure_transport_null(&x->_this); }
+static inline void z_closure_transport_event_take(z_owned_closure_transport_event_t* closure_, z_moved_closure_transport_event_t* x) { *closure_ = x->_this; z_internal_closure_transport_event_null(&x->_this); }
 static inline void z_closure_zid_take(z_owned_closure_zid_t* closure_, z_moved_closure_zid_t* x) { *closure_ = x->_this; z_internal_closure_zid_null(&x->_this); }
 static inline void z_condvar_take(z_owned_condvar_t* this_, z_moved_condvar_t* x) { *this_ = x->_this; z_internal_condvar_null(&x->_this); }
 static inline void z_config_take(z_owned_config_t* this_, z_moved_config_t* x) { *this_ = x->_this; z_internal_config_null(&x->_this); }
@@ -862,6 +903,8 @@ static inline void z_string_take(z_owned_string_t* this_, z_moved_string_t* x) {
 static inline void z_subscriber_take(z_owned_subscriber_t* this_, z_moved_subscriber_t* x) { *this_ = x->_this; z_internal_subscriber_null(&x->_this); }
 static inline void z_task_take(z_owned_task_t* this_, z_moved_task_t* x) { *this_ = x->_this; z_internal_task_null(&x->_this); }
 static inline void z_transport_take(z_owned_transport_t* this_, z_moved_transport_t* x) { *this_ = x->_this; z_internal_transport_null(&x->_this); }
+static inline void z_transport_event_take(z_owned_transport_event_t* this_, z_moved_transport_event_t* x) { *this_ = x->_this; z_internal_transport_event_null(&x->_this); }
+static inline void z_transport_events_listener_take(z_owned_transport_events_listener_t* this_, z_moved_transport_events_listener_t* x) { *this_ = x->_this; z_internal_transport_events_listener_null(&x->_this); }
 static inline void zc_closure_log_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) { *closure_ = x->_this; zc_internal_closure_log_null(&x->_this); }
 static inline void zc_concurrent_close_handle_take(zc_owned_concurrent_close_handle_t* this_, zc_moved_concurrent_close_handle_t* x) { *this_ = x->_this; zc_internal_concurrent_close_handle_null(&x->_this); }
 static inline void ze_advanced_publisher_take(ze_owned_advanced_publisher_t* this_, ze_moved_advanced_publisher_t* x) { *this_ = x->_this; ze_internal_advanced_publisher_null(&x->_this); }
@@ -903,6 +946,9 @@ inline void z_take(z_owned_closure_sample_t* closure_, z_moved_closure_sample_t*
 };
 inline void z_take(z_owned_closure_transport_t* closure_, z_moved_closure_transport_t* x) {
     z_closure_transport_take(closure_, x);
+};
+inline void z_take(z_owned_closure_transport_event_t* closure_, z_moved_closure_transport_event_t* x) {
+    z_closure_transport_event_take(closure_, x);
 };
 inline void z_take(z_owned_closure_zid_t* closure_, z_moved_closure_zid_t* x) {
     z_closure_zid_take(closure_, x);
@@ -994,6 +1040,12 @@ inline void z_take(z_owned_task_t* this_, z_moved_task_t* x) {
 inline void z_take(z_owned_transport_t* this_, z_moved_transport_t* x) {
     z_transport_take(this_, x);
 };
+inline void z_take(z_owned_transport_event_t* this_, z_moved_transport_event_t* x) {
+    z_transport_event_take(this_, x);
+};
+inline void z_take(z_owned_transport_events_listener_t* this_, z_moved_transport_events_listener_t* x) {
+    z_transport_events_listener_take(this_, x);
+};
 inline void z_take(zc_owned_closure_log_t* closure_, zc_moved_closure_log_t* x) {
     zc_closure_log_take(closure_, x);
 };
@@ -1053,6 +1105,7 @@ inline bool z_internal_check(const z_owned_closure_query_t& this_) { return z_in
 inline bool z_internal_check(const z_owned_closure_reply_t& this_) { return z_internal_closure_reply_check(&this_); };
 inline bool z_internal_check(const z_owned_closure_sample_t& this_) { return z_internal_closure_sample_check(&this_); };
 inline bool z_internal_check(const z_owned_closure_transport_t& this_) { return z_internal_closure_transport_check(&this_); };
+inline bool z_internal_check(const z_owned_closure_transport_event_t& this_) { return z_internal_closure_transport_event_check(&this_); };
 inline bool z_internal_check(const z_owned_closure_zid_t& this_) { return z_internal_closure_zid_check(&this_); };
 inline bool z_internal_check(const z_owned_condvar_t& this_) { return z_internal_condvar_check(&this_); };
 inline bool z_internal_check(const z_owned_config_t& this_) { return z_internal_config_check(&this_); };
@@ -1083,6 +1136,8 @@ inline bool z_internal_check(const z_owned_string_t& this_) { return z_internal_
 inline bool z_internal_check(const z_owned_subscriber_t& this_) { return z_internal_subscriber_check(&this_); };
 inline bool z_internal_check(const z_owned_task_t& this_) { return z_internal_task_check(&this_); };
 inline bool z_internal_check(const z_owned_transport_t& this_) { return z_internal_transport_check(&this_); };
+inline bool z_internal_check(const z_owned_transport_event_t& this_) { return z_internal_transport_event_check(&this_); };
+inline bool z_internal_check(const z_owned_transport_events_listener_t& this_) { return z_internal_transport_events_listener_check(&this_); };
 inline bool z_internal_check(const zc_owned_closure_log_t& this_) { return zc_internal_closure_log_check(&this_); };
 inline bool z_internal_check(const zc_owned_concurrent_close_handle_t& this_) { return zc_internal_concurrent_close_handle_check(&this_); };
 inline bool z_internal_check(const ze_owned_advanced_publisher_t& this_) { return ze_internal_advanced_publisher_check(&this_); };
@@ -1115,6 +1170,9 @@ inline void z_call(const z_loaned_closure_sample_t* closure, z_loaned_sample_t* 
 inline void z_call(const z_loaned_closure_transport_t* closure, z_loaned_transport_t* transport) {
     z_closure_transport_call(closure, transport);
 };
+inline void z_call(const z_loaned_closure_transport_event_t* closure, const z_loaned_transport_event_t* event) {
+    z_closure_transport_event_call(closure, event);
+};
 inline void z_call(const z_loaned_closure_zid_t* closure, const z_id_t* z_id) {
     z_closure_zid_call(closure, z_id);
 };
@@ -1130,6 +1188,7 @@ extern "C" using z_closure_query_callback_t = void(z_loaned_query_t *query, void
 extern "C" using z_closure_reply_callback_t = void(z_loaned_reply_t *reply, void *context);
 extern "C" using z_closure_sample_callback_t = void(z_loaned_sample_t *sample, void *context);
 extern "C" using z_closure_transport_callback_t = void(z_loaned_transport_t *transport, void *context);
+extern "C" using z_closure_transport_event_callback_t = void(const z_loaned_transport_event_t *event, void *context);
 extern "C" using z_closure_zid_callback_t = void(const z_id_t *z_id, void *context);
 extern "C" using zc_closure_log_callback_t = void(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
 extern "C" using ze_closure_miss_callback_t = void(const ze_miss_t *matching_status, void *context);
@@ -1161,6 +1220,10 @@ inline void z_closure(z_owned_closure_sample_t* this_, z_closure_sample_callback
 inline void z_closure(z_owned_closure_transport_t* this_, z_closure_transport_callback_t* call,
     z_closure_drop_callback_t* drop, void* context) {
     z_closure_transport(this_, call, drop, context);
+};
+inline void z_closure(z_owned_closure_transport_event_t* this_, z_closure_transport_event_callback_t* call,
+    z_closure_drop_callback_t* drop, void* context) {
+    z_closure_transport_event(this_, call, drop, context);
 };
 inline void z_closure(z_owned_closure_zid_t* this_, z_closure_zid_callback_t* call,
     z_closure_drop_callback_t* drop, void* context) {
@@ -1279,6 +1342,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_closure_reply_t> { typedef z
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_reply_t> { typedef z_loaned_closure_reply_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_sample_t> { typedef z_owned_closure_sample_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_sample_t> { typedef z_loaned_closure_sample_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_closure_transport_event_t> { typedef z_owned_closure_transport_event_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_closure_transport_event_t> { typedef z_loaned_closure_transport_event_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_transport_t> { typedef z_owned_closure_transport_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_closure_transport_t> { typedef z_loaned_closure_transport_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_closure_zid_t> { typedef z_owned_closure_zid_t type; };
@@ -1333,6 +1398,8 @@ template<> struct z_loaned_to_owned_type_t<z_loaned_string_t> { typedef z_owned_
 template<> struct z_owned_to_loaned_type_t<z_owned_string_t> { typedef z_loaned_string_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_subscriber_t> { typedef z_owned_subscriber_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_subscriber_t> { typedef z_loaned_subscriber_t type; };
+template<> struct z_loaned_to_owned_type_t<z_loaned_transport_events_listener_t> { typedef z_owned_transport_events_listener_t type; };
+template<> struct z_owned_to_loaned_type_t<z_owned_transport_events_listener_t> { typedef z_loaned_transport_events_listener_t type; };
 template<> struct z_loaned_to_owned_type_t<z_loaned_transport_t> { typedef z_owned_transport_t type; };
 template<> struct z_owned_to_loaned_type_t<z_owned_transport_t> { typedef z_loaned_transport_t type; };
 template<> struct z_loaned_to_owned_type_t<zc_loaned_closure_log_t> { typedef zc_owned_closure_log_t type; };

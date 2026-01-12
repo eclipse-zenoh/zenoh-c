@@ -296,6 +296,214 @@ int test_z_info_links_filtered() {
     return 0;
 }
 
+// ========================================
+// Transport Events Listener Tests
+// ========================================
+
+// Context for transport event handler
+typedef struct {
+    int added_count;
+    int removed_count;
+    z_owned_transport_t last_transport;
+} transport_event_ctx_t;
+
+// Handler for transport events
+void transport_event_handler(const z_loaned_transport_event_t* event, void* arg) {
+    transport_event_ctx_t* ctx = (transport_event_ctx_t*)arg;
+    z_sample_kind_t kind = z_transport_event_kind(event);
+    const z_loaned_transport_t* transport = z_transport_event_transport(event);
+
+    if (kind == Z_SAMPLE_KIND_PUT) {
+        ctx->added_count++;
+        z_transport_take_from_loaned(&ctx->last_transport, transport);
+    } else {
+        ctx->removed_count++;
+    }
+}
+
+int test_transport_events_sync() {
+    printf("=== Test: Transport events (sync, no history) ===\n");
+
+    // Session 1
+    z_owned_session_t s1;
+    z_owned_config_t cfg1;
+    create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17448\"]", "[]");
+    if (z_open(&s1, z_move(cfg1), NULL) < 0) {
+        printf("FAIL: Unable to open session 1\n");
+        return -1;
+    }
+
+    transport_event_ctx_t ctx = {0};
+    z_internal_transport_null(&ctx.last_transport);
+
+    // Declare listener
+    z_owned_transport_events_listener_t listener;
+    z_owned_closure_transport_event_t callback;
+    z_closure(&callback, transport_event_handler, NULL, &ctx);
+    z_transport_events_listener_options_t opts;
+    z_transport_events_listener_options_default(&opts);
+    opts.history = false;
+
+    if (z_declare_transport_events_listener(z_loan(s1), &listener, z_move(callback), &opts) != 0) {
+        printf("FAIL: Unable to declare transport events listener\n");
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    // Should have no events yet (no history)
+    if (ctx.added_count != 0) {
+        printf("FAIL: Expected 0 events before connection, got %d\n", ctx.added_count);
+        z_undeclare_transport_events_listener(z_move(listener));
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    // Session 2 connects
+    z_owned_session_t s2;
+    z_owned_config_t cfg2;
+    create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17448\"]");
+    if (z_open(&s2, z_move(cfg2), NULL) < 0) {
+        printf("FAIL: Unable to open session 2\n");
+        z_undeclare_transport_events_listener(z_move(listener));
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    sleep(2);
+
+    if (ctx.added_count != 1) {
+        printf("FAIL: Expected 1 added event, got %d\n", ctx.added_count);
+        z_drop(z_move(ctx.last_transport));
+        z_undeclare_transport_events_listener(z_move(listener));
+        z_drop(z_move(s2));
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    // Verify ZID
+    z_id_t event_zid = z_transport_zid(z_loan(ctx.last_transport));
+    z_id_t s2_zid = z_info_zid(z_loan(s2));
+    if (memcmp(event_zid.id, s2_zid.id, sizeof(s2_zid.id)) != 0) {
+        printf("FAIL: Transport ZID doesn't match session 2's ZID\n");
+        z_drop(z_move(ctx.last_transport));
+        z_undeclare_transport_events_listener(z_move(listener));
+        z_drop(z_move(s2));
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    z_drop(z_move(ctx.last_transport));
+    z_drop(z_move(s2));
+    sleep(1);
+
+    if (ctx.removed_count != 1) {
+        printf("FAIL: Expected 1 removed event, got %d\n", ctx.removed_count);
+        z_undeclare_transport_events_listener(z_move(listener));
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    printf("PASS\n\n");
+    z_undeclare_transport_events_listener(z_move(listener));
+    z_drop(z_move(s1));
+    return 0;
+}
+
+int test_transport_events_history() {
+    printf("=== Test: Transport events with history ===\n");
+
+    z_owned_session_t s1, s2;
+    if (create_isolated_session_pair(&s1, &s2) != 0) {
+        return -1;
+    }
+
+    transport_event_ctx_t ctx = {0};
+    z_internal_transport_null(&ctx.last_transport);
+
+    z_owned_transport_events_listener_t listener;
+    z_owned_closure_transport_event_t callback;
+    z_closure(&callback, transport_event_handler, NULL, &ctx);
+    z_transport_events_listener_options_t opts;
+    z_transport_events_listener_options_default(&opts);
+    opts.history = true;
+
+    if (z_declare_transport_events_listener(z_loan(s1), &listener, z_move(callback), &opts) != 0) {
+        printf("FAIL: Unable to declare transport events listener\n");
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    sleep(1);
+
+    if (ctx.added_count != 1) {
+        printf("FAIL: Expected 1 history event, got %d\n", ctx.added_count);
+        z_drop(z_move(ctx.last_transport));
+        z_undeclare_transport_events_listener(z_move(listener));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    printf("PASS\n\n");
+    z_drop(z_move(ctx.last_transport));
+    z_undeclare_transport_events_listener(z_move(listener));
+    z_drop(z_move(s1));
+    z_drop(z_move(s2));
+    return 0;
+}
+
+int test_transport_events_background() {
+    printf("=== Test: Transport events (background) ===\n");
+
+    z_owned_session_t s1;
+    z_owned_config_t cfg1;
+    create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17449\"]", "[]");
+    if (z_open(&s1, z_move(cfg1), NULL) < 0) {
+        printf("FAIL: Unable to open session 1\n");
+        return -1;
+    }
+
+    transport_event_ctx_t ctx = {0};
+    z_internal_transport_null(&ctx.last_transport);
+
+    z_owned_closure_transport_event_t callback;
+    z_closure(&callback, transport_event_handler, NULL, &ctx);
+    z_transport_events_listener_options_t opts;
+    z_transport_events_listener_options_default(&opts);
+
+    if (z_declare_background_transport_events_listener(z_loan(s1), z_move(callback), &opts) != 0) {
+        printf("FAIL: Unable to declare background transport events listener\n");
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    z_owned_session_t s2;
+    z_owned_config_t cfg2;
+    create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17449\"]");
+    if (z_open(&s2, z_move(cfg2), NULL) < 0) {
+        printf("FAIL: Unable to open session 2\n");
+        z_drop(z_move(s1));
+        return -1;
+    }
+
+    sleep(2);
+
+    if (ctx.added_count != 1) {
+        printf("FAIL: Expected 1 added event, got %d\n", ctx.added_count);
+        z_drop(z_move(ctx.last_transport));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    printf("PASS\n\n");
+    z_drop(z_move(ctx.last_transport));
+    z_drop(z_move(s1));
+    z_drop(z_move(s2));
+    return 0;
+}
+
 #endif
 
 int main(int argc, char** argv) {
@@ -314,6 +522,21 @@ int main(int argc, char** argv) {
 
     // Test filtered links
     if (test_z_info_links_filtered() != 0) {
+        return -1;
+    }
+
+    // Test transport events listener (sync, no history)
+    if (test_transport_events_sync() != 0) {
+        return -1;
+    }
+
+    // Test transport events listener (with history)
+    if (test_transport_events_history() != 0) {
+        return -1;
+    }
+
+    // Test transport events listener (background)
+    if (test_transport_events_background() != 0) {
         return -1;
     }
 
