@@ -148,10 +148,8 @@ int test_z_info_transports() {
 
     // Cleanup
     z_drop(z_move(transport));
-    z_close(z_loan_mut(s1), NULL);
     z_drop(z_move(s1));
 
-    z_close(z_loan_mut(s2), NULL);
     z_drop(z_move(s2));
 
     return 0;
@@ -202,9 +200,7 @@ int test_z_info_links() {
     z_drop(z_move(zid_str));
     z_drop(z_move(link));
 
-    z_close(z_loan_mut(s1), NULL);
     z_drop(z_move(s1));
-    z_close(z_loan_mut(s2), NULL);
     z_drop(z_move(s2));
 
     return 0;
@@ -217,29 +213,44 @@ int test_z_info_links_filtered() {
         return -1;
     }
 
-    // Capture a transport to use as filter
-    z_owned_transport_t transport;
-    z_internal_transport_null(&transport);
-    
+    // Capture transport from s1 (transport to s2)
+    z_owned_transport_t transport_s1;
+    z_internal_transport_null(&transport_s1);
+
     z_owned_closure_transport_t transport_callback;
-    z_closure(&transport_callback, capture_transport_handler, NULL, &transport);
+    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s1);
     z_info_transports(z_loan(s1), z_move(transport_callback));
 
-    if (!z_internal_transport_check(&transport)) {
-        printf("FAIL: No transport captured for filtering\n");
+    if (!z_internal_transport_check(&transport_s1)) {
+        printf("FAIL: No transport captured from session 1\n");
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
-    // Now capture links filtered by the transport
+    // Capture transport from s2 (transport to s1)
+    z_owned_transport_t transport_s2;
+    z_internal_transport_null(&transport_s2);
+
+    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s2);
+    z_info_transports(z_loan(s2), z_move(transport_callback));
+
+    if (!z_internal_transport_check(&transport_s2)) {
+        printf("FAIL: No transport captured from session 2\n");
+        z_drop(z_move(transport_s1));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    // Test 1: Filter links on s1 by s1's transport (should find links)
     z_owned_link_t link;
     z_internal_link_null(&link);
-    
+
     z_info_links_options_t options;
     z_info_links_options_default(&options);
-    options.transport = z_transport_move(&transport);
-    
+    options.transport = z_transport_move(&transport_s1);
+
     z_owned_closure_link_t link_callback;
     z_closure(&link_callback, capture_link_handler, NULL, &link);
     z_info_links(z_loan(s1), z_move(link_callback), &options);
@@ -248,22 +259,38 @@ int test_z_info_links_filtered() {
         z_id_t link_zid = z_link_zid(z_loan(link));
         z_owned_string_t zid_str;
         z_id_to_string(&link_zid, &zid_str);
-        printf("Filtered link: zid=%.*s\n",
+        printf("PASS: Filtered link by s1's transport: zid=%.*s\n",
                (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
         z_drop(z_move(zid_str));
-        printf("PASS: z_info_links with transport filter works\n\n");
+        z_drop(z_move(link));
     } else {
-        printf("FAIL: No link found for filtered transport\n");
+        printf("FAIL: No link found when filtering s1 by s1's transport\n");
+        z_drop(z_move(transport_s2));
         z_drop(z_move(s1));
         z_drop(z_move(s2));
         return -1;
     }
 
-    z_drop(z_move(link));
+    // Test 2: Filter links on s1 by s2's transport (should find no links)
+    z_internal_link_null(&link);
 
-    z_close(z_loan_mut(s1), NULL);
+    z_info_links_options_default(&options);
+    options.transport = z_transport_move(&transport_s2);
+
+    z_closure(&link_callback, capture_link_handler, NULL, &link);
+    z_info_links(z_loan(s1), z_move(link_callback), &options);
+
+    if (!z_internal_link_check(&link)) {
+        printf("PASS: No links found when filtering s1 by s2's transport (as expected)\n\n");
+    } else {
+        printf("FAIL: Found link when filtering s1 by s2's transport (should be none)\n");
+        z_drop(z_move(link));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
     z_drop(z_move(s1));
-    z_close(z_loan_mut(s2), NULL);
     z_drop(z_move(s2));
 
     return 0;
