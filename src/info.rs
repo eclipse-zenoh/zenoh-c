@@ -42,7 +42,7 @@ use crate::{
     z_closure_transport_loan, z_loaned_link_event_t, z_loaned_link_events_listener_t,
     z_loaned_link_t, z_loaned_transport_event_t, z_loaned_transport_events_listener_t,
     z_loaned_transport_t, z_moved_closure_link_t, z_moved_closure_transport_t,
-    z_owned_link_event_t, z_owned_link_events_listener_t, z_owned_link_t,
+    z_moved_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t, z_owned_link_t,
     z_owned_transport_event_t, z_owned_transport_events_listener_t, z_owned_transport_t,
 };
 
@@ -178,6 +178,47 @@ pub extern "C" fn z_transport_is_shm(transport: &z_loaned_transport_t) -> bool {
     transport.is_shm()
 }
 
+/// @brief Clones the transport.
+///
+/// Creates an owned copy of the transport that can be used independently.
+/// The caller is responsible for dropping the cloned transport using `z_drop`.
+///
+/// @param this_: The destination for the cloned transport.
+/// @param transport: The transport to clone.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_clone(
+    this_: &mut MaybeUninit<z_owned_transport_t>,
+    transport: &z_loaned_transport_t,
+) {
+    let transport = transport.as_rust_type_ref();
+    this_.as_rust_type_mut_uninit().write(Some(transport.clone()));
+}
+
+/// @brief Drops the owned transport.
+///
+/// @param this_: The transport to drop.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_drop(this_: &mut z_moved_transport_t) {
+    let _ = this_.take_rust_type();
+}
+
+/// Constructs a transport in its gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_owned_transport_t>) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// Returns ``true`` if transport is valid, ``false`` if it is in gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_internal_transport_check(this_: &z_owned_transport_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
 /// @brief Get the transports `z_loaned_transport_t` used by the session.
 ///
 /// The tranport is a connection to another zenoh node. The `z_owned_transport_t`
@@ -213,8 +254,8 @@ pub unsafe extern "C" fn z_info_transports(
 pub struct z_info_links_options_t {
     /// Optional transport to filter links by.
     /// If NULL, returns all links (default behavior).
-    /// If provided, only returns links for the specified transport.
-    pub transport: Option<&'static z_loaned_transport_t>,
+    /// If provided, ownership of the transport is taken and it will be dropped after filtering.
+    pub transport: Option<&'static mut z_moved_transport_t>,
 }
 
 #[cfg(feature = "unstable")]
@@ -252,7 +293,7 @@ pub extern "C" fn z_info_links_options_default(
 pub unsafe extern "C" fn z_info_links(
     session: &z_loaned_session_t,
     callback: &mut z_moved_closure_link_t,
-    options: Option<&z_info_links_options_t>,
+    options: Option<&mut z_info_links_options_t>,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
@@ -263,10 +304,13 @@ pub unsafe extern "C" fn z_info_links(
 
     // Apply transport filter if provided
     if let Some(opts) = options {
-        if let Some(transport) = opts.transport {
-            let transport_ref = transport.as_rust_type_ref();
-            // LinksBuilder::transport() takes Transport by value, so clone it
-            links_builder = links_builder.transport(transport_ref.clone());
+        if let Some(moved_transport) = opts.transport.take() {
+            // Take ownership of the transport
+            let owned_transport = moved_transport.take_rust_type();
+            if let Some(transport) = owned_transport {
+                // Use the transport for filtering
+                links_builder = links_builder.transport(transport);
+            }
         }
     }
 

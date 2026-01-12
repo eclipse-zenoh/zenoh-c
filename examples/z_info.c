@@ -179,9 +179,15 @@ int main(int argc, char** argv) {
 
     if (first_transport_ptr != NULL) {
         printf("\nlinks (filtered by first transport):\n");
+
+        // Clone the transport to create an owned copy
+        z_owned_transport_t owned_transport;
+        z_transport_clone(&owned_transport, first_transport_ptr);
+
+        // Set up options with the moved transport
         z_info_links_options_t options;
         z_info_links_options_default(&options);
-        options.transport = first_transport_ptr;
+        options.transport = z_transport_move(&owned_transport);
 
         z_owned_closure_link_t callback6;
         z_closure(&callback6, print_link, NULL, NULL);

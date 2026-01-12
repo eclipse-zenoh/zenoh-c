@@ -942,6 +942,19 @@ typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
 /**
+ * @brief An Transport structure returned by Zenoh connectivity API.
+ *
+ * Represents a remote zenoh node connected to this node. Only one transport per remote node exists.
+ * Each transport can have multiple corresponding `z_owned_link_t` which represent
+ * actual established data links with various protocols.
+ */
+typedef struct ALIGN(1) z_owned_transport_t {
+  uint8_t _0[19];
+} z_owned_transport_t;
+typedef struct z_moved_transport_t {
+  struct z_owned_transport_t _this;
+} z_moved_transport_t;
+/**
  * Options for `z_info_links()`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -949,9 +962,9 @@ typedef struct z_info_links_options_t {
   /**
    * Optional transport to filter links by.
    * If NULL, returns all links (default behavior).
-   * If provided, only returns links for the specified transport.
+   * If provided, ownership of the transport is taken and it will be dropped after filtering.
    */
-  const struct z_loaned_transport_t *transport;
+  struct z_moved_transport_t *transport;
 } z_info_links_options_t;
 #endif
 typedef struct z_moved_keyexpr_t {
@@ -3389,7 +3402,7 @@ ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t
 ZENOHC_API
 z_result_t z_info_links(const struct z_loaned_session_t *session,
                         struct z_moved_closure_link_t *callback,
-                        const struct z_info_links_options_t *options);
+                        struct z_info_links_options_t *options);
 #endif
 /**
  * Constructs the default value for `z_info_links_options_t`.
@@ -3964,6 +3977,18 @@ ZENOHC_API bool z_internal_task_check(const struct z_owned_task_t *this_);
  * Constructs task in a gravestone state.
  */
 ZENOHC_API void z_internal_task_null(struct z_owned_task_t *this_);
+/**
+ * Returns ``true`` if transport is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API bool z_internal_transport_check(const struct z_owned_transport_t *this_);
+#endif
+/**
+ * Constructs a transport in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_internal_transport_null(struct z_owned_transport_t *this_);
+#endif
 /**
  * Constructs a non-owned non-null-terminated string from key expression.
  */
@@ -6078,6 +6103,28 @@ z_result_t z_timestamp_new(struct z_timestamp_t *this_,
  * Returns NPT64 time associated with this timestamp.
  */
 ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
+/**
+ * @brief Clones the transport.
+ *
+ * Creates an owned copy of the transport that can be used independently.
+ * The caller is responsible for dropping the cloned transport using `z_drop`.
+ *
+ * @param this_: The destination for the cloned transport.
+ * @param transport: The transport to clone.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_transport_clone(struct z_owned_transport_t *this_,
+                       const struct z_loaned_transport_t *transport);
+#endif
+/**
+ * @brief Drops the owned transport.
+ *
+ * @param this_: The transport to drop.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_transport_drop(struct z_moved_transport_t *this_);
+#endif
 /**
  * @brief Check if the transport is multicast.
  *
