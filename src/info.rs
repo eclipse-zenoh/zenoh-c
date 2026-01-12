@@ -16,8 +16,6 @@ use std::mem::MaybeUninit;
 #[cfg(feature = "unstable")]
 use zenoh::config::WhatAmI;
 #[cfg(feature = "unstable")]
-use zenoh::qos::Reliability;
-#[cfg(feature = "unstable")]
 use zenoh::session::{
     Link, LinkEvent, LinkEventsListener, Transport, TransportEvent, TransportEventsListener,
 };
@@ -209,6 +207,32 @@ pub unsafe extern "C" fn z_info_transports(
     result::Z_OK
 }
 
+/// Options for `z_info_links()`.
+#[cfg(feature = "unstable")]
+#[repr(C)]
+pub struct z_info_links_options_t {
+    /// Optional transport to filter links by.
+    /// If NULL, returns all links (default behavior).
+    /// If provided, only returns links for the specified transport.
+    pub transport: Option<&'static z_loaned_transport_t>,
+}
+
+#[cfg(feature = "unstable")]
+impl Default for z_info_links_options_t {
+    fn default() -> Self {
+        Self { transport: None }
+    }
+}
+
+/// Constructs the default value for `z_info_links_options_t`.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_info_links_options_default(
+    this_: &mut MaybeUninit<z_info_links_options_t>,
+) {
+    this_.write(z_info_links_options_t::default());
+}
+
 /// @brief Get the links `z_loaned_link_t` used by the session.
 ///
 /// The link represents a concrete network connection used by a transport.
@@ -217,6 +241,10 @@ pub unsafe extern "C" fn z_info_transports(
 /// Callback will be called once for each link, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
 ///
+/// @param session The session to query links from.
+/// @param callback The callback to be called for each link.
+/// @param options Optional parameters to filter links. If NULL, returns all links.
+///
 /// Returns 0 on success, negative values on failure.
 #[cfg(feature = "unstable")]
 #[allow(clippy::missing_safety_doc)]
@@ -224,12 +252,29 @@ pub unsafe extern "C" fn z_info_transports(
 pub unsafe extern "C" fn z_info_links(
     session: &z_loaned_session_t,
     callback: &mut z_moved_closure_link_t,
+    options: Option<&z_info_links_options_t>,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    for mut link in session.info().links().wait() {
+
+    // Build the links query with optional transport filter
+    let session_info = session.info();
+    let mut links_builder = session_info.links();
+
+    // Apply transport filter if provided
+    if let Some(opts) = options {
+        if let Some(transport) = opts.transport {
+            let transport_ref = transport.as_rust_type_ref();
+            // LinksBuilder::transport() takes Transport by value, so clone it
+            links_builder = links_builder.transport(transport_ref.clone());
+        }
+    }
+
+    // Execute the query and call callback for each link
+    for mut link in links_builder.wait() {
         z_closure_link_call(z_closure_link_loan(&callback), link.as_loaned_c_type_mut());
     }
+
     result::Z_OK
 }
 

@@ -941,6 +941,19 @@ typedef struct z_get_options_t {
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
+/**
+ * Options for `z_info_links()`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_info_links_options_t {
+  /**
+   * Optional transport to filter links by.
+   * If NULL, returns all links (default behavior).
+   * If provided, only returns links for the specified transport.
+   */
+  const struct z_loaned_transport_t *transport;
+} z_info_links_options_t;
+#endif
 typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t _this;
 } z_moved_keyexpr_t;
@@ -3366,12 +3379,23 @@ ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t
  * Callback will be called once for each link, is guaranteed to never be called concurrently,
  * and is guaranteed to be dropped before this function exits.
  *
+ * @param session The session to query links from.
+ * @param callback The callback to be called for each link.
+ * @param options Optional parameters to filter links. If NULL, returns all links.
+ *
  * Returns 0 on success, negative values on failure.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 z_result_t z_info_links(const struct z_loaned_session_t *session,
-                        struct z_moved_closure_link_t *callback);
+                        struct z_moved_closure_link_t *callback,
+                        const struct z_info_links_options_t *options);
+#endif
+/**
+ * Constructs the default value for `z_info_links_options_t`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_info_links_options_default(struct z_info_links_options_t *this_);
 #endif
 /**
  * @brief Fetches the Zenoh IDs of all connected peers.

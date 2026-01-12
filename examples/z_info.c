@@ -24,6 +24,15 @@ void print_zid(const z_id_t* id, void* ctx) {
 }
 
 #if defined(Z_FEATURE_UNSTABLE_API)
+// Global variable to capture first transport for filtering demonstration
+static z_loaned_transport_t* first_transport_ptr = NULL;
+
+void capture_first_transport(z_loaned_transport_t* transport, void* ctx) {
+    if (first_transport_ptr == NULL) {
+        first_transport_ptr = transport;
+    }
+}
+
 void print_transport(z_loaned_transport_t* transport, void* ctx) {
     z_id_t zid = z_transport_zid(transport);
     z_whatami_t whatami = z_transport_whatami(transport);
@@ -154,11 +163,30 @@ int main(int argc, char** argv) {
     z_closure(&callback3, print_transport, NULL, NULL);
     z_info_transports(z_loan(s), z_move(callback3));
 
-    // Get links
-    printf("links:\n");
+    // Get all links (default behavior)
+    printf("\nlinks (all):\n");
     z_owned_closure_link_t callback4;
     z_closure(&callback4, print_link, NULL, NULL);
-    z_info_links(z_loan(s), z_move(callback4));
+    z_info_links(z_loan(s), z_move(callback4), NULL);
+
+    // Demonstrate filtered links by first transport
+    // First, capture the first transport to use as filter
+    printf("\nGetting first transport for filtering...\n");
+    first_transport_ptr = NULL;  // Reset the global variable
+    z_owned_closure_transport_t callback5;
+    z_closure(&callback5, capture_first_transport, NULL, NULL);
+    z_info_transports(z_loan(s), z_move(callback5));
+
+    if (first_transport_ptr != NULL) {
+        printf("\nlinks (filtered by first transport):\n");
+        z_info_links_options_t options;
+        z_info_links_options_default(&options);
+        options.transport = first_transport_ptr;
+
+        z_owned_closure_link_t callback6;
+        z_closure(&callback6, print_link, NULL, NULL);
+        z_info_links(z_loan(s), z_move(callback6), &options);
+    }
     #endif
 
     z_drop(z_move(s));
