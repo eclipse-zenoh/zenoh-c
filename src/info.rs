@@ -30,12 +30,12 @@ decl_c_type!(copy(z_id_t, ZenohId));
 
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::LoanedCTypeRef,
+    transmute::LoanedCTypeRef, z_closure_transport_call, z_closure_transport_loan,
     z_loaned_link_event_t, z_loaned_link_events_listener_t, z_loaned_link_t,
     z_loaned_transport_event_t, z_loaned_transport_events_listener_t, z_loaned_transport_t,
     z_moved_closure_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t,
     z_owned_link_t, z_owned_transport_event_t, z_owned_transport_events_listener_t,
-    z_owned_transport_t, z_closure_transport_call, z_closure_transport_loan
+    z_owned_transport_t,
 };
 
 #[cfg(feature = "unstable")]
@@ -117,7 +117,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
 }
 
 /// @brief Get the zenoh id from the `z_loaned_transport_t`.
-/// 
+///
 /// Returns the zenoh id of the transport.
 #[cfg(feature = "unstable")]
 #[no_mangle]
@@ -132,10 +132,10 @@ pub extern "C" fn z_transport_zid(transport: &z_loaned_transport_t) -> z_id_t {
 /// contains the common information related to that connection. The information specific
 /// to concrete network protocols are in the muttiple `z_owned_link_t` associated to each transport
 /// rereieved by `z_info_links`.
-/// 
+///
 /// Callback will be called once for each transport, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
-/// 
+///
 /// Returns 0 on success, negative values on failure.
 #[cfg(feature = "unstable")]
 #[allow(clippy::missing_safety_doc)]
@@ -154,4 +154,3 @@ pub unsafe extern "C" fn z_info_transports(
     }
     result::Z_OK
 }
-

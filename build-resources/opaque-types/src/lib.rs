@@ -349,10 +349,7 @@ get_opaque_type_data!(
     z_owned_link_events_listener_t
 );
 #[cfg(feature = "unstable")]
-get_opaque_type_data!(
-    LinkEventsListener<()>,
-    z_loaned_link_events_listener_t
-);
+get_opaque_type_data!(LinkEventsListener<()>, z_loaned_link_events_listener_t);
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
