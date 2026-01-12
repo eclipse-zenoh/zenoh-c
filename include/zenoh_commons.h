@@ -4078,6 +4078,94 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
                                                           const struct z_loaned_keyexpr_t *right);
 #endif
 /**
+ * @brief Get the authentication identifier from the `z_loaned_link_t`.
+ *
+ * Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_auth_identifier(const struct z_loaned_link_t *link,
+                            struct z_owned_string_t *str_out);
+#endif
+/**
+ * @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
+ *
+ * Stores the destination locator string in `str_out`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_link_dst(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+#endif
+/**
+ * @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
+ *
+ * Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_link_group(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+#endif
+/**
+ * @brief Get the network interfaces associated with the `z_loaned_link_t`.
+ *
+ * Stores an array of interface name strings in `interfaces_out`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_interfaces(const struct z_loaned_link_t *link,
+                       struct z_owned_string_array_t *interfaces_out);
+#endif
+/**
+ * @brief Check if the link is streamed.
+ *
+ * Returns true if the link is streamed, false otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API bool z_link_is_streamed(const struct z_loaned_link_t *link);
+#endif
+/**
+ * @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
+ *
+ * Returns the MTU in bytes.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API uint16_t z_link_mtu(const struct z_loaned_link_t *link);
+#endif
+/**
+ * @brief Get the priority range from the `z_loaned_link_t` (if QoS is supported).
+ *
+ * Returns true if priorities are supported and stores the min and max priorities in `min_out` and `max_out`.
+ * Returns false if the link does not support QoS.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_link_priorities(const struct z_loaned_link_t *link,
+                       uint8_t *min_out,
+                       uint8_t *max_out);
+#endif
+/**
+ * @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
+ *
+ * Returns the reliability level, or BEST_EFFORT if QoS is not supported.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API enum z_reliability_t z_link_reliability(const struct z_loaned_link_t *link);
+#endif
+/**
+ * @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.
+ *
+ * Stores the source locator string in `str_out`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API void z_link_src(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+#endif
+/**
+ * @brief Get the zenoh id from the `z_loaned_link_t`.
+ *
+ * Returns the zenoh id of the transport this link belongs to.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API struct z_id_t z_link_zid(const struct z_loaned_link_t *link);
+#endif
+/**
  * @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
  * until the corresponding session is closed or dropped.
  * @param session: The Zenoh session.
@@ -5963,6 +6051,38 @@ z_result_t z_timestamp_new(struct z_timestamp_t *this_,
  * Returns NPT64 time associated with this timestamp.
  */
 ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
+/**
+ * @brief Check if the transport is multicast.
+ *
+ * Returns true if the transport is multicast, false otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API bool z_transport_is_multicast(const struct z_loaned_transport_t *transport);
+#endif
+/**
+ * @brief Check if the transport supports QoS.
+ *
+ * Returns true if the transport supports QoS, false otherwise.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API bool z_transport_is_qos(const struct z_loaned_transport_t *transport);
+#endif
+/**
+ * @brief Check if the transport supports shared memory.
+ *
+ * Returns true if the transport supports shared memory, false otherwise.
+ */
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_SHARED_MEMORY))
+ZENOHC_API bool z_transport_is_shm(const struct z_loaned_transport_t *transport);
+#endif
+/**
+ * @brief Get the whatami from the `z_loaned_transport_t`.
+ *
+ * Returns the whatami (node type) of the remote node.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API enum z_whatami_t z_transport_whatami(const struct z_loaned_transport_t *transport);
+#endif
 /**
  * @brief Get the zenoh id from the `z_loaned_transport_t`.
  *

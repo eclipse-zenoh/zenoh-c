@@ -26,12 +26,87 @@ void print_zid(const z_id_t* id, void* ctx) {
 #if defined(Z_FEATURE_UNSTABLE_API)
 void print_transport(z_loaned_transport_t* transport, void* ctx) {
     z_id_t zid = z_transport_zid(transport);
-    printf(" transport to zid: ");
+    z_whatami_t whatami = z_transport_whatami(transport);
+    bool is_qos = z_transport_is_qos(transport);
+    bool is_multicast = z_transport_is_multicast(transport);
+
+    printf("  Transport { zid: ");
     print_zid(&zid, NULL);
+
+    printf("  whatami: ");
+    z_view_string_t whatami_str;
+    z_whatami_to_view_string(whatami, &whatami_str);
+    printf("%.*s", (int)z_string_len(z_loan(whatami_str)), z_string_data(z_loan(whatami_str)));
+
+    printf(", is_qos: %s", is_qos ? "true" : "false");
+    printf(", is_multicast: %s", is_multicast ? "true" : "false");
+
+    #if defined(Z_FEATURE_SHARED_MEMORY)
+    bool is_shm = z_transport_is_shm(transport);
+    printf(", is_shm: %s", is_shm ? "true" : "false");
+    #endif
+
+    printf(" }\n");
 }
 
 void print_link(z_loaned_link_t* link, void* ctx) {
-    printf(" link\n");
+    z_id_t zid = z_link_zid(link);
+    z_owned_string_t src, dst, group, auth_id;
+    z_link_src(link, &src);
+    z_link_dst(link, &dst);
+    z_link_group(link, &group);
+    z_link_auth_identifier(link, &auth_id);
+
+    uint16_t mtu = z_link_mtu(link);
+    bool is_streamed = z_link_is_streamed(link);
+
+    uint8_t min_prio = 0, max_prio = 0;
+    bool has_priorities = z_link_priorities(link, &min_prio, &max_prio);
+    z_reliability_t reliability = z_link_reliability(link);
+
+    printf("  Link { zid: ");
+    print_zid(&zid, NULL);
+
+    printf("  src: %.*s", (int)z_string_len(z_loan(src)), z_string_data(z_loan(src)));
+    printf(", dst: %.*s", (int)z_string_len(z_loan(dst)), z_string_data(z_loan(dst)));
+
+    if (z_string_len(z_loan(group)) > 0) {
+        printf(", group: %.*s", (int)z_string_len(z_loan(group)), z_string_data(z_loan(group)));
+    }
+
+    printf(", mtu: %u", mtu);
+    printf(", is_streamed: %s", is_streamed ? "true" : "false");
+
+    z_owned_string_array_t interfaces;
+    z_link_interfaces(link, &interfaces);
+    size_t interfaces_len = z_string_array_len(z_loan(interfaces));
+    if (interfaces_len > 0) {
+        printf(", interfaces: [");
+        for (size_t i = 0; i < interfaces_len; i++) {
+            const z_loaned_string_t* iface = z_string_array_get(z_loan(interfaces), i);
+            if (i > 0) printf(", ");
+            printf("%.*s", (int)z_string_len(iface), z_string_data(iface));
+        }
+        printf("]");
+    }
+    z_drop(z_move(interfaces));
+
+    if (z_string_len(z_loan(auth_id)) > 0) {
+        printf(", auth_id: %.*s", (int)z_string_len(z_loan(auth_id)), z_string_data(z_loan(auth_id)));
+    }
+
+    if (has_priorities) {
+        printf(", priorities: (%u, %u)", min_prio, max_prio);
+    }
+
+    printf(", reliability: %s", reliability == Z_RELIABILITY_RELIABLE ? "Reliable" : "BestEffort");
+
+    printf(" }\n");
+
+    z_drop(z_move(src));
+    z_drop(z_move(dst));
+    z_drop(z_move(group));
+    z_drop(z_move(auth_id));
 }
 #endif
 

@@ -26,8 +26,7 @@ use crate::{
 #[repr(C)]
 pub struct z_owned_closure_link_t {
     pub _context: *mut c_void,
-    pub(crate) _call:
-        Option<extern "C" fn(link: &mut z_loaned_link_t, context: *mut c_void)>,
+    pub(crate) _call: Option<extern "C" fn(link: &mut z_loaned_link_t, context: *mut c_void)>,
     pub _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 

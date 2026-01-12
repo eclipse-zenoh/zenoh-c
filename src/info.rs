@@ -14,18 +14,28 @@
 use std::mem::MaybeUninit;
 
 #[cfg(feature = "unstable")]
+use zenoh::config::WhatAmI;
+#[cfg(feature = "unstable")]
+use zenoh::qos::Reliability;
+#[cfg(feature = "unstable")]
 use zenoh::session::{
     Link, LinkEvent, LinkEventsListener, Transport, TransportEvent, TransportEventsListener,
 };
 use zenoh::{session::ZenohId, Wait};
 
 pub use crate::opaque_types::z_id_t;
+#[cfg(feature = "unstable")]
+use crate::transmute::Gravestone;
 use crate::{
     result,
     transmute::{CTypeRef, IntoCType, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_zid_call, z_closure_zid_loan, z_loaned_session_t, z_moved_closure_zid_t,
     z_owned_string_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{z_owned_string_array_t, z_reliability_t, z_whatami_t, CStringOwned};
+#[cfg(feature = "unstable")]
+use crate::{CStringInner, ZVector};
 decl_c_type!(copy(z_id_t, ZenohId));
 
 #[cfg(feature = "unstable")]
@@ -126,6 +136,50 @@ pub extern "C" fn z_transport_zid(transport: &z_loaned_transport_t) -> z_id_t {
     transport.zid().into_c_type()
 }
 
+/// @brief Get the whatami from the `z_loaned_transport_t`.
+///
+/// Returns the whatami (node type) of the remote node.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_whatami(transport: &z_loaned_transport_t) -> z_whatami_t {
+    let transport = transport.as_rust_type_ref();
+    match transport.whatami() {
+        WhatAmI::Router => z_whatami_t::ROUTER,
+        WhatAmI::Peer => z_whatami_t::PEER,
+        WhatAmI::Client => z_whatami_t::CLIENT,
+    }
+}
+
+/// @brief Check if the transport supports QoS.
+///
+/// Returns true if the transport supports QoS, false otherwise.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_is_qos(transport: &z_loaned_transport_t) -> bool {
+    let transport = transport.as_rust_type_ref();
+    transport.is_qos()
+}
+
+/// @brief Check if the transport is multicast.
+///
+/// Returns true if the transport is multicast, false otherwise.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_is_multicast(transport: &z_loaned_transport_t) -> bool {
+    let transport = transport.as_rust_type_ref();
+    transport.is_multicast()
+}
+
+/// @brief Check if the transport supports shared memory.
+///
+/// Returns true if the transport supports shared memory, false otherwise.
+#[cfg(all(feature = "unstable", feature = "shared-memory"))]
+#[no_mangle]
+pub extern "C" fn z_transport_is_shm(transport: &z_loaned_transport_t) -> bool {
+    let transport = transport.as_rust_type_ref();
+    transport.is_shm()
+}
+
 /// @brief Get the transports `z_loaned_transport_t` used by the session.
 ///
 /// The tranport is a connection to another zenoh node. The `z_owned_transport_t`
@@ -177,4 +231,140 @@ pub unsafe extern "C" fn z_info_links(
         z_closure_link_call(z_closure_link_loan(&callback), link.as_loaned_c_type_mut());
     }
     result::Z_OK
+}
+
+/// @brief Get the zenoh id from the `z_loaned_link_t`.
+///
+/// Returns the zenoh id of the transport this link belongs to.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_zid(link: &z_loaned_link_t) -> z_id_t {
+    let link = link.as_rust_type_ref();
+    link.zid().into_c_type()
+}
+
+/// @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.
+///
+/// Stores the source locator string in `str_out`.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_src(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z_owned_string_t>) {
+    let link = link.as_rust_type_ref();
+    str_out
+        .as_rust_type_mut_uninit()
+        .write(link.src().to_string().into());
+}
+
+/// @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
+///
+/// Stores the destination locator string in `str_out`.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_dst(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z_owned_string_t>) {
+    let link = link.as_rust_type_ref();
+    str_out
+        .as_rust_type_mut_uninit()
+        .write(link.dst().to_string().into());
+}
+
+/// @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
+///
+/// Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_group(
+    link: &z_loaned_link_t,
+    str_out: &mut MaybeUninit<z_owned_string_t>,
+) {
+    let link = link.as_rust_type_ref();
+    str_out.as_rust_type_mut_uninit().write(
+        link.group()
+            .map(|g| g.to_string().into())
+            .unwrap_or_else(|| CStringOwned::gravestone()),
+    );
+}
+
+/// @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
+///
+/// Returns the MTU in bytes.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_mtu(link: &z_loaned_link_t) -> u16 {
+    let link = link.as_rust_type_ref();
+    link.mtu()
+}
+
+/// @brief Check if the link is streamed.
+///
+/// Returns true if the link is streamed, false otherwise.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
+    let link = link.as_rust_type_ref();
+    link.is_streamed()
+}
+
+/// @brief Get the network interfaces associated with the `z_loaned_link_t`.
+///
+/// Stores an array of interface name strings in `interfaces_out`.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_interfaces(
+    link: &z_loaned_link_t,
+    interfaces_out: &mut MaybeUninit<z_owned_string_array_t>,
+) {
+    let link = link.as_rust_type_ref();
+    let mut interfaces = ZVector::with_capacity(link.interfaces().len());
+    for iface in link.interfaces().iter() {
+        interfaces.push(CStringInner::new_borrowed_from_slice(iface.as_bytes()));
+    }
+    interfaces_out.as_rust_type_mut_uninit().write(interfaces);
+}
+
+/// @brief Get the authentication identifier from the `z_loaned_link_t`.
+///
+/// Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_auth_identifier(
+    link: &z_loaned_link_t,
+    str_out: &mut MaybeUninit<z_owned_string_t>,
+) {
+    let link = link.as_rust_type_ref();
+    str_out.as_rust_type_mut_uninit().write(
+        link.auth_identifier()
+            .map(|s| s.to_string().into())
+            .unwrap_or_else(|| CStringOwned::gravestone()),
+    );
+}
+
+/// @brief Get the priority range from the `z_loaned_link_t` (if QoS is supported).
+///
+/// Returns true if priorities are supported and stores the min and max priorities in `min_out` and `max_out`.
+/// Returns false if the link does not support QoS.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_priorities(
+    link: &z_loaned_link_t,
+    min_out: &mut u8,
+    max_out: &mut u8,
+) -> bool {
+    let link = link.as_rust_type_ref();
+    if let Some((min, max)) = link.priorities() {
+        *min_out = min;
+        *max_out = max;
+        true
+    } else {
+        false
+    }
+}
+
+/// @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
+///
+/// Returns the reliability level, or BEST_EFFORT if QoS is not supported.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_reliability(link: &z_loaned_link_t) -> z_reliability_t {
+    let link = link.as_rust_type_ref();
+    link.reliability().unwrap_or(Reliability::BestEffort).into()
 }
