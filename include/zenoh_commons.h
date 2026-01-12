@@ -3390,9 +3390,7 @@ ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t
  * Each transport may have multiple links associated with it.
  *
  * Callback will be called once for each link, is guaranteed to never be called concurrently,
- * and is guaranteed to be dropped before this function exits. All callback invocations are
- * completed synchronously before this function returns, and no further callbacks will be
- * called after this function returns.
+ * and is guaranteed to be dropped before this function exits.
  *
  * @param session The session to query links from.
  * @param callback The callback to be called for each link.
@@ -3416,9 +3414,7 @@ ZENOHC_API void z_info_links_options_default(struct z_info_links_options_t *this
  * @brief Fetches the Zenoh IDs of all connected peers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
- * and is guaranteed to be dropped before this function exits. All callback invocations are
- * completed synchronously before this function returns, and no further callbacks will be
- * called after this function returns.
+ * and is guaranteed to be dropped before this function exits.
  *
  * Retuns 0 on success, negative values on failure
  */
@@ -3429,9 +3425,7 @@ z_result_t z_info_peers_zid(const struct z_loaned_session_t *session,
  * @brief Fetches the Zenoh IDs of all connected routers.
  *
  * `callback` will be called once for each ID, is guaranteed to never be called concurrently,
- * and is guaranteed to be dropped before this function exits. All callback invocations are
- * completed synchronously before this function returns, and no further callbacks will be
- * called after this function returns.
+ * and is guaranteed to be dropped before this function exits.
  *
  * Retuns 0 on success, negative values on failure.
  */
@@ -3447,9 +3441,7 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
  * rereieved by `z_info_links`.
  *
  * Callback will be called once for each transport, is guaranteed to never be called concurrently,
- * and is guaranteed to be dropped before this function exits. All callback invocations are
- * completed synchronously before this function returns, and no further callbacks will be
- * called after this function returns.
+ * and is guaranteed to be dropped before this function exits.
  *
  * Returns 0 on success, negative values on failure.
  */
