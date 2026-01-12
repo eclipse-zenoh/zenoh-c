@@ -46,57 +46,48 @@ void capture_link_handler(z_loaned_link_t* link, void* arg) {
 
 #endif
 
-// Helper to configure an isolated session that won't connect to external zenoh nodes
+// Helper to create an isolated session configuration
+// This prevents the session from discovering or connecting to external zenoh nodes
+void create_isolated_config(z_owned_config_t* config, const char* listen_endpoints, const char* connect_endpoints) {
+    z_config_default(config);
+
+    // Set mode to peer
+    zc_config_insert_json5(z_loan_mut(*config), "mode", "\"peer\"");
+
+    // Disable multicast scouting
+    zc_config_insert_json5(z_loan_mut(*config), "scouting/multicast/enabled", "false");
+
+    // Disable gossip scouting
+    zc_config_insert_json5(z_loan_mut(*config), "scouting/gossip/enabled", "false");
+
+    // Configure listen endpoints
+    zc_config_insert_json5(z_loan_mut(*config), "listen/endpoints", listen_endpoints);
+
+    // Configure connect endpoints
+    zc_config_insert_json5(z_loan_mut(*config), "connect/endpoints", connect_endpoints);
+}
+
+// Helper to configure an isolated session pair that won't connect to external zenoh nodes
 // Session 1: listens on a specific port
 // Session 2: connects to session 1's port
 // Both sessions have scouting disabled to prevent discovery of external nodes
 int create_isolated_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
     // Create config for session 1: listener on localhost
     z_owned_config_t config1;
-    z_config_default(&config1);
-    
-    // Set mode to peer
-    zc_config_insert_json5(z_loan_mut(config1), "mode", "\"peer\"");
-    
-    // Disable multicast scouting
-    zc_config_insert_json5(z_loan_mut(config1), "scouting/multicast/enabled", "false");
-    
-    // Disable gossip scouting
-    zc_config_insert_json5(z_loan_mut(config1), "scouting/gossip/enabled", "false");
-    
-    // Listen only on localhost with a specific port
-    zc_config_insert_json5(z_loan_mut(config1), "listen/endpoints", "[\"tcp/127.0.0.1:17447\"]");
-    
-    // Don't connect to anything
-    zc_config_insert_json5(z_loan_mut(config1), "connect/endpoints", "[]");
-    
+    create_isolated_config(&config1, "[\"tcp/127.0.0.1:17447\"]", "[]");
+
     if (z_open(s1, z_move(config1), NULL) < 0) {
         printf("Unable to open session 1!\n");
         return -1;
     }
-    
+
     // Give session 1 time to start listening
     sleep(1);
 
     // Create config for session 2: connects to session 1
     z_owned_config_t config2;
-    z_config_default(&config2);
-    
-    // Set mode to peer
-    zc_config_insert_json5(z_loan_mut(config2), "mode", "\"peer\"");
-    
-    // Disable multicast scouting
-    zc_config_insert_json5(z_loan_mut(config2), "scouting/multicast/enabled", "false");
-    
-    // Disable gossip scouting
-    zc_config_insert_json5(z_loan_mut(config2), "scouting/gossip/enabled", "false");
-    
-    // Don't listen on any port
-    zc_config_insert_json5(z_loan_mut(config2), "listen/endpoints", "[]");
-    
-    // Connect to session 1
-    zc_config_insert_json5(z_loan_mut(config2), "connect/endpoints", "[\"tcp/127.0.0.1:17447\"]");
-    
+    create_isolated_config(&config2, "[]", "[\"tcp/127.0.0.1:17447\"]");
+
     if (z_open(s2, z_move(config2), NULL) < 0) {
         printf("Unable to open session 2!\n");
         z_drop(z_move(*s1));
