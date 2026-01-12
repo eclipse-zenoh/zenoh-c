@@ -4144,10 +4144,13 @@ bool z_link_priorities(const struct z_loaned_link_t *link,
 /**
  * @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
  *
- * Returns the reliability level, or BEST_EFFORT if QoS is not supported.
+ * Returns true if reliability information is available and stores the reliability level in `reliability_out`.
+ * Returns false if the link does not support QoS.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API enum z_reliability_t z_link_reliability(const struct z_loaned_link_t *link);
+ZENOHC_API
+bool z_link_reliability(const struct z_loaned_link_t *link,
+                        enum z_reliability_t *reliability_out);
 #endif
 /**
  * @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.

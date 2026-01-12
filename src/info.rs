@@ -361,10 +361,19 @@ pub extern "C" fn z_link_priorities(
 
 /// @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
 ///
-/// Returns the reliability level, or BEST_EFFORT if QoS is not supported.
+/// Returns true if reliability information is available and stores the reliability level in `reliability_out`.
+/// Returns false if the link does not support QoS.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_reliability(link: &z_loaned_link_t) -> z_reliability_t {
+pub extern "C" fn z_link_reliability(
+    link: &z_loaned_link_t,
+    reliability_out: &mut z_reliability_t,
+) -> bool {
     let link = link.as_rust_type_ref();
-    link.reliability().unwrap_or(Reliability::BestEffort).into()
+    if let Some(reliability) = link.reliability() {
+        *reliability_out = reliability.into();
+        true
+    } else {
+        false
+    }
 }

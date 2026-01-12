@@ -62,7 +62,8 @@ void print_link(z_loaned_link_t* link, void* ctx) {
 
     uint8_t min_prio = 0, max_prio = 0;
     bool has_priorities = z_link_priorities(link, &min_prio, &max_prio);
-    z_reliability_t reliability = z_link_reliability(link);
+    z_reliability_t reliability;
+    bool has_reliability = z_link_reliability(link, &reliability);
 
     printf("  Link { zid: ");
     print_zid(&zid, NULL);
@@ -99,7 +100,9 @@ void print_link(z_loaned_link_t* link, void* ctx) {
         printf(", priorities: (%u, %u)", min_prio, max_prio);
     }
 
-    printf(", reliability: %s", reliability == Z_RELIABILITY_RELIABLE ? "Reliable" : "BestEffort");
+    if (has_reliability) {
+        printf(", reliability: %s", reliability == Z_RELIABILITY_RELIABLE ? "Reliable" : "BestEffort");
+    }
 
     printf(" }\n");
 
