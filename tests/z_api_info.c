@@ -21,19 +21,27 @@
 #if defined(Z_FEATURE_UNSTABLE_API)
 
 // Callback that takes the first transport from loaned pointer
+// Fails if called multiple times (indicating multiple transports exist)
 void capture_transport_handler(z_loaned_transport_t* transport, void* arg) {
     z_owned_transport_t* ctx = (z_owned_transport_t*)arg;
-    if (!z_internal_transport_check(ctx)) {
-        z_take_from_loaned(ctx, transport);
+    if (z_internal_transport_check(ctx)) {
+        printf("FAIL: capture_transport_handler called multiple times - multiple transports detected\n");
+        printf("      This may indicate external zenoh sessions are connecting\n");
+        exit(1);
     }
+    z_take_from_loaned(ctx, transport);
 }
 
 // Callback that takes the first link from loaned pointer
+// Fails if called multiple times (indicating multiple links exist)
 void capture_link_handler(z_loaned_link_t* link, void* arg) {
     z_owned_link_t* ctx = (z_owned_link_t*)arg;
-    if (!z_internal_link_check(ctx)) {
-        z_take_from_loaned(ctx, link);
+    if (z_internal_link_check(ctx)) {
+        printf("FAIL: capture_link_handler called multiple times - multiple links detected\n");
+        printf("      This may indicate external zenoh sessions are connecting\n");
+        exit(1);
     }
+    z_take_from_loaned(ctx, link);
 }
 
 #endif
@@ -270,82 +278,12 @@ int test_z_info_links_filtered() {
     return 0;
 }
 
-int test_isolation() {
-    printf("=== Testing session isolation (no external connections) ===\n");
-    z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
-
-    // Count transports from session 1 - should be exactly 1 (only s2)
-    // We count by capturing transports one by one
-    unsigned int count1 = 0;
-    z_owned_transport_t transport1;
-    z_internal_transport_null(&transport1);
-    
-    z_owned_closure_transport_t callback;
-    
-    // Capture first transport
-    z_closure(&callback, capture_transport_handler, NULL, &transport1);
-    z_info_transports(z_loan(s1), z_move(callback));
-    
-    if (z_internal_transport_check(&transport1)) {
-        count1 = 1;
-    }
-
-    if (count1 != 1) {
-        printf("FAIL: Session 1 should have exactly 1 transport (to session 2), got %u\n", count1);
-        printf("      This may indicate external zenoh sessions are connecting\n");
-        z_drop(z_move(transport1));
-        z_drop(z_move(s1));
-        z_drop(z_move(s2));
-        return -1;
-    }
-    z_drop(z_move(transport1));
-
-    // Count transports from session 2 - should be exactly 1 (only s1)
-    unsigned int count2 = 0;
-    z_owned_transport_t transport2;
-    z_internal_transport_null(&transport2);
-    
-    z_closure(&callback, capture_transport_handler, NULL, &transport2);
-    z_info_transports(z_loan(s2), z_move(callback));
-    
-    if (z_internal_transport_check(&transport2)) {
-        count2 = 1;
-    }
-
-    if (count2 != 1) {
-        printf("FAIL: Session 2 should have exactly 1 transport (to session 1), got %u\n", count2);
-        printf("      This may indicate external zenoh sessions are connecting\n");
-        z_drop(z_move(transport2));
-        z_drop(z_move(s1));
-        z_drop(z_move(s2));
-        return -1;
-    }
-    z_drop(z_move(transport2));
-
-    printf("PASS: Both sessions have exactly 1 transport each (properly isolated)\n\n");
-
-    z_close(z_loan_mut(s1), NULL);
-    z_drop(z_move(s1));
-    z_close(z_loan_mut(s2), NULL);
-    z_drop(z_move(s2));
-
-    return 0;
-}
-
 #endif
 
 int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
 #if defined(Z_FEATURE_UNSTABLE_API)
-    // Test isolation first
-    if (test_isolation() != 0) {
-        return -1;
-    }
-
     // Test transports
     if (test_z_info_transports() != 0) {
         return -1;
