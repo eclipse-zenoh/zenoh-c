@@ -149,7 +149,7 @@ pub unsafe extern "C" fn z_info_transports(
     for mut transport in session.info().transports().wait() {
         z_closure_transport_call(
             z_closure_transport_loan(&callback),
-            transport.as_loaned_ctype_mut(),
+            transport.as_loaned_c_type_mut(),
         );
     }
     result::Z_OK
