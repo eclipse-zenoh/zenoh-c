@@ -29,6 +29,10 @@ void print_transport(z_loaned_transport_t* transport, void* ctx) {
     printf(" transport to zid: ");
     print_zid(&zid, NULL);
 }
+
+void print_link(z_loaned_link_t* link, void* ctx) {
+    printf(" link\n");
+}
 #endif
 
 void parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -68,6 +72,12 @@ int main(int argc, char** argv) {
     z_owned_closure_transport_t callback3;
     z_closure(&callback3, print_transport, NULL, NULL);
     z_info_transports(z_loan(s), z_move(callback3));
+
+    // Get links
+    printf("links:\n");
+    z_owned_closure_link_t callback4;
+    z_closure(&callback4, print_link, NULL, NULL);
+    z_info_links(z_loan(s), z_move(callback4));
     #endif
 
     z_drop(z_move(s));

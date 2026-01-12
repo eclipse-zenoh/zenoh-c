@@ -30,12 +30,12 @@ decl_c_type!(copy(z_id_t, ZenohId));
 
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::LoanedCTypeRef, z_closure_transport_call, z_closure_transport_loan,
-    z_loaned_link_event_t, z_loaned_link_events_listener_t, z_loaned_link_t,
-    z_loaned_transport_event_t, z_loaned_transport_events_listener_t, z_loaned_transport_t,
-    z_moved_closure_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t,
-    z_owned_link_t, z_owned_transport_event_t, z_owned_transport_events_listener_t,
-    z_owned_transport_t,
+    transmute::LoanedCTypeRef, z_closure_link_call, z_closure_link_loan, z_closure_transport_call,
+    z_closure_transport_loan, z_loaned_link_event_t, z_loaned_link_events_listener_t,
+    z_loaned_link_t, z_loaned_transport_event_t, z_loaned_transport_events_listener_t,
+    z_loaned_transport_t, z_moved_closure_link_t, z_moved_closure_transport_t,
+    z_owned_link_event_t, z_owned_link_events_listener_t, z_owned_link_t,
+    z_owned_transport_event_t, z_owned_transport_events_listener_t, z_owned_transport_t,
 };
 
 #[cfg(feature = "unstable")]
@@ -151,6 +151,30 @@ pub unsafe extern "C" fn z_info_transports(
             z_closure_transport_loan(&callback),
             transport.as_loaned_c_type_mut(),
         );
+    }
+    result::Z_OK
+}
+
+/// @brief Get the links `z_loaned_link_t` used by the session.
+///
+/// The link represents a concrete network connection used by a transport.
+/// Each transport may have multiple links associated with it.
+///
+/// Callback will be called once for each link, is guaranteed to never be called concurrently,
+/// and is guaranteed to be dropped before this function exits.
+///
+/// Returns 0 on success, negative values on failure.
+#[cfg(feature = "unstable")]
+#[allow(clippy::missing_safety_doc)]
+#[no_mangle]
+pub unsafe extern "C" fn z_info_links(
+    session: &z_loaned_session_t,
+    callback: &mut z_moved_closure_link_t,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+    for mut link in session.info().links().wait() {
+        z_closure_link_call(z_closure_link_loan(&callback), link.as_loaned_c_type_mut());
     }
     result::Z_OK
 }

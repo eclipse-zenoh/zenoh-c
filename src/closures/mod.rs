@@ -47,6 +47,11 @@ pub use transport_closure::*;
 mod transport_closure;
 
 #[cfg(feature = "unstable")]
+pub use link_closure::*;
+#[cfg(feature = "unstable")]
+mod link_closure;
+
+#[cfg(feature = "unstable")]
 pub use miss_closure::*;
 #[cfg(feature = "unstable")]
 mod miss_closure;
