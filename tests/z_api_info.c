@@ -73,58 +73,26 @@ void create_isolated_config(z_owned_config_t* config, const char* listen_endpoin
     create_isolated_config_with_mode(config, "\"peer\"", listen_endpoints, connect_endpoints);
 }
 
-// Helper to configure an isolated session pair that won't connect to external zenoh nodes
-// Session 1: listens on a specific port
-// Session 2: connects to session 1's port
-// Both sessions have scouting disabled to prevent discovery of external nodes
-int create_isolated_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
-    // Create config for session 1: listener on localhost
-    z_owned_config_t config1;
-    create_isolated_config(&config1, "[\"tcp/127.0.0.1:17447\"]", "[]");
-
-    if (z_open(s1, z_move(config1), NULL) < 0) {
-        printf("Unable to open session 1!\n");
-        return -1;
-    }
-
-    // Give session 1 time to start listening
-    sleep(1);
-
-    // Create config for session 2: connects to session 1
-    z_owned_config_t config2;
-    create_isolated_config(&config2, "[]", "[\"tcp/127.0.0.1:17447\"]");
-
-    if (z_open(s2, z_move(config2), NULL) < 0) {
-        printf("Unable to open session 2!\n");
-        z_drop(z_move(*s1));
-        return -1;
-    }
-
-    // Sleep to allow sessions to establish transports
-    sleep(1);
-
-    return 0;
-}
-
-// Helper to create an isolated session pair with first session in router mode, second in peer mode
+// Helper to create an isolated session pair (router + peer) that won't connect to external zenoh nodes
 // Session 1 (router): listens on a specific port
 // Session 2 (peer): connects to session 1's port
-void create_router_peer_session_pair(z_owned_session_t* router_session, z_owned_session_t* peer_session) {
+// Both sessions have scouting disabled to prevent discovery of external nodes
+void create_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
     // Create config for router session: listener on localhost
-    z_owned_config_t config_router;
-    create_isolated_config_with_mode(&config_router, "\"router\"", "[\"tcp/127.0.0.1:17452\"]", "[]");
+    z_owned_config_t config1;
+    create_isolated_config_with_mode(&config1, "\"router\"", "[\"tcp/127.0.0.1:17447\"]", "[]");
 
-    z_result_t res = z_open(router_session, z_move(config_router), NULL);
+    z_result_t res = z_open(s1, z_move(config1), NULL);
     assert(res == 0);
 
     // Give router session time to start listening
     sleep(1);
 
     // Create config for peer session: connects to router
-    z_owned_config_t config_peer;
-    create_isolated_config_with_mode(&config_peer, "\"peer\"", "[]", "[\"tcp/127.0.0.1:17452\"]");
+    z_owned_config_t config2;
+    create_isolated_config_with_mode(&config2, "\"peer\"", "[]", "[\"tcp/127.0.0.1:17447\"]");
 
-    res = z_open(peer_session, z_move(config_peer), NULL);
+    res = z_open(s2, z_move(config2), NULL);
     assert(res == 0);
 
     // Sleep to allow sessions to establish connection
@@ -151,7 +119,7 @@ void test_z_info_stable() {
     printf("=== Testing stable z_info functions ===\n");
 
     z_owned_session_t router_session, peer_session;
-    create_router_peer_session_pair(&router_session, &peer_session);
+    create_session_pair(&router_session, &peer_session);
 
     // Get ZIDs of both sessions
     z_id_t router_zid = z_info_zid(z_loan(router_session));
@@ -200,9 +168,7 @@ void test_z_info_stable() {
 int test_z_info_transports() {
     printf("=== Testing z_info_transports ===\n");
     z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
+    create_session_pair(&s1, &s2);
 
     // Capture transport from session 1
     z_owned_transport_t transport;
@@ -252,9 +218,7 @@ int test_z_info_transports() {
 int test_z_info_links() {
     printf("=== Testing z_info_links ===\n");
     z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
+    create_session_pair(&s1, &s2);
 
     // Capture link from session 1
     z_owned_link_t link;
@@ -302,9 +266,7 @@ int test_z_info_links() {
 int test_z_info_links_filtered() {
     printf("=== Testing z_info_links with transport filter ===\n");
     z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
+    create_session_pair(&s1, &s2);
 
     // Capture transport from s1 (transport to s2)
     z_owned_transport_t transport_s1;
@@ -402,10 +364,10 @@ typedef struct {
 
 // Handler for transport events
 // NOTE: Caller must drop and nullify ctx->last_transport before expecting a new PUT event
-void transport_event_handler(z_loaned_transport_event_t* event, void* arg) {
+void transport_event_handler(const z_loaned_transport_event_t* event, void* arg) {
     transport_event_ctx_t* ctx = (transport_event_ctx_t*)arg;
     z_sample_kind_t kind = z_transport_event_kind(event);
-    z_loaned_transport_t* transport = z_transport_event_transport_mut(event);
+    z_loaned_transport_t* transport = z_transport_event_transport_mut((z_loaned_transport_event_t*)event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
         // Verify last_transport is null before taking a new one
@@ -510,9 +472,7 @@ int test_transport_events_history() {
     printf("=== Test: Transport events with history ===\n");
 
     z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
+    create_session_pair(&s1, &s2);
 
     transport_event_ctx_t ctx = {0};
     z_internal_transport_null(&ctx.last_transport);
@@ -614,10 +574,10 @@ typedef struct {
 
 // Handler for link events
 // NOTE: Caller must drop and nullify ctx->last_link before expecting a new PUT event
-void link_event_handler(z_loaned_link_event_t* event, void* arg) {
+void link_event_handler(const z_loaned_link_event_t* event, void* arg) {
     link_event_ctx_t* ctx = (link_event_ctx_t*)arg;
     z_sample_kind_t kind = z_link_event_kind(event);
-    z_loaned_link_t* link = z_link_event_link_mut(event);
+    z_loaned_link_t* link = z_link_event_link_mut((z_loaned_link_event_t*)event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
         // Verify last_link is null before taking a new one
@@ -723,9 +683,7 @@ int test_link_events_history() {
     printf("=== Test: Link events with history ===\n");
 
     z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
+    create_session_pair(&s1, &s2);
 
     link_event_ctx_t ctx = {0};
     z_internal_link_null(&ctx.last_link);
@@ -818,9 +776,7 @@ int test_link_events_filtered() {
     printf("=== Test: Link events with transport filter ===\n");
 
     z_owned_session_t s1, s2;
-    if (create_isolated_session_pair(&s1, &s2) != 0) {
-        return -1;
-    }
+    create_session_pair(&s1, &s2);
 
     // Capture transport from s1 (transport to s2)
     z_owned_transport_t transport_s1;
