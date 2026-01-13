@@ -130,30 +130,27 @@ void transport_event_handler(const z_loaned_transport_event_t* event, void* ctx)
     z_sample_kind_t kind = z_transport_event_kind(event);
     const z_loaned_transport_t* transport = z_transport_event_transport(event);
 
-    z_id_t zid = z_transport_zid(transport);
-    z_owned_string_t zid_str;
-    z_id_to_string(&zid, &zid_str);
-
     if (kind == Z_SAMPLE_KIND_PUT) {
         printf("[Transport Event] Opened:\n");
     } else {
         printf("[Transport Event] Closed:\n");
     }
 
-    printf("    zid: %.*s\n", (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
-    z_drop(z_move(zid_str));
+    print_transport((z_loaned_transport_t*)transport, NULL);
+}
 
-    z_whatami_t whatami = z_transport_whatami(transport);
-    z_view_string_t whatami_str;
-    z_whatami_to_view_string(whatami, &whatami_str);
-    printf("    whatami: %.*s\n", (int)z_string_len(z_loan(whatami_str)), z_string_data(z_loan(whatami_str)));
+void link_event_handler(const z_loaned_link_event_t* event, void* ctx) {
+    (void)ctx;
+    z_sample_kind_t kind = z_link_event_kind(event);
+    const z_loaned_link_t* link = z_link_event_link(event);
 
-    printf("    is_qos: %s\n", z_transport_is_qos(transport) ? "true" : "false");
-    printf("    is_multicast: %s\n", z_transport_is_multicast(transport) ? "true" : "false");
+    if (kind == Z_SAMPLE_KIND_PUT) {
+        printf("[Link Event] Added:\n");
+    } else {
+        printf("[Link Event] Removed:\n");
+    }
 
-#if defined(Z_FEATURE_SHARED_MEMORY)
-    printf("    is_shm: %s\n", z_transport_is_shm(transport) ? "true" : "false");
-#endif
+    print_link((z_loaned_link_t*)link, NULL);
 }
 #endif
 
@@ -201,20 +198,33 @@ int main(int argc, char** argv) {
     z_closure(&callback4, print_link, NULL, NULL);
     z_info_links(z_loan(s), z_move(callback4), NULL);
 
-    // Set up transport events listener
+    // Set up transport and link events listeners
     printf("\nConnectivity events (Press CTRL-C to quit):\n");
 
     signal(SIGINT, handle_signal);
     signal(SIGTERM, handle_signal);
 
-    z_owned_closure_transport_event_t event_callback;
-    z_closure(&event_callback, transport_event_handler, NULL, NULL);
-    z_transport_events_listener_options_t opts;
-    z_transport_events_listener_options_default(&opts);
-    opts.history = false;  // Don't repeat transports we already printed
+    z_owned_closure_transport_event_t transport_event_callback;
+    z_closure(&transport_event_callback, transport_event_handler, NULL, NULL);
+    z_transport_events_listener_options_t transport_opts;
+    z_transport_events_listener_options_default(&transport_opts);
+    transport_opts.history = false;  // Don't repeat transports we already printed
 
-    if (z_declare_background_transport_events_listener(z_loan(s), z_move(event_callback), &opts) != 0) {
+    if (z_declare_background_transport_events_listener(z_loan(s), z_move(transport_event_callback), &transport_opts) != 0) {
         printf("Unable to declare transport events listener!\n");
+        z_drop(z_move(s));
+        exit(-1);
+    }
+
+    z_owned_link_events_listener_t link_listener;
+    z_owned_closure_link_event_t link_event_callback;
+    z_closure(&link_event_callback, link_event_handler, NULL, NULL);
+    z_link_events_listener_options_t link_opts;
+    z_link_events_listener_options_default(&link_opts);
+    link_opts.history = false;  // Don't repeat links we already printed
+
+    if (z_declare_link_events_listener(z_loan(s), &link_listener, z_move(link_event_callback), &link_opts) != 0) {
+        printf("Unable to declare link events listener!\n");
         z_drop(z_move(s));
         exit(-1);
     }
