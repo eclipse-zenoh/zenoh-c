@@ -195,7 +195,9 @@ pub extern "C" fn z_transport_clone(
     transport: &z_loaned_transport_t,
 ) {
     let transport = transport.as_rust_type_ref();
-    this_.as_rust_type_mut_uninit().write(Some(transport.clone()));
+    this_
+        .as_rust_type_mut_uninit()
+        .write(Some(transport.clone()));
 }
 
 /// @brief Drops the owned transport.
@@ -262,7 +264,9 @@ pub extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> *const z_loan
 /// @return A mutable loaned transport reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_transport_loan_mut(this_: &mut z_owned_transport_t) -> *mut z_loaned_transport_t {
+pub extern "C" fn z_transport_loan_mut(
+    this_: &mut z_owned_transport_t,
+) -> *mut z_loaned_transport_t {
     this_ as *mut z_owned_transport_t as *mut z_loaned_transport_t
 }
 
@@ -318,6 +322,7 @@ pub unsafe extern "C" fn z_info_transports(
 /// Options for `z_info_links()`.
 #[cfg(feature = "unstable")]
 #[repr(C)]
+#[derive(Default)]
 pub struct z_info_links_options_t {
     /// Optional transport to filter links by.
     /// If NULL, returns all links (default behavior).
@@ -325,19 +330,10 @@ pub struct z_info_links_options_t {
     pub transport: Option<&'static mut z_moved_transport_t>,
 }
 
-#[cfg(feature = "unstable")]
-impl Default for z_info_links_options_t {
-    fn default() -> Self {
-        Self { transport: None }
-    }
-}
-
 /// Constructs the default value for `z_info_links_options_t`.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_info_links_options_default(
-    this_: &mut MaybeUninit<z_info_links_options_t>,
-) {
+pub extern "C" fn z_info_links_options_default(this_: &mut MaybeUninit<z_info_links_options_t>) {
     this_.write(z_info_links_options_t::default());
 }
 
@@ -436,7 +432,7 @@ pub extern "C" fn z_link_group(
     str_out.as_rust_type_mut_uninit().write(
         link.group()
             .map(|g| g.to_string().into())
-            .unwrap_or_else(|| CStringOwned::gravestone()),
+            .unwrap_or(CStringOwned::gravestone()),
     );
 }
 
@@ -490,7 +486,7 @@ pub extern "C" fn z_link_auth_identifier(
     str_out.as_rust_type_mut_uninit().write(
         link.auth_identifier()
             .map(|s| s.to_string().into())
-            .unwrap_or_else(|| CStringOwned::gravestone()),
+            .unwrap_or(CStringOwned::gravestone()),
     );
 }
 
@@ -631,17 +627,11 @@ pub extern "C" fn z_transport_event_drop(this_: &mut z_moved_transport_event_t) 
 /// @brief Options for `z_declare_transport_events_listener()`.
 #[cfg(feature = "unstable")]
 #[repr(C)]
+#[derive(Default)]
 pub struct z_transport_events_listener_options_t {
     /// If true, the listener will receive events for transports that were already
     /// connected when the listener was declared.
     pub history: bool,
-}
-
-#[cfg(feature = "unstable")]
-impl Default for z_transport_events_listener_options_t {
-    fn default() -> Self {
-        Self { history: false }
-    }
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -677,12 +667,14 @@ pub extern "C" fn z_declare_transport_events_listener(
     let callback = callback.take_rust_type();
 
     let session_info = session.info();
-    let mut builder = session_info.transport_events_listener().callback(move |event| {
-        z_closure_transport_event_call(
-            z_closure_transport_event_loan(&callback),
-            event.as_loaned_c_type_ref(),
-        );
-    });
+    let mut builder = session_info
+        .transport_events_listener()
+        .callback(move |event| {
+            z_closure_transport_event_call(
+                z_closure_transport_event_loan(&callback),
+                event.as_loaned_c_type_ref(),
+            );
+        });
 
     if let Some(opts) = options {
         builder = builder.history(opts.history);
@@ -717,12 +709,14 @@ pub extern "C" fn z_declare_background_transport_events_listener(
     let callback = callback.take_rust_type();
 
     let session_info = session.info();
-    let mut builder = session_info.transport_events_listener().callback(move |event| {
-        z_closure_transport_event_call(
-            z_closure_transport_event_loan(&callback),
-            event.as_loaned_c_type_ref(),
-        );
-    });
+    let mut builder = session_info
+        .transport_events_listener()
+        .callback(move |event| {
+            z_closure_transport_event_call(
+                z_closure_transport_event_loan(&callback),
+                event.as_loaned_c_type_ref(),
+            );
+        });
 
     if let Some(opts) = options {
         builder = builder.history(opts.history);
@@ -793,5 +787,6 @@ pub extern "C" fn z_internal_transport_events_listener_check(
 pub extern "C" fn z_transport_events_listener_loan(
     this_: &z_owned_transport_events_listener_t,
 ) -> *const z_loaned_transport_events_listener_t {
-    this_ as *const z_owned_transport_events_listener_t as *const z_loaned_transport_events_listener_t
+    this_ as *const z_owned_transport_events_listener_t
+        as *const z_loaned_transport_events_listener_t
 }
