@@ -818,16 +818,6 @@ pub extern "C" fn z_link_event_link(event: &z_loaned_link_event_t) -> &z_loaned_
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Get the transport ZenohId from the link event.
-///
-/// Returns the ZenohId of the transport this link belongs to.
-#[cfg(feature = "unstable")]
-#[no_mangle]
-pub extern "C" fn z_link_event_transport_zid(event: &z_loaned_link_event_t) -> z_id_t {
-    event.as_rust_type_ref().transport_zid().into_c_type()
-}
-
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs link event in its gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]

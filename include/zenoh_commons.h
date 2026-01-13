@@ -4624,16 +4624,6 @@ const struct z_loaned_link_t *z_link_event_link(const struct z_loaned_link_event
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the transport ZenohId from the link event.
- *
- * Returns the ZenohId of the transport this link belongs to.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-struct z_id_t z_link_event_transport_zid(const struct z_loaned_link_event_t *event);
-#endif
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops the owned link events listener.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
