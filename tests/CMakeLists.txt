@@ -17,10 +17,9 @@ foreach(file ${files})
     
         # Exclude zenoh-ext tests if unstable api feature is disabled
     if(NOT(ZENOHC_BUILD_WITH_UNSTABLE_API))
-	    if((${target} MATCHES "^.*_advanced_pub_sub.*$") 
-            OR (${target} MATCHES "^.*_pub_cache_query_sub.*$") 
-            OR (${target} MATCHES "^.*_cancellation_token.*$")
-            OR (${target} MATCHES "^.*_info.*$"))
+	    if((${target} MATCHES "^.*_advanced_pub_sub.*$")
+            OR (${target} MATCHES "^.*_pub_cache_query_sub.*$")
+            OR (${target} MATCHES "^.*_cancellation_token.*$"))
             continue()
         endif()
     endif()
