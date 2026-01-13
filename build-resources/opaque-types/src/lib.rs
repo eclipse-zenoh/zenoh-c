@@ -298,7 +298,7 @@ get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
 /// Each transport can have multiple corresponding `z_owned_link_t` which represent
 /// actual established data links with various protocols.
 #[cfg(feature = "unstable")]
-get_opaque_type_data!(Option<Transport>, z_owned_transport_t);
+get_opaque_type_data!(Transport, z_owned_transport_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Transport, z_loaned_transport_t);
 
@@ -306,7 +306,7 @@ get_opaque_type_data!(Transport, z_loaned_transport_t);
 ///
 /// Represents an actual data link with a remote zenoh node over a specific protocol.
 #[cfg(feature = "unstable")]
-get_opaque_type_data!(Option<Link>, z_owned_link_t);
+get_opaque_type_data!(Link, z_owned_link_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Link, z_loaned_link_t);
 
@@ -314,7 +314,7 @@ get_opaque_type_data!(Link, z_loaned_link_t);
 ///
 /// Used in Zenoh connectivity API to notify about connecting or disconnecting to remote zenoh nodes.
 #[cfg(feature = "unstable")]
-get_opaque_type_data!(Option<TransportEvent>, z_owned_transport_event_t);
+get_opaque_type_data!(TransportEvent, z_owned_transport_event_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(TransportEvent, z_loaned_transport_event_t);
 
@@ -322,7 +322,7 @@ get_opaque_type_data!(TransportEvent, z_loaned_transport_event_t);
 ///
 /// Used in Zenoh connectivity API to notify about establishment or break of data links with remote zenoh nodes.
 #[cfg(feature = "unstable")]
-get_opaque_type_data!(Option<LinkEvent>, z_owned_link_event_t);
+get_opaque_type_data!(LinkEvent, z_owned_link_event_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(LinkEvent, z_loaned_link_event_t);
 
