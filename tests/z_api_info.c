@@ -48,11 +48,12 @@ void capture_link_handler(z_loaned_link_t* link, void* arg) {
 
 // Helper to create an isolated session configuration
 // This prevents the session from discovering or connecting to external zenoh nodes
-void create_isolated_config(z_owned_config_t* config, const char* listen_endpoints, const char* connect_endpoints) {
+void create_isolated_config_with_mode(z_owned_config_t* config, const char* mode, const char* listen_endpoints,
+                                      const char* connect_endpoints) {
     z_config_default(config);
 
-    // Set mode to peer
-    zc_config_insert_json5(z_loan_mut(*config), "mode", "\"peer\"");
+    // Set mode
+    zc_config_insert_json5(z_loan_mut(*config), "mode", mode);
 
     // Disable multicast scouting
     zc_config_insert_json5(z_loan_mut(*config), "scouting/multicast/enabled", "false");
@@ -65,6 +66,11 @@ void create_isolated_config(z_owned_config_t* config, const char* listen_endpoin
 
     // Configure connect endpoints
     zc_config_insert_json5(z_loan_mut(*config), "connect/endpoints", connect_endpoints);
+}
+
+// Helper to create an isolated session configuration in peer mode
+void create_isolated_config(z_owned_config_t* config, const char* listen_endpoints, const char* connect_endpoints) {
+    create_isolated_config_with_mode(config, "\"peer\"", listen_endpoints, connect_endpoints);
 }
 
 // Helper to configure an isolated session pair that won't connect to external zenoh nodes
@@ -98,6 +104,95 @@ int create_isolated_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
     sleep(1);
 
     return 0;
+}
+
+// Helper to create an isolated session pair with first session in router mode, second in peer mode
+// Session 1 (router): listens on a specific port
+// Session 2 (peer): connects to session 1's port
+void create_router_peer_session_pair(z_owned_session_t* router_session, z_owned_session_t* peer_session) {
+    // Create config for router session: listener on localhost
+    z_owned_config_t config_router;
+    create_isolated_config_with_mode(&config_router, "\"router\"", "[\"tcp/127.0.0.1:17452\"]", "[]");
+
+    z_result_t res = z_open(router_session, z_move(config_router), NULL);
+    assert(res == 0);
+
+    // Give router session time to start listening
+    sleep(1);
+
+    // Create config for peer session: connects to router
+    z_owned_config_t config_peer;
+    create_isolated_config_with_mode(&config_peer, "\"peer\"", "[]", "[\"tcp/127.0.0.1:17452\"]");
+
+    res = z_open(peer_session, z_move(config_peer), NULL);
+    assert(res == 0);
+
+    // Sleep to allow sessions to establish connection
+    sleep(1);
+}
+
+// Context for counting ZIDs and storing the first one
+typedef struct {
+    int count;
+    z_id_t first_zid;
+} zid_collect_ctx_t;
+
+// Callback for collecting ZIDs
+void zid_collect_handler(const z_id_t* zid, void* arg) {
+    zid_collect_ctx_t* ctx = (zid_collect_ctx_t*)arg;
+    if (ctx->count == 0) {
+        ctx->first_zid = *zid;
+    }
+    ctx->count++;
+}
+
+// Test for stable z_info functions (z_info_zid, z_info_routers_zid, z_info_peers_zid)
+void test_z_info_stable() {
+    printf("=== Testing stable z_info functions ===\n");
+
+    z_owned_session_t router_session, peer_session;
+    create_router_peer_session_pair(&router_session, &peer_session);
+
+    // Get ZIDs of both sessions
+    z_id_t router_zid = z_info_zid(z_loan(router_session));
+    z_id_t peer_zid = z_info_zid(z_loan(peer_session));
+
+    // Verify ZIDs are different
+    assert(memcmp(router_zid.id, peer_zid.id, sizeof(router_zid.id)) != 0);
+    printf("PASS: Router and peer sessions have different ZIDs\n");
+
+    // Test router session: should have empty routers list
+    zid_collect_ctx_t router_routers_ctx = {0};
+    z_owned_closure_zid_t callback;
+    z_closure(&callback, zid_collect_handler, NULL, &router_routers_ctx);
+    z_info_routers_zid(z_loan(router_session), z_move(callback));
+    assert(router_routers_ctx.count == 0);
+    printf("PASS: Router session has empty routers list\n");
+
+    // Test router session: should have peers list with peer's ZID
+    zid_collect_ctx_t router_peers_ctx = {0};
+    z_closure(&callback, zid_collect_handler, NULL, &router_peers_ctx);
+    z_info_peers_zid(z_loan(router_session), z_move(callback));
+    assert(router_peers_ctx.count == 1);
+    assert(memcmp(router_peers_ctx.first_zid.id, peer_zid.id, sizeof(peer_zid.id)) == 0);
+    printf("PASS: Router session has peers list with peer's ZID\n");
+
+    // Test peer session: should have routers list with router's ZID
+    zid_collect_ctx_t peer_routers_ctx = {0};
+    z_closure(&callback, zid_collect_handler, NULL, &peer_routers_ctx);
+    z_info_routers_zid(z_loan(peer_session), z_move(callback));
+    assert(peer_routers_ctx.count == 1);
+    assert(memcmp(peer_routers_ctx.first_zid.id, router_zid.id, sizeof(router_zid.id)) == 0);
+    printf("PASS: Peer session has routers list with router's ZID\n");
+
+    // Test peer session: should have empty peers list
+    zid_collect_ctx_t peer_peers_ctx = {0};
+    z_closure(&callback, zid_collect_handler, NULL, &peer_peers_ctx);
+    z_info_peers_zid(z_loan(peer_session), z_move(callback));
+    assert(peer_peers_ctx.count == 0);
+    printf("PASS: Peer session has empty peers list\n");
+
+    printf("\n");
 }
 
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -834,6 +929,9 @@ int test_link_events_filtered() {
 
 int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
+
+    // Test stable z_info functions (always run, not dependent on unstable API)
+    test_z_info_stable();
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     // Test transports
