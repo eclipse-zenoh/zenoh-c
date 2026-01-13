@@ -11,8 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <stdio.h>
 #include <signal.h>
+#include <stdio.h>
 
 #include "parse_args.h"
 #include "zenoh.h"
@@ -54,10 +54,10 @@ void print_transport(z_loaned_transport_t* transport, void* ctx) {
     printf("    is_qos: %s\n", is_qos ? "true" : "false");
     printf("    is_multicast: %s\n", is_multicast ? "true" : "false");
 
-    #if defined(Z_FEATURE_SHARED_MEMORY)
+#if defined(Z_FEATURE_SHARED_MEMORY)
     bool is_shm = z_transport_is_shm(transport);
     printf("    is_shm: %s\n", is_shm ? "true" : "false");
-    #endif
+#endif
 }
 
 void print_link(z_loaned_link_t* link, void* ctx) {
@@ -151,9 +151,9 @@ void transport_event_handler(const z_loaned_transport_event_t* event, void* ctx)
     printf("    is_qos: %s\n", z_transport_is_qos(transport) ? "true" : "false");
     printf("    is_multicast: %s\n", z_transport_is_multicast(transport) ? "true" : "false");
 
-    #if defined(Z_FEATURE_SHARED_MEMORY)
+#if defined(Z_FEATURE_SHARED_MEMORY)
     printf("    is_shm: %s\n", z_transport_is_shm(transport) ? "true" : "false");
-    #endif
+#endif
 }
 #endif
 
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
     z_closure(&callback2, print_zid, NULL, NULL);
     z_info_peers_zid(z_loan(s), z_move(callback2));
 
-    #if defined(Z_FEATURE_UNSTABLE_API)
+#if defined(Z_FEATURE_UNSTABLE_API)
     // Get transports
     printf("transports:\n");
     z_owned_closure_transport_t callback3;
@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
     }
 
     printf("\nExiting...\n");
-    #endif
+#endif
 
     z_drop(z_move(s));
 }

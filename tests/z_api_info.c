@@ -11,10 +11,10 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
-#include <stdio.h>
-#include <unistd.h>
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "zenoh.h"
 
@@ -112,7 +112,7 @@ int test_z_info_transports() {
     // Capture transport from session 1
     z_owned_transport_t transport;
     z_internal_transport_null(&transport);
-    
+
     z_owned_closure_transport_t callback;
     z_closure(&callback, capture_transport_handler, NULL, &transport);
     z_info_transports(z_loan(s1), z_move(callback));
@@ -129,13 +129,12 @@ int test_z_info_transports() {
     z_id_t captured_zid = z_transport_zid(z_loan(transport));
     z_owned_string_t zid_str;
     z_id_to_string(&captured_zid, &zid_str);
-    printf("Session 1 transport: zid=%.*s\n",
-           (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+    printf("Session 1 transport: zid=%.*s\n", (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
     z_drop(z_move(zid_str));
 
     // Verify the captured transport matches session 2's ZID
     z_id_t s2_zid = z_info_zid(z_loan(s2));
-    
+
     if (memcmp(s2_zid.id, captured_zid.id, sizeof(s2_zid.id)) == 0) {
         printf("PASS: Session 1's transport connects to session 2 (ZIDs match)\n\n");
     } else {
@@ -165,7 +164,7 @@ int test_z_info_links() {
     // Capture link from session 1
     z_owned_link_t link;
     z_internal_link_null(&link);
-    
+
     z_owned_closure_link_t callback;
     z_closure(&callback, capture_link_handler, NULL, &link);
     z_info_links(z_loan(s1), z_move(callback), NULL);
@@ -181,8 +180,7 @@ int test_z_info_links() {
     z_id_t captured_zid = z_link_zid(z_loan(link));
     z_owned_string_t zid_str;
     z_id_to_string(&captured_zid, &zid_str);
-    printf("Session 1 link: zid=%.*s\n",
-           (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+    printf("Session 1 link: zid=%.*s\n", (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
 
     // Verify link connects to session 2
     z_id_t s2_zid = z_info_zid(z_loan(s2));
@@ -259,8 +257,8 @@ int test_z_info_links_filtered() {
         z_id_t link_zid = z_link_zid(z_loan(link));
         z_owned_string_t zid_str;
         z_id_to_string(&link_zid, &zid_str);
-        printf("PASS: Filtered link by s1's transport: zid=%.*s\n",
-               (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+        printf("PASS: Filtered link by s1's transport: zid=%.*s\n", (int)z_string_len(z_loan(zid_str)),
+               z_string_data(z_loan(zid_str)));
         z_drop(z_move(zid_str));
         z_drop(z_move(link));
     } else {
