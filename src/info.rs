@@ -38,11 +38,13 @@ decl_c_type!(copy(z_id_t, ZenohId));
 
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::LoanedCTypeRef, z_closure_link_call, z_closure_link_loan, z_closure_transport_call,
+    transmute::LoanedCTypeRef, z_closure_link_call, z_closure_link_event_call,
+    z_closure_link_event_loan, z_closure_link_loan, z_closure_transport_call,
     z_closure_transport_event_call, z_closure_transport_event_loan, z_closure_transport_loan,
     z_loaned_link_event_t, z_loaned_link_events_listener_t, z_loaned_link_t,
     z_loaned_transport_event_t, z_loaned_transport_events_listener_t, z_loaned_transport_t,
-    z_moved_closure_link_t, z_moved_closure_transport_event_t, z_moved_closure_transport_t,
+    z_moved_closure_link_event_t, z_moved_closure_link_t, z_moved_closure_transport_event_t,
+    z_moved_closure_transport_t, z_moved_link_event_t, z_moved_link_events_listener_t,
     z_moved_link_t, z_moved_transport_event_t, z_moved_transport_events_listener_t,
     z_moved_transport_t, z_owned_link_event_t, z_owned_link_events_listener_t, z_owned_link_t,
     z_owned_transport_event_t, z_owned_transport_events_listener_t, z_owned_transport_t,
@@ -789,4 +791,230 @@ pub extern "C" fn z_transport_events_listener_loan(
 ) -> *const z_loaned_transport_events_listener_t {
     this_ as *const z_owned_transport_events_listener_t
         as *const z_loaned_transport_events_listener_t
+}
+
+// ========================
+// LinkEvent Functions
+// ========================
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Get event kind from the link event.
+///
+/// Returns `Z_SAMPLE_KIND_PUT` when a link was added, `Z_SAMPLE_KIND_DELETE` when removed.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_event_kind(event: &z_loaned_link_event_t) -> z_sample_kind_t {
+    event.as_rust_type_ref().kind().into()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Get the link from the link event.
+///
+/// Returns a loaned reference to the link that was added or removed.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_event_link(event: &z_loaned_link_event_t) -> &z_loaned_link_t {
+    event.as_rust_type_ref().link().as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Get the transport ZenohId from the link event.
+///
+/// Returns the ZenohId of the transport this link belongs to.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_event_transport_zid(event: &z_loaned_link_event_t) -> z_id_t {
+    event.as_rust_type_ref().transport_zid().into_c_type()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs link event in its gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_internal_link_event_null(
+    this_: &mut MaybeUninit<z_owned_link_event_t>,
+) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns ``true`` if link event is valid, ``false`` if it is in gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_internal_link_event_check(this_: &z_owned_link_event_t) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Drops the owned link event.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_event_drop(this_: &mut z_moved_link_event_t) {
+    let _ = this_.take_rust_type();
+}
+
+// ====================================
+// LinkEventsListener Functions
+// ====================================
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Options for `z_declare_link_events_listener()`.
+#[cfg(feature = "unstable")]
+#[repr(C)]
+#[derive(Default)]
+pub struct z_link_events_listener_options_t {
+    /// If true, the listener will receive events for links that were already
+    /// connected when the listener was declared.
+    pub history: bool,
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs the default value for `z_link_events_listener_options_t`.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_events_listener_options_default(
+    this_: &mut MaybeUninit<z_link_events_listener_options_t>,
+) {
+    this_.write(z_link_events_listener_options_t::default());
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a link events listener.
+///
+/// The listener will be called whenever a link is added or removed from the session.
+///
+/// @param session: The session to listen on.
+/// @param listener: The uninitialized memory location where the listener will be constructed.
+/// @param callback: The closure to be called for each link event.
+/// @param options: Optional configuration for the listener.
+///
+/// @return 0 on success, negative value on failure.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_declare_link_events_listener(
+    session: &'static z_loaned_session_t,
+    listener: &mut MaybeUninit<z_owned_link_events_listener_t>,
+    callback: &mut z_moved_closure_link_event_t,
+    options: Option<&z_link_events_listener_options_t>,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+
+    let session_info = session.info();
+    let mut builder = session_info.link_events_listener().callback(move |event| {
+        z_closure_link_event_call(
+            z_closure_link_event_loan(&callback),
+            event.as_loaned_c_type_ref(),
+        );
+    });
+
+    if let Some(opts) = options {
+        builder = builder.history(opts.history);
+    }
+
+    let listener_result = builder.wait();
+    listener
+        .as_rust_type_mut_uninit()
+        .write(Some(listener_result));
+    result::Z_OK
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a background link events listener.
+///
+/// The listener runs in the background and cannot be undeclared. It will be dropped
+/// when the session is closed.
+///
+/// @param session: The session to listen on.
+/// @param callback: The closure to be called for each link event.
+/// @param options: Optional configuration for the listener.
+///
+/// @return 0 on success, negative value on failure.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_declare_background_link_events_listener(
+    session: &'static z_loaned_session_t,
+    callback: &mut z_moved_closure_link_event_t,
+    options: Option<&z_link_events_listener_options_t>,
+) -> result::z_result_t {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+
+    let session_info = session.info();
+    let mut builder = session_info.link_events_listener().callback(move |event| {
+        z_closure_link_event_call(
+            z_closure_link_event_loan(&callback),
+            event.as_loaned_c_type_ref(),
+        );
+    });
+
+    if let Some(opts) = options {
+        builder = builder.history(opts.history);
+    }
+
+    let _ = builder.background().wait();
+    result::Z_OK
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Undeclares a link events listener.
+///
+/// @param this_: The listener to undeclare.
+///
+/// @return 0 on success, negative value on failure.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_undeclare_link_events_listener(
+    this_: &mut z_moved_link_events_listener_t,
+) -> result::z_result_t {
+    if let Some(listener) = this_.take_rust_type() {
+        if let Err(e) = listener.undeclare().wait() {
+            crate::report_error!("{}", e);
+            return result::Z_ENETWORK;
+        }
+    }
+    result::Z_OK
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Drops the owned link events listener.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_events_listener_drop(this_: &mut z_moved_link_events_listener_t) {
+    std::mem::drop(this_.take_rust_type())
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs link events listener in its gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_internal_link_events_listener_null(
+    this_: &mut MaybeUninit<z_owned_link_events_listener_t>,
+) {
+    this_.as_rust_type_mut_uninit().write(None);
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Returns ``true`` if link events listener is valid, ``false`` if it is in gravestone state.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_internal_link_events_listener_check(
+    this_: &z_owned_link_events_listener_t,
+) -> bool {
+    this_.as_rust_type_ref().is_some()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Gets a loaned reference from an owned link events listener.
+///
+/// @param this_: The owned link events listener.
+/// @return A loaned link events listener reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_events_listener_loan(
+    this_: &z_owned_link_events_listener_t,
+) -> *const z_loaned_link_events_listener_t {
+    this_ as *const z_owned_link_events_listener_t as *const z_loaned_link_events_listener_t
 }

@@ -251,6 +251,16 @@ typedef enum z_keyexpr_intersection_level_t {
   Z_KEYEXPR_INTERSECTION_LEVEL_EQUALS = 3,
 } z_keyexpr_intersection_level_t;
 #endif
+typedef enum z_sample_kind_t {
+  /**
+   * The Sample was issued by a ``put`` operation.
+   */
+  Z_SAMPLE_KIND_PUT = 0,
+  /**
+   * The Sample was issued by a ``delete`` operation.
+   */
+  Z_SAMPLE_KIND_DELETE = 1,
+} z_sample_kind_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Session's provider state.
@@ -275,16 +285,6 @@ typedef enum z_shm_provider_state {
   Z_SHM_PROVIDER_STATE_ERROR,
 } z_shm_provider_state;
 #endif
-typedef enum z_sample_kind_t {
-  /**
-   * The Sample was issued by a ``put`` operation.
-   */
-  Z_SAMPLE_KIND_PUT = 0,
-  /**
-   * The Sample was issued by a ``delete`` operation.
-   */
-  Z_SAMPLE_KIND_DELETE = 1,
-} z_sample_kind_t;
 typedef enum z_what_t {
   Z_WHAT_ROUTER = 1,
   Z_WHAT_PEER = 2,
@@ -590,6 +590,42 @@ typedef struct z_moved_closure_link_t {
   struct z_owned_closure_link_t _this;
 } z_moved_closure_link_t;
 #endif
+typedef struct ALIGN(8) z_loaned_link_event_t {
+  uint8_t _0[152];
+} z_loaned_link_event_t;
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief A link event-processing closure.
+ *
+ * A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_owned_closure_link_event_t {
+  void *_context;
+  void (*_call)(const struct z_loaned_link_event_t *event, void *context);
+  void (*_drop)(void *context);
+} z_owned_closure_link_event_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Loaned closure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_loaned_closure_link_event_t {
+  size_t _0;
+  size_t _1;
+  size_t _2;
+} z_loaned_closure_link_event_t;
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Moved closure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_moved_closure_link_event_t {
+  struct z_owned_closure_link_event_t _this;
+} z_moved_closure_link_event_t;
+#endif
 /**
  * @brief A struct that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
  */
@@ -757,6 +793,19 @@ typedef struct z_moved_config_t {
   struct z_owned_config_t _this;
 } z_moved_config_t;
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Options for `z_declare_link_events_listener()`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+typedef struct z_link_events_listener_options_t {
+  /**
+   * If true, the listener will receive events for links that were already
+   * connected when the listener was declared.
+   */
+  bool history;
+} z_link_events_listener_options_t;
+#endif
+/**
  * Options passed to the `z_declare_queryable()` function.
  */
 typedef struct z_queryable_options_t {
@@ -793,6 +842,14 @@ typedef struct z_transport_events_listener_options_t {
   bool history;
 } z_transport_events_listener_options_t;
 #endif
+/**
+ * @brief An listener for link events.
+ *
+ * Used in Zenoh connectivity API to get notified about establishment or break of data links with remote zenoh nodes.
+ */
+typedef struct ALIGN(8) z_owned_link_events_listener_t {
+  uint8_t _0[16];
+} z_owned_link_events_listener_t;
 typedef struct z_moved_encoding_t {
   struct z_owned_encoding_t _this;
 } z_moved_encoding_t;
@@ -1033,6 +1090,14 @@ typedef struct ALIGN(8) z_owned_link_t {
   uint8_t _0[144];
 } z_owned_link_t;
 /**
+ * @brief The event notifyting about addition or removal of a link `z_owned_link_t`
+ *
+ * Used in Zenoh connectivity API to notify about establishment or break of data links with remote zenoh nodes.
+ */
+typedef struct ALIGN(8) z_owned_link_event_t {
+  uint8_t _0[152];
+} z_owned_link_event_t;
+/**
  * @brief The event notifyting about addition or removal of a transport `z_owned_transport_t`
  *
  * Used in Zenoh connectivity API to notify about connecting or disconnecting to remote zenoh nodes.
@@ -1046,6 +1111,15 @@ typedef struct z_moved_keyexpr_t {
 typedef struct z_moved_link_t {
   struct z_owned_link_t _this;
 } z_moved_link_t;
+typedef struct z_moved_link_event_t {
+  struct z_owned_link_event_t _this;
+} z_moved_link_event_t;
+typedef struct z_moved_link_events_listener_t {
+  struct z_owned_link_events_listener_t _this;
+} z_moved_link_events_listener_t;
+typedef struct ALIGN(8) z_loaned_link_events_listener_t {
+  uint8_t _0[16];
+} z_loaned_link_events_listener_t;
 /**
  * @brief The options for `z_liveliness_declare_subscriber()`
  */
@@ -2427,6 +2501,54 @@ void z_closure_link_call(const struct z_loaned_closure_link_t *closure,
 ZENOHC_API void z_closure_link_drop(struct z_moved_closure_link_t *closure_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ *
+ * Closures are not guaranteed not to be called concurrently.
+ *
+ * It is guaranteed that:
+ *   - `call` will never be called once `drop` has started.
+ *   - `drop` will only be called **once**, and **after every** `call` has ended.
+ *   - The two previous guarantees imply that `call` and `drop` are never called concurrently.
+ *
+ * @brief Constructs closure.
+ * @param this_: uninitialized memory location where new closure will be constructed.
+ * @param call: a closure body.
+ * @param drop: an optional function to be called once on closure drop.
+ * @param context: closure context.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_closure_link_event(struct z_owned_closure_link_event_t *this_,
+                          void (*call)(const struct z_loaned_link_event_t *event, void *context),
+                          void (*drop)(void *context),
+                          void *context);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Calls the closure. Calling an uninitialized closure is a no-op.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_closure_link_event_call(const struct z_loaned_closure_link_event_t *closure,
+                               const struct z_loaned_link_event_t *event);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_closure_link_event_drop(struct z_moved_closure_link_event_t *closure_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Borrows closure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_closure_link_event_t *z_closure_link_event_loan(const struct z_owned_closure_link_event_t *closure);
+#endif
+/**
  * Borrows closure.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -2794,6 +2916,25 @@ ZENOHC_API const struct z_loaned_config_t *z_config_loan(const struct z_owned_co
  */
 ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a background link events listener.
+ *
+ * The listener runs in the background and cannot be undeclared. It will be dropped
+ * when the session is closed.
+ *
+ * @param session: The session to listen on.
+ * @param callback: The closure to be called for each link event.
+ * @param options: Optional configuration for the listener.
+ *
+ * @return 0 on success, negative value on failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_declare_background_link_events_listener(const struct z_loaned_session_t *session,
+                                                     struct z_moved_closure_link_event_t *callback,
+                                                     const struct z_link_events_listener_options_t *options);
+#endif
+/**
  * Declares a background queryable for a given keyexpr. The queryable callback will be be called
  * to proccess incoming queries until the corresponding session is closed or dropped.
  *
@@ -2857,6 +2998,26 @@ ZENOHC_API
 z_result_t z_declare_keyexpr(const struct z_loaned_session_t *session,
                              struct z_owned_keyexpr_t *declared_key_expr,
                              const struct z_loaned_keyexpr_t *key_expr);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Declares a link events listener.
+ *
+ * The listener will be called whenever a link is added or removed from the session.
+ *
+ * @param session: The session to listen on.
+ * @param listener: The uninitialized memory location where the listener will be constructed.
+ * @param callback: The closure to be called for each link event.
+ * @param options: Optional configuration for the listener.
+ *
+ * @return 0 on success, negative value on failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_declare_link_events_listener(const struct z_loaned_session_t *session,
+                                          struct z_owned_link_events_listener_t *listener,
+                                          struct z_moved_closure_link_event_t *callback,
+                                          const struct z_link_events_listener_options_t *options);
+#endif
 /**
  * Constructs and declares a publisher for the given key expression.
  *
@@ -3708,6 +3869,22 @@ ZENOHC_API void z_internal_closure_hello_null(struct z_owned_closure_hello_t *th
 ZENOHC_API bool z_internal_closure_link_check(const struct z_owned_closure_link_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_closure_link_event_check(const struct z_owned_closure_link_event_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs a null value of 'z_owned_closure_link_event_t' type
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_closure_link_event_null(struct z_owned_closure_link_event_t *this_);
+#endif
+/**
  * Constructs a closure in its gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -3872,6 +4049,38 @@ ZENOHC_API void z_internal_keyexpr_null(struct z_owned_keyexpr_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API bool z_internal_link_check(const struct z_owned_link_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if link event is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_link_event_check(const struct z_owned_link_event_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs link event in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_link_event_null(struct z_owned_link_event_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Returns ``true`` if link events listener is valid, ``false`` if it is in gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_internal_link_events_listener_check(const struct z_owned_link_events_listener_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs link events listener in its gravestone state.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_internal_link_events_listener_null(struct z_owned_link_events_listener_t *this_);
 #endif
 /**
  * Constructs a link in its gravestone state.
@@ -4384,6 +4593,71 @@ ZENOHC_API void z_link_drop(struct z_moved_link_t *this_);
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API void z_link_dst(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Drops the owned link event.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_event_drop(struct z_moved_link_event_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Get event kind from the link event.
+ *
+ * Returns `Z_SAMPLE_KIND_PUT` when a link was added, `Z_SAMPLE_KIND_DELETE` when removed.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+enum z_sample_kind_t z_link_event_kind(const struct z_loaned_link_event_t *event);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Get the link from the link event.
+ *
+ * Returns a loaned reference to the link that was added or removed.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_link_t *z_link_event_link(const struct z_loaned_link_event_t *event);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Get the transport ZenohId from the link event.
+ *
+ * Returns the ZenohId of the transport this link belongs to.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_id_t z_link_event_transport_zid(const struct z_loaned_link_event_t *event);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Drops the owned link events listener.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_events_listener_drop(struct z_moved_link_events_listener_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Gets a loaned reference from an owned link events listener.
+ *
+ * @param this_: The owned link events listener.
+ * @return A loaned link events listener reference.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+const struct z_loaned_link_events_listener_t *z_link_events_listener_loan(const struct z_owned_link_events_listener_t *this_);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Constructs the default value for `z_link_events_listener_options_t`.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_events_listener_options_default(struct z_link_events_listener_options_t *this_);
 #endif
 /**
  * @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
@@ -6536,6 +6810,18 @@ ZENOHC_API struct z_id_t z_transport_zid(const struct z_loaned_transport_t *tran
 ZENOHC_API
 z_result_t z_undeclare_keyexpr(const struct z_loaned_session_t *session,
                                struct z_moved_keyexpr_t *key_expr);
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Undeclares a link events listener.
+ *
+ * @param this_: The listener to undeclare.
+ *
+ * @return 0 on success, negative value on failure.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+z_result_t z_undeclare_link_events_listener(struct z_moved_link_events_listener_t *this_);
+#endif
 /**
  * @brief Undeclares the given matching listener, droping and invalidating it.
  * @return 0 in case of success, negative error code otherwise.
