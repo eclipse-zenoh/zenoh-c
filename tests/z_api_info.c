@@ -308,12 +308,16 @@ typedef struct {
 } transport_event_ctx_t;
 
 // Handler for transport events
+// NOTE: Caller must drop and nullify ctx->last_transport before expecting a new PUT event
 void transport_event_handler(const z_loaned_transport_event_t* event, void* arg) {
     transport_event_ctx_t* ctx = (transport_event_ctx_t*)arg;
     z_sample_kind_t kind = z_transport_event_kind(event);
     const z_loaned_transport_t* transport = z_transport_event_transport(event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
+        // Verify last_transport is null before taking a new one
+        assert(!z_internal_transport_check(&ctx->last_transport) &&
+               "last_transport must be nullified before receiving new event");
         ctx->added_count++;
         z_transport_take_from_loaned(&ctx->last_transport, transport);
     } else {
