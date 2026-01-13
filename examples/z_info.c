@@ -135,14 +135,25 @@ void transport_event_handler(const z_loaned_transport_event_t* event, void* ctx)
     z_id_to_string(&zid, &zid_str);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
-        printf("[Transport Event] Opened: zid=%.*s\n",
-               (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+        printf("[Transport Event] Opened:\n");
     } else {
-        printf("[Transport Event] Closed: zid=%.*s\n",
-               (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+        printf("[Transport Event] Closed:\n");
     }
 
+    printf("    zid: %.*s\n", (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
     z_drop(z_move(zid_str));
+
+    z_whatami_t whatami = z_transport_whatami(transport);
+    z_view_string_t whatami_str;
+    z_whatami_to_view_string(whatami, &whatami_str);
+    printf("    whatami: %.*s\n", (int)z_string_len(z_loan(whatami_str)), z_string_data(z_loan(whatami_str)));
+
+    printf("    is_qos: %s\n", z_transport_is_qos(transport) ? "true" : "false");
+    printf("    is_multicast: %s\n", z_transport_is_multicast(transport) ? "true" : "false");
+
+    #if defined(Z_FEATURE_SHARED_MEMORY)
+    printf("    is_shm: %s\n", z_transport_is_shm(transport) ? "true" : "false");
+    #endif
 }
 #endif
 
