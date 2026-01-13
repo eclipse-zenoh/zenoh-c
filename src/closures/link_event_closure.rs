@@ -27,7 +27,7 @@ use crate::{
 #[repr(C)]
 pub struct z_owned_closure_link_event_t {
     _context: *mut c_void,
-    _call: Option<extern "C" fn(event: &z_loaned_link_event_t, context: *mut c_void)>,
+    _call: Option<extern "C" fn(event: &mut z_loaned_link_event_t, context: *mut c_void)>,
     _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
@@ -102,7 +102,7 @@ pub extern "C" fn z_internal_closure_link_event_check(
 #[no_mangle]
 pub extern "C" fn z_closure_link_event_call(
     closure: &z_loaned_closure_link_event_t,
-    event: &z_loaned_link_event_t,
+    event: &mut z_loaned_link_event_t,
 ) {
     let closure = closure.as_owned_c_type_ref();
     match closure._call {
@@ -120,11 +120,11 @@ pub extern "C" fn z_closure_link_event_drop(closure_: &mut z_moved_closure_link_
     let _ = closure_.take_rust_type();
 }
 
-impl<F: Fn(&z_loaned_link_event_t)> From<F> for z_owned_closure_link_event_t {
+impl<F: Fn(&mut z_loaned_link_event_t)> From<F> for z_owned_closure_link_event_t {
     fn from(f: F) -> Self {
         let this = Box::into_raw(Box::new(f)) as _;
-        extern "C" fn call<F: Fn(&z_loaned_link_event_t)>(
-            event: &z_loaned_link_event_t,
+        extern "C" fn call<F: Fn(&mut z_loaned_link_event_t)>(
+            event: &mut z_loaned_link_event_t,
             this: *mut c_void,
         ) {
             let this = unsafe { &*(this as *const F) };
@@ -167,7 +167,7 @@ pub extern "C" fn z_closure_link_event_loan(
 #[no_mangle]
 pub extern "C" fn z_closure_link_event(
     this: &mut MaybeUninit<z_owned_closure_link_event_t>,
-    call: Option<extern "C" fn(event: &z_loaned_link_event_t, context: *mut c_void)>,
+    call: Option<extern "C" fn(event: &mut z_loaned_link_event_t, context: *mut c_void)>,
     drop: Option<extern "C" fn(context: *mut c_void)>,
     context: *mut c_void,
 ) {

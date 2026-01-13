@@ -526,13 +526,13 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
 typedef void(*z_closure_drop_callback_t)(void *context);
 typedef void(*z_closure_hello_callback_t)(z_loaned_hello_t *hello, void *context);
 typedef void(*z_closure_link_callback_t)(z_loaned_link_t *link, void *context);
-typedef void(*z_closure_link_event_callback_t)(const z_loaned_link_event_t *event, void *context);
+typedef void(*z_closure_link_event_callback_t)(z_loaned_link_event_t *event, void *context);
 typedef void(*z_closure_matching_status_callback_t)(const z_matching_status_t *matching_status, void *context);
 typedef void(*z_closure_query_callback_t)(z_loaned_query_t *query, void *context);
 typedef void(*z_closure_reply_callback_t)(z_loaned_reply_t *reply, void *context);
 typedef void(*z_closure_sample_callback_t)(z_loaned_sample_t *sample, void *context);
 typedef void(*z_closure_transport_callback_t)(z_loaned_transport_t *transport, void *context);
-typedef void(*z_closure_transport_event_callback_t)(const z_loaned_transport_event_t *event, void *context);
+typedef void(*z_closure_transport_event_callback_t)(z_loaned_transport_event_t *event, void *context);
 typedef void(*z_closure_zid_callback_t)(const z_id_t *z_id, void *context);
 typedef void(*zc_closure_log_callback_t)(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
 typedef void(*ze_closure_miss_callback_t)(const ze_miss_t *matching_status, void *context);
@@ -1210,7 +1210,7 @@ inline void z_call(const z_loaned_closure_hello_t* closure, z_loaned_hello_t* he
 inline void z_call(const z_loaned_closure_link_t* closure, z_loaned_link_t* link) {
     z_closure_link_call(closure, link);
 };
-inline void z_call(const z_loaned_closure_link_event_t* closure, const z_loaned_link_event_t* event) {
+inline void z_call(const z_loaned_closure_link_event_t* closure, z_loaned_link_event_t* event) {
     z_closure_link_event_call(closure, event);
 };
 inline void z_call(const z_loaned_closure_matching_status_t* closure, const z_matching_status_t* mathing_status) {
@@ -1228,7 +1228,7 @@ inline void z_call(const z_loaned_closure_sample_t* closure, z_loaned_sample_t* 
 inline void z_call(const z_loaned_closure_transport_t* closure, z_loaned_transport_t* transport) {
     z_closure_transport_call(closure, transport);
 };
-inline void z_call(const z_loaned_closure_transport_event_t* closure, const z_loaned_transport_event_t* event) {
+inline void z_call(const z_loaned_closure_transport_event_t* closure, z_loaned_transport_event_t* event) {
     z_closure_transport_event_call(closure, event);
 };
 inline void z_call(const z_loaned_closure_zid_t* closure, const z_id_t* z_id) {
@@ -1241,13 +1241,13 @@ inline void z_call(const ze_loaned_closure_miss_t* closure, const ze_miss_t* mat
 extern "C" using z_closure_drop_callback_t = void(void* context);
 extern "C" using z_closure_hello_callback_t = void(z_loaned_hello_t *hello, void *context);
 extern "C" using z_closure_link_callback_t = void(z_loaned_link_t *link, void *context);
-extern "C" using z_closure_link_event_callback_t = void(const z_loaned_link_event_t *event, void *context);
+extern "C" using z_closure_link_event_callback_t = void(z_loaned_link_event_t *event, void *context);
 extern "C" using z_closure_matching_status_callback_t = void(const z_matching_status_t *matching_status, void *context);
 extern "C" using z_closure_query_callback_t = void(z_loaned_query_t *query, void *context);
 extern "C" using z_closure_reply_callback_t = void(z_loaned_reply_t *reply, void *context);
 extern "C" using z_closure_sample_callback_t = void(z_loaned_sample_t *sample, void *context);
 extern "C" using z_closure_transport_callback_t = void(z_loaned_transport_t *transport, void *context);
-extern "C" using z_closure_transport_event_callback_t = void(const z_loaned_transport_event_t *event, void *context);
+extern "C" using z_closure_transport_event_callback_t = void(z_loaned_transport_event_t *event, void *context);
 extern "C" using z_closure_zid_callback_t = void(const z_id_t *z_id, void *context);
 extern "C" using zc_closure_log_callback_t = void(zc_log_severity_t severity, const z_loaned_string_t *msg, void *context);
 extern "C" using ze_closure_miss_callback_t = void(const ze_miss_t *matching_status, void *context);

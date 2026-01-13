@@ -602,7 +602,7 @@ typedef struct ALIGN(8) z_loaned_link_event_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_owned_closure_link_event_t {
   void *_context;
-  void (*_call)(const struct z_loaned_link_event_t *event, void *context);
+  void (*_call)(struct z_loaned_link_event_t *event, void *context);
   void (*_drop)(void *context);
 } z_owned_closure_link_event_t;
 #endif
@@ -746,7 +746,7 @@ typedef struct ALIGN(1) z_loaned_transport_event_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef struct z_owned_closure_transport_event_t {
   void *_context;
-  void (*_call)(const struct z_loaned_transport_event_t *event, void *context);
+  void (*_call)(struct z_loaned_transport_event_t *event, void *context);
   void (*_drop)(void *context);
 } z_owned_closure_transport_event_t;
 #endif
@@ -2526,7 +2526,7 @@ ZENOHC_API void z_closure_link_drop(struct z_moved_closure_link_t *closure_);
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_link_event(struct z_owned_closure_link_event_t *this_,
-                          void (*call)(const struct z_loaned_link_event_t *event, void *context),
+                          void (*call)(struct z_loaned_link_event_t *event, void *context),
                           void (*drop)(void *context),
                           void *context);
 #endif
@@ -2537,7 +2537,7 @@ void z_closure_link_event(struct z_owned_closure_link_event_t *this_,
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_link_event_call(const struct z_loaned_closure_link_event_t *closure,
-                               const struct z_loaned_link_event_t *event);
+                               struct z_loaned_link_event_t *event);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -2786,8 +2786,7 @@ ZENOHC_API void z_closure_transport_drop(struct z_moved_closure_transport_t *clo
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_transport_event(struct z_owned_closure_transport_event_t *this_,
-                               void (*call)(const struct z_loaned_transport_event_t *event,
-                                            void *context),
+                               void (*call)(struct z_loaned_transport_event_t *event, void *context),
                                void (*drop)(void *context),
                                void *context);
 #endif
@@ -2798,7 +2797,7 @@ void z_closure_transport_event(struct z_owned_closure_transport_event_t *this_,
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_closure_transport_event_call(const struct z_loaned_closure_transport_event_t *closure,
-                                    const struct z_loaned_transport_event_t *event);
+                                    struct z_loaned_transport_event_t *event);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

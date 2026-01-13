@@ -730,10 +730,10 @@ pub extern "C" fn z_declare_transport_events_listener(
     let session_info = session.info();
     let mut builder = session_info
         .transport_events_listener()
-        .callback(move |event| {
+        .callback(move |mut event| {
             z_closure_transport_event_call(
                 z_closure_transport_event_loan(&callback),
-                event.as_loaned_c_type_ref(),
+                event.as_loaned_c_type_mut(),
             );
         });
 
@@ -772,10 +772,10 @@ pub extern "C" fn z_declare_background_transport_events_listener(
     let session_info = session.info();
     let mut builder = session_info
         .transport_events_listener()
-        .callback(move |event| {
+        .callback(move |mut event| {
             z_closure_transport_event_call(
                 z_closure_transport_event_loan(&callback),
-                event.as_loaned_c_type_ref(),
+                event.as_loaned_c_type_mut(),
             );
         });
 
@@ -968,10 +968,10 @@ pub extern "C" fn z_declare_link_events_listener(
     let callback = callback.take_rust_type();
 
     let session_info = session.info();
-    let mut builder = session_info.link_events_listener().callback(move |event| {
+    let mut builder = session_info.link_events_listener().callback(move |mut event| {
         z_closure_link_event_call(
             z_closure_link_event_loan(&callback),
-            event.as_loaned_c_type_ref(),
+            event.as_loaned_c_type_mut(),
         );
     });
 
@@ -1015,10 +1015,10 @@ pub extern "C" fn z_declare_background_link_events_listener(
     let callback = callback.take_rust_type();
 
     let session_info = session.info();
-    let mut builder = session_info.link_events_listener().callback(move |event| {
+    let mut builder = session_info.link_events_listener().callback(move |mut event| {
         z_closure_link_event_call(
             z_closure_link_event_loan(&callback),
-            event.as_loaned_c_type_ref(),
+            event.as_loaned_c_type_mut(),
         );
     });
 
