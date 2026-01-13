@@ -12,9 +12,19 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 
 #include <stdio.h>
+#include <signal.h>
 
 #include "parse_args.h"
 #include "zenoh.h"
+
+#if defined(Z_FEATURE_UNSTABLE_API)
+static volatile bool running = true;
+
+void handle_signal(int sig) {
+    (void)sig;
+    running = false;
+}
+#endif
 
 void print_zid(const z_id_t* id, void* ctx) {
     z_owned_string_t str;
@@ -114,6 +124,26 @@ void print_link(z_loaned_link_t* link, void* ctx) {
     z_drop(z_move(group));
     z_drop(z_move(auth_id));
 }
+
+void transport_event_handler(const z_loaned_transport_event_t* event, void* ctx) {
+    (void)ctx;
+    z_sample_kind_t kind = z_transport_event_kind(event);
+    const z_loaned_transport_t* transport = z_transport_event_transport(event);
+
+    z_id_t zid = z_transport_zid(transport);
+    z_owned_string_t zid_str;
+    z_id_to_string(&zid, &zid_str);
+
+    if (kind == Z_SAMPLE_KIND_PUT) {
+        printf("[Transport Event] Opened: zid=%.*s\n",
+               (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+    } else {
+        printf("[Transport Event] Closed: zid=%.*s\n",
+               (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+    }
+
+    z_drop(z_move(zid_str));
+}
 #endif
 
 void parse_args(int argc, char** argv, z_owned_config_t* config);
@@ -159,6 +189,30 @@ int main(int argc, char** argv) {
     z_owned_closure_link_t callback4;
     z_closure(&callback4, print_link, NULL, NULL);
     z_info_links(z_loan(s), z_move(callback4), NULL);
+
+    // Set up transport events listener
+    printf("\nConnectivity events (Press CTRL-C to quit):\n");
+
+    signal(SIGINT, handle_signal);
+    signal(SIGTERM, handle_signal);
+
+    z_owned_closure_transport_event_t event_callback;
+    z_closure(&event_callback, transport_event_handler, NULL, NULL);
+    z_transport_events_listener_options_t opts;
+    z_transport_events_listener_options_default(&opts);
+    opts.history = false;  // Don't repeat transports we already printed
+
+    if (z_declare_background_transport_events_listener(z_loan(s), z_move(event_callback), &opts) != 0) {
+        printf("Unable to declare transport events listener!\n");
+        z_drop(z_move(s));
+        exit(-1);
+    }
+
+    while (running) {
+        z_sleep_s(1);
+    }
+
+    printf("\nExiting...\n");
     #endif
 
     z_drop(z_move(s));
