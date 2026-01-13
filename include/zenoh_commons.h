@@ -4631,6 +4631,16 @@ const struct z_loaned_link_t *z_link_event_link(const struct z_loaned_link_event
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Get the mutable link from the link event.
+ *
+ * Returns a mutable loaned reference to the link that was added or removed.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_loaned_link_t *z_link_event_link_mut(struct z_loaned_link_event_t *event);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops the owned link events listener.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -4743,16 +4753,14 @@ ZENOHC_API void z_link_src(const struct z_loaned_link_t *link, struct z_owned_st
  * @brief Move link data from loaned pointer to owned object.
  *
  * Moves the link referenced by `src` into the `dst` owned object.
- * The source loaned object is still owned by the caller and must be dropped.
+ * The source loaned object is replaced with an empty state.
  * The destination must be uninitialized (in gravestone state).
  *
  * @param dst: The destination owned link (must be uninitialized).
- * @param src: The source loaned link.
+ * @param src: The source loaned link (will be replaced with empty state).
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-void z_link_take_from_loaned(struct z_owned_link_t *dst,
-                             const struct z_loaned_link_t *src);
+ZENOHC_API void z_link_take_from_loaned(struct z_owned_link_t *dst, struct z_loaned_link_t *src);
 #endif
 /**
  * @brief Get the zenoh id from the `z_loaned_link_t`.
@@ -6700,6 +6708,16 @@ const struct z_loaned_transport_t *z_transport_event_transport(const struct z_lo
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Get the mutable transport from the transport event.
+ *
+ * Returns a mutable loaned reference to the transport that was added or removed.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+struct z_loaned_transport_t *z_transport_event_transport_mut(struct z_loaned_transport_event_t *event);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops the owned transport events listener.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -6772,16 +6790,16 @@ ZENOHC_API struct z_loaned_transport_t *z_transport_loan_mut(struct z_owned_tran
  * @brief Move transport data from loaned pointer to owned object.
  *
  * Moves the transport referenced by `src` into the `dst` owned object.
- * The source loaned object is still owned by the caller and must be dropped.
+ * The source loaned object is replaced with an empty state.
  * The destination must be uninitialized (in gravestone state).
  *
  * @param dst: The destination owned transport (must be uninitialized).
- * @param src: The source loaned transport.
+ * @param src: The source loaned transport (will be replaced with empty state).
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 void z_transport_take_from_loaned(struct z_owned_transport_t *dst,
-                                  const struct z_loaned_transport_t *src);
+                                  struct z_loaned_transport_t *src);
 #endif
 /**
  * @brief Get the whatami from the `z_loaned_transport_t`.

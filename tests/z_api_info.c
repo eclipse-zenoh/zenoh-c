@@ -307,10 +307,10 @@ typedef struct {
 
 // Handler for transport events
 // NOTE: Caller must drop and nullify ctx->last_transport before expecting a new PUT event
-void transport_event_handler(const z_loaned_transport_event_t* event, void* arg) {
+void transport_event_handler(z_loaned_transport_event_t* event, void* arg) {
     transport_event_ctx_t* ctx = (transport_event_ctx_t*)arg;
     z_sample_kind_t kind = z_transport_event_kind(event);
-    const z_loaned_transport_t* transport = z_transport_event_transport(event);
+    z_loaned_transport_t* transport = z_transport_event_transport_mut(event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
         // Verify last_transport is null before taking a new one
@@ -519,10 +519,10 @@ typedef struct {
 
 // Handler for link events
 // NOTE: Caller must drop and nullify ctx->last_link before expecting a new PUT event
-void link_event_handler(const z_loaned_link_event_t* event, void* arg) {
+void link_event_handler(z_loaned_link_event_t* event, void* arg) {
     link_event_ctx_t* ctx = (link_event_ctx_t*)arg;
     z_sample_kind_t kind = z_link_event_kind(event);
-    const z_loaned_link_t* link = z_link_event_link(event);
+    z_loaned_link_t* link = z_link_event_link_mut(event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
         // Verify last_link is null before taking a new one
