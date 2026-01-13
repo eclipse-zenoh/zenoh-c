@@ -793,6 +793,19 @@ typedef struct z_moved_config_t {
   struct z_owned_config_t _this;
 } z_moved_config_t;
 /**
+ * @brief An Transport structure returned by Zenoh connectivity API.
+ *
+ * Represents a remote zenoh node connected to this node. Only one transport per remote node exists.
+ * Each transport can have multiple corresponding `z_owned_link_t` which represent
+ * actual established data links with various protocols.
+ */
+typedef struct ALIGN(1) z_owned_transport_t {
+  uint8_t _0[19];
+} z_owned_transport_t;
+typedef struct z_moved_transport_t {
+  struct z_owned_transport_t _this;
+} z_moved_transport_t;
+/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Options for `z_declare_link_events_listener()`.
  */
@@ -803,6 +816,13 @@ typedef struct z_link_events_listener_options_t {
    * connected when the listener was declared.
    */
   bool history;
+  /**
+   * Optional transport to filter link events by.
+   * If NULL, receives events for all links (default behavior).
+   * If provided, only receives events for links belonging to this transport.
+   * Ownership of the transport is taken.
+   */
+  struct z_moved_transport_t *transport;
 } z_link_events_listener_options_t;
 #endif
 /**
@@ -1055,19 +1075,6 @@ typedef struct z_get_options_t {
 typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
-/**
- * @brief An Transport structure returned by Zenoh connectivity API.
- *
- * Represents a remote zenoh node connected to this node. Only one transport per remote node exists.
- * Each transport can have multiple corresponding `z_owned_link_t` which represent
- * actual established data links with various protocols.
- */
-typedef struct ALIGN(1) z_owned_transport_t {
-  uint8_t _0[19];
-} z_owned_transport_t;
-typedef struct z_moved_transport_t {
-  struct z_owned_transport_t _this;
-} z_moved_transport_t;
 /**
  * Options for `z_info_links()`.
  */
@@ -2932,7 +2939,7 @@ ZENOHC_API struct z_loaned_config_t *z_config_loan_mut(struct z_owned_config_t *
 ZENOHC_API
 z_result_t z_declare_background_link_events_listener(const struct z_loaned_session_t *session,
                                                      struct z_moved_closure_link_event_t *callback,
-                                                     const struct z_link_events_listener_options_t *options);
+                                                     struct z_link_events_listener_options_t *options);
 #endif
 /**
  * Declares a background queryable for a given keyexpr. The queryable callback will be be called
@@ -3016,7 +3023,7 @@ ZENOHC_API
 z_result_t z_declare_link_events_listener(const struct z_loaned_session_t *session,
                                           struct z_owned_link_events_listener_t *listener,
                                           struct z_moved_closure_link_event_t *callback,
-                                          const struct z_link_events_listener_options_t *options);
+                                          struct z_link_events_listener_options_t *options);
 #endif
 /**
  * Constructs and declares a publisher for the given key expression.

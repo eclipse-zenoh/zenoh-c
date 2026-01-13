@@ -719,6 +719,117 @@ int test_link_events_background() {
     return 0;
 }
 
+int test_link_events_filtered() {
+    printf("=== Test: Link events with transport filter ===\n");
+
+    z_owned_session_t s1, s2;
+    if (create_isolated_session_pair(&s1, &s2) != 0) {
+        return -1;
+    }
+
+    // Capture transport from s1 (transport to s2)
+    z_owned_transport_t transport_s1;
+    z_internal_transport_null(&transport_s1);
+
+    z_owned_closure_transport_t transport_callback;
+    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s1);
+    z_info_transports(z_loan(s1), z_move(transport_callback));
+
+    if (!z_internal_transport_check(&transport_s1)) {
+        printf("FAIL: No transport captured from session 1\n");
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    // Capture transport from s2 (transport to s1)
+    z_owned_transport_t transport_s2;
+    z_internal_transport_null(&transport_s2);
+
+    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s2);
+    z_info_transports(z_loan(s2), z_move(transport_callback));
+
+    if (!z_internal_transport_check(&transport_s2)) {
+        printf("FAIL: No transport captured from session 2\n");
+        z_drop(z_move(transport_s1));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    // Test 1: Listen for link events on s1 filtered by s1's transport (should receive events)
+    link_event_ctx_t ctx1 = {0};
+    z_internal_link_null(&ctx1.last_link);
+
+    z_owned_link_events_listener_t listener1;
+    z_owned_closure_link_event_t callback1;
+    z_closure(&callback1, link_event_handler, NULL, &ctx1);
+    z_link_events_listener_options_t opts1;
+    z_link_events_listener_options_default(&opts1);
+    opts1.history = true;
+    opts1.transport = z_transport_move(&transport_s1);
+
+    if (z_declare_link_events_listener(z_loan(s1), &listener1, z_move(callback1), &opts1) != 0) {
+        printf("FAIL: Unable to declare filtered link events listener\n");
+        z_drop(z_move(transport_s2));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    sleep(1);
+
+    if (ctx1.added_count < 1) {
+        printf("FAIL: Expected at least 1 event with matching transport filter, got %d\n", ctx1.added_count);
+        z_drop(z_move(ctx1.last_link));
+        z_undeclare_link_events_listener(z_move(listener1));
+        z_drop(z_move(transport_s2));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+    printf("PASS: Received %d event(s) with matching transport filter\n", ctx1.added_count);
+
+    z_drop(z_move(ctx1.last_link));
+    z_undeclare_link_events_listener(z_move(listener1));
+
+    // Test 2: Listen for link events on s1 filtered by s2's transport (should receive no events)
+    link_event_ctx_t ctx2 = {0};
+    z_internal_link_null(&ctx2.last_link);
+
+    z_owned_link_events_listener_t listener2;
+    z_owned_closure_link_event_t callback2;
+    z_closure(&callback2, link_event_handler, NULL, &ctx2);
+    z_link_events_listener_options_t opts2;
+    z_link_events_listener_options_default(&opts2);
+    opts2.history = true;
+    opts2.transport = z_transport_move(&transport_s2);
+
+    if (z_declare_link_events_listener(z_loan(s1), &listener2, z_move(callback2), &opts2) != 0) {
+        printf("FAIL: Unable to declare filtered link events listener (test 2)\n");
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+
+    sleep(1);
+
+    if (ctx2.added_count != 0) {
+        printf("FAIL: Expected 0 events with non-matching transport filter, got %d\n", ctx2.added_count);
+        z_drop(z_move(ctx2.last_link));
+        z_undeclare_link_events_listener(z_move(listener2));
+        z_drop(z_move(s1));
+        z_drop(z_move(s2));
+        return -1;
+    }
+    printf("PASS: Received 0 events with non-matching transport filter (as expected)\n\n");
+
+    z_undeclare_link_events_listener(z_move(listener2));
+    z_drop(z_move(s1));
+    z_drop(z_move(s2));
+    return 0;
+}
+
 #endif
 
 int main(int argc, char** argv) {
@@ -767,6 +878,11 @@ int main(int argc, char** argv) {
 
     // Test link events listener (background)
     if (test_link_events_background() != 0) {
+        return -1;
+    }
+
+    // Test link events listener with transport filter
+    if (test_link_events_filtered() != 0) {
         return -1;
     }
 

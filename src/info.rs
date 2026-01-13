@@ -857,6 +857,11 @@ pub struct z_link_events_listener_options_t {
     /// If true, the listener will receive events for links that were already
     /// connected when the listener was declared.
     pub history: bool,
+    /// Optional transport to filter link events by.
+    /// If NULL, receives events for all links (default behavior).
+    /// If provided, only receives events for links belonging to this transport.
+    /// Ownership of the transport is taken.
+    pub transport: Option<&'static mut z_moved_transport_t>,
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -886,7 +891,7 @@ pub extern "C" fn z_declare_link_events_listener(
     session: &'static z_loaned_session_t,
     listener: &mut MaybeUninit<z_owned_link_events_listener_t>,
     callback: &mut z_moved_closure_link_event_t,
-    options: Option<&z_link_events_listener_options_t>,
+    options: Option<&mut z_link_events_listener_options_t>,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
@@ -901,6 +906,11 @@ pub extern "C" fn z_declare_link_events_listener(
 
     if let Some(opts) = options {
         builder = builder.history(opts.history);
+        if let Some(transport) = opts.transport.take() {
+            if let Some(t) = transport.take_rust_type() {
+                builder = builder.transport(t);
+            }
+        }
     }
 
     let listener_result = builder.wait();
@@ -926,7 +936,7 @@ pub extern "C" fn z_declare_link_events_listener(
 pub extern "C" fn z_declare_background_link_events_listener(
     session: &'static z_loaned_session_t,
     callback: &mut z_moved_closure_link_event_t,
-    options: Option<&z_link_events_listener_options_t>,
+    options: Option<&mut z_link_events_listener_options_t>,
 ) -> result::z_result_t {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
@@ -941,6 +951,11 @@ pub extern "C" fn z_declare_background_link_events_listener(
 
     if let Some(opts) = options {
         builder = builder.history(opts.history);
+        if let Some(transport) = opts.transport.take() {
+            if let Some(t) = transport.take_rust_type() {
+                builder = builder.transport(t);
+            }
+        }
     }
 
     let _ = builder.background().wait();
