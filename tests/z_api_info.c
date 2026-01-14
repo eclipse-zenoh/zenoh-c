@@ -473,20 +473,18 @@ void test_transport_events_sync() {
     z_drop(z_move(s1));
 }
 
-#if 0
-
 void test_transport_events_history() {
     printf("=== Test: Transport events with history ===\n");
 
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
-    transport_event_ctx_t ctx;
-    init_transport_event_ctx(&ctx);
+    context_t ctx;
+    init_context(&ctx);
 
     z_owned_transport_events_listener_t listener;
     z_owned_closure_transport_event_t callback;
-    z_closure(&callback, transport_event_handler, NULL, &ctx);
+    z_closure(&callback, capture_transport_events, NULL, &ctx);
     z_transport_events_listener_options_t opts;
     z_transport_events_listener_options_default(&opts);
     opts.history = true;
@@ -496,18 +494,22 @@ void test_transport_events_history() {
 
     sleep(1);
 
-    assert(ctx.added_count == 1 && "Expected 1 history event");
-    assert(z_internal_transport_check(&ctx.transports[0]) && "No transport captured");
-    assert(!z_internal_transport_check(&ctx.transports[1]) && "Multiple transports captured");
+    // Should have 1 PUT event from history (existing transport)
+    assert(ctx.transport_event_count == 1 && "Expected 1 history event");
+    assert(z_transport_event_kind(z_loan(ctx.transport_events[0])) == Z_SAMPLE_KIND_PUT &&
+           "Expected PUT event for existing transport");
+    print_context(&ctx);
 
     printf("PASS\n\n");
 
     // Cleanup
     z_undeclare_transport_events_listener(z_move(listener));
-    drop_transport_event_ctx(&ctx);
+    drop_context(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
+
+#if 0
 
 void test_transport_events_background() {
     printf("=== Test: Transport events (background) ===\n");
@@ -817,8 +819,8 @@ int main(int argc, char** argv) {
     // Test transport events listener (sync, no history)
     test_transport_events_sync();
 
-    // // Test transport events listener (with history)
-    // test_transport_events_history();
+    // Test transport events listener (with history)
+    test_transport_events_history();
 
     // // Test transport events listener (background)
     // test_transport_events_background();
