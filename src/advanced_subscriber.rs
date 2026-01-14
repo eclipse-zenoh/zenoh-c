@@ -417,7 +417,7 @@ fn _advanced_subscriber_sample_miss_listener_declare_inner<'a>(
 ) -> zenoh_ext::SampleMissListenerBuilder<'a, Callback<zenoh_ext::Miss>> {
     let subscriber = subscriber.as_rust_type_ref();
     let callback = callback.take_rust_type();
-    let listener = subscriber.sample_miss_listener().callback_mut(move |miss| {
+    let listener = subscriber.sample_miss_listener().callback(move |miss| {
         let miss = ze_miss_t {
             source: miss.source().into_c_type(),
             nb: miss.nb(),
