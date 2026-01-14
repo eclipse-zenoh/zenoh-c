@@ -256,6 +256,7 @@ pub extern "C" fn z_link_drop(this_: &mut z_moved_link_t) {
 /// @return A loaned transport reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> &z_loaned_transport_t {
     this_
         .as_rust_type_ref()
@@ -270,6 +271,7 @@ pub unsafe extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> &z_loa
 /// @return A mutable loaned transport reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_transport_loan_mut(
     this_: &mut z_owned_transport_t,
 ) -> &mut z_loaned_transport_t {
@@ -286,6 +288,7 @@ pub unsafe extern "C" fn z_transport_loan_mut(
 /// @return A loaned link reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_link_loan(this_: &z_owned_link_t) -> &z_loaned_link_t {
     this_
         .as_rust_type_ref()
@@ -300,6 +303,7 @@ pub unsafe extern "C" fn z_link_loan(this_: &z_owned_link_t) -> &z_loaned_link_t
 /// @return A mutable loaned link reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_link_loan_mut(this_: &mut z_owned_link_t) -> &mut z_loaned_link_t {
     this_
         .as_rust_type_mut()
@@ -620,7 +624,10 @@ pub extern "C" fn z_transport_event_transport(
 pub extern "C" fn z_transport_event_transport_mut(
     event: &mut z_loaned_transport_event_t,
 ) -> &mut z_loaned_transport_t {
-    event.as_rust_type_mut().transport_mut().as_loaned_c_type_mut()
+    event
+        .as_rust_type_mut()
+        .transport_mut()
+        .as_loaned_c_type_mut()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -657,6 +664,7 @@ pub extern "C" fn z_transport_event_drop(this_: &mut z_moved_transport_event_t) 
 /// @return A loaned transport event reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_transport_event_loan(
     this_: &z_owned_transport_event_t,
 ) -> &z_loaned_transport_event_t {
@@ -674,6 +682,7 @@ pub unsafe extern "C" fn z_transport_event_loan(
 /// @return A mutable loaned transport event reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_transport_event_loan_mut(
     this_: &mut z_owned_transport_event_t,
 ) -> &mut z_loaned_transport_event_t {
@@ -905,9 +914,7 @@ pub extern "C" fn z_link_event_link(event: &z_loaned_link_event_t) -> &z_loaned_
 /// Returns a mutable loaned reference to the link that was added or removed.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_event_link_mut(
-    event: &mut z_loaned_link_event_t,
-) -> &mut z_loaned_link_t {
+pub extern "C" fn z_link_event_link_mut(event: &mut z_loaned_link_event_t) -> &mut z_loaned_link_t {
     event.as_rust_type_mut().link_mut().as_loaned_c_type_mut()
 }
 
@@ -916,9 +923,7 @@ pub extern "C" fn z_link_event_link_mut(
 #[cfg(feature = "unstable")]
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
-pub unsafe extern "C" fn z_internal_link_event_null(
-    this_: &mut MaybeUninit<z_owned_link_event_t>,
-) {
+pub unsafe extern "C" fn z_internal_link_event_null(this_: &mut MaybeUninit<z_owned_link_event_t>) {
     this_.as_rust_type_mut_uninit().write(None);
 }
 
@@ -945,9 +950,8 @@ pub extern "C" fn z_link_event_drop(this_: &mut z_moved_link_event_t) {
 /// @return A loaned link event reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub unsafe extern "C" fn z_link_event_loan(
-    this_: &z_owned_link_event_t,
-) -> &z_loaned_link_event_t {
+#[allow(clippy::missing_safety_doc)]
+pub unsafe extern "C" fn z_link_event_loan(this_: &z_owned_link_event_t) -> &z_loaned_link_event_t {
     this_
         .as_rust_type_ref()
         .as_ref()
@@ -962,6 +966,7 @@ pub unsafe extern "C" fn z_link_event_loan(
 /// @return A mutable loaned link event reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
+#[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_link_event_loan_mut(
     this_: &mut z_owned_link_event_t,
 ) -> &mut z_loaned_link_event_t {
@@ -1044,12 +1049,14 @@ pub extern "C" fn z_declare_link_events_listener(
     let callback = callback.take_rust_type();
 
     let session_info = session.info();
-    let mut builder = session_info.link_events_listener().callback(move |mut event| {
-        z_closure_link_event_call(
-            z_closure_link_event_loan(&callback),
-            event.as_loaned_c_type_mut(),
-        );
-    });
+    let mut builder = session_info
+        .link_events_listener()
+        .callback(move |mut event| {
+            z_closure_link_event_call(
+                z_closure_link_event_loan(&callback),
+                event.as_loaned_c_type_mut(),
+            );
+        });
 
     if let Some(opts) = options {
         builder = builder.history(opts.history);
@@ -1091,12 +1098,14 @@ pub extern "C" fn z_declare_background_link_events_listener(
     let callback = callback.take_rust_type();
 
     let session_info = session.info();
-    let mut builder = session_info.link_events_listener().callback(move |mut event| {
-        z_closure_link_event_call(
-            z_closure_link_event_loan(&callback),
-            event.as_loaned_c_type_mut(),
-        );
-    });
+    let mut builder = session_info
+        .link_events_listener()
+        .callback(move |mut event| {
+            z_closure_link_event_call(
+                z_closure_link_event_loan(&callback),
+                event.as_loaned_c_type_mut(),
+            );
+        });
 
     if let Some(opts) = options {
         builder = builder.history(opts.history);

@@ -91,9 +91,7 @@ pub unsafe extern "C" fn z_internal_closure_link_event_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
-pub extern "C" fn z_internal_closure_link_event_check(
-    this: &z_owned_closure_link_event_t,
-) -> bool {
+pub extern "C" fn z_internal_closure_link_event_check(this: &z_owned_closure_link_event_t) -> bool {
     !this.is_empty()
 }
 
