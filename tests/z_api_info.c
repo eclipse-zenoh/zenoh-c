@@ -408,6 +408,8 @@ void transport_event_handler(z_loaned_transport_event_t* event, void* arg) {
     }
 }
 
+#endif // if 0
+
 void test_transport_events_sync() {
     printf("=== Test: Transport events (sync, no history) ===\n");
 
@@ -417,13 +419,13 @@ void test_transport_events_sync() {
     create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17448\"]", "[]");
     assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
 
-    transport_event_ctx_t ctx;
-    init_transport_event_ctx(&ctx);
+    context_t ctx;
+    init_context(&ctx);
 
     // Declare listener
     z_owned_transport_events_listener_t listener;
     z_owned_closure_transport_event_t callback;
-    z_closure(&callback, transport_event_handler, NULL, &ctx);
+    z_closure(&callback, capture_transport_events, NULL, &ctx);
     z_transport_events_listener_options_t opts;
     z_transport_events_listener_options_default(&opts);
     opts.history = false;
@@ -432,7 +434,7 @@ void test_transport_events_sync() {
            "Unable to declare transport events listener");
 
     // Should have no events yet (no history)
-    assert(ctx.added_count == 0 && "Expected 0 events before connection");
+    assert(ctx.transport_event_count == 0 && "Expected 0 events before connection");
 
     // Session 2 connects
     z_owned_session_t s2;
@@ -442,27 +444,36 @@ void test_transport_events_sync() {
 
     sleep(2);
 
-    assert(ctx.added_count == 1 && "Expected 1 added event");
-    assert(z_internal_transport_check(&ctx.transports[0]) && "No transport captured");
-    assert(!z_internal_transport_check(&ctx.transports[1]) && "Multiple transports captured");
+    // Should have 1 PUT event (transport added)
+    assert(ctx.transport_event_count == 1 && "Expected 1 event after connection");
+    assert(z_transport_event_kind(z_loan(ctx.transport_events[0])) == Z_SAMPLE_KIND_PUT &&
+           "Expected PUT event for transport added");
 
-    // Verify ZID
-    z_id_t event_zid = z_transport_zid(z_loan(ctx.transports[0]));
+    // Verify ZID from the transport in the event
+    const z_loaned_transport_t* event_transport = z_transport_event_transport(z_loan(ctx.transport_events[0]));
+    z_id_t event_zid = z_transport_zid(event_transport);
     z_id_t s2_zid = z_info_zid(z_loan(s2));
-    assert(memcmp(event_zid.id, s2_zid.id, sizeof(s2_zid.id)) == 0 && "Transport ZID doesn't match session 2's ZID");
+    assert(memcmp(&event_zid, &s2_zid, sizeof(z_id_t)) == 0 &&
+           "Transport ZID doesn't match session 2's ZID");
+    print_context(&ctx);
 
     z_drop(z_move(s2));
     sleep(1);
 
-    assert(ctx.removed_count == 1 && "Expected 1 removed event");
+    // Should have 2 events now (1 PUT + 1 DELETE)
+    assert(ctx.transport_event_count == 2 && "Expected 2 events after disconnection");
+    assert(z_transport_event_kind(z_loan(ctx.transport_events[1])) == Z_SAMPLE_KIND_DELETE &&
+           "Expected DELETE event for transport removed");
 
     printf("PASS\n\n");
 
     // Cleanup
     z_undeclare_transport_events_listener(z_move(listener));
-    drop_transport_event_ctx(&ctx);
+    drop_context(&ctx);
     z_drop(z_move(s1));
 }
+
+#if 0
 
 void test_transport_events_history() {
     printf("=== Test: Transport events with history ===\n");
@@ -803,8 +814,8 @@ int main(int argc, char** argv) {
     // Test filtered links
     test_z_info_links_filtered();
 
-    // // Test transport events listener (sync, no history)
-    // test_transport_events_sync();
+    // Test transport events listener (sync, no history)
+    test_transport_events_sync();
 
     // // Test transport events listener (with history)
     // test_transport_events_history();
