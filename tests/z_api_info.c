@@ -113,7 +113,7 @@ void drop_context(context_t* ctx) {
 void capture_transports(z_loaned_transport_t* transport, void* arg) {
     context_t* ctx = (context_t*)arg;
     assert(ctx->transport_count < MAX_CAPTURE && "Exceeded maximum transport capture limit");
-    z_take_from_loaned(&ctx->transports_put[ctx->transport_count], transport);
+    z_take_from_loaned(&ctx->transports[ctx->transport_count], transport);
     ctx->transport_count++;
 }
 
@@ -121,7 +121,7 @@ void capture_transports(z_loaned_transport_t* transport, void* arg) {
 void capture_links(z_loaned_link_t* link, void* arg) {
     context_t* ctx = (context_t*)arg;
     assert(ctx->link_count < MAX_CAPTURE && "Exceeded maximum link capture limit");
-    z_take_from_loaned(&ctx->links_put[ctx->link_count], link);
+    z_take_from_loaned(&ctx->links[ctx->link_count], link);
     ctx->link_count++;
 }
 
@@ -803,11 +803,8 @@ int main(int argc, char** argv) {
     test_z_info_stable();
 
 #if defined(Z_FEATURE_UNSTABLE_API)
-    // Test transports
-    test_z_info_transports();
-
-    // Test links
-    test_z_info_links();
+    // Test transports and links
+    test_z_info_transports_and_links();
 
     // Test filtered links
     // test_z_info_links_filtered();

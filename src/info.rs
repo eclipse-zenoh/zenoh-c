@@ -256,8 +256,12 @@ pub extern "C" fn z_link_drop(this_: &mut z_moved_link_t) {
 /// @return A loaned transport reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> *const z_loaned_transport_t {
-    this_ as *const z_owned_transport_t as *const z_loaned_transport_t
+pub unsafe extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> &z_loaned_transport_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// @brief Gets a mutable loaned reference from an owned transport.
@@ -266,10 +270,14 @@ pub extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> *const z_loan
 /// @return A mutable loaned transport reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_transport_loan_mut(
+pub unsafe extern "C" fn z_transport_loan_mut(
     this_: &mut z_owned_transport_t,
-) -> *mut z_loaned_transport_t {
-    this_ as *mut z_owned_transport_t as *mut z_loaned_transport_t
+) -> &mut z_loaned_transport_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// @brief Gets a loaned reference from an owned link.
@@ -278,8 +286,12 @@ pub extern "C" fn z_transport_loan_mut(
 /// @return A loaned link reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_loan(this_: &z_owned_link_t) -> *const z_loaned_link_t {
-    this_ as *const z_owned_link_t as *const z_loaned_link_t
+pub unsafe extern "C" fn z_link_loan(this_: &z_owned_link_t) -> &z_loaned_link_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
 }
 
 /// @brief Gets a mutable loaned reference from an owned link.
@@ -288,8 +300,12 @@ pub extern "C" fn z_link_loan(this_: &z_owned_link_t) -> *const z_loaned_link_t 
 /// @return A mutable loaned link reference.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_loan_mut(this_: &mut z_owned_link_t) -> *mut z_loaned_link_t {
-    this_ as *mut z_owned_link_t as *mut z_loaned_link_t
+pub unsafe extern "C" fn z_link_loan_mut(this_: &mut z_owned_link_t) -> &mut z_loaned_link_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
 }
 
 /// @brief Get the transports `z_loaned_transport_t` used by the session.
@@ -634,6 +650,59 @@ pub extern "C" fn z_transport_event_drop(this_: &mut z_moved_transport_event_t) 
     let _ = this_.take_rust_type();
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Gets a loaned reference from an owned transport event.
+///
+/// @param this_: The owned transport event.
+/// @return A loaned transport event reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub unsafe extern "C" fn z_transport_event_loan(
+    this_: &z_owned_transport_event_t,
+) -> &z_loaned_transport_event_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Gets a mutable loaned reference from an owned transport event.
+///
+/// @param this_: The owned transport event.
+/// @return A mutable loaned transport event reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub unsafe extern "C" fn z_transport_event_loan_mut(
+    this_: &mut z_owned_transport_event_t,
+) -> &mut z_loaned_transport_event_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Move transport event data from loaned pointer to owned object.
+///
+/// Moves the transport event referenced by `src` into the `dst` owned object.
+/// The source loaned object is replaced with an empty state: valid but unspecified.
+///
+/// @param dst: The destination owned transport event (must be uninitialized).
+/// @param src: The source loaned transport event (will be replaced with empty state).
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_transport_event_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_transport_event_t>,
+    src: &mut z_loaned_transport_event_t,
+) {
+    let event_ref = src.as_rust_type_mut();
+    let event = std::mem::replace(event_ref, TransportEvent::empty());
+    dst.as_rust_type_mut_uninit().write(Some(event));
+}
+
 // ====================================
 // TransportEventsListener Functions
 // ====================================
@@ -867,6 +936,59 @@ pub extern "C" fn z_internal_link_event_check(this_: &z_owned_link_event_t) -> b
 #[no_mangle]
 pub extern "C" fn z_link_event_drop(this_: &mut z_moved_link_event_t) {
     let _ = this_.take_rust_type();
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Gets a loaned reference from an owned link event.
+///
+/// @param this_: The owned link event.
+/// @return A loaned link event reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub unsafe extern "C" fn z_link_event_loan(
+    this_: &z_owned_link_event_t,
+) -> &z_loaned_link_event_t {
+    this_
+        .as_rust_type_ref()
+        .as_ref()
+        .unwrap_unchecked()
+        .as_loaned_c_type_ref()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Gets a mutable loaned reference from an owned link event.
+///
+/// @param this_: The owned link event.
+/// @return A mutable loaned link event reference.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub unsafe extern "C" fn z_link_event_loan_mut(
+    this_: &mut z_owned_link_event_t,
+) -> &mut z_loaned_link_event_t {
+    this_
+        .as_rust_type_mut()
+        .as_mut()
+        .unwrap_unchecked()
+        .as_loaned_c_type_mut()
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Move link event data from loaned pointer to owned object.
+///
+/// Moves the link event referenced by `src` into the `dst` owned object.
+/// The source loaned object is replaced with an empty state: valid but unspecified.
+///
+/// @param dst: The destination owned link event (must be uninitialized).
+/// @param src: The source loaned link event (will be replaced with empty state).
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_event_take_from_loaned(
+    dst: &mut MaybeUninit<z_owned_link_event_t>,
+    src: &mut z_loaned_link_event_t,
+) {
+    let event_ref = src.as_rust_type_mut();
+    let event = std::mem::replace(event_ref, LinkEvent::empty());
+    dst.as_rust_type_mut_uninit().write(Some(event));
 }
 
 // ====================================
