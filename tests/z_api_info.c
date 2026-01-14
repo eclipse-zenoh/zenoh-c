@@ -286,7 +286,6 @@ void test_z_info_transports_and_links() {
            "Captured transport ZID doesn't match session 2's ZID");
     printf("PASS: Session 1's transport connects to session 2 (ZIDs match)\n\n");
 
-
     z_owned_closure_link_t capture_link_callback;
     z_closure(&capture_link_callback, capture_links, NULL, &ctx);
     z_info_links(z_loan(s1), z_move(capture_link_callback), NULL);
@@ -365,8 +364,8 @@ void test_z_info_links_filtered() {
     z_drop(z_move(s2));
 }
 
-void test_transport_events_sync() {
-    printf("=== Test: Transport events (sync, no history) ===\n");
+void test_transport_events() {
+    printf("=== Test: Transport events (no history) ===\n");
 
     // Session 1
     z_owned_session_t s1;
@@ -408,8 +407,7 @@ void test_transport_events_sync() {
     const z_loaned_transport_t* event_transport = z_transport_event_transport(z_loan(ctx.transport_events[0]));
     z_id_t event_zid = z_transport_zid(event_transport);
     z_id_t s2_zid = z_info_zid(z_loan(s2));
-    assert(memcmp(&event_zid, &s2_zid, sizeof(z_id_t)) == 0 &&
-           "Transport ZID doesn't match session 2's ZID");
+    assert(memcmp(&event_zid, &s2_zid, sizeof(z_id_t)) == 0 && "Transport ZID doesn't match session 2's ZID");
     print_context(&ctx);
 
     z_drop(z_move(s2));
@@ -504,8 +502,8 @@ void test_transport_events_background() {
     z_drop(z_move(s2));
 }
 
-void test_link_events_sync() {
-    printf("=== Test: Link events (sync, no history) ===\n");
+void test_link_events() {
+    printf("=== Test: Link events (no history) ===\n");
 
     // Session 1
     z_owned_session_t s1;
@@ -540,8 +538,7 @@ void test_link_events_sync() {
 
     // Should have 1 PUT event (link added)
     assert(ctx.link_event_count == 1 && "Expected 1 event after connection");
-    assert(z_link_event_kind(z_loan(ctx.link_events[0])) == Z_SAMPLE_KIND_PUT &&
-           "Expected PUT event for link added");
+    assert(z_link_event_kind(z_loan(ctx.link_events[0])) == Z_SAMPLE_KIND_PUT && "Expected PUT event for link added");
 
     // Verify ZID from the link in the event
     const z_loaned_link_t* event_link = z_link_event_link(z_loan(ctx.link_events[0]));
@@ -629,8 +626,7 @@ void test_link_events_background() {
     sleep(2);
 
     assert(ctx.link_event_count == 1 && "Expected 1 link event");
-    assert(z_link_event_kind(z_loan(ctx.link_events[0])) == Z_SAMPLE_KIND_PUT &&
-           "Expected PUT event for link added");
+    assert(z_link_event_kind(z_loan(ctx.link_events[0])) == Z_SAMPLE_KIND_PUT && "Expected PUT event for link added");
     print_context(&ctx);
 
     printf("PASS\n\n");
@@ -733,8 +729,8 @@ int main(int argc, char** argv) {
     // Test filtered links
     test_z_info_links_filtered();
 
-    // Test transport events listener (sync, no history)
-    test_transport_events_sync();
+    // Test transport events listener (no history)
+    test_transport_events();
 
     // Test transport events listener (with history)
     test_transport_events_history();
@@ -742,8 +738,8 @@ int main(int argc, char** argv) {
     // Test transport events listener (background)
     test_transport_events_background();
 
-    // Test link events listener (sync, no history)
-    test_link_events_sync();
+    // Test link events listener (no history)
+    test_link_events();
 
     // Test link events listener (with history)
     test_link_events_history();
