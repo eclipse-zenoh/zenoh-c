@@ -34,6 +34,10 @@ typedef struct context_t {
 } context_t;
 
 void init_context(context_t* ctx) {
+    ctx->transport_count = 0;
+    ctx->link_count = 0;
+    ctx->transport_event_count = 0;
+    ctx->link_event_count = 0;
     for (int i = 0; i < MAX_CAPTURE; i++) {
         z_internal_transport_null(&ctx->transports[i]);
         z_internal_link_null(&ctx->links[i]);
@@ -75,25 +79,18 @@ void print_link_event(const z_loaned_link_event_t* event) {
 }
 
 void print_context(context_t* ctx) {
-    printf("Transports captured: %d\n", ctx->transport_count);
     for (int i = 0; i < ctx->transport_count; i++) {
         printf("Transport %d: ", i);
         print_transport(z_loan(ctx->transports[i]));
     }
-
-    printf("Links captured: %d\n", ctx->link_count);
     for (int i = 0; i < ctx->link_count; i++) {
         printf("Link %d: ", i);
         print_link(z_loan(ctx->links[i]));
     }
-
-    printf("Transport Events captured: %d\n", ctx->transport_event_count);
     for (int i = 0; i < ctx->transport_event_count; i++) {
         printf("Transport Event %d: ", i);
         print_transport_event(z_loan(ctx->transport_events[i]));
     }
-
-    printf("Link Events captured: %d\n", ctx->link_event_count);
     for (int i = 0; i < ctx->link_event_count; i++) {
         printf("Link Event %d: ", i);
         print_link_event(z_loan(ctx->link_events[i]));
@@ -267,7 +264,7 @@ void test_z_info_stable() {
 #if defined(Z_FEATURE_UNSTABLE_API)
 
 void test_z_info_transports_and_links() {
-    printf("=== Testing z_info_transports ===\n");
+    printf("=== Testing z_info_transports and z_info_links ===\n");
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
@@ -309,69 +306,66 @@ void test_z_info_transports_and_links() {
     z_drop(z_move(s2));
 }
 
-#if 0
-
 void test_z_info_links_filtered() {
     printf("=== Testing z_info_links with transport filter ===\n");
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
     // Capture transports from s1 and s2
-    z_owned_transport_t transports_s1[MAX_CAPTURE];
-    init_transports(transports_s1);
-    z_owned_transport_t transports_s2[MAX_CAPTURE];
-    init_transports(transports_s2);
+    context_t ctx_s1, ctx_s2;
+    init_context(&ctx_s1);
+    init_context(&ctx_s2);
 
     z_owned_closure_transport_t transport_callback;
-    z_closure(&transport_callback, capture_transports, NULL, transports_s1);
+    z_closure(&transport_callback, capture_transports, NULL, &ctx_s1);
     z_info_transports(z_loan(s1), z_move(transport_callback));
 
-    assert(z_internal_transport_check(&transports_s1[0]) && "No transport captured from session 1");
-    assert(!z_internal_transport_check(&transports_s1[1]) && "Multiple transports found from session 1");
+    assert(ctx_s1.transport_count == 1 && "Expected exactly one transport from session 1");
 
-    z_closure(&transport_callback, capture_transports, NULL, transports_s2);
+    z_closure(&transport_callback, capture_transports, NULL, &ctx_s2);
     z_info_transports(z_loan(s2), z_move(transport_callback));
 
-    assert(z_internal_transport_check(&transports_s2[0]) && "No transport captured from session 2");
-    assert(!z_internal_transport_check(&transports_s2[1]) && "Multiple transports found from session 2");
+    assert(ctx_s2.transport_count == 1 && "Expected exactly one transport from session 2");
 
     // Test 1: Filter links on s1 by s1's transport (should find links)
-    z_owned_link_t links[MAX_CAPTURE];
-    init_links(links);
+    context_t ctx_links;
+    init_context(&ctx_links);
 
     z_info_links_options_t options;
     z_info_links_options_default(&options);
-    options.transport = z_transport_move(&transports_s1[0]);
+    options.transport = z_transport_move(&ctx_s1.transports[0]);
 
     z_owned_closure_link_t link_callback;
-    z_closure(&link_callback, capture_links, NULL, links);
+    z_closure(&link_callback, capture_links, NULL, &ctx_links);
     z_info_links(z_loan(s1), z_move(link_callback), &options);
 
-    assert(z_internal_link_check(&links[0]) && "No link found when filtering s1 by s1's transport");
-    assert(!z_internal_link_check(&links[1]) && "Multiple links found when filtering s1 by s1's transport");
-    print_links(links);
+    assert(ctx_links.link_count == 1 && "Expected exactly one link when filtering s1 by s1's transport");
+    print_context(&ctx_links);
     printf("PASS: Filtered link by s1's transport\n");
-    drop_links(links);
+    drop_context(&ctx_links);
 
     // Test 2: Filter links on s1 by s2's transport (should find no links)
-    init_links(links);
+    init_context(&ctx_links);
 
     z_info_links_options_default(&options);
-    options.transport = z_transport_move(&transports_s2[0]);
+    options.transport = z_transport_move(&ctx_s2.transports[0]);
 
-    z_closure(&link_callback, capture_links, NULL, links);
+    z_closure(&link_callback, capture_links, NULL, &ctx_links);
     z_info_links(z_loan(s1), z_move(link_callback), &options);
+    print_context(&ctx_links);
 
-    assert(!z_internal_link_check(&links[0]) && "Found link when filtering s1 by s2's transport (should be none)");
+    assert(ctx_links.link_count == 0 && "Expected no links when filtering s1 by s2's transport");
     printf("PASS: No links found when filtering s1 by s2's transport (as expected)\n\n");
 
     // Cleanup
-    drop_links(links);
-    drop_transports(transports_s1);
-    drop_transports(transports_s2);
+    drop_context(&ctx_links);
+    drop_context(&ctx_s1);
+    drop_context(&ctx_s2);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
+
+#if 0
 
 // ========================================
 // Transport Events Listener Tests
@@ -807,7 +801,7 @@ int main(int argc, char** argv) {
     test_z_info_transports_and_links();
 
     // Test filtered links
-    // test_z_info_links_filtered();
+    test_z_info_links_filtered();
 
     // // Test transport events listener (sync, no history)
     // test_transport_events_sync();
