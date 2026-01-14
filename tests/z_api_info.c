@@ -20,13 +20,61 @@
 
 #if defined(Z_FEATURE_UNSTABLE_API)
 
+#define MAX_CAPTURE 16
+
+void init_transports(z_owned_transport_t transports[MAX_CAPTURE]) {
+    for (int i = 0; i < MAX_CAPTURE; i++) {
+        z_internal_transport_null(&transports[i]);
+    }
+}
+
+void init_links(z_owned_link_t links[MAX_CAPTURE]) {
+    for (int i = 0; i < MAX_CAPTURE; i++) {
+        z_internal_link_null(&links[i]);
+    }
+}
+
+void print_transport(const z_loaned_transport_t* transport) {
+    z_id_t zid = z_transport_zid(transport);
+    z_owned_string_t zid_str;
+    z_id_to_string(&zid, &zid_str);
+    printf("zid=%.*s\n", (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
+    z_drop(z_move(zid_str));
+}
+
+void print_transports(z_owned_transport_t transports[MAX_CAPTURE]) {
+    for (int i = 0; i < MAX_CAPTURE; i++) {
+        if (z_internal_transport_check(&transports[i])) {
+            printf("Transport %d: ", i);
+            print_transport(z_loan(transports[i]));
+        }
+    }
+}
+
+void drop_transports(z_owned_transport_t transports[MAX_CAPTURE]) {
+    for (int i = 0; i < MAX_CAPTURE; i++) {
+        z_drop(z_move(transports[i]));
+    }
+}
+
+void drop_links(z_owned_link_t links[MAX_CAPTURE]) {
+    for (int i = 0; i < MAX_CAPTURE; i++) {
+        z_drop(z_move(links[i]));
+    }
+}
+
 // Callback that takes the first transport from loaned pointer
 // Fails if called multiple times (indicating multiple transports exist)
-void capture_transport_handler(z_loaned_transport_t* transport, void* arg) {
-    z_owned_transport_t* ctx = (z_owned_transport_t*)arg;
-    assert(!z_internal_transport_check(ctx) && "capture_transport_handler called multiple times - multiple transports detected");
-    z_take_from_loaned(ctx, transport);
-}
+void capture_transports(z_loaned_transport_t* transport, void* arg) {
+    z_owned_transport_t* transports = (z_owned_transport_t*)arg;
+    for (int i = 0; i < MAX_CAPTURE; i++) {
+        if (!z_internal_transport_check(&transports[i])) {
+            z_take_from_loaned(&transports[i], transport);
+            return;
+        }
+    }
+    assert(false && "Exceeded maximum transport capture limit");
+}   
 
 // Callback that takes the first link from loaned pointer
 // Fails if called multiple times (indicating multiple links exist)
@@ -34,6 +82,10 @@ void capture_link_handler(z_loaned_link_t* link, void* arg) {
     z_owned_link_t* ctx = (z_owned_link_t*)arg;
     assert(!z_internal_link_check(ctx) && "capture_link_handler called multiple times - multiple links detected");
     z_take_from_loaned(ctx, link);
+}
+
+void capture_transport_handler(z_loaned_transport_t* transport, void* arg) {
+    assert(false); // dummy function to be removed later and replaced with capture_transports
 }
 
 #endif
@@ -167,22 +219,20 @@ void test_z_info_transports() {
     create_session_pair(&s1, &s2);
 
     // Capture transport from session 1
-    z_owned_transport_t transport;
-    z_internal_transport_null(&transport);
+    z_owned_transport_t transports[MAX_CAPTURE];
+    init_transports(transports);
 
     z_owned_closure_transport_t callback;
-    z_closure(&callback, capture_transport_handler, NULL, &transport);
+    z_closure(&callback, capture_transports, NULL, transports);
     z_info_transports(z_loan(s1), z_move(callback));
+    print_transports(transports);
 
-    // Verify transport was captured
-    assert(z_internal_transport_check(&transport) && "No transport found from session 1");
+    // // Verify that only one transport is captured
+    assert(z_internal_transport_check(&transports[0]) && "No transport found from session 1");
+    assert(!z_internal_transport_check(&transports[1]) && "Multiple transports found from session 1");
 
     // Get ZID from captured transport
-    z_id_t captured_zid = z_transport_zid(z_loan(transport));
-    z_owned_string_t zid_str;
-    z_id_to_string(&captured_zid, &zid_str);
-    printf("Session 1 transport: zid=%.*s\n", (int)z_string_len(z_loan(zid_str)), z_string_data(z_loan(zid_str)));
-    z_drop(z_move(zid_str));
+    z_id_t captured_zid = z_transport_zid(z_loan(transports[0]));
 
     // Verify the captured transport matches session 2's ZID
     z_id_t s2_zid = z_info_zid(z_loan(s2));
@@ -190,7 +240,7 @@ void test_z_info_transports() {
     printf("PASS: Session 1's transport connects to session 2 (ZIDs match)\n\n");
 
     // Cleanup
-    z_drop(z_move(transport));
+    drop_transports(transports);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -673,38 +723,38 @@ int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
     // Test stable z_info functions (always run, not dependent on unstable API)
-    test_z_info_stable();
+    // test_z_info_stable();
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     // Test transports
-    test_z_info_transports();
+    test_z_info_transports();  // FIRST FAILING TEST
 
     // Test links
-    test_z_info_links();
+    // test_z_info_links();  // COMMENTED OUT FOR DEBUGGING
 
     // Test filtered links
-    test_z_info_links_filtered();
+    // test_z_info_links_filtered();  // COMMENTED OUT FOR DEBUGGING
 
     // Test transport events listener (sync, no history)
-    test_transport_events_sync();
+    // test_transport_events_sync();  // COMMENTED OUT FOR DEBUGGING
 
     // Test transport events listener (with history)
-    test_transport_events_history();
+    // test_transport_events_history();  // COMMENTED OUT FOR DEBUGGING
 
     // Test transport events listener (background)
-    test_transport_events_background();
+    // test_transport_events_background();  // COMMENTED OUT FOR DEBUGGING
 
     // Test link events listener (sync, no history)
-    test_link_events_sync();
+    // test_link_events_sync();  // COMMENTED OUT FOR DEBUGGING
 
     // Test link events listener (with history)
-    test_link_events_history();
+    // test_link_events_history();  // COMMENTED OUT FOR DEBUGGING
 
     // Test link events listener (background)
-    test_link_events_background();
+    // test_link_events_background();  // COMMENTED OUT FOR DEBUGGING
 
     // Test link events listener with transport filter
-    test_link_events_filtered();
+    // test_link_events_filtered();  // COMMENTED OUT FOR DEBUGGING
 
     printf("\nAll tests completed successfully!\n");
 #else

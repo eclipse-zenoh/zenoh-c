@@ -52,61 +52,17 @@ use crate::{
 };
 
 #[cfg(feature = "unstable")]
-decl_c_type!(owned(z_owned_transport_t, Transport), loaned(z_loaned_transport_t, Transport));
+decl_c_type!(owned(z_owned_transport_t, option Transport), loaned(z_loaned_transport_t, Transport));
 #[cfg(feature = "unstable")]
-decl_c_type!(owned(z_owned_link_t, Link), loaned(z_loaned_link_t, Link));
+decl_c_type!(owned(z_owned_link_t, option Link), loaned(z_loaned_link_t, Link));
 #[cfg(feature = "unstable")]
-decl_c_type!(owned(z_owned_transport_event_t, TransportEvent), loaned(z_loaned_transport_event_t, TransportEvent));
+decl_c_type!(owned(z_owned_transport_event_t, option TransportEvent), loaned(z_loaned_transport_event_t, TransportEvent));
 #[cfg(feature = "unstable")]
-decl_c_type!(owned(z_owned_link_event_t, LinkEvent), loaned(z_loaned_link_event_t, LinkEvent));
+decl_c_type!(owned(z_owned_link_event_t, option LinkEvent), loaned(z_loaned_link_event_t, LinkEvent));
 #[cfg(feature = "unstable")]
 decl_c_type!(owned(z_owned_transport_events_listener_t, option TransportEventsListener<()>), loaned(z_loaned_transport_events_listener_t, TransportEventsListener<()>));
 #[cfg(feature = "unstable")]
 decl_c_type!(owned(z_owned_link_events_listener_t, option LinkEventsListener<()>), loaned(z_loaned_link_events_listener_t, LinkEventsListener<()>));
-
-#[cfg(feature = "unstable")]
-impl Gravestone for Transport {
-    fn gravestone() -> Self {
-        Transport::empty()
-    }
-    fn is_gravestone(&self) -> bool {
-        // An empty transport has a default ZenohId (all zeros)
-        *self.zid() == ZenohId::default()
-    }
-}
-
-#[cfg(feature = "unstable")]
-impl Gravestone for Link {
-    fn gravestone() -> Self {
-        Link::empty()
-    }
-    fn is_gravestone(&self) -> bool {
-        // An empty link has a default ZenohId (all zeros)
-        *self.zid() == ZenohId::default()
-    }
-}
-
-#[cfg(feature = "unstable")]
-impl Gravestone for TransportEvent {
-    fn gravestone() -> Self {
-        TransportEvent::empty()
-    }
-    fn is_gravestone(&self) -> bool {
-        // A gravestone transport event has an empty transport
-        *self.transport().zid() == ZenohId::default()
-    }
-}
-
-#[cfg(feature = "unstable")]
-impl Gravestone for LinkEvent {
-    fn gravestone() -> Self {
-        LinkEvent::empty()
-    }
-    fn is_gravestone(&self) -> bool {
-        // A gravestone link event has an empty link
-        *self.link().zid() == ZenohId::default()
-    }
-}
 
 impl From<[u8; 16]> for z_id_t {
     fn from(value: [u8; 16]) -> Self {
@@ -243,7 +199,7 @@ pub extern "C" fn z_transport_clone(
     let transport = transport.as_rust_type_ref();
     this_
         .as_rust_type_mut_uninit()
-        .write(transport.clone());
+        .write(Some(transport.clone()));
 }
 
 /// @brief Drops the owned transport.
@@ -260,14 +216,14 @@ pub extern "C" fn z_transport_drop(this_: &mut z_moved_transport_t) {
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_owned_transport_t>) {
-    this_.as_rust_type_mut_uninit().write(Transport::gravestone());
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if transport is valid, ``false`` if it is in gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_internal_transport_check(this_: &z_owned_transport_t) -> bool {
-    !this_.as_rust_type_ref().is_gravestone()
+    !this_.as_rust_type_ref().is_none()
 }
 
 /// Constructs a link in its gravestone state.
@@ -275,14 +231,14 @@ pub extern "C" fn z_internal_transport_check(this_: &z_owned_transport_t) -> boo
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_link_null(this_: &mut MaybeUninit<z_owned_link_t>) {
-    this_.as_rust_type_mut_uninit().write(Link::gravestone());
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// Returns ``true`` if link is valid, ``false`` if it is in gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_internal_link_check(this_: &z_owned_link_t) -> bool {
-    !this_.as_rust_type_ref().is_gravestone()
+    !this_.as_rust_type_ref().is_none()
 }
 
 /// @brief Drops the owned link.
@@ -417,7 +373,7 @@ pub unsafe extern "C" fn z_info_links(
             // Take ownership of the transport
             let owned_transport = moved_transport.take_rust_type();
             // Check if the transport is valid (not gravestone)
-            if !owned_transport.is_gravestone() {
+            if let Some(owned_transport) = owned_transport {
                 // Use the transport for filtering
                 links_builder = links_builder.transport(owned_transport);
             }
@@ -580,8 +536,7 @@ pub extern "C" fn z_link_reliability(
 /// @brief Move transport data from loaned pointer to owned object.
 ///
 /// Moves the transport referenced by `src` into the `dst` owned object.
-/// The source loaned object is replaced with an empty state.
-/// The destination must be uninitialized (in gravestone state).
+/// The source loaned object is replaced with an empty one: valid but unspecified.
 ///
 /// @param dst: The destination owned transport (must be uninitialized).
 /// @param src: The source loaned transport (will be replaced with empty state).
@@ -592,15 +547,14 @@ pub extern "C" fn z_transport_take_from_loaned(
     src: &mut z_loaned_transport_t,
 ) {
     let transport_ref = src.as_rust_type_mut();
-    let transport = std::mem::replace(transport_ref, Transport::gravestone());
-    dst.as_rust_type_mut_uninit().write(transport);
+    let transport = std::mem::replace(transport_ref, Transport::empty());
+    dst.as_rust_type_mut_uninit().write(Some(transport));
 }
 
 /// @brief Move link data from loaned pointer to owned object.
 ///
 /// Moves the link referenced by `src` into the `dst` owned object.
-/// The source loaned object is replaced with an empty state.
-/// The destination must be uninitialized (in gravestone state).
+/// The source loaned object is replaced with an empty state: valid but unspecified.
 ///
 /// @param dst: The destination owned link (must be uninitialized).
 /// @param src: The source loaned link (will be replaced with empty state).
@@ -611,8 +565,8 @@ pub extern "C" fn z_link_take_from_loaned(
     src: &mut z_loaned_link_t,
 ) {
     let link_ref = src.as_rust_type_mut();
-    let link = std::mem::replace(link_ref, Link::gravestone());
-    dst.as_rust_type_mut_uninit().write(link);
+    let link = std::mem::replace(link_ref, Link::empty());
+    dst.as_rust_type_mut_uninit().write(Some(link));
 }
 
 // ========================
@@ -654,18 +608,18 @@ pub extern "C" fn z_transport_event_transport_mut(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs transport event in its gravestone state.
+/// @brief Constructs null transport event.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_transport_event_null(
     this_: &mut MaybeUninit<z_owned_transport_event_t>,
 ) {
-    this_.as_rust_type_mut_uninit().write(TransportEvent::gravestone());
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Returns ``true`` if transport event is valid, ``false`` if it is in gravestone state.
+/// @brief Returns ``true`` if transport event is valid, ``false`` if it is in null state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_internal_transport_event_check(this_: &z_owned_transport_event_t) -> bool {
@@ -889,14 +843,14 @@ pub extern "C" fn z_link_event_link_mut(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs link event in its gravestone state.
+/// @brief Constructs link event in null state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub unsafe extern "C" fn z_internal_link_event_null(
     this_: &mut MaybeUninit<z_owned_link_event_t>,
 ) {
-    this_.as_rust_type_mut_uninit().write(LinkEvent::gravestone());
+    this_.as_rust_type_mut_uninit().write(None);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -904,7 +858,7 @@ pub unsafe extern "C" fn z_internal_link_event_null(
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_internal_link_event_check(this_: &z_owned_link_event_t) -> bool {
-    !this_.as_rust_type_ref().is_gravestone()
+    !this_.as_rust_type_ref().is_none()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -980,7 +934,7 @@ pub extern "C" fn z_declare_link_events_listener(
         if let Some(transport) = opts.transport.take() {
             let t = transport.take_rust_type();
             // Check if the transport is valid (not gravestone)
-            if !t.is_gravestone() {
+            if let Some(t) = t {
                 builder = builder.transport(t);
             }
         }
@@ -1027,7 +981,7 @@ pub extern "C" fn z_declare_background_link_events_listener(
         if let Some(transport) = opts.transport.take() {
             let t = transport.take_rust_type();
             // Check if the transport is valid (not gravestone)
-            if !t.is_gravestone() {
+            if let Some(t) = t {
                 builder = builder.transport(t);
             }
         }

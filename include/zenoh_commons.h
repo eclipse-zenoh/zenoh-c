@@ -4066,7 +4066,7 @@ bool z_internal_link_event_check(const struct z_owned_link_event_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs link event in its gravestone state.
+ * @brief Constructs link event in null state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -4401,7 +4401,7 @@ ZENOHC_API bool z_internal_transport_check(const struct z_owned_transport_t *thi
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Returns ``true`` if transport event is valid, ``false`` if it is in gravestone state.
+ * @brief Returns ``true`` if transport event is valid, ``false`` if it is in null state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -4409,7 +4409,7 @@ bool z_internal_transport_event_check(const struct z_owned_transport_event_t *th
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs transport event in its gravestone state.
+ * @brief Constructs null transport event.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -4752,8 +4752,7 @@ ZENOHC_API void z_link_src(const struct z_loaned_link_t *link, struct z_owned_st
  * @brief Move link data from loaned pointer to owned object.
  *
  * Moves the link referenced by `src` into the `dst` owned object.
- * The source loaned object is replaced with an empty state.
- * The destination must be uninitialized (in gravestone state).
+ * The source loaned object is replaced with an empty state: valid but unspecified.
  *
  * @param dst: The destination owned link (must be uninitialized).
  * @param src: The source loaned link (will be replaced with empty state).
@@ -6789,8 +6788,7 @@ ZENOHC_API struct z_loaned_transport_t *z_transport_loan_mut(struct z_owned_tran
  * @brief Move transport data from loaned pointer to owned object.
  *
  * Moves the transport referenced by `src` into the `dst` owned object.
- * The source loaned object is replaced with an empty state.
- * The destination must be uninitialized (in gravestone state).
+ * The source loaned object is replaced with an empty one: valid but unspecified.
  *
  * @param dst: The destination owned transport (must be uninitialized).
  * @param src: The source loaned transport (will be replaced with empty state).
