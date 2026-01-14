@@ -656,20 +656,18 @@ void test_link_events_sync() {
     z_drop(z_move(s1));
 }
 
-#if 0
-
 void test_link_events_history() {
     printf("=== Test: Link events with history ===\n");
 
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
-    link_event_ctx_t ctx;
-    init_link_event_ctx(&ctx);
+    context_t ctx;
+    init_context(&ctx);
 
     z_owned_link_events_listener_t listener;
     z_owned_closure_link_event_t callback;
-    z_closure(&callback, link_event_handler, NULL, &ctx);
+    z_closure(&callback, capture_link_events, NULL, &ctx);
     z_link_events_listener_options_t opts;
     z_link_events_listener_options_default(&opts);
     opts.history = true;
@@ -679,18 +677,22 @@ void test_link_events_history() {
 
     sleep(1);
 
-    assert(ctx.added_count == 1 && "Expected 1 history event");
-    assert(z_internal_link_check(&ctx.links[0]) && "No link captured");
-    assert(!z_internal_link_check(&ctx.links[1]) && "Multiple links captured");
+    // Should have 1 PUT event from history (existing link)
+    assert(ctx.link_event_count == 1 && "Expected 1 history event");
+    assert(z_link_event_kind(z_loan(ctx.link_events[0])) == Z_SAMPLE_KIND_PUT &&
+           "Expected PUT event for existing link");
+    print_context(&ctx);
 
     printf("PASS\n\n");
 
     // Cleanup
     z_undeclare_link_events_listener(z_move(listener));
-    drop_link_event_ctx(&ctx);
+    drop_context(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
+
+#if 0
 
 void test_link_events_background() {
     printf("=== Test: Link events (background) ===\n");
@@ -838,8 +840,8 @@ int main(int argc, char** argv) {
     // Test link events listener (sync, no history)
     test_link_events_sync();
 
-    // // Test link events listener (with history)
-    // test_link_events_history();
+    // Test link events listener (with history)
+    test_link_events_history();
 
     // // Test link events listener (background)
     // test_link_events_background();
