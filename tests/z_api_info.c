@@ -104,17 +104,6 @@ void capture_links(z_loaned_link_t* link, void* arg) {
     assert(false && "Exceeded maximum link capture limit");
 }
 
-// Callback that takes the first link from loaned pointer
-// Fails if called multiple times (indicating multiple links exist)
-void capture_link_handler(z_loaned_link_t* link, void* arg) {
-    z_owned_link_t* ctx = (z_owned_link_t*)arg;
-    assert(!z_internal_link_check(ctx) && "capture_link_handler called multiple times - multiple links detected");
-    z_take_from_loaned(ctx, link);
-}
-
-void capture_transport_handler(z_loaned_transport_t* transport, void* arg) {
-    assert(false); // dummy function to be removed later and replaced with capture_transports
-}
 
 #endif
 
@@ -310,59 +299,59 @@ void test_z_info_links_filtered() {
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
-    // Capture transport from s1 (transport to s2)
-    z_owned_transport_t transport_s1;
-    z_internal_transport_null(&transport_s1);
+    // Capture transports from s1 and s2
+    z_owned_transport_t transports_s1[MAX_CAPTURE];
+    init_transports(transports_s1);
+    z_owned_transport_t transports_s2[MAX_CAPTURE];
+    init_transports(transports_s2);
 
     z_owned_closure_transport_t transport_callback;
-    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s1);
+    z_closure(&transport_callback, capture_transports, NULL, transports_s1);
     z_info_transports(z_loan(s1), z_move(transport_callback));
 
-    assert(z_internal_transport_check(&transport_s1) && "No transport captured from session 1");
+    assert(z_internal_transport_check(&transports_s1[0]) && "No transport captured from session 1");
+    assert(!z_internal_transport_check(&transports_s1[1]) && "Multiple transports found from session 1");
 
-    // Capture transport from s2 (transport to s1)
-    z_owned_transport_t transport_s2;
-    z_internal_transport_null(&transport_s2);
-
-    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s2);
+    z_closure(&transport_callback, capture_transports, NULL, transports_s2);
     z_info_transports(z_loan(s2), z_move(transport_callback));
 
-    assert(z_internal_transport_check(&transport_s2) && "No transport captured from session 2");
+    assert(z_internal_transport_check(&transports_s2[0]) && "No transport captured from session 2");
+    assert(!z_internal_transport_check(&transports_s2[1]) && "Multiple transports found from session 2");
 
     // Test 1: Filter links on s1 by s1's transport (should find links)
-    z_owned_link_t link;
-    z_internal_link_null(&link);
+    z_owned_link_t links[MAX_CAPTURE];
+    init_links(links);
 
     z_info_links_options_t options;
     z_info_links_options_default(&options);
-    options.transport = z_transport_move(&transport_s1);
+    options.transport = z_transport_move(&transports_s1[0]);
 
     z_owned_closure_link_t link_callback;
-    z_closure(&link_callback, capture_link_handler, NULL, &link);
+    z_closure(&link_callback, capture_links, NULL, links);
     z_info_links(z_loan(s1), z_move(link_callback), &options);
 
-    assert(z_internal_link_check(&link) && "No link found when filtering s1 by s1's transport");
-    z_id_t link_zid = z_link_zid(z_loan(link));
-    z_owned_string_t zid_str;
-    z_id_to_string(&link_zid, &zid_str);
-    printf("PASS: Filtered link by s1's transport: zid=%.*s\n", (int)z_string_len(z_loan(zid_str)),
-           z_string_data(z_loan(zid_str)));
-    z_drop(z_move(zid_str));
-    z_drop(z_move(link));
+    assert(z_internal_link_check(&links[0]) && "No link found when filtering s1 by s1's transport");
+    assert(!z_internal_link_check(&links[1]) && "Multiple links found when filtering s1 by s1's transport");
+    print_links(links);
+    printf("PASS: Filtered link by s1's transport\n");
+    drop_links(links);
 
     // Test 2: Filter links on s1 by s2's transport (should find no links)
-    z_internal_link_null(&link);
+    init_links(links);
 
     z_info_links_options_default(&options);
-    options.transport = z_transport_move(&transport_s2);
+    options.transport = z_transport_move(&transports_s2[0]);
 
-    z_closure(&link_callback, capture_link_handler, NULL, &link);
+    z_closure(&link_callback, capture_links, NULL, links);
     z_info_links(z_loan(s1), z_move(link_callback), &options);
 
-    assert(!z_internal_link_check(&link) && "Found link when filtering s1 by s2's transport (should be none)");
+    assert(!z_internal_link_check(&links[0]) && "Found link when filtering s1 by s2's transport (should be none)");
     printf("PASS: No links found when filtering s1 by s2's transport (as expected)\n\n");
 
     // Cleanup
+    drop_links(links);
+    drop_transports(transports_s1);
+    drop_transports(transports_s2);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -375,22 +364,34 @@ void test_z_info_links_filtered() {
 typedef struct {
     int added_count;
     int removed_count;
-    z_owned_transport_t last_transport;
+    z_owned_transport_t transports[MAX_CAPTURE];
 } transport_event_ctx_t;
 
-// Handler for transport events
-// NOTE: Caller must drop and nullify ctx->last_transport before expecting a new PUT event
+void init_transport_event_ctx(transport_event_ctx_t* ctx) {
+    ctx->added_count = 0;
+    ctx->removed_count = 0;
+    init_transports(ctx->transports);
+}
+
+void drop_transport_event_ctx(transport_event_ctx_t* ctx) {
+    drop_transports(ctx->transports);
+}
+
+// Handler for transport events - captures into array, no asserts
 void transport_event_handler(z_loaned_transport_event_t* event, void* arg) {
     transport_event_ctx_t* ctx = (transport_event_ctx_t*)arg;
     z_sample_kind_t kind = z_transport_event_kind(event);
     z_loaned_transport_t* transport = z_transport_event_transport_mut(event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
-        // Verify last_transport is null before taking a new one
-        assert(!z_internal_transport_check(&ctx->last_transport) &&
-               "last_transport must be nullified before receiving new event");
+        // Find first empty slot
+        for (int i = 0; i < MAX_CAPTURE; i++) {
+            if (!z_internal_transport_check(&ctx->transports[i])) {
+                z_transport_take_from_loaned(&ctx->transports[i], transport);
+                break;
+            }
+        }
         ctx->added_count++;
-        z_transport_take_from_loaned(&ctx->last_transport, transport);
     } else {
         ctx->removed_count++;
     }
@@ -405,8 +406,8 @@ void test_transport_events_sync() {
     create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17448\"]", "[]");
     assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
 
-    transport_event_ctx_t ctx = {0};
-    z_internal_transport_null(&ctx.last_transport);
+    transport_event_ctx_t ctx;
+    init_transport_event_ctx(&ctx);
 
     // Declare listener
     z_owned_transport_events_listener_t listener;
@@ -431,13 +432,14 @@ void test_transport_events_sync() {
     sleep(2);
 
     assert(ctx.added_count == 1 && "Expected 1 added event");
+    assert(z_internal_transport_check(&ctx.transports[0]) && "No transport captured");
+    assert(!z_internal_transport_check(&ctx.transports[1]) && "Multiple transports captured");
 
     // Verify ZID
-    z_id_t event_zid = z_transport_zid(z_loan(ctx.last_transport));
+    z_id_t event_zid = z_transport_zid(z_loan(ctx.transports[0]));
     z_id_t s2_zid = z_info_zid(z_loan(s2));
     assert(memcmp(event_zid.id, s2_zid.id, sizeof(s2_zid.id)) == 0 && "Transport ZID doesn't match session 2's ZID");
 
-    z_drop(z_move(ctx.last_transport));
     z_drop(z_move(s2));
     sleep(1);
 
@@ -447,6 +449,7 @@ void test_transport_events_sync() {
 
     // Cleanup
     z_undeclare_transport_events_listener(z_move(listener));
+    drop_transport_event_ctx(&ctx);
     z_drop(z_move(s1));
 }
 
@@ -456,8 +459,8 @@ void test_transport_events_history() {
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
-    transport_event_ctx_t ctx = {0};
-    z_internal_transport_null(&ctx.last_transport);
+    transport_event_ctx_t ctx;
+    init_transport_event_ctx(&ctx);
 
     z_owned_transport_events_listener_t listener;
     z_owned_closure_transport_event_t callback;
@@ -472,12 +475,14 @@ void test_transport_events_history() {
     sleep(1);
 
     assert(ctx.added_count == 1 && "Expected 1 history event");
+    assert(z_internal_transport_check(&ctx.transports[0]) && "No transport captured");
+    assert(!z_internal_transport_check(&ctx.transports[1]) && "Multiple transports captured");
 
     printf("PASS\n\n");
 
     // Cleanup
-    z_drop(z_move(ctx.last_transport));
     z_undeclare_transport_events_listener(z_move(listener));
+    drop_transport_event_ctx(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -490,8 +495,8 @@ void test_transport_events_background() {
     create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17449\"]", "[]");
     assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
 
-    transport_event_ctx_t ctx = {0};
-    z_internal_transport_null(&ctx.last_transport);
+    transport_event_ctx_t ctx;
+    init_transport_event_ctx(&ctx);
 
     z_owned_closure_transport_event_t callback;
     z_closure(&callback, transport_event_handler, NULL, &ctx);
@@ -509,11 +514,13 @@ void test_transport_events_background() {
     sleep(2);
 
     assert(ctx.added_count == 1 && "Expected 1 added event");
+    assert(z_internal_transport_check(&ctx.transports[0]) && "No transport captured");
+    assert(!z_internal_transport_check(&ctx.transports[1]) && "Multiple transports captured");
 
     printf("PASS\n\n");
 
     // Cleanup
-    z_drop(z_move(ctx.last_transport));
+    drop_transport_event_ctx(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -526,21 +533,34 @@ void test_transport_events_background() {
 typedef struct {
     int added_count;
     int removed_count;
-    z_owned_link_t last_link;
+    z_owned_link_t links[MAX_CAPTURE];
 } link_event_ctx_t;
 
-// Handler for link events
-// NOTE: Caller must drop and nullify ctx->last_link before expecting a new PUT event
+void init_link_event_ctx(link_event_ctx_t* ctx) {
+    ctx->added_count = 0;
+    ctx->removed_count = 0;
+    init_links(ctx->links);
+}
+
+void drop_link_event_ctx(link_event_ctx_t* ctx) {
+    drop_links(ctx->links);
+}
+
+// Handler for link events - captures into array, no asserts
 void link_event_handler(z_loaned_link_event_t* event, void* arg) {
     link_event_ctx_t* ctx = (link_event_ctx_t*)arg;
     z_sample_kind_t kind = z_link_event_kind(event);
     z_loaned_link_t* link = z_link_event_link_mut(event);
 
     if (kind == Z_SAMPLE_KIND_PUT) {
-        // Verify last_link is null before taking a new one
-        assert(!z_internal_link_check(&ctx->last_link) && "last_link must be nullified before receiving new event");
+        // Find first empty slot
+        for (int i = 0; i < MAX_CAPTURE; i++) {
+            if (!z_internal_link_check(&ctx->links[i])) {
+                z_link_take_from_loaned(&ctx->links[i], link);
+                break;
+            }
+        }
         ctx->added_count++;
-        z_link_take_from_loaned(&ctx->last_link, link);
     } else {
         ctx->removed_count++;
     }
@@ -555,8 +575,8 @@ void test_link_events_sync() {
     create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17450\"]", "[]");
     assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
 
-    link_event_ctx_t ctx = {0};
-    z_internal_link_null(&ctx.last_link);
+    link_event_ctx_t ctx;
+    init_link_event_ctx(&ctx);
 
     // Declare listener
     z_owned_link_events_listener_t listener;
@@ -581,13 +601,14 @@ void test_link_events_sync() {
     sleep(2);
 
     assert(ctx.added_count == 1 && "Expected 1 added event");
+    assert(z_internal_link_check(&ctx.links[0]) && "No link captured");
+    assert(!z_internal_link_check(&ctx.links[1]) && "Multiple links captured");
 
     // Verify ZID from link matches session 2's ZID
-    z_id_t link_zid = z_link_zid(z_loan(ctx.last_link));
+    z_id_t link_zid = z_link_zid(z_loan(ctx.links[0]));
     z_id_t s2_zid = z_info_zid(z_loan(s2));
     assert(memcmp(link_zid.id, s2_zid.id, sizeof(s2_zid.id)) == 0 && "Link ZID doesn't match session 2's ZID");
 
-    z_drop(z_move(ctx.last_link));
     z_drop(z_move(s2));
     sleep(1);
 
@@ -599,6 +620,7 @@ void test_link_events_sync() {
 
     // Cleanup
     z_undeclare_link_events_listener(z_move(listener));
+    drop_link_event_ctx(&ctx);
     z_drop(z_move(s1));
 }
 
@@ -608,8 +630,8 @@ void test_link_events_history() {
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
-    link_event_ctx_t ctx = {0};
-    z_internal_link_null(&ctx.last_link);
+    link_event_ctx_t ctx;
+    init_link_event_ctx(&ctx);
 
     z_owned_link_events_listener_t listener;
     z_owned_closure_link_event_t callback;
@@ -624,12 +646,14 @@ void test_link_events_history() {
     sleep(1);
 
     assert(ctx.added_count == 1 && "Expected 1 history event");
+    assert(z_internal_link_check(&ctx.links[0]) && "No link captured");
+    assert(!z_internal_link_check(&ctx.links[1]) && "Multiple links captured");
 
     printf("PASS\n\n");
 
     // Cleanup
-    z_drop(z_move(ctx.last_link));
     z_undeclare_link_events_listener(z_move(listener));
+    drop_link_event_ctx(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -642,8 +666,8 @@ void test_link_events_background() {
     create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17451\"]", "[]");
     assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
 
-    link_event_ctx_t ctx = {0};
-    z_internal_link_null(&ctx.last_link);
+    link_event_ctx_t ctx;
+    init_link_event_ctx(&ctx);
 
     z_owned_closure_link_event_t callback;
     z_closure(&callback, link_event_handler, NULL, &ctx);
@@ -661,11 +685,13 @@ void test_link_events_background() {
     sleep(2);
 
     assert(ctx.added_count == 1 && "Expected 1 added event");
+    assert(z_internal_link_check(&ctx.links[0]) && "No link captured");
+    assert(!z_internal_link_check(&ctx.links[1]) && "Multiple links captured");
 
     printf("PASS\n\n");
 
     // Cleanup
-    z_drop(z_move(ctx.last_link));
+    drop_link_event_ctx(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -676,28 +702,28 @@ void test_link_events_filtered() {
     z_owned_session_t s1, s2;
     create_session_pair(&s1, &s2);
 
-    // Capture transport from s1 (transport to s2)
-    z_owned_transport_t transport_s1;
-    z_internal_transport_null(&transport_s1);
+    // Capture transports from s1 and s2
+    z_owned_transport_t transports_s1[MAX_CAPTURE];
+    init_transports(transports_s1);
+    z_owned_transport_t transports_s2[MAX_CAPTURE];
+    init_transports(transports_s2);
 
     z_owned_closure_transport_t transport_callback;
-    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s1);
+    z_closure(&transport_callback, capture_transports, NULL, transports_s1);
     z_info_transports(z_loan(s1), z_move(transport_callback));
 
-    assert(z_internal_transport_check(&transport_s1) && "No transport captured from session 1");
+    assert(z_internal_transport_check(&transports_s1[0]) && "No transport captured from session 1");
+    assert(!z_internal_transport_check(&transports_s1[1]) && "Multiple transports found from session 1");
 
-    // Capture transport from s2 (transport to s1)
-    z_owned_transport_t transport_s2;
-    z_internal_transport_null(&transport_s2);
-
-    z_closure(&transport_callback, capture_transport_handler, NULL, &transport_s2);
+    z_closure(&transport_callback, capture_transports, NULL, transports_s2);
     z_info_transports(z_loan(s2), z_move(transport_callback));
 
-    assert(z_internal_transport_check(&transport_s2) && "No transport captured from session 2");
+    assert(z_internal_transport_check(&transports_s2[0]) && "No transport captured from session 2");
+    assert(!z_internal_transport_check(&transports_s2[1]) && "Multiple transports found from session 2");
 
     // Test 1: Listen for link events on s1 filtered by s1's transport (should receive events)
-    link_event_ctx_t ctx1 = {0};
-    z_internal_link_null(&ctx1.last_link);
+    link_event_ctx_t ctx1;
+    init_link_event_ctx(&ctx1);
 
     z_owned_link_events_listener_t listener1;
     z_owned_closure_link_event_t callback1;
@@ -705,7 +731,7 @@ void test_link_events_filtered() {
     z_link_events_listener_options_t opts1;
     z_link_events_listener_options_default(&opts1);
     opts1.history = true;
-    opts1.transport = z_transport_move(&transport_s1);
+    opts1.transport = z_transport_move(&transports_s1[0]);
 
     assert(z_declare_link_events_listener(z_loan(s1), &listener1, z_move(callback1), &opts1) == 0 &&
            "Unable to declare filtered link events listener");
@@ -713,14 +739,15 @@ void test_link_events_filtered() {
     sleep(1);
 
     assert(ctx1.added_count >= 1 && "Expected at least 1 event with matching transport filter");
+    assert(z_internal_link_check(&ctx1.links[0]) && "No link captured");
     printf("PASS: Received %d event(s) with matching transport filter\n", ctx1.added_count);
 
-    z_drop(z_move(ctx1.last_link));
     z_undeclare_link_events_listener(z_move(listener1));
+    drop_link_event_ctx(&ctx1);
 
     // Test 2: Listen for link events on s1 filtered by s2's transport (should receive no events)
-    link_event_ctx_t ctx2 = {0};
-    z_internal_link_null(&ctx2.last_link);
+    link_event_ctx_t ctx2;
+    init_link_event_ctx(&ctx2);
 
     z_owned_link_events_listener_t listener2;
     z_owned_closure_link_event_t callback2;
@@ -728,7 +755,7 @@ void test_link_events_filtered() {
     z_link_events_listener_options_t opts2;
     z_link_events_listener_options_default(&opts2);
     opts2.history = true;
-    opts2.transport = z_transport_move(&transport_s2);
+    opts2.transport = z_transport_move(&transports_s2[0]);
 
     assert(z_declare_link_events_listener(z_loan(s1), &listener2, z_move(callback2), &opts2) == 0 &&
            "Unable to declare filtered link events listener (test 2)");
@@ -736,10 +763,14 @@ void test_link_events_filtered() {
     sleep(1);
 
     assert(ctx2.added_count == 0 && "Expected 0 events with non-matching transport filter");
+    assert(!z_internal_link_check(&ctx2.links[0]) && "Link captured unexpectedly");
     printf("PASS: Received 0 events with non-matching transport filter (as expected)\n\n");
 
     // Cleanup
     z_undeclare_link_events_listener(z_move(listener2));
+    drop_link_event_ctx(&ctx2);
+    drop_transports(transports_s1);
+    drop_transports(transports_s2);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
@@ -750,7 +781,7 @@ int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
     // Test stable z_info functions (always run, not dependent on unstable API)
-    // test_z_info_stable();
+    test_z_info_stable();
 
 #if defined(Z_FEATURE_UNSTABLE_API)
     // Test transports
@@ -760,28 +791,28 @@ int main(int argc, char** argv) {
     test_z_info_links();
 
     // Test filtered links
-    // test_z_info_links_filtered();
+    test_z_info_links_filtered();
 
     // Test transport events listener (sync, no history)
-    // test_transport_events_sync();
+    test_transport_events_sync();
 
     // Test transport events listener (with history)
-    // test_transport_events_history();
+    test_transport_events_history();
 
     // Test transport events listener (background)
-    // test_transport_events_background();
+    test_transport_events_background();
 
     // Test link events listener (sync, no history)
-    // test_link_events_sync();
+    test_link_events_sync();
 
     // Test link events listener (with history)
-    // test_link_events_history();
+    test_link_events_history();
 
     // Test link events listener (background)
-    // test_link_events_background();
+    test_link_events_background();
 
     // Test link events listener with transport filter
-    // test_link_events_filtered();
+    test_link_events_filtered();
 
     printf("\nAll tests completed successfully!\n");
 #else
