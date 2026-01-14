@@ -413,7 +413,7 @@ void test_transport_events_sync() {
     print_context(&ctx);
 
     z_drop(z_move(s2));
-    sleep(1);
+    sleep(2);
 
     // Should have 2 events now (1 PUT + 1 DELETE)
     assert(ctx.transport_event_count == 2 && "Expected 2 events after disconnection");
@@ -551,7 +551,7 @@ void test_link_events_sync() {
     print_context(&ctx);
 
     z_drop(z_move(s2));
-    sleep(1);
+    sleep(2);
 
     // Should have 2 events now (1 PUT + 1 DELETE)
     assert(ctx.link_event_count == 2 && "Expected 2 events after disconnection");
