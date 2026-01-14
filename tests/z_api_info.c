@@ -509,8 +509,6 @@ void test_transport_events_history() {
     z_drop(z_move(s2));
 }
 
-#if 0
-
 void test_transport_events_background() {
     printf("=== Test: Transport events (background) ===\n");
 
@@ -519,11 +517,11 @@ void test_transport_events_background() {
     create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17449\"]", "[]");
     assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
 
-    transport_event_ctx_t ctx;
-    init_transport_event_ctx(&ctx);
+    context_t ctx;
+    init_context(&ctx);
 
     z_owned_closure_transport_event_t callback;
-    z_closure(&callback, transport_event_handler, NULL, &ctx);
+    z_closure(&callback, capture_transport_events, NULL, &ctx);
     z_transport_events_listener_options_t opts;
     z_transport_events_listener_options_default(&opts);
 
@@ -537,17 +535,21 @@ void test_transport_events_background() {
 
     sleep(2);
 
-    assert(ctx.added_count == 1 && "Expected 1 added event");
-    assert(z_internal_transport_check(&ctx.transports[0]) && "No transport captured");
-    assert(!z_internal_transport_check(&ctx.transports[1]) && "Multiple transports captured");
+    // Should have 1 PUT event (transport added)
+    assert(ctx.transport_event_count == 1 && "Expected 1 event after connection");
+    assert(z_transport_event_kind(z_loan(ctx.transport_events[0])) == Z_SAMPLE_KIND_PUT &&
+           "Expected PUT event for transport added");
+    print_context(&ctx);
 
     printf("PASS\n\n");
 
     // Cleanup
-    drop_transport_event_ctx(&ctx);
+    drop_context(&ctx);
     z_drop(z_move(s1));
     z_drop(z_move(s2));
 }
+
+#if 0
 
 // ========================================
 // Link Events Listener Tests
@@ -822,8 +824,8 @@ int main(int argc, char** argv) {
     // Test transport events listener (with history)
     test_transport_events_history();
 
-    // // Test transport events listener (background)
-    // test_transport_events_background();
+    // Test transport events listener (background)
+    test_transport_events_background();
 
     // // Test link events listener (sync, no history)
     // test_link_events_sync();
