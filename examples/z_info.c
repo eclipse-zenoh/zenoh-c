@@ -125,7 +125,7 @@ void print_link(z_loaned_link_t* link, void* ctx) {
     z_drop(z_move(auth_id));
 }
 
-void transport_event_handler(const z_loaned_transport_event_t* event, void* ctx) {
+void transport_event_handler(z_loaned_transport_event_t* event, void* ctx) {
     (void)ctx;
     z_sample_kind_t kind = z_transport_event_kind(event);
     const z_loaned_transport_t* transport = z_transport_event_transport(event);
@@ -139,7 +139,7 @@ void transport_event_handler(const z_loaned_transport_event_t* event, void* ctx)
     print_transport((z_loaned_transport_t*)transport, NULL);
 }
 
-void link_event_handler(const z_loaned_link_event_t* event, void* ctx) {
+void link_event_handler(z_loaned_link_event_t* event, void* ctx) {
     (void)ctx;
     z_sample_kind_t kind = z_link_event_kind(event);
     const z_loaned_link_t* link = z_link_event_link(event);
