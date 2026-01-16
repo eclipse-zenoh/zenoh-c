@@ -326,7 +326,7 @@ get_opaque_type_data!(Option<LinkEvent>, z_owned_link_event_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(LinkEvent, z_loaned_link_event_t);
 
-/// @brief An listener for transport events.
+/// @brief A listener for transport events.
 ///
 /// Used in Zenoh connectivity API to get notified about connecting or disconnecting to remote zenoh nodes.
 #[cfg(feature = "unstable")]
