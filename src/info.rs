@@ -312,7 +312,7 @@ pub unsafe extern "C" fn z_link_loan_mut(this_: &mut z_owned_link_t) -> &mut z_l
         .as_loaned_c_type_mut()
 }
 
-/// @brief Get the transports `z_loaned_transport_t` used by the session.
+/// @brief Gets the transports `z_loaned_transport_t` used by the session.
 ///
 /// The tranport is a connection to another zenoh node. The `z_owned_transport_t`
 /// contains the common information related to that connection. The information specific
