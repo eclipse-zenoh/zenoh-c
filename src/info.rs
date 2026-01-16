@@ -513,7 +513,7 @@ pub extern "C" fn z_link_auth_identifier(
     );
 }
 
-/// @brief Get the priority range from the `z_loaned_link_t` (if QoS is supported).
+/// @brief Gets the priority range from the `z_loaned_link_t` (if QoS is supported).
 ///
 /// Returns true if priorities are supported and stores the min and max priorities in `min_out` and `max_out`.
 /// Returns false if the link does not support QoS.
