@@ -292,7 +292,7 @@ get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
 get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
 
-/// @brief An Transport structure returned by Zenoh connectivity API.
+/// @brief A Transport structure returned by Zenoh connectivity API.
 ///
 /// Represents a remote zenoh node connected to this node. Only one transport per remote node exists.
 /// Each transport can have multiple corresponding `z_owned_link_t` which represent
