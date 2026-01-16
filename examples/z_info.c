@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
     z_link_events_listener_options_default(&link_opts);
     link_opts.history = false;  // Don't repeat links we already printed
 
-    if (z_declare_link_events_listener(z_loan(s), &link_listener, z_move(link_event_callback), &link_opts) != 0) {
+    if (z_declare_link_events_listener(z_loan(s), &link_listener, z_move(link_event_callback), &link_opts) != Z_OK) {
         printf("Unable to declare link events listener!\n");
         z_drop(z_move(s));
         exit(-1);
