@@ -909,7 +909,7 @@ pub extern "C" fn z_link_event_link(event: &z_loaned_link_event_t) -> &z_loaned_
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Get the mutable link from the link event.
+/// @brief Gets the mutable link from the link event.
 ///
 /// Returns a mutable loaned reference to the link that was added or removed.
 #[cfg(feature = "unstable")]
