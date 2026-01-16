@@ -594,7 +594,7 @@ pub extern "C" fn z_link_take_from_loaned(
 // ========================
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Get event kind from the transport event.
+/// @brief Gets event kind from the transport event.
 ///
 /// Returns `Z_SAMPLE_KIND_PUT` when a transport was added, `Z_SAMPLE_KIND_DELETE` when removed.
 #[cfg(feature = "unstable")]
