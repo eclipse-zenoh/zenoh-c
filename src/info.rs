@@ -553,7 +553,7 @@ pub extern "C" fn z_link_reliability(
     }
 }
 
-/// @brief Move transport data from loaned pointer to owned object.
+/// @brief Moves transport data from loaned pointer to owned object.
 ///
 /// Moves the transport referenced by `src` into the `dst` owned object.
 /// The source loaned object is replaced with an empty one: valid but unspecified.
