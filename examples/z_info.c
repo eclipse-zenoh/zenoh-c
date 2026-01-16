@@ -211,7 +211,7 @@ int main(int argc, char** argv) {
     transport_opts.history = false;  // Don't repeat transports we already printed
 
     if (z_declare_background_transport_events_listener(z_loan(s), z_move(transport_event_callback), &transport_opts) !=
-        0) {
+        Z_OK) {
         printf("Unable to declare transport events listener!\n");
         z_drop(z_move(s));
         exit(-1);
