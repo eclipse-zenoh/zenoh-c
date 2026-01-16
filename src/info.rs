@@ -616,7 +616,7 @@ pub extern "C" fn z_transport_event_transport(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Get the mutable transport from the transport event.
+/// @brief Gets the mutable transport from the transport event.
 ///
 /// Returns a mutable loaned reference to the transport that was added or removed.
 #[cfg(feature = "unstable")]
