@@ -694,7 +694,7 @@ pub unsafe extern "C" fn z_transport_event_loan_mut(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Move transport event data from loaned pointer to owned object.
+/// @brief Moves transport event data from loaned pointer to owned object.
 ///
 /// Moves the transport event referenced by `src` into the `dst` owned object.
 /// The source loaned object is replaced with an empty state: valid but unspecified.
