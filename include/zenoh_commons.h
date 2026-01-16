@@ -393,9 +393,6 @@ typedef struct z_owned_closure_hello_t {
 typedef struct z_moved_closure_hello_t {
   struct z_owned_closure_hello_t _this;
 } z_moved_closure_hello_t;
-typedef struct ALIGN(8) z_loaned_link_t {
-  uint8_t _0[144];
-} z_loaned_link_t;
 /**
  * @brief A link-processing closure.
  *
@@ -426,9 +423,6 @@ typedef struct z_moved_closure_link_t {
   struct z_owned_closure_link_t _this;
 } z_moved_closure_link_t;
 #endif
-typedef struct ALIGN(8) z_loaned_link_event_t {
-  uint8_t _0[152];
-} z_loaned_link_event_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief A link event-processing closure.
@@ -537,9 +531,6 @@ typedef struct z_owned_closure_sample_t {
 typedef struct z_moved_closure_sample_t {
   struct z_owned_closure_sample_t _this;
 } z_moved_closure_sample_t;
-typedef struct ALIGN(1) z_loaned_transport_t {
-  uint8_t _0[20];
-} z_loaned_transport_t;
 /**
  * @brief A transport-processing closure.
  *
@@ -570,9 +561,6 @@ typedef struct z_moved_closure_transport_t {
   struct z_owned_closure_transport_t _this;
 } z_moved_closure_transport_t;
 #endif
-typedef struct ALIGN(1) z_loaned_transport_event_t {
-  uint8_t _0[21];
-} z_loaned_transport_event_t;
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief A transport event-processing closure.
@@ -628,16 +616,6 @@ typedef struct z_moved_condvar_t {
 typedef struct z_moved_config_t {
   struct z_owned_config_t _this;
 } z_moved_config_t;
-/**
- * @brief An Transport structure returned by Zenoh connectivity API.
- *
- * Represents a remote zenoh node connected to this node. Only one transport per remote node exists.
- * Each transport can have multiple corresponding `z_owned_link_t` which represent
- * actual established data links with various protocols.
- */
-typedef struct ALIGN(1) z_owned_transport_t {
-  uint8_t _0[20];
-} z_owned_transport_t;
 typedef struct z_moved_transport_t {
   struct z_owned_transport_t _this;
 } z_moved_transport_t;
@@ -698,14 +676,6 @@ typedef struct z_transport_events_listener_options_t {
   bool history;
 } z_transport_events_listener_options_t;
 #endif
-/**
- * @brief An listener for link events.
- *
- * Used in Zenoh connectivity API to get notified about establishment or break of data links with remote zenoh nodes.
- */
-typedef struct ALIGN(8) z_owned_link_events_listener_t {
-  uint8_t _0[16];
-} z_owned_link_events_listener_t;
 typedef struct z_moved_encoding_t {
   struct z_owned_encoding_t _this;
 } z_moved_encoding_t;
@@ -789,14 +759,6 @@ typedef struct z_querier_options_t {
    */
   uint64_t timeout_ms;
 } z_querier_options_t;
-/**
- * @brief An listener for transport events.
- *
- * Used in Zenoh connectivity API to get notified about connecting or disconnecting to remote zenoh nodes.
- */
-typedef struct ALIGN(8) z_owned_transport_events_listener_t {
-  uint8_t _0[16];
-} z_owned_transport_events_listener_t;
 /**
  * Options passed to the `z_delete()` function.
  */
@@ -924,30 +886,6 @@ typedef struct z_info_links_options_t {
   struct z_moved_transport_t *transport;
 } z_info_links_options_t;
 #endif
-/**
- * @brief A Zenoh link structure returned by Zenoh connectivity API.
- *
- * Represents an actual data link with a remote zenoh node over a specific protocol.
- */
-typedef struct ALIGN(8) z_owned_link_t {
-  uint8_t _0[144];
-} z_owned_link_t;
-/**
- * @brief The event notifyting about addition or removal of a link `z_owned_link_t`
- *
- * Used in Zenoh connectivity API to notify about establishment or break of data links with remote zenoh nodes.
- */
-typedef struct ALIGN(8) z_owned_link_event_t {
-  uint8_t _0[152];
-} z_owned_link_event_t;
-/**
- * @brief The event notifyting about addition or removal of a transport `z_owned_transport_t`
- *
- * Used in Zenoh connectivity API to notify about connecting or disconnecting to remote zenoh nodes.
- */
-typedef struct ALIGN(1) z_owned_transport_event_t {
-  uint8_t _0[21];
-} z_owned_transport_event_t;
 typedef struct z_moved_keyexpr_t {
   struct z_owned_keyexpr_t _this;
 } z_moved_keyexpr_t;
@@ -960,9 +898,6 @@ typedef struct z_moved_link_event_t {
 typedef struct z_moved_link_events_listener_t {
   struct z_owned_link_events_listener_t _this;
 } z_moved_link_events_listener_t;
-typedef struct ALIGN(8) z_loaned_link_events_listener_t {
-  uint8_t _0[16];
-} z_loaned_link_events_listener_t;
 /**
  * @brief The options for `z_liveliness_declare_subscriber()`
  */
@@ -1294,9 +1229,6 @@ typedef struct z_moved_transport_event_t {
 typedef struct z_moved_transport_events_listener_t {
   struct z_owned_transport_events_listener_t _this;
 } z_moved_transport_events_listener_t;
-typedef struct ALIGN(8) z_loaned_transport_events_listener_t {
-  uint8_t _0[16];
-} z_loaned_transport_events_listener_t;
 /**
  * @brief A log-processing closure.
  *
