@@ -479,7 +479,7 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
     link.is_streamed()
 }
 
-/// @brief Get the network interfaces associated with the `z_loaned_link_t`.
+/// @brief Gets the network interfaces associated with the `z_loaned_link_t`.
 ///
 /// Stores an array of interface name strings in `interfaces_out`.
 #[cfg(feature = "unstable")]
