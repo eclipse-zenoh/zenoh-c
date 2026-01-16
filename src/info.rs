@@ -571,7 +571,7 @@ pub extern "C" fn z_transport_take_from_loaned(
     dst.as_rust_type_mut_uninit().write(Some(transport));
 }
 
-/// @brief Move link data from loaned pointer to owned object.
+/// @brief Moves link data from loaned pointer to owned object.
 ///
 /// Moves the link referenced by `src` into the `dst` owned object.
 /// The source loaned object is replaced with an empty state: valid but unspecified.
