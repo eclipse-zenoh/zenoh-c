@@ -534,7 +534,7 @@ pub extern "C" fn z_link_priorities(
     }
 }
 
-/// @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
+/// @brief Gets the reliability from the `z_loaned_link_t` (if QoS is supported).
 ///
 /// Returns true if reliability information is available and stores the reliability level in `reliability_out`.
 /// Returns false if the link does not support QoS.
