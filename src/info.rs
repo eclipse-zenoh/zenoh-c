@@ -469,7 +469,7 @@ pub extern "C" fn z_link_mtu(link: &z_loaned_link_t) -> u16 {
     link.mtu()
 }
 
-/// @brief Check if the link is streamed.
+/// @brief Checks if the link is streamed.
 ///
 /// Returns true if the link is streamed, false otherwise.
 #[cfg(feature = "unstable")]
