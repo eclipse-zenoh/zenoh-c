@@ -359,7 +359,7 @@ pub extern "C" fn z_info_links_options_default(this_: &mut MaybeUninit<z_info_li
     this_.write(z_info_links_options_t::default());
 }
 
-/// @brief Get the links `z_loaned_link_t` used by the session.
+/// @brief Gets the links `z_loaned_link_t` used by the session.
 ///
 /// The link represents a concrete network connection used by a transport.
 /// Each transport may have multiple links associated with it.
@@ -408,7 +408,7 @@ pub unsafe extern "C" fn z_info_links(
     result::Z_OK
 }
 
-/// @brief Get the zenoh id from the `z_loaned_link_t`.
+/// @brief Gets the zenoh id from the `z_loaned_link_t`.
 ///
 /// Returns the zenoh id of the transport this link belongs to.
 #[cfg(feature = "unstable")]
