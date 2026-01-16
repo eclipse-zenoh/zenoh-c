@@ -496,7 +496,7 @@ pub extern "C" fn z_link_interfaces(
     interfaces_out.as_rust_type_mut_uninit().write(interfaces);
 }
 
-/// @brief Get the authentication identifier from the `z_loaned_link_t`.
+/// @brief Gets the authentication identifier from the `z_loaned_link_t`.
 ///
 /// Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
 #[cfg(feature = "unstable")]
