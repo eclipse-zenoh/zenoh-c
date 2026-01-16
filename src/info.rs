@@ -978,7 +978,7 @@ pub unsafe extern "C" fn z_link_event_loan_mut(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Move link event data from loaned pointer to owned object.
+/// @brief Moves link event data from loaned pointer to owned object.
 ///
 /// Moves the link event referenced by `src` into the `dst` owned object.
 /// The source loaned object is replaced with an empty state: valid but unspecified.
