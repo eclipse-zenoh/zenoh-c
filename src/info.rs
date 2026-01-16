@@ -430,7 +430,7 @@ pub extern "C" fn z_link_src(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z
         .write(link.src().to_string().into());
 }
 
-/// @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
+/// @brief Gets the destination locator (remote endpoint) from the `z_loaned_link_t`.
 ///
 /// Stores the destination locator string in `str_out`.
 #[cfg(feature = "unstable")]
