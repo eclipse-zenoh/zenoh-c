@@ -17,6 +17,10 @@ pub fn generate_opaque_types() {
         // so this ensures it will be included in `total_error_count`
         .replace('\r', "\n");
 
+    // Strip ANSI escape codes from compiler output to improve regex reliability
+    let re_ansi = Regex::new(r"\x1b\[[0-9;]*[mK]").unwrap();
+    let data_in = re_ansi.replace_all(&data_in, "").to_string();
+
     // Check for cargo-level errors (dependency resolution, manifest parsing, etc.)
     if data_in.contains("error: failed to") || data_in.contains("Caused by:") {
         panic!(
