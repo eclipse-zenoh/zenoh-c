@@ -899,7 +899,7 @@ pub extern "C" fn z_link_event_kind(event: &z_loaned_link_event_t) -> z_sample_k
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Get the link from the link event.
+/// @brief Gets the link from the link event.
 ///
 /// Returns a loaned reference to the link that was added or removed.
 #[cfg(feature = "unstable")]
