@@ -1007,7 +1007,7 @@ pub extern "C" fn z_link_event_take_from_loaned(
 #[derive(Default)]
 pub struct z_link_events_listener_options_t {
     /// If true, the listener will receive events for links that were already
-    /// connected when the listener was declared.
+    /// established when the listener was declared.
     pub history: bool,
     /// Optional transport to filter link events by.
     /// If NULL, receives events for all links (default behavior).
