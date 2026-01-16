@@ -442,7 +442,7 @@ pub extern "C" fn z_link_dst(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z
         .write(link.dst().to_string().into());
 }
 
-/// @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
+/// @brief Gets the group locator from the `z_loaned_link_t` (for multicast links).
 ///
 /// Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
 #[cfg(feature = "unstable")]
