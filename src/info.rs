@@ -459,7 +459,7 @@ pub extern "C" fn z_link_group(
     );
 }
 
-/// @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
+/// @brief Gets the MTU (maximum transmission unit) from the `z_loaned_link_t`.
 ///
 /// Returns the MTU in bytes.
 #[cfg(feature = "unstable")]
