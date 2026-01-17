@@ -261,14 +261,9 @@ pub extern "C" fn z_internal_link_check(this_: &z_owned_link_t) -> bool {
 /// @param link: The link to clone.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_clone(
-    this_: &mut MaybeUninit<z_owned_link_t>,
-    link: &z_loaned_link_t,
-) {
+pub extern "C" fn z_link_clone(this_: &mut MaybeUninit<z_owned_link_t>, link: &z_loaned_link_t) {
     let link = link.as_rust_type_ref();
-    this_
-        .as_rust_type_mut_uninit()
-        .write(Some(link.clone()));
+    this_.as_rust_type_mut_uninit().write(Some(link.clone()));
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
