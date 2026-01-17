@@ -676,6 +676,7 @@ typedef void(*ze_closure_miss_callback_t)(const ze_miss_t *matching_status, void
         z_owned_encoding_t* : z_encoding_clone, \
         z_owned_hello_t* : z_hello_clone, \
         z_owned_keyexpr_t* : z_keyexpr_clone, \
+        z_owned_link_t* : z_link_clone, \
         z_owned_ptr_in_segment_t* : z_ptr_in_segment_clone, \
         z_owned_query_t* : z_query_clone, \
         z_owned_reply_t* : z_reply_clone, \
@@ -1579,6 +1580,9 @@ inline void z_clone(z_owned_hello_t* dst, const z_loaned_hello_t* this_) {
 };
 inline void z_clone(z_owned_keyexpr_t* dst, const z_loaned_keyexpr_t* this_) {
     z_keyexpr_clone(dst, this_);
+};
+inline void z_clone(z_owned_link_t* this_, const z_loaned_link_t* link) {
+    z_link_clone(this_, link);
 };
 inline void z_clone(z_owned_ptr_in_segment_t* out, const z_loaned_ptr_in_segment_t* this_) {
     z_ptr_in_segment_clone(out, this_);

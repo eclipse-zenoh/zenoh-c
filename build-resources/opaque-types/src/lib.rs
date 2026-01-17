@@ -290,6 +290,7 @@ get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
 get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
+/// @brief A loaned liveliness token.
 get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
 
 /// @brief A Transport structure returned by Zenoh connectivity API.
@@ -300,6 +301,7 @@ get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Option<Transport>, z_owned_transport_t);
 #[cfg(feature = "unstable")]
+//// @brief A loaned Transport structure.
 get_opaque_type_data!(Transport, z_loaned_transport_t);
 
 /// @brief A Zenoh link structure returned by Zenoh connectivity API.
@@ -308,6 +310,7 @@ get_opaque_type_data!(Transport, z_loaned_transport_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Option<Link>, z_owned_link_t);
 #[cfg(feature = "unstable")]
+//// @brief A loaned Link structure.
 get_opaque_type_data!(Link, z_loaned_link_t);
 
 /// @brief The event notifyting about addition or removal of a transport `z_owned_transport_t`
@@ -316,6 +319,7 @@ get_opaque_type_data!(Link, z_loaned_link_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Option<TransportEvent>, z_owned_transport_event_t);
 #[cfg(feature = "unstable")]
+/// @brief A loaned TransportEvent structure.
 get_opaque_type_data!(TransportEvent, z_loaned_transport_event_t);
 
 /// @brief The event notifyting about addition or removal of a link `z_owned_link_t`
@@ -324,6 +328,7 @@ get_opaque_type_data!(TransportEvent, z_loaned_transport_event_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Option<LinkEvent>, z_owned_link_event_t);
 #[cfg(feature = "unstable")]
+/// @brief A loaned LinkEvent structure.
 get_opaque_type_data!(LinkEvent, z_loaned_link_event_t);
 
 /// @brief A listener for transport events.
@@ -335,6 +340,7 @@ get_opaque_type_data!(
     z_owned_transport_events_listener_t
 );
 #[cfg(feature = "unstable")]
+/// @brief A loaned TransportEventsListener structure.
 get_opaque_type_data!(
     TransportEventsListener<()>,
     z_loaned_transport_events_listener_t
@@ -349,6 +355,7 @@ get_opaque_type_data!(
     z_owned_link_events_listener_t
 );
 #[cfg(feature = "unstable")]
+/// @brief A loaned LinkEventsListener structure.
 get_opaque_type_data!(LinkEventsListener<()>, z_loaned_link_events_listener_t);
 
 #[cfg(feature = "unstable")]
