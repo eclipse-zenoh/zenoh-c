@@ -19,8 +19,8 @@ use zenoh::config::WhatAmI;
 use zenoh::handlers::Callback;
 #[cfg(feature = "unstable")]
 use zenoh::session::{
-    Link, LinkEvent, LinkEventsListener, Transport, TransportEvent, TransportEventsListener,
-    TransportEventsListenerBuilder,
+    Link, LinkEvent, LinkEventsListener, LinkEventsListenerBuilder, Transport, TransportEvent,
+    TransportEventsListener, TransportEventsListenerBuilder,
 };
 use zenoh::{session::ZenohId, Wait};
 
@@ -1069,9 +1069,6 @@ pub extern "C" fn z_link_events_listener_options_default(
 ) {
     this_.write(z_link_events_listener_options_t::default());
 }
-
-#[cfg(feature = "unstable")]
-use zenoh::session::LinkEventsListenerBuilder;
 
 #[cfg(feature = "unstable")]
 fn _declare_link_events_listener_inner<'a>(
