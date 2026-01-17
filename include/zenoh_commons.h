@@ -874,6 +874,7 @@ typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Options for `z_info_links()`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
@@ -3409,6 +3410,7 @@ ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
  */
 ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t *dst);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the links `z_loaned_link_t` used by the session.
  *
  * The link represents a concrete network connection used by a transport.
@@ -3430,10 +3432,12 @@ z_result_t z_info_links(const struct z_loaned_session_t *session,
                         struct z_info_links_options_t *options);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs the default value for `z_info_links_options_t`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_info_links_options_default(struct z_info_links_options_t *this_);
+ZENOHC_API
+void z_info_links_options_default(struct z_info_links_options_t *this_);
 #endif
 /**
  * @brief Fetches the Zenoh IDs of all connected peers.
@@ -3458,12 +3462,13 @@ ZENOHC_API
 z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
                               struct z_moved_closure_zid_t *callback);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the transports `z_loaned_transport_t` used by the session.
  *
  * The tranport is a connection to another zenoh node. The `z_owned_transport_t`
  * contains the common information related to that connection. The information specific
  * to concrete network protocols are in the muttiple `z_owned_link_t` associated to each transport
- * rereieved by `z_info_links`.
+ * rereieved by `z_info_links()`.
  *
  * Callback will be called once for each transport, is guaranteed to never be called concurrently,
  * and is guaranteed to be dropped before this function exits.
@@ -3736,10 +3741,12 @@ ZENOHC_API bool z_internal_keyexpr_check(const struct z_owned_keyexpr_t *this_);
  */
 ZENOHC_API void z_internal_keyexpr_null(struct z_owned_keyexpr_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Returns ``true`` if link is valid, ``false`` if it is in gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API bool z_internal_link_check(const struct z_owned_link_t *this_);
+ZENOHC_API
+bool z_internal_link_check(const struct z_owned_link_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -3774,10 +3781,12 @@ ZENOHC_API
 void z_internal_link_events_listener_null(struct z_owned_link_events_listener_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs a link in its gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_internal_link_null(struct z_owned_link_t *this_);
+ZENOHC_API
+void z_internal_link_null(struct z_owned_link_t *this_);
 #endif
 /**
  * @brief Returns ``true`` if liveliness token is valid, ``false`` otherwise.
@@ -4079,10 +4088,12 @@ ZENOHC_API bool z_internal_task_check(const struct z_owned_task_t *this_);
  */
 ZENOHC_API void z_internal_task_null(struct z_owned_task_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Returns ``true`` if transport is valid, ``false`` if it is in gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API bool z_internal_transport_check(const struct z_owned_transport_t *this_);
+ZENOHC_API
+bool z_internal_transport_check(const struct z_owned_transport_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4117,10 +4128,12 @@ ZENOHC_API
 void z_internal_transport_events_listener_null(struct z_owned_transport_events_listener_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Constructs a transport in its gravestone state.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_internal_transport_null(struct z_owned_transport_t *this_);
+ZENOHC_API
+void z_internal_transport_null(struct z_owned_transport_t *this_);
 #endif
 /**
  * Constructs a non-owned non-null-terminated string from key expression.
@@ -4260,6 +4273,7 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
                                                           const struct z_loaned_keyexpr_t *right);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the authentication identifier from the `z_loaned_link_t`.
  *
  * Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
@@ -4270,20 +4284,40 @@ void z_link_auth_identifier(const struct z_loaned_link_t *link,
                             struct z_owned_string_t *str_out);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * @brief Clones the link.
+ *
+ * Creates an owned copy of the link that can be used independently.
+ * The caller is responsible for dropping the cloned link using `z_drop`.
+ *
+ * @param this_: The destination for the cloned link.
+ * @param link: The link to clone.
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+void z_link_clone(struct z_owned_link_t *this_,
+                  const struct z_loaned_link_t *link);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops the owned link.
  *
  * @param this_: The link to drop.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_link_drop(struct z_moved_link_t *this_);
+ZENOHC_API
+void z_link_drop(struct z_moved_link_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
  *
  * Stores the destination locator string in `str_out`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_link_dst(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+ZENOHC_API
+void z_link_dst(const struct z_loaned_link_t *link,
+                struct z_owned_string_t *str_out);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4388,14 +4422,18 @@ ZENOHC_API
 void z_link_events_listener_options_default(struct z_link_events_listener_options_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
  *
  * Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_link_group(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+ZENOHC_API
+void z_link_group(const struct z_loaned_link_t *link,
+                  struct z_owned_string_t *str_out);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the network interfaces associated with the `z_loaned_link_t`.
  *
  * Stores an array of interface name strings in `interfaces_out`.
@@ -4406,40 +4444,49 @@ void z_link_interfaces(const struct z_loaned_link_t *link,
                        struct z_owned_string_array_t *interfaces_out);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Check if the link is streamed.
  *
  * Returns true if the link is streamed, false otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API bool z_link_is_streamed(const struct z_loaned_link_t *link);
+ZENOHC_API
+bool z_link_is_streamed(const struct z_loaned_link_t *link);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets a loaned reference from an owned link.
  *
  * @param this_: The owned link.
  * @return A loaned link reference.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API const struct z_loaned_link_t *z_link_loan(const struct z_owned_link_t *this_);
+ZENOHC_API
+const struct z_loaned_link_t *z_link_loan(const struct z_owned_link_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets a mutable loaned reference from an owned link.
  *
  * @param this_: The owned link.
  * @return A mutable loaned link reference.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API struct z_loaned_link_t *z_link_loan_mut(struct z_owned_link_t *this_);
+ZENOHC_API
+struct z_loaned_link_t *z_link_loan_mut(struct z_owned_link_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
  *
  * Returns the MTU in bytes.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API uint16_t z_link_mtu(const struct z_loaned_link_t *link);
+ZENOHC_API
+uint16_t z_link_mtu(const struct z_loaned_link_t *link);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the priority range from the `z_loaned_link_t` (if QoS is supported).
  *
  * Returns true if priorities are supported and stores the min and max priorities in `min_out` and `max_out`.
@@ -4452,6 +4499,7 @@ bool z_link_priorities(const struct z_loaned_link_t *link,
                        uint8_t *max_out);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
  *
  * Returns true if reliability information is available and stores the reliability level in `reliability_out`.
@@ -4463,14 +4511,18 @@ bool z_link_reliability(const struct z_loaned_link_t *link,
                         enum z_reliability_t *reliability_out);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.
  *
  * Stores the source locator string in `str_out`.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_link_src(const struct z_loaned_link_t *link, struct z_owned_string_t *str_out);
+ZENOHC_API
+void z_link_src(const struct z_loaned_link_t *link,
+                struct z_owned_string_t *str_out);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Move link data from loaned pointer to owned object.
  *
  * Moves the link referenced by `src` into the `dst` owned object.
@@ -4480,15 +4532,19 @@ ZENOHC_API void z_link_src(const struct z_loaned_link_t *link, struct z_owned_st
  * @param src: The source loaned link (will be replaced with empty state).
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_link_take_from_loaned(struct z_owned_link_t *dst, struct z_loaned_link_t *src);
+ZENOHC_API
+void z_link_take_from_loaned(struct z_owned_link_t *dst,
+                             struct z_loaned_link_t *src);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the zenoh id from the `z_loaned_link_t`.
  *
  * Returns the zenoh id of the transport this link belongs to.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API struct z_id_t z_link_zid(const struct z_loaned_link_t *link);
+ZENOHC_API
+struct z_id_t z_link_zid(const struct z_loaned_link_t *link);
 #endif
 /**
  * @brief Declares a background subscriber on liveliness tokens that intersect `key_expr`. Subscriber callback will be called to process the messages,
@@ -6377,6 +6433,7 @@ z_result_t z_timestamp_new(struct z_timestamp_t *this_,
  */
 ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Clones the transport.
  *
  * Creates an owned copy of the transport that can be used independently.
@@ -6391,12 +6448,14 @@ void z_transport_clone(struct z_owned_transport_t *this_,
                        const struct z_loaned_transport_t *transport);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Drops the owned transport.
  *
  * @param this_: The transport to drop.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_transport_drop(struct z_moved_transport_t *this_);
+ZENOHC_API
+void z_transport_drop(struct z_moved_transport_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -6410,7 +6469,8 @@ void z_transport_event_drop(struct z_moved_transport_event_t *this_);
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get event kind from the transport event.
  *
- * Returns `Z_SAMPLE_KIND_PUT` when a transport was added, `Z_SAMPLE_KIND_DELETE` when removed.
+ * Returns `z_sample_kind_t::Z_SAMPLE_KIND_PUT` when a transport was added,
+ * `z_sample_kind_t::Z_SAMPLE_KIND_DELETE` when removed.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -6501,20 +6561,24 @@ ZENOHC_API
 void z_transport_events_listener_options_default(struct z_transport_events_listener_options_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Check if the transport is multicast.
  *
  * Returns true if the transport is multicast, false otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API bool z_transport_is_multicast(const struct z_loaned_transport_t *transport);
+ZENOHC_API
+bool z_transport_is_multicast(const struct z_loaned_transport_t *transport);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Check if the transport supports QoS.
  *
  * Returns true if the transport supports QoS, false otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API bool z_transport_is_qos(const struct z_loaned_transport_t *transport);
+ZENOHC_API
+bool z_transport_is_qos(const struct z_loaned_transport_t *transport);
 #endif
 /**
  * @brief Check if the transport supports shared memory.
@@ -6525,6 +6589,7 @@ ZENOHC_API bool z_transport_is_qos(const struct z_loaned_transport_t *transport)
 ZENOHC_API bool z_transport_is_shm(const struct z_loaned_transport_t *transport);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets a loaned reference from an owned transport.
  *
  * @param this_: The owned transport.
@@ -6535,15 +6600,18 @@ ZENOHC_API
 const struct z_loaned_transport_t *z_transport_loan(const struct z_owned_transport_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets a mutable loaned reference from an owned transport.
  *
  * @param this_: The owned transport.
  * @return A mutable loaned transport reference.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API struct z_loaned_transport_t *z_transport_loan_mut(struct z_owned_transport_t *this_);
+ZENOHC_API
+struct z_loaned_transport_t *z_transport_loan_mut(struct z_owned_transport_t *this_);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Move transport data from loaned pointer to owned object.
  *
  * Moves the transport referenced by `src` into the `dst` owned object.
@@ -6558,20 +6626,24 @@ void z_transport_take_from_loaned(struct z_owned_transport_t *dst,
                                   struct z_loaned_transport_t *src);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the whatami from the `z_loaned_transport_t`.
  *
  * Returns the whatami (node type) of the remote node.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API enum z_whatami_t z_transport_whatami(const struct z_loaned_transport_t *transport);
+ZENOHC_API
+enum z_whatami_t z_transport_whatami(const struct z_loaned_transport_t *transport);
 #endif
 /**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get the zenoh id from the `z_loaned_transport_t`.
  *
  * Returns the zenoh id of the transport.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API struct z_id_t z_transport_zid(const struct z_loaned_transport_t *transport);
+ZENOHC_API
+struct z_id_t z_transport_zid(const struct z_loaned_transport_t *transport);
 #endif
 /**
  * Undeclares the key expression generated by a call to `z_declare_keyexpr()`.

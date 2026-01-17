@@ -129,6 +129,7 @@ pub unsafe extern "C" fn z_info_routers_zid(
     result::Z_OK
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the zenoh id from the `z_loaned_transport_t`.
 ///
 /// Returns the zenoh id of the transport.
@@ -139,6 +140,7 @@ pub extern "C" fn z_transport_zid(transport: &z_loaned_transport_t) -> z_id_t {
     transport.zid().into_c_type()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the whatami from the `z_loaned_transport_t`.
 ///
 /// Returns the whatami (node type) of the remote node.
@@ -153,6 +155,7 @@ pub extern "C" fn z_transport_whatami(transport: &z_loaned_transport_t) -> z_wha
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Check if the transport supports QoS.
 ///
 /// Returns true if the transport supports QoS, false otherwise.
@@ -163,6 +166,7 @@ pub extern "C" fn z_transport_is_qos(transport: &z_loaned_transport_t) -> bool {
     transport.is_qos()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Check if the transport is multicast.
 ///
 /// Returns true if the transport is multicast, false otherwise.
@@ -183,6 +187,7 @@ pub extern "C" fn z_transport_is_shm(transport: &z_loaned_transport_t) -> bool {
     transport.is_shm()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Clones the transport.
 ///
 /// Creates an owned copy of the transport that can be used independently.
@@ -202,6 +207,7 @@ pub extern "C" fn z_transport_clone(
         .write(Some(transport.clone()));
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops the owned transport.
 ///
 /// @param this_: The transport to drop.
@@ -211,6 +217,7 @@ pub extern "C" fn z_transport_drop(this_: &mut z_moved_transport_t) {
     let _ = this_.take_rust_type();
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs a transport in its gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
@@ -219,6 +226,7 @@ pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_own
     this_.as_rust_type_mut_uninit().write(None);
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns ``true`` if transport is valid, ``false`` if it is in gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
@@ -226,6 +234,7 @@ pub extern "C" fn z_internal_transport_check(this_: &z_owned_transport_t) -> boo
     !this_.as_rust_type_ref().is_none()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs a link in its gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
@@ -234,6 +243,7 @@ pub unsafe extern "C" fn z_internal_link_null(this_: &mut MaybeUninit<z_owned_li
     this_.as_rust_type_mut_uninit().write(None);
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns ``true`` if link is valid, ``false`` if it is in gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]
@@ -241,6 +251,27 @@ pub extern "C" fn z_internal_link_check(this_: &z_owned_link_t) -> bool {
     !this_.as_rust_type_ref().is_none()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Clones the link.
+///
+/// Creates an owned copy of the link that can be used independently.
+/// The caller is responsible for dropping the cloned link using `z_drop`.
+///
+/// @param this_: The destination for the cloned link.
+/// @param link: The link to clone.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_clone(
+    this_: &mut MaybeUninit<z_owned_link_t>,
+    link: &z_loaned_link_t,
+) {
+    let link = link.as_rust_type_ref();
+    this_
+        .as_rust_type_mut_uninit()
+        .write(Some(link.clone()));
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops the owned link.
 ///
 /// @param this_: The link to drop.
@@ -250,6 +281,7 @@ pub extern "C" fn z_link_drop(this_: &mut z_moved_link_t) {
     let _ = this_.take_rust_type();
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets a loaned reference from an owned transport.
 ///
 /// @param this_: The owned transport.
@@ -265,6 +297,7 @@ pub unsafe extern "C" fn z_transport_loan(this_: &z_owned_transport_t) -> &z_loa
         .as_loaned_c_type_ref()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets a mutable loaned reference from an owned transport.
 ///
 /// @param this_: The owned transport.
@@ -282,6 +315,7 @@ pub unsafe extern "C" fn z_transport_loan_mut(
         .as_loaned_c_type_mut()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets a loaned reference from an owned link.
 ///
 /// @param this_: The owned link.
@@ -297,6 +331,7 @@ pub unsafe extern "C" fn z_link_loan(this_: &z_owned_link_t) -> &z_loaned_link_t
         .as_loaned_c_type_ref()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets a mutable loaned reference from an owned link.
 ///
 /// @param this_: The owned link.
@@ -312,12 +347,13 @@ pub unsafe extern "C" fn z_link_loan_mut(this_: &mut z_owned_link_t) -> &mut z_l
         .as_loaned_c_type_mut()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the transports `z_loaned_transport_t` used by the session.
 ///
 /// The tranport is a connection to another zenoh node. The `z_owned_transport_t`
 /// contains the common information related to that connection. The information specific
 /// to concrete network protocols are in the muttiple `z_owned_link_t` associated to each transport
-/// rereieved by `z_info_links`.
+/// rereieved by `z_info_links()`.
 ///
 /// Callback will be called once for each transport, is guaranteed to never be called concurrently,
 /// and is guaranteed to be dropped before this function exits.
@@ -341,6 +377,7 @@ pub unsafe extern "C" fn z_info_transports(
     result::Z_OK
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Options for `z_info_links()`.
 #[cfg(feature = "unstable")]
 #[repr(C)]
@@ -352,6 +389,7 @@ pub struct z_info_links_options_t {
     pub transport: Option<&'static mut z_moved_transport_t>,
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs the default value for `z_info_links_options_t`.
 #[cfg(feature = "unstable")]
 #[no_mangle]
@@ -359,6 +397,7 @@ pub extern "C" fn z_info_links_options_default(this_: &mut MaybeUninit<z_info_li
     this_.write(z_info_links_options_t::default());
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the links `z_loaned_link_t` used by the session.
 ///
 /// The link represents a concrete network connection used by a transport.
@@ -408,6 +447,7 @@ pub unsafe extern "C" fn z_info_links(
     result::Z_OK
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the zenoh id from the `z_loaned_link_t`.
 ///
 /// Returns the zenoh id of the transport this link belongs to.
@@ -418,6 +458,7 @@ pub extern "C" fn z_link_zid(link: &z_loaned_link_t) -> z_id_t {
     link.zid().into_c_type()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.
 ///
 /// Stores the source locator string in `str_out`.
@@ -430,6 +471,7 @@ pub extern "C" fn z_link_src(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z
         .write(link.src().to_string().into());
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
 ///
 /// Stores the destination locator string in `str_out`.
@@ -442,6 +484,7 @@ pub extern "C" fn z_link_dst(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z
         .write(link.dst().to_string().into());
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
 ///
 /// Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
@@ -459,6 +502,7 @@ pub extern "C" fn z_link_group(
     );
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
 ///
 /// Returns the MTU in bytes.
@@ -469,6 +513,7 @@ pub extern "C" fn z_link_mtu(link: &z_loaned_link_t) -> u16 {
     link.mtu()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Check if the link is streamed.
 ///
 /// Returns true if the link is streamed, false otherwise.
@@ -479,6 +524,7 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
     link.is_streamed()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the network interfaces associated with the `z_loaned_link_t`.
 ///
 /// Stores an array of interface name strings in `interfaces_out`.
@@ -496,6 +542,7 @@ pub extern "C" fn z_link_interfaces(
     interfaces_out.as_rust_type_mut_uninit().write(interfaces);
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the authentication identifier from the `z_loaned_link_t`.
 ///
 /// Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
@@ -513,6 +560,7 @@ pub extern "C" fn z_link_auth_identifier(
     );
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the priority range from the `z_loaned_link_t` (if QoS is supported).
 ///
 /// Returns true if priorities are supported and stores the min and max priorities in `min_out` and `max_out`.
@@ -534,6 +582,7 @@ pub extern "C" fn z_link_priorities(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
 ///
 /// Returns true if reliability information is available and stores the reliability level in `reliability_out`.
@@ -553,6 +602,7 @@ pub extern "C" fn z_link_reliability(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Move transport data from loaned pointer to owned object.
 ///
 /// Moves the transport referenced by `src` into the `dst` owned object.
@@ -571,6 +621,7 @@ pub extern "C" fn z_transport_take_from_loaned(
     dst.as_rust_type_mut_uninit().write(Some(transport));
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Move link data from loaned pointer to owned object.
 ///
 /// Moves the link referenced by `src` into the `dst` owned object.
@@ -596,7 +647,8 @@ pub extern "C" fn z_link_take_from_loaned(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get event kind from the transport event.
 ///
-/// Returns `Z_SAMPLE_KIND_PUT` when a transport was added, `Z_SAMPLE_KIND_DELETE` when removed.
+/// Returns `z_sample_kind_t::Z_SAMPLE_KIND_PUT` when a transport was added, 
+/// `z_sample_kind_t::Z_SAMPLE_KIND_DELETE` when removed.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_transport_event_kind(event: &z_loaned_transport_event_t) -> z_sample_kind_t {
