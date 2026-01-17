@@ -16,8 +16,11 @@ use std::mem::MaybeUninit;
 #[cfg(feature = "unstable")]
 use zenoh::config::WhatAmI;
 #[cfg(feature = "unstable")]
+use zenoh::handlers::Callback;
+#[cfg(feature = "unstable")]
 use zenoh::session::{
     Link, LinkEvent, LinkEventsListener, Transport, TransportEvent, TransportEventsListener,
+    TransportEventsListenerBuilder,
 };
 use zenoh::{session::ZenohId, Wait};
 
@@ -784,6 +787,32 @@ pub extern "C" fn z_transport_events_listener_options_default(
     this_.write(z_transport_events_listener_options_t::default());
 }
 
+#[cfg(feature = "unstable")]
+fn _declare_transport_events_listener_inner<'a>(
+    session: &'a z_loaned_session_t,
+    callback: &mut z_moved_closure_transport_event_t,
+    options: Option<&z_transport_events_listener_options_t>,
+) -> TransportEventsListenerBuilder<'a, Callback<TransportEvent>> {
+    let session = session.as_rust_type_ref();
+    let callback = callback.take_rust_type();
+
+    let mut builder = session
+        .info()
+        .transport_events_listener()
+        .callback(move |mut event| {
+            z_closure_transport_event_call(
+                z_closure_transport_event_loan(&callback),
+                event.as_loaned_c_type_mut(),
+            );
+        });
+
+    if let Some(opts) = options {
+        builder = builder.history(opts.history);
+    }
+
+    builder
+}
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Declares a transport events listener.
 ///
@@ -803,23 +832,7 @@ pub extern "C" fn z_declare_transport_events_listener(
     callback: &mut z_moved_closure_transport_event_t,
     options: Option<&z_transport_events_listener_options_t>,
 ) -> result::z_result_t {
-    let session = session.as_rust_type_ref();
-    let callback = callback.take_rust_type();
-
-    let session_info = session.info();
-    let mut builder = session_info
-        .transport_events_listener()
-        .callback(move |mut event| {
-            z_closure_transport_event_call(
-                z_closure_transport_event_loan(&callback),
-                event.as_loaned_c_type_mut(),
-            );
-        });
-
-    if let Some(opts) = options {
-        builder = builder.history(opts.history);
-    }
-
+    let builder = _declare_transport_events_listener_inner(session, callback, options);
     let listener_result = builder.wait();
     listener
         .as_rust_type_mut_uninit()
@@ -845,23 +858,7 @@ pub extern "C" fn z_declare_background_transport_events_listener(
     callback: &mut z_moved_closure_transport_event_t,
     options: Option<&z_transport_events_listener_options_t>,
 ) -> result::z_result_t {
-    let session = session.as_rust_type_ref();
-    let callback = callback.take_rust_type();
-
-    let session_info = session.info();
-    let mut builder = session_info
-        .transport_events_listener()
-        .callback(move |mut event| {
-            z_closure_transport_event_call(
-                z_closure_transport_event_loan(&callback),
-                event.as_loaned_c_type_mut(),
-            );
-        });
-
-    if let Some(opts) = options {
-        builder = builder.history(opts.history);
-    }
-
+    let builder = _declare_transport_events_listener_inner(session, callback, options);
     let _ = builder.background().wait();
     result::Z_OK
 }
@@ -1073,30 +1070,20 @@ pub extern "C" fn z_link_events_listener_options_default(
     this_.write(z_link_events_listener_options_t::default());
 }
 
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Declares a link events listener.
-///
-/// The listener will be called whenever a link is added or removed from the session.
-///
-/// @param session: The session to listen on.
-/// @param listener: The uninitialized memory location where the listener will be constructed.
-/// @param callback: The closure to be called for each link event.
-/// @param options: Optional configuration for the listener.
-///
-/// @return 0 on success, negative value on failure.
 #[cfg(feature = "unstable")]
-#[no_mangle]
-pub extern "C" fn z_declare_link_events_listener(
-    session: &'static z_loaned_session_t,
-    listener: &mut MaybeUninit<z_owned_link_events_listener_t>,
+use zenoh::session::LinkEventsListenerBuilder;
+
+#[cfg(feature = "unstable")]
+fn _declare_link_events_listener_inner<'a>(
+    session: &'a z_loaned_session_t,
     callback: &mut z_moved_closure_link_event_t,
     options: Option<&mut z_link_events_listener_options_t>,
-) -> result::z_result_t {
+) -> LinkEventsListenerBuilder<'a, Callback<LinkEvent>> {
     let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
 
-    let session_info = session.info();
-    let mut builder = session_info
+    let mut builder = session
+        .info()
         .link_events_listener()
         .callback(move |mut event| {
             z_closure_link_event_call(
@@ -1116,6 +1103,29 @@ pub extern "C" fn z_declare_link_events_listener(
         }
     }
 
+    builder
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Declares a link events listener.
+///
+/// The listener will be called whenever a link is added or removed from the session.
+///
+/// @param session: The session to listen on.
+/// @param listener: The uninitialized memory location where the listener will be constructed.
+/// @param callback: The closure to be called for each link event.
+/// @param options: Optional configuration for the listener.
+///
+/// @return 0 on success, negative value on failure.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_declare_link_events_listener(
+    session: &'static z_loaned_session_t,
+    listener: &mut MaybeUninit<z_owned_link_events_listener_t>,
+    callback: &mut z_moved_closure_link_event_t,
+    options: Option<&mut z_link_events_listener_options_t>,
+) -> result::z_result_t {
+    let builder = _declare_link_events_listener_inner(session, callback, options);
     let listener_result = builder.wait();
     listener
         .as_rust_type_mut_uninit()
@@ -1141,30 +1151,7 @@ pub extern "C" fn z_declare_background_link_events_listener(
     callback: &mut z_moved_closure_link_event_t,
     options: Option<&mut z_link_events_listener_options_t>,
 ) -> result::z_result_t {
-    let session = session.as_rust_type_ref();
-    let callback = callback.take_rust_type();
-
-    let session_info = session.info();
-    let mut builder = session_info
-        .link_events_listener()
-        .callback(move |mut event| {
-            z_closure_link_event_call(
-                z_closure_link_event_loan(&callback),
-                event.as_loaned_c_type_mut(),
-            );
-        });
-
-    if let Some(opts) = options {
-        builder = builder.history(opts.history);
-        if let Some(transport) = opts.transport.take() {
-            let t = transport.take_rust_type();
-            // Check if the transport is valid (not gravestone)
-            if let Some(t) = t {
-                builder = builder.transport(t);
-            }
-        }
-    }
-
+    let builder = _declare_link_events_listener_inner(session, callback, options);
     let _ = builder.background().wait();
     result::Z_OK
 }
