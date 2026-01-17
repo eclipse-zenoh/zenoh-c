@@ -25,6 +25,7 @@ use crate::{
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
 #[repr(C)]
+#[cfg(feature = "unstable")]
 pub struct z_owned_closure_link_event_t {
     _context: *mut c_void,
     _call: Option<extern "C" fn(event: &mut z_loaned_link_event_t, context: *mut c_void)>,
@@ -34,6 +35,7 @@ pub struct z_owned_closure_link_event_t {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Loaned closure.
 #[repr(C)]
+#[cfg(feature = "unstable")]
 pub struct z_loaned_closure_link_event_t {
     _0: usize,
     _1: usize,
@@ -42,6 +44,7 @@ pub struct z_loaned_closure_link_event_t {
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Moved closure.
+#[cfg(feature = "unstable")]
 #[repr(C)]
 pub struct z_moved_closure_link_event_t {
     _this: z_owned_closure_link_event_t,
@@ -82,6 +85,7 @@ impl Drop for z_owned_closure_link_event_t {
 /// @brief Constructs a null value of 'z_owned_closure_link_event_t' type
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+#[cfg(feature = "unstable")]
 pub unsafe extern "C" fn z_internal_closure_link_event_null(
     this: &mut MaybeUninit<z_owned_closure_link_event_t>,
 ) {
@@ -91,6 +95,7 @@ pub unsafe extern "C" fn z_internal_closure_link_event_null(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_internal_closure_link_event_check(this: &z_owned_closure_link_event_t) -> bool {
     !this.is_empty()
 }
@@ -98,6 +103,7 @@ pub extern "C" fn z_internal_closure_link_event_check(this: &z_owned_closure_lin
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_event_call(
     closure: &z_loaned_closure_link_event_t,
     event: &mut z_loaned_link_event_t,
@@ -114,6 +120,7 @@ pub extern "C" fn z_closure_link_event_call(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_event_drop(closure_: &mut z_moved_closure_link_event_t) {
     let _ = closure_.take_rust_type();
 }
@@ -142,6 +149,7 @@ impl<F: Fn(&mut z_loaned_link_event_t)> From<F> for z_owned_closure_link_event_t
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Borrows closure.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_event_loan(
     closure: &z_owned_closure_link_event_t,
 ) -> &z_loaned_closure_link_event_t {
@@ -163,6 +171,7 @@ pub extern "C" fn z_closure_link_event_loan(
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_event(
     this: &mut MaybeUninit<z_owned_closure_link_event_t>,
     call: Option<extern "C" fn(event: &mut z_loaned_link_event_t, context: *mut c_void)>,

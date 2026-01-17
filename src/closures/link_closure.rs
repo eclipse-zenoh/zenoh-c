@@ -20,9 +20,11 @@ use crate::{
     transmute::{LoanedCTypeRef, OwnedCTypeRef, TakeRustType},
     z_loaned_link_t,
 };
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A link-processing closure.
 ///
 /// A closure is a structure that contains all the elements for stateful, memory-leak-free callbacks.
+#[cfg(feature = "unstable")]
 #[repr(C)]
 pub struct z_owned_closure_link_t {
     pub _context: *mut c_void,
@@ -30,15 +32,19 @@ pub struct z_owned_closure_link_t {
     pub _drop: Option<extern "C" fn(context: *mut c_void)>,
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Loaned closure.
 #[repr(C)]
+#[cfg(feature = "unstable")]
 pub struct z_loaned_closure_link_t {
     _0: usize,
     _1: usize,
     _2: usize,
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Moved closure.
+#[cfg(feature = "unstable")]
 #[repr(C)]
 pub struct z_moved_closure_link_t {
     _this: z_owned_closure_link_t,
@@ -75,23 +81,29 @@ impl Drop for z_owned_closure_link_t {
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Constructs a closure in its gravestone state.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
+#[cfg(feature = "unstable")]
 pub unsafe extern "C" fn z_internal_closure_link_null(
     this_: &mut MaybeUninit<z_owned_closure_link_t>,
 ) {
     this_.write(z_owned_closure_link_t::default());
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns ``true`` if closure is valid, ``false`` if it is in gravestone state.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_internal_closure_link_check(this_: &z_owned_closure_link_t) -> bool {
     !this_.is_empty()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Calls the closure. Calling an uninitialized closure is a no-op.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_call(
     closure: &z_loaned_closure_link_t,
     link: &mut z_loaned_link_t,
@@ -103,8 +115,10 @@ pub extern "C" fn z_closure_link_call(
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Drops the closure. Droping an uninitialized closure is a no-op.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_drop(closure_: &mut z_moved_closure_link_t) {
     let _ = closure_.take_rust_type();
 }
@@ -130,22 +144,27 @@ impl<F: Fn(&mut z_loaned_link_t)> From<F> for z_owned_closure_link_t {
     }
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Borrows closure.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_loan(
     closure: &z_owned_closure_link_t,
 ) -> &z_loaned_closure_link_t {
     closure.as_loaned_c_type_ref()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Mutably borrows closure.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link_loan_mut(
     closure: &mut z_owned_closure_link_t,
 ) -> &mut z_loaned_closure_link_t {
     closure.as_loaned_c_type_mut()
 }
 
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Constructs closure.
 ///
 /// Closures are not guaranteed not to be called concurrently.
@@ -160,6 +179,7 @@ pub extern "C" fn z_closure_link_loan_mut(
 /// @param drop: an optional function to be called once on closure drop.
 /// @param context: closure context.
 #[no_mangle]
+#[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_link(
     this: &mut MaybeUninit<z_owned_closure_link_t>,
     call: Option<extern "C" fn(link: &mut z_loaned_link_t, context: *mut c_void)>,
