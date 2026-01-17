@@ -19,8 +19,7 @@ use zenoh::config::WhatAmI;
 use zenoh::handlers::Callback;
 #[cfg(feature = "unstable")]
 use zenoh::session::{
-    Link, LinkEvent, LinkEventsListener, LinkEventsListenerBuilder, Transport, TransportEvent,
-    TransportEventsListener, TransportEventsListenerBuilder,
+    Link, LinkEvent, LinkEventsListener, LinkEventsListenerBuilder, SessionInfo, Transport, TransportEvent, TransportEventsListener, TransportEventsListenerBuilder
 };
 use zenoh::{session::ZenohId, Wait};
 
@@ -789,15 +788,13 @@ pub extern "C" fn z_transport_events_listener_options_default(
 
 #[cfg(feature = "unstable")]
 fn _declare_transport_events_listener_inner<'a>(
-    session: &'a z_loaned_session_t,
+    session_info: &'a SessionInfo,
     callback: &mut z_moved_closure_transport_event_t,
     options: Option<&z_transport_events_listener_options_t>,
 ) -> TransportEventsListenerBuilder<'a, Callback<TransportEvent>> {
-    let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
 
-    let mut builder = session
-        .info()
+    let mut builder = session_info
         .transport_events_listener()
         .callback(move |mut event| {
             z_closure_transport_event_call(
@@ -832,7 +829,9 @@ pub extern "C" fn z_declare_transport_events_listener(
     callback: &mut z_moved_closure_transport_event_t,
     options: Option<&z_transport_events_listener_options_t>,
 ) -> result::z_result_t {
-    let builder = _declare_transport_events_listener_inner(session, callback, options);
+    let session = session.as_rust_type_ref();
+    let session_info = session.info();
+    let builder = _declare_transport_events_listener_inner(&session_info, callback, options);
     let listener_result = builder.wait();
     listener
         .as_rust_type_mut_uninit()
@@ -858,7 +857,9 @@ pub extern "C" fn z_declare_background_transport_events_listener(
     callback: &mut z_moved_closure_transport_event_t,
     options: Option<&z_transport_events_listener_options_t>,
 ) -> result::z_result_t {
-    let builder = _declare_transport_events_listener_inner(session, callback, options);
+    let session = session.as_rust_type_ref();
+    let session_info = session.info();
+    let builder = _declare_transport_events_listener_inner(&session_info, callback, options);
     let _ = builder.background().wait();
     result::Z_OK
 }
@@ -1072,15 +1073,12 @@ pub extern "C" fn z_link_events_listener_options_default(
 
 #[cfg(feature = "unstable")]
 fn _declare_link_events_listener_inner<'a>(
-    session: &'a z_loaned_session_t,
+    session_info: &'a SessionInfo,
     callback: &mut z_moved_closure_link_event_t,
     options: Option<&mut z_link_events_listener_options_t>,
 ) -> LinkEventsListenerBuilder<'a, Callback<LinkEvent>> {
-    let session = session.as_rust_type_ref();
     let callback = callback.take_rust_type();
-
-    let mut builder = session
-        .info()
+    let mut builder = session_info
         .link_events_listener()
         .callback(move |mut event| {
             z_closure_link_event_call(
@@ -1122,7 +1120,9 @@ pub extern "C" fn z_declare_link_events_listener(
     callback: &mut z_moved_closure_link_event_t,
     options: Option<&mut z_link_events_listener_options_t>,
 ) -> result::z_result_t {
-    let builder = _declare_link_events_listener_inner(session, callback, options);
+    let session = session.as_rust_type_ref();
+    let session_info = session.info();
+    let builder = _declare_link_events_listener_inner(&session_info, callback, options);
     let listener_result = builder.wait();
     listener
         .as_rust_type_mut_uninit()
@@ -1148,7 +1148,9 @@ pub extern "C" fn z_declare_background_link_events_listener(
     callback: &mut z_moved_closure_link_event_t,
     options: Option<&mut z_link_events_listener_options_t>,
 ) -> result::z_result_t {
-    let builder = _declare_link_events_listener_inner(session, callback, options);
+    let session = session.as_rust_type_ref();
+    let session_info = session.info();
+    let builder = _declare_link_events_listener_inner(&session_info, callback, options);
     let _ = builder.background().wait();
     result::Z_OK
 }

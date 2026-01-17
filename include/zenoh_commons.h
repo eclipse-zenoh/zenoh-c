@@ -4355,7 +4355,7 @@ void z_link_event_drop(struct z_moved_link_event_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get event kind from the link event.
+ * @brief Gets event kind from the link event.
  *
  * Returns @ref Z_SAMPLE_KIND_PUT when a link was added, @ref Z_SAMPLE_KIND_DELETE when removed.
  */
