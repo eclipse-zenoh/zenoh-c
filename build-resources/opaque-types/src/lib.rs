@@ -301,7 +301,7 @@ get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Option<Transport>, z_owned_transport_t);
 #[cfg(feature = "unstable")]
-//// @brief A loaned Transport structure.
+/// @brief A loaned Transport structure.
 get_opaque_type_data!(Transport, z_loaned_transport_t);
 
 /// @brief A Zenoh link structure returned by Zenoh connectivity API.
@@ -310,7 +310,7 @@ get_opaque_type_data!(Transport, z_loaned_transport_t);
 #[cfg(feature = "unstable")]
 get_opaque_type_data!(Option<Link>, z_owned_link_t);
 #[cfg(feature = "unstable")]
-//// @brief A loaned Link structure.
+/// @brief A loaned Link structure.
 get_opaque_type_data!(Link, z_loaned_link_t);
 
 /// @brief The event notifyting about addition or removal of a transport `z_owned_transport_t`

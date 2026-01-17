@@ -627,7 +627,7 @@ typedef struct z_moved_transport_t {
 typedef struct z_link_events_listener_options_t {
   /**
    * If true, the listener will receive events for links that were already
-   * connected when the listener was declared.
+   * established when the listener was declared.
    */
   bool history;
   /**
@@ -3411,7 +3411,7 @@ ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t *dst);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the links `z_loaned_link_t` used by the session.
+ * @brief Gets the links `z_loaned_link_t` used by the session.
  *
  * The link represents a concrete network connection used by a transport.
  * Each transport may have multiple links associated with it.
@@ -3463,7 +3463,7 @@ z_result_t z_info_routers_zid(const struct z_loaned_session_t *session,
                               struct z_moved_closure_zid_t *callback);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the transports `z_loaned_transport_t` used by the session.
+ * @brief Gets the transports `z_loaned_transport_t` used by the session.
  *
  * The tranport is a connection to another zenoh node. The `z_owned_transport_t`
  * contains the common information related to that connection. The information specific
@@ -4274,7 +4274,7 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the authentication identifier from the `z_loaned_link_t`.
+ * @brief Gets the authentication identifier from the `z_loaned_link_t`.
  *
  * Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
  */
@@ -4310,7 +4310,7 @@ void z_link_drop(struct z_moved_link_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the destination locator (remote endpoint) from the `z_loaned_link_t`.
+ * @brief Gets the destination locator (remote endpoint) from the `z_loaned_link_t`.
  *
  * Stores the destination locator string in `str_out`.
  */
@@ -4339,7 +4339,7 @@ enum z_sample_kind_t z_link_event_kind(const struct z_loaned_link_event_t *event
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the link from the link event.
+ * @brief Gets the link from the link event.
  *
  * Returns a loaned reference to the link that was added or removed.
  */
@@ -4349,7 +4349,7 @@ const struct z_loaned_link_t *z_link_event_link(const struct z_loaned_link_event
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the mutable link from the link event.
+ * @brief Gets the mutable link from the link event.
  *
  * Returns a mutable loaned reference to the link that was added or removed.
  */
@@ -4381,7 +4381,7 @@ struct z_loaned_link_event_t *z_link_event_loan_mut(struct z_owned_link_event_t 
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Move link event data from loaned pointer to owned object.
+ * @brief Moves link event data from loaned pointer to owned object.
  *
  * Moves the link event referenced by `src` into the `dst` owned object.
  * The source loaned object is replaced with an empty state: valid but unspecified.
@@ -4423,7 +4423,7 @@ void z_link_events_listener_options_default(struct z_link_events_listener_option
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the group locator from the `z_loaned_link_t` (for multicast links).
+ * @brief Gets the group locator from the `z_loaned_link_t` (for multicast links).
  *
  * Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
  */
@@ -4434,7 +4434,7 @@ void z_link_group(const struct z_loaned_link_t *link,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the network interfaces associated with the `z_loaned_link_t`.
+ * @brief Gets the network interfaces associated with the `z_loaned_link_t`.
  *
  * Stores an array of interface name strings in `interfaces_out`.
  */
@@ -4445,7 +4445,7 @@ void z_link_interfaces(const struct z_loaned_link_t *link,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Check if the link is streamed.
+ * @brief Checks if the link is streamed.
  *
  * Returns true if the link is streamed, false otherwise.
  */
@@ -4477,7 +4477,7 @@ struct z_loaned_link_t *z_link_loan_mut(struct z_owned_link_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the MTU (maximum transmission unit) from the `z_loaned_link_t`.
+ * @brief Gets the MTU (maximum transmission unit) from the `z_loaned_link_t`.
  *
  * Returns the MTU in bytes.
  */
@@ -4487,7 +4487,7 @@ uint16_t z_link_mtu(const struct z_loaned_link_t *link);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the priority range from the `z_loaned_link_t` (if QoS is supported).
+ * @brief Gets the priority range from the `z_loaned_link_t` (if QoS is supported).
  *
  * Returns true if priorities are supported and stores the min and max priorities in `min_out` and `max_out`.
  * Returns false if the link does not support QoS.
@@ -4500,7 +4500,7 @@ bool z_link_priorities(const struct z_loaned_link_t *link,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the reliability from the `z_loaned_link_t` (if QoS is supported).
+ * @brief Gets the reliability from the `z_loaned_link_t` (if QoS is supported).
  *
  * Returns true if reliability information is available and stores the reliability level in `reliability_out`.
  * Returns false if the link does not support QoS.
@@ -4523,7 +4523,7 @@ void z_link_src(const struct z_loaned_link_t *link,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Move link data from loaned pointer to owned object.
+ * @brief Moves link data from loaned pointer to owned object.
  *
  * Moves the link referenced by `src` into the `dst` owned object.
  * The source loaned object is replaced with an empty state: valid but unspecified.
@@ -4538,7 +4538,7 @@ void z_link_take_from_loaned(struct z_owned_link_t *dst,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the zenoh id from the `z_loaned_link_t`.
+ * @brief Gets the zenoh id from the `z_loaned_link_t`.
  *
  * Returns the zenoh id of the transport this link belongs to.
  */
@@ -6467,7 +6467,7 @@ void z_transport_event_drop(struct z_moved_transport_event_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get event kind from the transport event.
+ * @brief Gets event kind from the transport event.
  *
  * Returns @ref Z_SAMPLE_KIND_PUT when a transport was added,
  * @ref Z_SAMPLE_KIND_DELETE when removed.
@@ -6500,7 +6500,7 @@ struct z_loaned_transport_event_t *z_transport_event_loan_mut(struct z_owned_tra
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Move transport event data from loaned pointer to owned object.
+ * @brief Moves transport event data from loaned pointer to owned object.
  *
  * Moves the transport event referenced by `src` into the `dst` owned object.
  * The source loaned object is replaced with an empty state: valid but unspecified.
@@ -6515,7 +6515,7 @@ void z_transport_event_take_from_loaned(struct z_owned_transport_event_t *dst,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the transport from the transport event.
+ * @brief Gets the transport from the transport event.
  *
  * Returns a loaned reference to the transport that was added or removed.
  */
@@ -6525,7 +6525,7 @@ const struct z_loaned_transport_t *z_transport_event_transport(const struct z_lo
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the mutable transport from the transport event.
+ * @brief Gets the mutable transport from the transport event.
  *
  * Returns a mutable loaned reference to the transport that was added or removed.
  */
@@ -6612,7 +6612,7 @@ struct z_loaned_transport_t *z_transport_loan_mut(struct z_owned_transport_t *th
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Move transport data from loaned pointer to owned object.
+ * @brief Moves transport data from loaned pointer to owned object.
  *
  * Moves the transport referenced by `src` into the `dst` owned object.
  * The source loaned object is replaced with an empty one: valid but unspecified.
