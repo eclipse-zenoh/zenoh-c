@@ -19,7 +19,8 @@ use zenoh::config::WhatAmI;
 use zenoh::handlers::Callback;
 #[cfg(feature = "unstable")]
 use zenoh::session::{
-    Link, LinkEvent, LinkEventsListener, LinkEventsListenerBuilder, SessionInfo, Transport, TransportEvent, TransportEventsListener, TransportEventsListenerBuilder
+    Link, LinkEvent, LinkEventsListener, LinkEventsListenerBuilder, SessionInfo, Transport,
+    TransportEvent, TransportEventsListener, TransportEventsListenerBuilder,
 };
 use zenoh::{session::ZenohId, Wait};
 
