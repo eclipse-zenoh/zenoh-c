@@ -4331,7 +4331,7 @@ void z_link_event_drop(struct z_moved_link_event_t *this_);
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get event kind from the link event.
  *
- * Returns `Z_SAMPLE_KIND_PUT` when a link was added, `Z_SAMPLE_KIND_DELETE` when removed.
+ * Returns @ref Z_SAMPLE_KIND_PUT when a link was added, @ref Z_SAMPLE_KIND_DELETE when removed.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -6469,8 +6469,8 @@ void z_transport_event_drop(struct z_moved_transport_event_t *this_);
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Get event kind from the transport event.
  *
- * Returns `z_sample_kind_t::Z_SAMPLE_KIND_PUT` when a transport was added,
- * `z_sample_kind_t::Z_SAMPLE_KIND_DELETE` when removed.
+ * Returns @ref Z_SAMPLE_KIND_PUT when a transport was added,
+ * @ref Z_SAMPLE_KIND_DELETE when removed.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API

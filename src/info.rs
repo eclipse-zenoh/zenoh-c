@@ -647,8 +647,8 @@ pub extern "C" fn z_link_take_from_loaned(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get event kind from the transport event.
 ///
-/// Returns `z_sample_kind_t::Z_SAMPLE_KIND_PUT` when a transport was added, 
-/// `z_sample_kind_t::Z_SAMPLE_KIND_DELETE` when removed.
+/// Returns @ref Z_SAMPLE_KIND_PUT when a transport was added,
+/// @ref Z_SAMPLE_KIND_DELETE when removed.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_transport_event_kind(event: &z_loaned_transport_event_t) -> z_sample_kind_t {
@@ -943,7 +943,7 @@ pub extern "C" fn z_transport_events_listener_loan(
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Get event kind from the link event.
 ///
-/// Returns `Z_SAMPLE_KIND_PUT` when a link was added, `Z_SAMPLE_KIND_DELETE` when removed.
+/// Returns @ref Z_SAMPLE_KIND_PUT when a link was added, @ref Z_SAMPLE_KIND_DELETE when removed.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_event_kind(event: &z_loaned_link_event_t) -> z_sample_kind_t {
