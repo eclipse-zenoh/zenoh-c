@@ -340,7 +340,7 @@ fn _publisher_matching_listener_declare_inner<'a>(
     let callback = callback.take_rust_type();
     let listener = publisher
         .matching_listener()
-        .callback_mut(move |matching_status| {
+        .callback(move |matching_status| {
             let status = z_matching_status_t {
                 matching: matching_status.matching(),
             };
