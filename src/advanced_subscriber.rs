@@ -387,7 +387,7 @@ pub extern "C" fn ze_internal_sample_miss_listener_check(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given sample miss listener, droping and invalidating it.
+/// @brief Undeclares the given sample miss listener, dropping and invalidating it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_sample_miss_listener_drop(this: &mut ze_moved_sample_miss_listener_t) {
@@ -395,7 +395,7 @@ pub extern "C" fn ze_sample_miss_listener_drop(this: &mut ze_moved_sample_miss_l
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given sample miss listener, droping and invalidating it.
+/// @brief Undeclares the given sample miss listener, dropping and invalidating it.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
