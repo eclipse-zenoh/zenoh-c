@@ -120,7 +120,7 @@ pub extern "C" fn z_closure_transport_event_call(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
+/// @brief Drops the closure, resetting it to its gravestone state. Dropping an uninitialized closure is a no-op.
 #[no_mangle]
 #[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_transport_event_drop(closure_: &mut z_moved_closure_transport_event_t) {

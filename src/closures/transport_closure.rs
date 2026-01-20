@@ -117,7 +117,7 @@ pub extern "C" fn z_closure_transport_call(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// Drops the closure. Droping an uninitialized closure is a no-op.
+/// Drops the closure. Dropping an uninitialized closure is a no-op.
 #[no_mangle]
 #[cfg(feature = "unstable")]
 pub extern "C" fn z_closure_transport_drop(closure_: &mut z_moved_closure_transport_t) {
