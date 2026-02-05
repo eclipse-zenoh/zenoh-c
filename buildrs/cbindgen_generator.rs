@@ -40,6 +40,7 @@ pub fn generate_c_headers() {
     let config = cbindgen::Config::from_root_or_default(crate_dir.clone());
     cbindgen::Builder::new()
         .with_config(config)
+        .with_only_target_dependencies(true)
         .with_crate(crate_dir)
         .with_src(get_out_rs_path().join("./opaque_types.rs"))
         .generate()

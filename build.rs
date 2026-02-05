@@ -1,4 +1,5 @@
 use std::env;
+use std::fs;
 
 use fs_extra::{dir, file};
 
@@ -40,7 +41,26 @@ pub fn dump_rust_sources(out_path: &std::path::Path) {
     .unwrap();
 }
 
+fn sync_opaque_types_lockfile() {
+    let root_path = get_build_rs_path();
+    let root_lock = root_path.join("Cargo.lock");
+    if !root_lock.exists() {
+        panic!("Missing Cargo.lock at {}", root_lock.display());
+    }
+
+    let opaque_types_dir = root_path.join("build-resources/opaque-types");
+    let opaque_lock = opaque_types_dir.join("Cargo.lock");
+    if let Err(err) = fs::copy(&root_lock, &opaque_lock) {
+        panic!(
+            "Failed to copy Cargo.lock to {}: {}",
+            opaque_lock.display(),
+            err
+        );
+    }
+}
+
 fn main() {
+    sync_opaque_types_lockfile();
     buildrs::opaque_types_generator::generate_opaque_types();
     buildrs::cbindgen_generator::generate_c_headers();
     if let Some(out_path) = env::var_os("ZENOHC_DUMP_SRC_DIR") {
@@ -54,6 +74,7 @@ fn main() {
     println!("cargo:rerun-if-changed=cbindgen.toml");
     println!("cargo:rerun-if-changed=build-resources");
     println!("cargo:rerun-if-changed=include");
+    println!("cargo:rerun-if-changed=Cargo.lock");
     if std::env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("linux") {
         let name = std::env::var("CARGO_PKG_NAME").unwrap();
         // Create the shared library name by removing hyphens from the pkg_name
