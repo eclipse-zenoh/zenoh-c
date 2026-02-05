@@ -74,11 +74,12 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
+flume = "*"
 zenoh = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
 zenoh-ext = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
 zenoh-runtime = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-flume = "*"
+@COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"

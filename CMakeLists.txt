@@ -141,6 +141,13 @@ endfunction()
 #
 # Configure Cargo.toml files
 #
+# Set COMMENT_PINNED_DEPS based on ZENOHC_CARGO_CHANNEL
+if(ZENOHC_CARGO_CHANNEL STREQUAL "+1.75")
+	set(COMMENT_PINNED_DEPS "")
+else()
+	set(COMMENT_PINNED_DEPS "# ")
+endif()
+
 set(cargo_lib_name_debug zenohc)
 set(cargo_lib_name_release zenohc)
 if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
