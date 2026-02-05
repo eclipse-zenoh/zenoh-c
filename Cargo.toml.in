@@ -14,6 +14,7 @@
 [package]
 name = "zenoh-c"
 version = "@CARGO_PROJECT_VERSION@"
+rust-version = "1.75.0"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
