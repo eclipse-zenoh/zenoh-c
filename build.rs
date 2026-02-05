@@ -1,5 +1,4 @@
-use std::env;
-use std::fs;
+use std::{env, fs};
 
 use fs_extra::{dir, file};
 
