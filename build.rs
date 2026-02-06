@@ -18,10 +18,10 @@ pub fn get_out_rs_path() -> std::path::PathBuf {
 
 pub fn dump_rust_sources(out_path: &std::path::Path) {
     let build_rs_path = get_build_rs_path();
-    let src_path = build_rs_path.join("./src");
+    let src_path = build_rs_path.join("src");
 
     let out_rs_path = get_out_rs_path();
-    let opaque_types_src_path = out_rs_path.join("./opaque_types.rs");
+    let opaque_types_src_path = out_rs_path.join("opaque_types.rs");
 
     if !out_path.exists() {
         std::fs::create_dir_all(out_path).unwrap();
@@ -34,7 +34,7 @@ pub fn dump_rust_sources(out_path: &std::path::Path) {
     .unwrap();
     fs_extra::file::copy(
         opaque_types_src_path,
-        out_path.join("./src/opaque_types/mod.rs"),
+        out_path.join("src/opaque_types/mod.rs"),
         &file::CopyOptions::new().overwrite(true),
     )
     .unwrap();

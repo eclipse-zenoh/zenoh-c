@@ -42,7 +42,7 @@ pub fn generate_c_headers() {
         .with_config(config)
         .with_only_target_dependencies(true)
         .with_crate(crate_dir)
-        .with_src(get_out_rs_path().join("./opaque_types.rs"))
+        .with_src(get_out_rs_path().join("opaque_types.rs"))
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(BUGGY_GENERATION_PATH);

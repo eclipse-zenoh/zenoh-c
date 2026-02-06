@@ -9,7 +9,7 @@ pub fn generate_opaque_types() {
     let type_to_inner_field_name = HashMap::from([("z_id_t", "pub id")]);
     let current_folder = get_out_rs_path();
     let (command, path_in) = produce_opaque_types_data();
-    let path_out = current_folder.join("./opaque_types.rs");
+    let path_out = current_folder.join("opaque_types.rs");
 
     let data_in = std::fs::read_to_string(path_in)
         .unwrap()
@@ -109,8 +109,8 @@ impl Drop for {type_name} {{
 fn produce_opaque_types_data() -> (String, PathBuf) {
     let target = std::env::var("TARGET").unwrap();
     let linker = std::env::var("RUSTC_LINKER").unwrap_or_default();
-    let manifest_path = get_build_rs_path().join("./build-resources/opaque-types/Cargo.toml");
-    let output_file_path = get_out_rs_path().join("./build_resources_opaque_types.txt");
+    let manifest_path = get_build_rs_path().join("build-resources/opaque-types/Cargo.toml");
+    let output_file_path = get_out_rs_path().join("build_resources_opaque_types.txt");
     let out_file = std::fs::File::create(output_file_path.clone()).unwrap();
     let stdio = std::process::Stdio::from(out_file);
 
@@ -154,7 +154,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
                 );
                 opaque_types_build_dir.into()
             }
-            Err(_) => get_out_rs_path().join("./build_resources/opaque_types"),
+            Err(_) => get_out_rs_path().join("build_resources/opaque_types"),
         });
 
     let command_str = format!("{:?}", command);
@@ -164,7 +164,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
 
 fn get_opaque_type_docs() -> HashMap<String, Vec<String>> {
     let current_folder = get_build_rs_path();
-    let path_in = current_folder.join("./build-resources/opaque-types/src/lib.rs");
+    let path_in = current_folder.join("build-resources/opaque-types/src/lib.rs");
     let re = Regex::new(r"(?m)^get_opaque_type_data!\(\s*(.*)\s*,\s*(\w+)\s*(,)?\s*\);").unwrap();
     let mut comments = Vec::new();
     let mut opaque_lines = Vec::new();
