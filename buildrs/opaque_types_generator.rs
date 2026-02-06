@@ -127,12 +127,12 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
     }
 
     let mut command = std::process::Command::new("cargo");
-    
+
     // Preserve the toolchain channel if one was specified (e.g., +1.75)
     if let Ok(toolchain) = std::env::var("RUSTUP_TOOLCHAIN") {
         command.arg(format!("+{}", toolchain));
     }
-    
+
     command
         .arg("build")
         .args(feature_args)
