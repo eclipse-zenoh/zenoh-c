@@ -5,10 +5,11 @@ use fs_extra::{dir, file};
 mod buildrs;
 
 pub fn get_build_rs_path() -> std::path::PathBuf {
-    let file_path = file!();
-    let mut path_buf = std::path::PathBuf::new();
-    path_buf.push(file_path);
-    path_buf.parent().unwrap().to_path_buf()
+    // Use CARGO_MANIFEST_DIR to get the absolute path to the source directory
+    // This is more reliable than file!() which can be relative on Windows/CMake builds
+    env::var_os("CARGO_MANIFEST_DIR")
+        .map(|p| std::path::PathBuf::from(p))
+        .expect("CARGO_MANIFEST_DIR not set")
 }
 
 pub fn get_out_rs_path() -> std::path::PathBuf {
@@ -49,6 +50,10 @@ fn sync_opaque_types_lockfile() {
 
     let opaque_types_dir = root_path.join("build-resources/opaque-types");
     let opaque_lock = opaque_types_dir.join("Cargo.lock");
+    
+    println!("cargo:warning=Copying Cargo.lock from {} to {}", 
+             root_lock.display(), opaque_lock.display());
+    
     if let Err(err) = fs::copy(&root_lock, &opaque_lock) {
         panic!(
             "Failed to copy Cargo.lock to {}: {}",
@@ -56,6 +61,8 @@ fn sync_opaque_types_lockfile() {
             err
         );
     }
+    
+    println!("cargo:warning=Successfully copied Cargo.lock");
 }
 
 fn main() {
