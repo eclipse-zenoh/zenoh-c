@@ -8,7 +8,7 @@ pub fn get_build_rs_path() -> std::path::PathBuf {
     // Use CARGO_MANIFEST_DIR to get the absolute path to the source directory
     // This is more reliable than file!() which can be relative on Windows/CMake builds
     env::var_os("CARGO_MANIFEST_DIR")
-        .map(|p| std::path::PathBuf::from(p))
+        .map(std::path::PathBuf::from)
         .expect("CARGO_MANIFEST_DIR not set")
 }
 
