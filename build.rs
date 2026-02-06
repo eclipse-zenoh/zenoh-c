@@ -50,10 +50,13 @@ fn sync_opaque_types_lockfile() {
 
     let opaque_types_dir = root_path.join("build-resources/opaque-types");
     let opaque_lock = opaque_types_dir.join("Cargo.lock");
-    
-    println!("cargo:warning=Copying Cargo.lock from {} to {}", 
-             root_lock.display(), opaque_lock.display());
-    
+
+    println!(
+        "cargo:warning=Copying Cargo.lock from {} to {}",
+        root_lock.display(),
+        opaque_lock.display()
+    );
+
     if let Err(err) = fs::copy(&root_lock, &opaque_lock) {
         panic!(
             "Failed to copy Cargo.lock to {}: {}",
@@ -61,7 +64,7 @@ fn sync_opaque_types_lockfile() {
             err
         );
     }
-    
+
     println!("cargo:warning=Successfully copied Cargo.lock");
 }
 
