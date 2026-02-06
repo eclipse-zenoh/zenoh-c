@@ -5,11 +5,22 @@ use fs_extra::{dir, file};
 mod buildrs;
 
 pub fn get_build_rs_path() -> std::path::PathBuf {
-    // Use CARGO_MANIFEST_DIR to get the absolute path to the source directory
-    // This is more reliable than file!() which can be relative on Windows/CMake builds
-    env::var_os("CARGO_MANIFEST_DIR")
-        .map(std::path::PathBuf::from)
-        .expect("CARGO_MANIFEST_DIR not set")
+    // Use file!() to get the path to build.rs
+    // On Windows through CMake, this might be a relative path, so we need to make it absolute
+    let file_path = file!();
+    let base_path = std::path::PathBuf::from(file_path);
+    
+    let absolute_path = if base_path.is_absolute() {
+        base_path
+    } else {
+        // If relative, resolve relative to current directory (which should be the source root during build)
+        std::env::current_dir()
+            .ok()
+            .map(|cwd| cwd.join(&base_path))
+            .unwrap_or(base_path)
+    };
+    
+    absolute_path.parent().unwrap().to_path_buf()
 }
 
 pub fn get_out_rs_path() -> std::path::PathBuf {
