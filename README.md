@@ -206,7 +206,7 @@ cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+nightly"
 
 Special efforts are made to keep Rust 1.75 compatibility. The base `zenoh` project provides crate [zenoh-pinned-deps-1-75](https://crates.io/crates/zenoh-pinned-deps-1-75) which
 pins crate dependencies to latest versions compatible with rust 1.75. This crate is separate from the [zenoh](https://crates.io/crates/zenoh) itself to avoid staying on obsolete versions and crate version conflicts.
-If some project needs compatibility with Rust 1.75, it adds a dependency on `zenoh-pinned-deps-1-75` and if necessary adds some additional version pins (like `crate_name="=X.Y.Z"`). 
+If some project needs compatibility with Rust 1.75, it adds a dependency on `zenoh-pinned-deps-1-75` and if necessary adds some additional version pins (like `crate_name="=X.Y.Z"`).
 On the `zenoh-c` level there is a special check in `CMakeLists.txt` which uncomments pinning in the generated `Cargo.toml` when `ZENOHC_CARGO_CHANNEL` == `+1.75.0`.
 
 ## Zenoh features support (enabling/disabling protocols, etc)
