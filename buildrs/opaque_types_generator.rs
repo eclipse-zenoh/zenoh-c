@@ -135,11 +135,12 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
 
     command
         .arg("build")
+        .arg("--no-default-features")
         .args(feature_args)
         .args(linker_args)
         .arg("--color")
         .arg("never")
-        .arg("--offline")
+        .arg("--offline") // The opaque types are supposed to use same crates as the main build
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
