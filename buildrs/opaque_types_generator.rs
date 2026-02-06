@@ -139,6 +139,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .args(linker_args)
         .arg("--color")
         .arg("never")
+        .arg("--offline")
         .arg("--target")
         .arg(target)
         .arg("--manifest-path")
