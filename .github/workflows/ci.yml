@@ -46,6 +46,7 @@ jobs:
       - name: Check zenoh with rust 1.75.0
         shell: bash
         run: |
+          rm Cargo.lock
           mkdir -p build && cd build
           cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DCMAKE_BUILD_TYPE=Release
           cmake --build . --config Release
