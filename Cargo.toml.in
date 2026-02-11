@@ -76,17 +76,18 @@ tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 flume = "*"
-zenoh = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
-zenoh-runtime = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-zenoh-util = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-@COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75", default-features = false, features=["internal"] }
+zenoh-runtime = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75" }
+zenoh-util = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75" }
+@COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75", default-features = false, features = ["internal"] }
+@COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.7.2", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "ci/zenoh_1_75" }
 cbindgen = "0.29.0"
 fs2 = "0.4.3"
 regex = "1.11.1"
