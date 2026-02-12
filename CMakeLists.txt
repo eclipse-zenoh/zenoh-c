@@ -125,10 +125,14 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/splitguide.yaml
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
-			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/version.txt
 			DESTINATION ${cargo_toml_dir})
+		if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock")
+			file(COPY
+				${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
+				DESTINATION ${cargo_toml_dir})
+		endif()
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
