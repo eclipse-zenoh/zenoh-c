@@ -44,7 +44,12 @@ jobs:
           cache-bin: false
 
       - name: Check zenoh with rust 1.75.0
-        run: cargo +1.75.0 check --release --bins --lib
+        shell: bash
+        run: |
+          rm Cargo.lock
+          mkdir -p build && cd build
+          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
 
   build:
     name: "Build on ${{ matrix.os }} shm: ${{ matrix.shm }} unstable: ${{ matrix.unstable }}"

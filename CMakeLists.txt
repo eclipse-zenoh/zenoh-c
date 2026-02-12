@@ -125,10 +125,14 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/splitguide.yaml
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
-			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/version.txt
 			DESTINATION ${cargo_toml_dir})
+		if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock")
+			file(COPY
+				${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
+				DESTINATION ${cargo_toml_dir})
+		endif()
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
@@ -141,6 +145,13 @@ endfunction()
 #
 # Configure Cargo.toml files
 #
+# Set COMMENT_PINNED_DEPS based on ZENOHC_CARGO_CHANNEL
+if(ZENOHC_CARGO_CHANNEL STREQUAL "+1.75" OR ZENOHC_CARGO_CHANNEL STREQUAL "+1.75.0")
+	set(COMMENT_PINNED_DEPS "")
+else()
+	set(COMMENT_PINNED_DEPS "# ")
+endif()
+
 set(cargo_lib_name_debug zenohc)
 set(cargo_lib_name_release zenohc)
 if(cargo_toml_dir_debug STREQUAL cargo_toml_dir_release)
