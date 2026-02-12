@@ -53,13 +53,15 @@ pub fn dump_rust_sources(out_path: &std::path::Path) {
 }
 
 fn sync_opaque_types_lockfile() {
-    let root_path = get_build_rs_path();
-    let root_lock = root_path.join("Cargo.lock");
+    let manifest_dir = env::var_os("CARGO_MANIFEST_DIR")
+        .map(std::path::PathBuf::from)
+        .expect("CARGO_MANIFEST_DIR is not set");
+    let root_lock = manifest_dir.join("Cargo.lock");
     if !root_lock.exists() {
         panic!("Missing Cargo.lock at {}", root_lock.display());
     }
 
-    let opaque_types_dir = root_path.join("build-resources/opaque-types");
+    let opaque_types_dir = get_build_rs_path().join("build-resources/opaque-types");
     let opaque_lock = opaque_types_dir.join("Cargo.lock");
 
     println!(
