@@ -86,9 +86,6 @@ if [[ "$bump_deps_pattern" != '' ]]; then
     fi
   done
 
-  # Update lockfile using 1.75.0 to avoid updating it to version 4
-  cargo +1.75.0 check
-  cargo +1.75.0 check --manifest-path build-resources/opaque-types/Cargo.toml
 
   if [[ -n $bump_deps_version || -n $bump_deps_branch ]]; then
     git commit Cargo.toml Cargo.toml.in Cargo.lock build-resources/opaque-types/Cargo.toml build-resources/opaque-types/Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
