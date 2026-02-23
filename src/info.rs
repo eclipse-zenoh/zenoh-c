@@ -833,11 +833,16 @@ pub extern "C" fn z_declare_transport_events_listener(
     let session = session.as_rust_type_ref();
     let session_info = session.info();
     let builder = _declare_transport_events_listener_inner(&session_info, callback, options);
-    let listener_result = builder.wait();
-    listener
-        .as_rust_type_mut_uninit()
-        .write(Some(listener_result));
-    result::Z_OK
+    match builder.wait() {
+        Ok(l) => {
+            listener.as_rust_type_mut_uninit().write(Some(l));
+            result::Z_OK
+        }
+        Err(e) => {
+            crate::report_error!("Failed to declare transport events listener: {}", e);
+            result::Z_EGENERIC
+        }
+    }
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1124,11 +1129,16 @@ pub extern "C" fn z_declare_link_events_listener(
     let session = session.as_rust_type_ref();
     let session_info = session.info();
     let builder = _declare_link_events_listener_inner(&session_info, callback, options);
-    let listener_result = builder.wait();
-    listener
-        .as_rust_type_mut_uninit()
-        .write(Some(listener_result));
-    result::Z_OK
+    match builder.wait() {
+        Ok(l) => {
+            listener.as_rust_type_mut_uninit().write(Some(l));
+            result::Z_OK
+        }
+        Err(e) => {
+            crate::report_error!("Failed to declare link events listener: {}", e);
+            result::Z_EGENERIC
+        }
+    }
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
