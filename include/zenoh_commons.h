@@ -4664,7 +4664,7 @@ void z_link_events_listener_drop(z_moved_link_events_listener_t *this_);
  *
  * @param this_: The owned link events listener.
  * @return A loaned link events listener reference.
- */dropping
+ */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
 const z_loaned_link_events_listener_t *z_link_events_listener_loan(const z_owned_link_events_listener_t *this_);
@@ -4894,7 +4894,7 @@ ZENOHC_API z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_tok
  */
 ZENOHC_API enum z_locality_t z_locality_default(void);
 /**
- * @brief Undeclares the given matching listener, droping and invalidating it.
+ * @brief Undeclares the given matching listener, dropping and invalidating it.
  */
 ZENOHC_API void z_matching_listener_drop(struct z_moved_matching_listener_t *this_);
 /**
@@ -6692,7 +6692,7 @@ ZENOHC_API uint64_t z_timestamp_ntp64_time(const struct z_timestamp_t *this_);
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Clones the transport.
  *
- * Creates an owned copy of the transport that candroppingd independently.
+ * Creates an owned copy of the transport that can be used independently.
  * The caller is responsible for dropping the cloned transport using `z_drop`.
  *
  * @param this_: The destination for the cloned transport.
@@ -6922,7 +6922,7 @@ ZENOHC_API
 z_result_t z_undeclare_link_events_listener(z_moved_link_events_listener_t *this_);
 #endif
 /**
- * @brief Undeclares the given matching listener, droping and invalidating it.
+ * @brief Undeclares the given matching listener, dropping and invalidating it.
  * @return 0 in case of success, negative error code otherwise.
  */
 ZENOHC_API z_result_t z_undeclare_matching_listener(struct z_moved_matching_listener_t *this_);
@@ -7976,7 +7976,7 @@ z_result_t ze_deserializer_deserialize_int64(struct ze_deserializer_t *this_,
  */
 ZENOHC_API
 z_result_t ze_deserializer_deserialize_int8(struct ze_deserializer_t *this_,
-                                            int8_t *ddropping
+                                            int8_t *dst);
 /**
  * @brief Initiates deserialization of a sequence of multiple elements.
  * @param this_: A serializer instance.
@@ -8201,7 +8201,7 @@ void ze_querying_subscriber_options_default(struct ze_querying_subscriber_option
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given sample miss listener, droping and invalidating it.
+ * @brief Undeclares the given sample miss listener, dropping and invalidating it.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -8250,7 +8250,7 @@ ZENOHC_API z_result_t ze_serialize_int8(struct z_owned_bytes_t *this_, int8_t va
  */
 ZENOHC_API
 z_result_t ze_serialize_slice(struct z_owned_bytes_t *this_,
-                              const struct z_loaned_sdropping*slice);
+                              const struct z_loaned_slice_t *slice);
 /**
  * @brief Serializes a null-terminated string.
  * The string should be a valid UTF-8.
@@ -8474,7 +8474,7 @@ ZENOHC_API z_result_t ze_undeclare_querying_subscriber(ze_moved_querying_subscri
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Undeclares the given sample miss listener, droping and invalidating it.
+ * @brief Undeclares the given sample miss listener, dropping and invalidating it.
  * @return 0 in case of success, negative error code otherwise.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
