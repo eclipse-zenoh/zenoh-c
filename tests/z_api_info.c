@@ -18,6 +18,9 @@
 
 #include "zenoh.h"
 
+#undef NDEBUG
+#include <assert.h>
+
 #if defined(Z_FEATURE_UNSTABLE_API)
 
 #define MAX_CAPTURE 16
