@@ -31,8 +31,13 @@ use zenoh::{
 };
 #[cfg(feature = "unstable")]
 use zenoh::{
-    cancellation::CancellationToken, internal::builders::close::NolocalJoinHandle,
-    sample::SourceInfo, session::EntityGlobalId,
+    cancellation::CancellationToken,
+    internal::builders::close::NolocalJoinHandle,
+    sample::SourceInfo,
+    session::{
+        EntityGlobalId, Link, LinkEvent, LinkEventsListener, Transport, TransportEvent,
+        TransportEventsListener,
+    },
 };
 
 #[macro_export]
@@ -285,7 +290,73 @@ get_opaque_type_data!(Subscriber<()>, z_loaned_subscriber_t);
 ///
 /// A DELETE on the token's key expression will be received by subscribers if the token is destroyed, or if connectivity between the subscriber and the token's creator is lost.
 get_opaque_type_data!(Option<LivelinessToken>, z_owned_liveliness_token_t);
+/// @brief A loaned liveliness token.
 get_opaque_type_data!(LivelinessToken, z_loaned_liveliness_token_t);
+
+/// @brief A Transport structure returned by Zenoh connectivity API.
+///
+/// Represents a remote zenoh node connected to this node. Only one transport per remote node exists.
+/// Each transport can have multiple corresponding `z_owned_link_t` which represent
+/// actual established data links with various protocols.
+#[cfg(feature = "unstable")]
+get_opaque_type_data!(Option<Transport>, z_owned_transport_t);
+#[cfg(feature = "unstable")]
+/// @brief A loaned Transport structure.
+get_opaque_type_data!(Transport, z_loaned_transport_t);
+
+/// @brief A Zenoh link structure returned by Zenoh connectivity API.
+///
+/// Represents an actual data link with a remote zenoh node over a specific protocol.
+#[cfg(feature = "unstable")]
+get_opaque_type_data!(Option<Link>, z_owned_link_t);
+#[cfg(feature = "unstable")]
+/// @brief A loaned Link structure.
+get_opaque_type_data!(Link, z_loaned_link_t);
+
+/// @brief The event notifyting about addition or removal of a transport `z_owned_transport_t`
+///
+/// Used in Zenoh connectivity API to notify about connecting or disconnecting to remote zenoh nodes.
+#[cfg(feature = "unstable")]
+get_opaque_type_data!(Option<TransportEvent>, z_owned_transport_event_t);
+#[cfg(feature = "unstable")]
+/// @brief A loaned TransportEvent structure.
+get_opaque_type_data!(TransportEvent, z_loaned_transport_event_t);
+
+/// @brief The event notifyting about addition or removal of a link `z_owned_link_t`
+///
+/// Used in Zenoh connectivity API to notify about establishment or break of data links with remote zenoh nodes.
+#[cfg(feature = "unstable")]
+get_opaque_type_data!(Option<LinkEvent>, z_owned_link_event_t);
+#[cfg(feature = "unstable")]
+/// @brief A loaned LinkEvent structure.
+get_opaque_type_data!(LinkEvent, z_loaned_link_event_t);
+
+/// @brief A listener for transport events.
+///
+/// Used in Zenoh connectivity API to get notified about connecting or disconnecting to remote zenoh nodes.
+#[cfg(feature = "unstable")]
+get_opaque_type_data!(
+    Option<TransportEventsListener<()>>,
+    z_owned_transport_events_listener_t
+);
+#[cfg(feature = "unstable")]
+/// @brief A loaned TransportEventsListener structure.
+get_opaque_type_data!(
+    TransportEventsListener<()>,
+    z_loaned_transport_events_listener_t
+);
+
+/// @brief A listener for link events.
+///
+/// Used in Zenoh connectivity API to get notified about establishment or break of data links with remote zenoh nodes.
+#[cfg(feature = "unstable")]
+get_opaque_type_data!(
+    Option<LinkEventsListener<()>>,
+    z_owned_link_events_listener_t
+);
+#[cfg(feature = "unstable")]
+/// @brief A loaned LinkEventsListener structure.
+get_opaque_type_data!(LinkEventsListener<()>, z_loaned_link_events_listener_t);
 
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
