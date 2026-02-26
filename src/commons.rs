@@ -533,24 +533,6 @@ pub enum z_congestion_control_t {
     BLOCK_FIRST = 2,
 }
 
-/// Returns the default congestion control value of zenoh push network messages, typically used for put operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_push() -> z_congestion_control_t {
-    CongestionControl::DEFAULT_PUSH.into()
-}
-
-/// Returns the default congestion control value of zenoh request network messages, typically used for get operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_request() -> z_congestion_control_t {
-    CongestionControl::DEFAULT_REQUEST.into()
-}
-
-/// Returns the default congestion control value of zenoh response network messages, typically used for reply operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_response() -> z_congestion_control_t {
-    CongestionControl::DEFAULT_RESPONSE.into()
-}
-
 impl From<CongestionControl> for z_congestion_control_t {
     fn from(cc: CongestionControl) -> Self {
         match cc {
