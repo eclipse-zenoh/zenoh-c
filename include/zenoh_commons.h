@@ -1091,10 +1091,12 @@ typedef struct z_query_reply_options_t {
   struct z_moved_encoding_t *encoding;
   /**
    * The congestion control to apply when routing the reply.
+   * @deprecated This field is deprecated and should not be used. It will be removed in a future release.
    */
   enum z_congestion_control_t congestion_control;
   /**
    * The priority of the reply.
+   * @deprecated This field is deprecated and should not be used. It will be removed in a future release.
    */
   enum z_priority_t priority;
   /**
@@ -1125,10 +1127,12 @@ typedef struct z_query_reply_options_t {
 typedef struct z_query_reply_del_options_t {
   /**
    * The congestion control to apply when routing the reply.
+   * @deprecated This field is deprecated and should not be used. It will be removed in a future release.
    */
   enum z_congestion_control_t congestion_control;
   /**
    * The priority of the reply.
+   * @deprecated This field is deprecated and should not be used. It will be removed in a future release.
    */
   enum z_priority_t priority;
   /**
