@@ -901,10 +901,12 @@ typedef struct z_query_reply_options_t {
   struct z_moved_encoding_t *encoding;
   /**
    * The congestion control to apply when routing the reply.
+   * @deprecated The congestion control field should not be exposed in the C API.
    */
   enum z_congestion_control_t congestion_control;
   /**
    * The priority of the reply.
+   * @deprecated The priority field should not be exposed in the C API.
    */
   enum z_priority_t priority;
   /**
@@ -935,10 +937,12 @@ typedef struct z_query_reply_options_t {
 typedef struct z_query_reply_del_options_t {
   /**
    * The congestion control to apply when routing the reply.
+   * @deprecated The congestion control field should not be exposed in the C API.
    */
   enum z_congestion_control_t congestion_control;
   /**
    * The priority of the reply.
+   * @deprecated The priority field should not be exposed in the C API.
    */
   enum z_priority_t priority;
   /**
