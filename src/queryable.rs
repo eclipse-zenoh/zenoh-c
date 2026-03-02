@@ -149,8 +149,12 @@ pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryabl
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
     pub encoding: Option<&'static mut z_moved_encoding_t>,
+    /// @deprecated This field is deprecated and should not be used.
+    ///
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
+    /// @deprecated This field is deprecated and should not be used.
+    ///
     /// The priority of the reply.
     pub priority: z_priority_t,
     /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
@@ -205,8 +209,12 @@ pub extern "C" fn z_query_reply_err_options_default(
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_reply_del_options_t {
+    /// @deprecated This field is deprecated and should not be used.
+    ///
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
+    /// @deprecated This field is deprecated and should not be used.
+    ///
     /// The priority of the reply.
     pub priority: z_priority_t,
     /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
