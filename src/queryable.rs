@@ -385,8 +385,6 @@ pub extern "C" fn z_query_reply(
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
-        reply = reply.priority(options.priority.into());
-        reply = reply.congestion_control(options.congestion_control.into());
         reply = reply.express(options.is_express);
     }
 
@@ -466,8 +464,6 @@ pub unsafe extern "C" fn z_query_reply_del(
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
-        reply = reply.priority(options.priority.into());
-        reply = reply.congestion_control(options.congestion_control.into());
         reply = reply.express(options.is_express);
     }
 
