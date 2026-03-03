@@ -55,7 +55,8 @@ cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
 # Update Debian dependency of libzenohc-dev
 debian_version=$(to_debian_version $version)
 toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$debian_version)"
-toml_set_in_place Cargo.toml.in "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$debian_version)"
+# Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax
+sed -i 's/^depends = "libzenohc (=.*)"/depends = "libzenohc (='"$debian_version"')"/' Cargo.toml.in
 
 git commit version.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $version"
 
@@ -66,12 +67,14 @@ if [[ "$bump_deps_pattern" != '' ]]; then
     for dep in $deps; do
       if [[ -n $bump_deps_version ]]; then
         toml_set_in_place Cargo.toml "$deps_key.$dep.version" "$bump_deps_version"
-        toml_set_in_place Cargo.toml.in "$deps_key.$dep.version" "$bump_deps_version"
+        # Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax
+        sed -i "/^\[$deps_key\]/,/^\[/ s/^\($dep = .*version = \"\)[^\"]*\"/\1$bump_deps_version\"/" Cargo.toml.in
       fi
 
       if [[ -n $bump_deps_branch ]]; then
         toml_set_in_place Cargo.toml "$deps_key.$dep.branch" "$bump_deps_branch"
-        toml_set_in_place Cargo.toml.in "$deps_key.$dep.branch" "$bump_deps_branch"
+        # Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax
+        sed -i "/^\[$deps_key\]/,/^\[/ s/^\($dep = .*branch = \"\)[^\"]*\"/\1$bump_deps_branch\"/" Cargo.toml.in
       fi
     done
   done
