@@ -150,8 +150,12 @@ pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
     pub encoding: Option<&'static mut z_moved_encoding_t>,
     /// The congestion control to apply when routing the reply.
+    /// @warning This API has been marked as deprecated.
+    #[deprecated]
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
+    /// @warning This API has been marked as deprecated.
+    #[deprecated]
     pub priority: z_priority_t,
     /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
@@ -206,8 +210,12 @@ pub extern "C" fn z_query_reply_err_options_default(
 #[repr(C)]
 pub struct z_query_reply_del_options_t {
     /// The congestion control to apply when routing the reply.
+    /// @warning This API has been marked as deprecated.
+    #[deprecated]
     pub congestion_control: z_congestion_control_t,
     /// The priority of the reply.
+    /// @warning This API has been marked as deprecated.
+    #[deprecated]
     pub priority: z_priority_t,
     /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
     pub is_express: bool,
@@ -385,8 +393,6 @@ pub extern "C" fn z_query_reply(
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
-        reply = reply.priority(options.priority.into());
-        reply = reply.congestion_control(options.congestion_control.into());
         reply = reply.express(options.is_express);
     }
 
@@ -466,8 +472,6 @@ pub unsafe extern "C" fn z_query_reply_del(
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
-        reply = reply.priority(options.priority.into());
-        reply = reply.congestion_control(options.congestion_control.into());
         reply = reply.express(options.is_express);
     }
 

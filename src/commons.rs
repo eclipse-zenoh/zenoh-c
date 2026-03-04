@@ -545,12 +545,6 @@ pub extern "C" fn z_internal_congestion_control_default_request() -> z_congestio
     CongestionControl::DEFAULT_REQUEST.into()
 }
 
-/// Returns the default congestion control value of zenoh response network messages, typically used for reply operations.
-#[no_mangle]
-pub extern "C" fn z_internal_congestion_control_default_response() -> z_congestion_control_t {
-    CongestionControl::DEFAULT_RESPONSE.into()
-}
-
 impl From<CongestionControl> for z_congestion_control_t {
     fn from(cc: CongestionControl) -> Self {
         match cc {
