@@ -545,7 +545,6 @@ pub extern "C" fn z_internal_congestion_control_default_request() -> z_congestio
     CongestionControl::DEFAULT_REQUEST.into()
 }
 
-
 impl From<CongestionControl> for z_congestion_control_t {
     fn from(cc: CongestionControl) -> Self {
         match cc {
