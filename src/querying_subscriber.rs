@@ -18,6 +18,8 @@ use std::mem::MaybeUninit;
 use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
 
+#[cfg(feature = "unstable")]
+use crate::ze_moved_querying_subscriber_t;
 use crate::{
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
@@ -25,10 +27,8 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_locality_default, z_locality_t, z_moved_closure_sample_t,
     z_query_consolidation_none, z_query_consolidation_t, z_query_target_default, z_query_target_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
-use crate::{zc_reply_keyexpr_default, zc_reply_keyexpr_t};
-#[cfg(feature = "unstable")]
-use crate::ze_moved_querying_subscriber_t;
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
