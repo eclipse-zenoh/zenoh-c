@@ -16,10 +16,10 @@ use std::{mem::MaybeUninit, ptr::null};
 
 use libc::c_ulong;
 #[cfg(feature = "unstable")]
-use zenoh::{qos::Reliability, query::ReplyKeyExpr, sample::SourceInfo, session::EntityGlobalId};
+use zenoh::{qos::Reliability, sample::SourceInfo, session::EntityGlobalId};
 use zenoh::{
     qos::{CongestionControl, Priority},
-    query::{ConsolidationMode, QueryTarget},
+    query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
     sample::{Locality, Sample, SampleKind},
     time::Timestamp,
 };
@@ -339,8 +339,6 @@ impl From<z_reliability_t> for Reliability {
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Key expressions types to which Queryable should reply to.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
@@ -351,7 +349,6 @@ pub enum zc_reply_keyexpr_t {
     MATCHING_QUERY = 1,
 }
 
-#[cfg(feature = "unstable")]
 impl From<ReplyKeyExpr> for zc_reply_keyexpr_t {
     fn from(k: ReplyKeyExpr) -> Self {
         match k {
@@ -361,7 +358,6 @@ impl From<ReplyKeyExpr> for zc_reply_keyexpr_t {
     }
 }
 
-#[cfg(feature = "unstable")]
 impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
     fn from(k: zc_reply_keyexpr_t) -> Self {
         match k {
@@ -371,8 +367,6 @@ impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
     }
 }
 
-#[cfg(feature = "unstable")]
-/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Returns the default value of #zc_reply_keyexpr_t.
 #[no_mangle]
 pub extern "C" fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {

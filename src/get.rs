@@ -33,12 +33,12 @@ use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t, z_moved_closure_reply_t,
-    z_moved_encoding_t, z_priority_t, z_query_target_t, CStringView,
+    z_moved_encoding_t, z_priority_t, z_query_target_t, zc_reply_keyexpr_default,
+    zc_reply_keyexpr_t, CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
     transmute::IntoCType, z_entity_global_id_t, z_moved_cancellation_token_t, z_source_info_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(z_owned_reply_err_t, ReplyError),
@@ -223,9 +223,6 @@ pub struct z_get_options_t {
     pub is_express: bool,
     /// The allowed destination for the query.
     pub allowed_destination: z_locality_t,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The accepted replies for the query.
     pub accept_replies: zc_reply_keyexpr_t,
     /// The priority of the query.
@@ -272,7 +269,6 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         allowed_destination: z_locality_default(),
-        #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),
         priority: Priority::default().into(),
         is_express: false,
@@ -382,12 +378,11 @@ pub unsafe extern "C" fn z_get_with_parameters_substr(
             .target(options.target.into())
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express);
+            .express(options.is_express)
+            .accept_replies(options.accept_replies.into());
         #[cfg(feature = "unstable")]
         {
-            get = get
-                .allowed_destination(options.allowed_destination.into())
-                .accept_replies(options.accept_replies.into());
+            get = get.allowed_destination(options.allowed_destination.into());
         }
 
         if options.timeout_ms != 0 {

@@ -32,12 +32,11 @@ use crate::{
     z_loaned_session_t, z_locality_default, z_locality_t, z_matching_status_t, z_moved_bytes_t,
     z_moved_closure_matching_status_t, z_moved_closure_reply_t, z_moved_encoding_t,
     z_moved_querier_t, z_owned_matching_listener_t, z_owned_querier_t, z_priority_t,
-    z_query_consolidation_t, z_query_target_t,
+    z_query_consolidation_t, z_query_target_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
     transmute::IntoCType, z_entity_global_id_t, z_moved_cancellation_token_t, z_source_info_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
 
 /// @brief Options passed to the `z_declare_querier()` function.
@@ -53,9 +52,6 @@ pub struct z_querier_options_t {
     pub is_express: bool,
     /// The allowed destination for the querier queries.
     pub allowed_destination: z_locality_t,
-    #[cfg(feature = "unstable")]
-    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-    ///
     /// The accepted replies for the querier queries.
     pub accept_replies: zc_reply_keyexpr_t,
     /// The priority of the querier queries.
@@ -74,7 +70,6 @@ pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_op
         priority: Priority::default().into(),
         is_express: false,
         allowed_destination: z_locality_default(),
-        #[cfg(feature = "unstable")]
         accept_replies: zc_reply_keyexpr_default(),
         timeout_ms: 0,
     });
@@ -114,13 +109,10 @@ pub extern "C" fn z_declare_querier(
             .express(options.is_express)
             .target(options.target.into())
             .consolidation(options.consolidation)
-            .allowed_destination(options.allowed_destination.into());
+            .allowed_destination(options.allowed_destination.into())
+            .accept_replies(options.accept_replies.into());
         if options.timeout_ms != 0 {
             q = q.timeout(std::time::Duration::from_millis(options.timeout_ms));
-        }
-        #[cfg(feature = "unstable")]
-        {
-            q = q.accept_replies(options.accept_replies.into());
         }
     }
     match q.wait() {
