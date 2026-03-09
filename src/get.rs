@@ -379,11 +379,8 @@ pub unsafe extern "C" fn z_get_with_parameters_substr(
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
             .express(options.is_express)
+            .allowed_destination(options.allowed_destination.into())
             .accept_replies(options.accept_replies.into());
-        #[cfg(feature = "unstable")]
-        {
-            get = get.allowed_destination(options.allowed_destination.into());
-        }
 
         if options.timeout_ms != 0 {
             get = get.timeout(std::time::Duration::from_millis(options.timeout_ms));

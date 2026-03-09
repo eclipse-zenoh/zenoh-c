@@ -220,10 +220,10 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                         .congestion_control(options.congestion_control.into())
                         .priority(options.priority.into())
                         .express(options.is_express)
+                        .allowed_destination(options.allowed_destination.into())
                         .accept_replies(options.accept_replies.into());
                     #[cfg(feature = "unstable")]
                     {
-                        get = get.allowed_destination(options.allowed_destination.into());
                         if let Some(source_info) = options.source_info {
                             get = get.source_info(source_info.as_rust_type_ref().clone());
                         }
