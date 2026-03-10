@@ -161,10 +161,8 @@ typedef enum z_consolidation_mode_t {
   Z_CONSOLIDATION_MODE_LATEST = 2,
 } z_consolidation_mode_t;
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Key expressions types to which Queryable should reply to.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
 typedef enum zc_reply_keyexpr_t {
   /**
    * Replies to any key expression queries.
@@ -175,7 +173,6 @@ typedef enum zc_reply_keyexpr_t {
    */
   ZC_REPLY_KEYEXPR_MATCHING_QUERY = 1,
 } zc_reply_keyexpr_t;
-#endif
 typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
   Z_WHATAMI_PEER = 2,
@@ -580,14 +577,10 @@ typedef struct z_querier_options_t {
    * The allowed destination for the querier queries.
    */
   enum z_locality_t allowed_destination;
-#if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
    * The accepted replies for the querier queries.
    */
   enum zc_reply_keyexpr_t accept_replies;
-#endif
   /**
    * The priority of the querier queries.
    */
@@ -671,14 +664,10 @@ typedef struct z_get_options_t {
    * The allowed destination for the query.
    */
   enum z_locality_t allowed_destination;
-#if defined(Z_FEATURE_UNSTABLE_API)
   /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
    * The accepted replies for the query.
    */
   enum zc_reply_keyexpr_t accept_replies;
-#endif
   /**
    * The priority of the query.
    */
@@ -1392,12 +1381,10 @@ typedef struct ze_querying_subscriber_options_t {
    * The consolidation mode to be used for queries.
    */
   struct z_query_consolidation_t query_consolidation;
-#if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * The accepted replies for queries.
    */
   enum zc_reply_keyexpr_t query_accept_replies;
-#endif
   /**
    * The timeout to be used for queries.
    */
@@ -5908,13 +5895,9 @@ void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
  */
 ZENOHC_API enum z_locality_t zc_locality_default(void);
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Returns the default value of #zc_reply_keyexpr_t.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API
-enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
-#endif
+ZENOHC_API enum zc_reply_keyexpr_t zc_reply_keyexpr_default(void);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Add client to the list.

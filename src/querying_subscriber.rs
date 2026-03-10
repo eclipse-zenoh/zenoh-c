@@ -18,6 +18,8 @@ use std::mem::MaybeUninit;
 use zenoh::{handlers::Callback, sample::Sample, session::Session, Wait};
 use zenoh_ext::*;
 
+#[cfg(feature = "unstable")]
+use crate::ze_moved_querying_subscriber_t;
 use crate::{
     opaque_types::{ze_loaned_querying_subscriber_t, ze_owned_querying_subscriber_t},
     result,
@@ -25,9 +27,8 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_locality_default, z_locality_t, z_moved_closure_sample_t,
     z_query_consolidation_none, z_query_consolidation_t, z_query_target_default, z_query_target_t,
+    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
 };
-#[cfg(feature = "unstable")]
-use crate::{zc_reply_keyexpr_default, zc_reply_keyexpr_t, ze_moved_querying_subscriber_t};
 decl_c_type!(
     owned(
         ze_owned_querying_subscriber_t,
@@ -60,7 +61,6 @@ pub struct ze_querying_subscriber_options_t {
     query_target: z_query_target_t,
     /// The consolidation mode to be used for queries.
     query_consolidation: z_query_consolidation_t,
-    #[cfg(feature = "unstable")]
     /// The accepted replies for queries.
     query_accept_replies: zc_reply_keyexpr_t,
     /// The timeout to be used for queries.
@@ -78,7 +78,6 @@ pub extern "C" fn ze_querying_subscriber_options_default(
         query_selector: None,
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
-        #[cfg(feature = "unstable")]
         query_accept_replies: zc_reply_keyexpr_default(),
         query_timeout_ms: 0,
     });
@@ -99,11 +98,8 @@ unsafe fn _declare_querying_subscriber_inner<'a, 'b>(
         sub = sub
             .query_target(options.query_target.into())
             .query_consolidation(options.query_consolidation)
-            .allowed_origin(options.allowed_origin.into());
-        #[cfg(feature = "unstable")]
-        {
-            sub = sub.query_accept_replies(options.query_accept_replies.into());
-        }
+            .allowed_origin(options.allowed_origin.into())
+            .query_accept_replies(options.query_accept_replies.into());
         if let Some(query_selector) = options.query_selector {
             let query_selector = query_selector.as_rust_type_ref().clone();
             sub = sub.query_selector(query_selector);
@@ -223,16 +219,14 @@ pub unsafe extern "C" fn ze_querying_subscriber_get(
                         .target(options.target.into())
                         .congestion_control(options.congestion_control.into())
                         .priority(options.priority.into())
-                        .express(options.is_express);
-
+                        .express(options.is_express)
+                        .allowed_destination(options.allowed_destination.into())
+                        .accept_replies(options.accept_replies.into());
                     #[cfg(feature = "unstable")]
                     {
                         if let Some(source_info) = options.source_info {
                             get = get.source_info(source_info.as_rust_type_ref().clone());
                         }
-                        get = get
-                            .allowed_destination(options.allowed_destination.into())
-                            .accept_replies(options.accept_replies.into());
                     }
 
                     if options.timeout_ms != 0 {
