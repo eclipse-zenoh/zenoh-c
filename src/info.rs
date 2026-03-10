@@ -866,8 +866,16 @@ pub extern "C" fn z_declare_background_transport_events_listener(
     let session = session.as_rust_type_ref();
     let session_info = session.info();
     let builder = _declare_transport_events_listener_inner(&session_info, callback, options);
-    let _ = builder.background().wait();
-    result::Z_OK
+    match builder.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            crate::report_error!(
+                "Failed to declare background transport events listener: {}",
+                e
+            );
+            result::Z_EGENERIC
+        }
+    }
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -883,7 +891,7 @@ pub extern "C" fn z_undeclare_transport_events_listener(
 ) -> result::z_result_t {
     if let Some(listener) = this_.take_rust_type() {
         if let Err(e) = listener.undeclare().wait() {
-            crate::report_error!("{}", e);
+            crate::report_error!("Failed to undeclare transport events listener: {}", e);
             return result::Z_ENETWORK;
         }
     }
@@ -1162,8 +1170,13 @@ pub extern "C" fn z_declare_background_link_events_listener(
     let session = session.as_rust_type_ref();
     let session_info = session.info();
     let builder = _declare_link_events_listener_inner(&session_info, callback, options);
-    let _ = builder.background().wait();
-    result::Z_OK
+    match builder.background().wait() {
+        Ok(_) => result::Z_OK,
+        Err(e) => {
+            crate::report_error!("Failed to declare background link events listener: {}", e);
+            result::Z_EGENERIC
+        }
+    }
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1179,7 +1192,7 @@ pub extern "C" fn z_undeclare_link_events_listener(
 ) -> result::z_result_t {
     if let Some(listener) = this_.take_rust_type() {
         if let Err(e) = listener.undeclare().wait() {
-            crate::report_error!("{}", e);
+            crate::report_error!("Failed to undeclare link events listener: {}", e);
             return result::Z_ENETWORK;
         }
     }
