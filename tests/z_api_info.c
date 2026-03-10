@@ -182,7 +182,7 @@ void create_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
     assert(res == 0);
 
     // Give router session time to start listening
-    sleep(1);
+    z_sleep_s(1);
 
     // Create config for peer session: connects to router
     z_owned_config_t config2;
@@ -192,7 +192,7 @@ void create_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
     assert(res == 0);
 
     // Sleep to allow sessions to establish connection
-    sleep(1);
+    z_sleep_s(1);
 }
 
 // Context for counting ZIDs and storing the first one
@@ -398,7 +398,7 @@ void test_transport_events() {
     create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17448\"]");
     assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
 
-    sleep(2);
+    z_sleep_s(2);
 
     // Should have 1 PUT event (transport added)
     assert(ctx.transport_event_count == 1 && "Expected 1 event after connection");
@@ -413,7 +413,7 @@ void test_transport_events() {
     print_context(&ctx);
 
     z_drop(z_move(s2));
-    sleep(2);
+    z_sleep_s(2);
 
     // Should have 2 events now (1 PUT + 1 DELETE)
     assert(ctx.transport_event_count == 2 && "Expected 2 events after disconnection");
@@ -447,7 +447,7 @@ void test_transport_events_history() {
     assert(z_declare_transport_events_listener(z_loan(s1), &listener, z_move(callback), &opts) == 0 &&
            "Unable to declare transport events listener");
 
-    sleep(1);
+    z_sleep_s(1);
 
     // Should have 1 PUT event from history (existing transport)
     assert(ctx.transport_event_count == 1 && "Expected 1 history event");
@@ -488,7 +488,7 @@ void test_transport_events_background() {
     create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17449\"]");
     assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
 
-    sleep(2);
+    z_sleep_s(2);
 
     // Should have 1 PUT event (transport added)
     assert(ctx.transport_event_count == 1 && "Expected 1 event after connection");
@@ -536,7 +536,7 @@ void test_link_events() {
     create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17450\"]");
     assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
 
-    sleep(2);
+    z_sleep_s(2);
 
     // Should have 1 PUT event (link added)
     assert(ctx.link_event_count == 1 && "Expected 1 event after connection");
@@ -550,7 +550,7 @@ void test_link_events() {
     print_context(&ctx);
 
     z_drop(z_move(s2));
-    sleep(2);
+    z_sleep_s(2);
 
     // Should have 2 events now (1 PUT + 1 DELETE)
     assert(ctx.link_event_count == 2 && "Expected 2 events after disconnection");
@@ -584,7 +584,7 @@ void test_link_events_history() {
     assert(z_declare_link_events_listener(z_loan(s1), &listener, z_move(callback), &opts) == 0 &&
            "Unable to declare link events listener");
 
-    sleep(1);
+    z_sleep_s(1);
 
     // Should have 1 PUT event from history (existing link)
     assert(ctx.link_event_count == 1 && "Expected 1 history event");
@@ -625,7 +625,7 @@ void test_link_events_background() {
     create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17451\"]");
     assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
 
-    sleep(2);
+    z_sleep_s(2);
 
     assert(ctx.link_event_count == 1 && "Expected 1 link event");
     assert(z_link_event_kind(z_loan(ctx.link_events[0])) == Z_SAMPLE_KIND_PUT && "Expected PUT event for link added");
@@ -676,7 +676,7 @@ void test_link_events_filtered() {
     assert(z_declare_link_events_listener(z_loan(s1), &listener1, z_move(callback1), &opts1) == 0 &&
            "Unable to declare filtered link events listener");
 
-    sleep(1);
+    z_sleep_s(1);
 
     assert(ctx1.link_event_count >= 1 && "Expected at least 1 event with matching transport filter");
     assert(z_link_event_kind(z_loan(ctx1.link_events[0])) == Z_SAMPLE_KIND_PUT &&
@@ -701,7 +701,7 @@ void test_link_events_filtered() {
     assert(z_declare_link_events_listener(z_loan(s1), &listener2, z_move(callback2), &opts2) == 0 &&
            "Unable to declare filtered link events listener (test 2)");
 
-    sleep(1);
+    z_sleep_s(1);
 
     assert(ctx2.link_event_count == 0 && "Expected 0 events with non-matching transport filter");
     printf("PASS: Received 0 events with non-matching transport filter (as expected)\n\n");
