@@ -4155,11 +4155,6 @@ ZENOHC_API struct z_loaned_querier_t *z_querier_loan_mut(struct z_owned_querier_
  */
 ZENOHC_API void z_querier_options_default(struct z_querier_options_t *this_);
 /**
- * @brief Gets the accept replies setting of the query,
- * i.e. which replies are accepted by the query originator.
- */
-ZENOHC_API enum zc_reply_keyexpr_t z_query_accept_replies(const struct z_loaned_query_t *this_);
-/**
  * Gets query attachment.
  *
  * Returns NULL if query does not contain an attachment.
@@ -5899,6 +5894,11 @@ void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
  * @brief Returns default value of `z_locality_t`
  */
 ZENOHC_API enum z_locality_t zc_locality_default(void);
+/**
+ * @brief Gets the accept replies setting of the query,
+ * i.e. which replies are accepted by the query originator.
+ */
+ZENOHC_API enum zc_reply_keyexpr_t zc_query_accepts_replies(const struct z_loaned_query_t *this_);
 /**
  * @brief Returns the default value of #zc_reply_keyexpr_t.
  */
