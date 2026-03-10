@@ -28,7 +28,7 @@ use crate::{
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t,
     z_moved_bytes_t, z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t,
-    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
+    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t, zc_reply_keyexpr_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t, z_source_info_t};
@@ -567,6 +567,17 @@ pub extern "C" fn z_query_source_info(this_: &z_loaned_query_t) -> Option<&z_sou
         .as_rust_type_ref()
         .source_info()
         .map(|si| si.as_ctype_ref())
+}
+
+/// @brief Gets the accept replies setting of the query,
+/// i.e. which replies are accepted by the query originator.
+#[no_mangle]
+pub extern "C" fn zc_query_accepts_replies(this_: &z_loaned_query_t) -> zc_reply_keyexpr_t {
+    this_
+        .as_rust_type_ref()
+        .accepts_replies()
+        .unwrap_or_default()
+        .into()
 }
 
 /// Undeclares a `z_owned_queryable_t`.
