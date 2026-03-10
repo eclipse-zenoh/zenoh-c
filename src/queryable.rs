@@ -573,7 +573,7 @@ pub extern "C" fn z_query_source_info(this_: &z_loaned_query_t) -> Option<&z_sou
 /// @brief Gets the accept replies setting of the query,
 /// i.e. which replies are accepted by the query originator.
 #[no_mangle]
-pub extern "C" fn z_query_accept_replies(this_: &z_loaned_query_t) -> zc_reply_keyexpr_t {
+pub extern "C" fn zc_query_accepts_replies(this_: &z_loaned_query_t) -> zc_reply_keyexpr_t {
     this_
         .as_rust_type_ref()
         .accepts_replies()
