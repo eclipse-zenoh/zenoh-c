@@ -33,8 +33,8 @@ use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t, z_moved_closure_reply_t,
-    z_moved_encoding_t, z_priority_t, z_query_target_t, z_reply_keyexpr_default,
-    z_reply_keyexpr_t, CStringView,
+    z_moved_encoding_t, z_priority_t, z_query_target_t, z_reply_keyexpr_default, z_reply_keyexpr_t,
+    CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
