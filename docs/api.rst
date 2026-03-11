@@ -564,6 +564,7 @@ Functions
 
 .. doxygenfunction:: z_locality_default
 .. doxygenfunction:: z_reliability_default
+.. doxygenfunction:: z_priority_default
 
 .. doxygenfunction:: z_publisher_get_matching_status
 .. doxygenfunction:: z_publisher_declare_matching_listener
@@ -745,7 +746,7 @@ Functions
 .. doxygenfunction:: z_query_consolidation_monotonic
 .. doxygenfunction:: z_query_consolidation_latest
 .. doxygenfunction:: z_query_target_default
-.. doxygenfunction:: _reply_keyexpr_default
+.. doxygenfunction:: z_reply_keyexpr_default
 
 .. doxygenfunction:: z_declare_querier
 .. doxygenfunction:: z_undeclare_querier
