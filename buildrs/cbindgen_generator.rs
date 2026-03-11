@@ -356,7 +356,10 @@ fn configure() {
     let version = version.trim();
     let version_parts: Vec<&str> = version.split('.').collect();
     if version_parts.len() < 3 {
-        panic!("Invalid version format: \"{}\" in file version.txt. Major.Minor.Patch parts are required", version);
+        panic!(
+            "Invalid version format: \"{}\" in file version.txt. Major.Minor.Patch parts are required",
+            version
+        );
     }
     let major = version_parts[0];
     let minor = version_parts[1];
