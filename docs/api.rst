@@ -470,8 +470,31 @@ Types
 .. doxygenstruct:: z_loaned_session_t
 .. doxygenstruct:: z_id_t
 
-.. doxygenstruct:: z_loaned_closure_zid_t
+.. doxygenstruct:: z_owned_transport_t
+.. doxygenstruct:: z_loaned_transport_t
+.. doxygenstruct:: z_owned_link_t
+.. doxygenstruct:: z_loaned_link_t
+.. doxygenstruct:: z_info_links_options_t
+    :members:
+.. doxygenstruct:: z_owned_transport_event_t
+.. doxygenstruct:: z_loaned_transport_event_t
+.. doxygenstruct:: z_owned_link_event_t
+.. doxygenstruct:: z_loaned_link_event_t
+.. doxygenstruct:: z_owned_transport_events_listener_t
+.. doxygenstruct:: z_loaned_transport_events_listener_t
+.. doxygenstruct:: z_transport_events_listener_options_t
+    :members:
+.. doxygenstruct:: z_owned_link_events_listener_t
+.. doxygenstruct:: z_loaned_link_events_listener_t
+.. doxygenstruct:: z_link_events_listener_options_t
+    :members:
+
 .. doxygenstruct:: z_owned_closure_zid_t
+.. doxygenstruct:: z_loaned_closure_zid_t
+.. doxygenstruct:: z_owned_closure_transport_event_t
+.. doxygenstruct:: z_loaned_closure_transport_event_t
+.. doxygenstruct:: z_owned_closure_link_event_t
+.. doxygenstruct:: z_loaned_closure_link_event_t
 
 Functions
 ^^^^^^^^^
@@ -484,16 +507,64 @@ Functions
 .. doxygenfunction:: z_session_loan_mut
 .. doxygenfunction:: z_session_drop
 
-
 .. doxygenfunction:: z_info_zid
 .. doxygenfunction:: z_info_routers_zid
 .. doxygenfunction:: z_info_peers_zid
 .. doxygenfunction:: z_id_to_string
 
+.. doxygenfunction:: z_info_transports
+.. doxygenfunction:: z_transport_loan
+.. doxygenfunction:: z_transport_loan_mut
+.. doxygenfunction:: z_transport_drop
+.. doxygenfunction:: z_transport_clone
+.. doxygenfunction:: z_transport_zid
+.. doxygenfunction:: z_transport_whatami
+.. doxygenfunction:: z_transport_is_qos
+.. doxygenfunction:: z_transport_is_multicast
+.. doxygenfunction:: z_transport_is_shm
+
+.. doxygenfunction:: z_info_links
+.. doxygenfunction:: z_link_loan
+.. doxygenfunction:: z_link_loan_mut
+.. doxygenfunction:: z_link_drop
+.. doxygenfunction:: z_link_clone
+.. doxygenfunction:: z_link_zid
+.. doxygenfunction:: z_link_src
+.. doxygenfunction:: z_link_dst
+.. doxygenfunction:: z_link_group
+.. doxygenfunction:: z_link_mtu
+.. doxygenfunction:: z_link_is_streamed
+.. doxygenfunction:: z_link_interfaces
+.. doxygenfunction:: z_link_auth_identifier
+.. doxygenfunction:: z_link_priorities
+.. doxygenfunction:: z_link_reliability
+
+.. doxygenfunction:: z_declare_transport_events_listener
+.. doxygenfunction:: z_undeclare_transport_events_listener
+.. doxygenfunction:: z_transport_events_listener_options_default
+.. doxygenfunction:: z_transport_event_kind
+.. doxygenfunction:: z_transport_event_transport
+.. doxygenfunction:: z_transport_event_transport_mut
+
+.. doxygenfunction:: z_declare_link_events_listener
+.. doxygenfunction:: z_undeclare_link_events_listener
+.. doxygenfunction:: z_link_events_listener_options_default
+.. doxygenfunction:: z_link_event_kind
+.. doxygenfunction:: z_link_event_link
+.. doxygenfunction:: z_link_event_link_mut
+
 .. doxygenfunction:: z_closure_zid_drop
 .. doxygenfunction:: z_closure_zid_loan
 .. doxygenfunction:: z_closure_zid_call
 .. doxygenfunction:: z_closure_zid
+.. doxygenfunction:: z_closure_transport_event_drop
+.. doxygenfunction:: z_closure_transport_event_loan
+.. doxygenfunction:: z_closure_transport_event_call
+.. doxygenfunction:: z_closure_transport_event
+.. doxygenfunction:: z_closure_link_event_drop
+.. doxygenfunction:: z_closure_link_event_loan
+.. doxygenfunction:: z_closure_link_event_call
+.. doxygenfunction:: z_closure_link_event
 
 Matching
 ========

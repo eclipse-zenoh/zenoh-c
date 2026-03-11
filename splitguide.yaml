@@ -133,3 +133,15 @@ zenoh_opaque.h:
   - z_loaned_shared_shm_provider_t!#shared-memory#unstable
   - z_owned_cancellation_token_t!#unstable
   - z_loaned_cancellation_token_t!#unstable
+  - z_owned_transport_t!#unstable
+  - z_loaned_transport_t!#unstable
+  - z_owned_link_t!#unstable
+  - z_loaned_link_t!#unstable
+  - z_owned_transport_event_t!#unstable
+  - z_loaned_transport_event_t!#unstable
+  - z_owned_link_event_t!#unstable
+  - z_loaned_link_event_t!#unstable
+  - z_owned_transport_events_listener_t!#unstable
+  - z_loaned_transport_events_listener_t!#unstable
+  - z_owned_link_events_listener_t!#unstable
+  - z_loaned_link_events_listener_t!#unstable
