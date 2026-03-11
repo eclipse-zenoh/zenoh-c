@@ -27,7 +27,7 @@ use crate::{
     z_closure_sample_call, z_closure_sample_loan, z_get_options_t, z_loaned_keyexpr_t,
     z_loaned_session_t, z_locality_default, z_locality_t, z_moved_closure_sample_t,
     z_query_consolidation_none, z_query_consolidation_t, z_query_target_default, z_query_target_t,
-    zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    z_reply_keyexpr_default, z_reply_keyexpr_t,
 };
 decl_c_type!(
     owned(
@@ -62,7 +62,7 @@ pub struct ze_querying_subscriber_options_t {
     /// The consolidation mode to be used for queries.
     query_consolidation: z_query_consolidation_t,
     /// The accepted replies for queries.
-    query_accept_replies: zc_reply_keyexpr_t,
+    query_accept_replies: z_reply_keyexpr_t,
     /// The timeout to be used for queries.
     query_timeout_ms: u64,
 }
@@ -78,7 +78,7 @@ pub extern "C" fn ze_querying_subscriber_options_default(
         query_selector: None,
         query_target: z_query_target_default(),
         query_consolidation: z_query_consolidation_none(),
-        query_accept_replies: zc_reply_keyexpr_default(),
+        query_accept_replies: z_reply_keyexpr_default(),
         query_timeout_ms: 0,
     });
 }

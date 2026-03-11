@@ -635,6 +635,7 @@ Functions
 
 .. doxygenfunction:: z_locality_default
 .. doxygenfunction:: z_reliability_default
+.. doxygenfunction:: z_priority_default
 
 .. doxygenfunction:: z_publisher_get_matching_status
 .. doxygenfunction:: z_publisher_declare_matching_listener
@@ -788,7 +789,7 @@ Types
     :members:
 .. doxygenenum:: z_query_target_t
 .. doxygenenum:: z_consolidation_mode_t
-.. doxygenenum:: zc_reply_keyexpr_t
+.. doxygenenum:: z_reply_keyexpr_t
 .. doxygenstruct:: z_query_consolidation_t
 
 .. doxygenstruct:: z_querier_options_t
@@ -816,7 +817,7 @@ Functions
 .. doxygenfunction:: z_query_consolidation_monotonic
 .. doxygenfunction:: z_query_consolidation_latest
 .. doxygenfunction:: z_query_target_default
-.. doxygenfunction:: zc_reply_keyexpr_default
+.. doxygenfunction:: z_reply_keyexpr_default
 
 .. doxygenfunction:: z_declare_querier
 .. doxygenfunction:: z_undeclare_querier

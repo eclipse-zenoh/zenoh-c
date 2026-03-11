@@ -342,34 +342,34 @@ impl From<z_reliability_t> for Reliability {
 /// @brief Key expressions types to which Queryable should reply to.
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub enum zc_reply_keyexpr_t {
+pub enum z_reply_keyexpr_t {
     /// Replies to any key expression queries.
     ANY = 0,
     /// Replies only to queries with intersecting key expressions.
     MATCHING_QUERY = 1,
 }
 
-impl From<ReplyKeyExpr> for zc_reply_keyexpr_t {
+impl From<ReplyKeyExpr> for z_reply_keyexpr_t {
     fn from(k: ReplyKeyExpr) -> Self {
         match k {
-            ReplyKeyExpr::Any => zc_reply_keyexpr_t::ANY,
-            ReplyKeyExpr::MatchingQuery => zc_reply_keyexpr_t::MATCHING_QUERY,
+            ReplyKeyExpr::Any => z_reply_keyexpr_t::ANY,
+            ReplyKeyExpr::MatchingQuery => z_reply_keyexpr_t::MATCHING_QUERY,
         }
     }
 }
 
-impl From<zc_reply_keyexpr_t> for ReplyKeyExpr {
-    fn from(k: zc_reply_keyexpr_t) -> Self {
+impl From<z_reply_keyexpr_t> for ReplyKeyExpr {
+    fn from(k: z_reply_keyexpr_t) -> Self {
         match k {
-            zc_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
-            zc_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
+            z_reply_keyexpr_t::ANY => ReplyKeyExpr::Any,
+            z_reply_keyexpr_t::MATCHING_QUERY => ReplyKeyExpr::MatchingQuery,
         }
     }
 }
 
-/// @brief Returns the default value of #zc_reply_keyexpr_t.
+/// @brief Returns the default value of #z_reply_keyexpr_t.
 #[no_mangle]
-pub extern "C" fn zc_reply_keyexpr_default() -> zc_reply_keyexpr_t {
+pub extern "C" fn z_reply_keyexpr_default() -> z_reply_keyexpr_t {
     ReplyKeyExpr::default().into()
 }
 
