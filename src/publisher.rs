@@ -427,7 +427,7 @@ pub extern "C" fn z_publisher_get_matching_status(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = z_undeclare_publisher(this);
 }
 
 #[no_mangle]
@@ -436,7 +436,7 @@ pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
 /// @return 0 in case of success, negative error code otherwise.
 pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
+        if let Err(e) = p.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }

@@ -176,7 +176,7 @@ pub extern "C" fn z_subscriber_keyexpr(subscriber: &z_loaned_subscriber_t) -> &z
 /// This is equivalent to calling `z_undeclare_subscriber()` and discarding its return value.
 #[no_mangle]
 pub extern "C" fn z_subscriber_drop(this_: &mut z_moved_subscriber_t) {
-    std::mem::drop(this_.take_rust_type())
+    let _ = z_undeclare_subscriber(this_);
 }
 
 /// Returns ``true`` if subscriber is valid, ``false`` otherwise.
@@ -191,7 +191,7 @@ pub extern "C" fn z_internal_subscriber_check(this_: &z_owned_subscriber_t) -> b
 #[no_mangle]
 pub extern "C" fn z_undeclare_subscriber(this_: &mut z_moved_subscriber_t) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
-        if let Err(e) = s.undeclare().wait() {
+        if let Err(e) = s.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
