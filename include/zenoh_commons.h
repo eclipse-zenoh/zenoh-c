@@ -67,9 +67,10 @@ typedef enum z_alloc_error_t {
  */
 typedef enum z_locality_t {
   /**
-   * Any
+   * Any.
    */
-  Z_LOCALITY_ANY = 0,
+  Z_LOCALITY_ANY = 0, 
+  Z_LOCALITY_DEFAULT = Z_LOCALITY_ANY,
   /**
   * @warning This API is deprecated. Please use `Z_LOCALITY_ANY`.
   */
@@ -103,7 +104,8 @@ typedef enum z_congestion_control_t {
   /**
    * Messages are dropped in case of congestion.
    */
-  Z_CONGESTION_CONTROL_DROP = 1,
+  Z_CONGESTION_CONTROL_DROP = 1, 
+  Z_CONGESTION_CONTROL_DEFAULT = Z_CONGESTION_CONTROL_DROP,
 #if defined(Z_FEATURE_UNSTABLE_API)
   /**
    * Messages except the first one are dropped in case of congestion.
@@ -134,7 +136,8 @@ typedef enum z_priority_t {
   /**
    * Default priority for ``Data`` messages.
    */
-  Z_PRIORITY_DATA = 5,
+  Z_PRIORITY_DATA = 5, 
+  Z_PRIORITY_DEFAULT = Z_PRIORITY_DATA,
   /**
    * Lowest priority for ``Data`` messages.
    */
@@ -153,13 +156,14 @@ typedef enum z_priority_t {
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef enum z_reliability_t {
   /**
-   * Defines reliability as ``BEST_EFFORT``
+   * Defines reliability as ``BEST_EFFORT``.
    */
   Z_RELIABILITY_BEST_EFFORT = 0,
   /**
-   * Defines reliability as ``RELIABLE``
+   * Defines reliability as ``RELIABLE``.
    */
-  Z_RELIABILITY_RELIABLE = 1,
+  Z_RELIABILITY_RELIABLE = 1, 
+  Z_RELIABILITY_DEFAULT = Z_RELIABILITY_RELIABLE,
 } z_reliability_t;
 #endif
 /**
@@ -169,7 +173,8 @@ typedef enum z_query_target_t {
   /**
    * The nearest complete queryable if any else all matching queryables.
    */
-  Z_QUERY_TARGET_BEST_MATCHING = 0,
+  Z_QUERY_TARGET_BEST_MATCHING = 0, 
+  Z_QUERY_TARGET_DEFAULT = Z_QUERY_TARGET_BEST_MATCHING,
   /**
    * All matching queryables.
    */
@@ -217,7 +222,8 @@ typedef enum z_reply_keyexpr_t {
   /**
    * Replies only to queries with intersecting key expressions.
    */
-  Z_REPLY_KEYEXPR_MATCHING_QUERY = 1,
+  Z_REPLY_KEYEXPR_MATCHING_QUERY = 1, 
+  Z_REPLY_KEYEXPR_DEFAULT = Z_REPLY_KEYEXPR_MATCHING_QUERY,
 } z_reply_keyexpr_t;
 typedef enum z_whatami_t {
   Z_WHATAMI_ROUTER = 1,
@@ -250,9 +256,10 @@ typedef enum z_keyexpr_intersection_level_t {
 #endif
 typedef enum z_sample_kind_t {
   /**
-   * The Sample was issued by a ``put`` operation.
+   * The Sample was issued by a ``put`` operation. 
    */
-  Z_SAMPLE_KIND_PUT = 0,
+  Z_SAMPLE_KIND_PUT = 0, 
+  Z_SAMPLE_KIND_DEFAULT = Z_SAMPLE_KIND_PUT,
   /**
    * The Sample was issued by a ``delete`` operation.
    */

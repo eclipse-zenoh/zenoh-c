@@ -42,7 +42,7 @@ pub type z_zint_t = c_ulong;
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum z_sample_kind_t {
-    /// The Sample was issued by a ``put`` operation.
+    /// The Sample was issued by a ``put`` operation. [Default]
     PUT = 0,
     /// The Sample was issued by a ``delete`` operation.
     DELETE = 1,
@@ -253,7 +253,7 @@ pub extern "C" fn z_internal_sample_null(this_: &mut MaybeUninit<z_owned_sample_
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub enum z_locality_t {
-    /// Any
+    /// Any.[Default]
     ANY = 0,
     /// Only from local sessions.
     SESSION_LOCAL = 1,
@@ -303,9 +303,9 @@ pub extern "C" fn zc_locality_default() -> z_locality_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_reliability_t {
-    /// Defines reliability as ``BEST_EFFORT``
+    /// Defines reliability as ``BEST_EFFORT``.
     BEST_EFFORT = 0,
-    /// Defines reliability as ``RELIABLE``
+    /// Defines reliability as ``RELIABLE``.[Default]
     RELIABLE = 1,
 }
 
@@ -345,7 +345,7 @@ impl From<z_reliability_t> for Reliability {
 pub enum z_reply_keyexpr_t {
     /// Replies to any key expression queries.
     ANY = 0,
-    /// Replies only to queries with intersecting key expressions.
+    /// Replies only to queries with intersecting key expressions.[Default]
     MATCHING_QUERY = 1,
 }
 
@@ -378,7 +378,7 @@ pub extern "C" fn z_reply_keyexpr_default() -> z_reply_keyexpr_t {
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub enum z_query_target_t {
-    /// The nearest complete queryable if any else all matching queryables.
+    /// The nearest complete queryable if any else all matching queryables.[Default]
     BEST_MATCHING = 0,
     /// All matching queryables.
     ALL = 1,
@@ -472,7 +472,7 @@ pub enum z_priority_t {
     INTERACTIVE_LOW = 3,
     /// Highest priority for ``Data`` messages.
     DATA_HIGH = 4,
-    /// Default priority for ``Data`` messages.
+    /// Default priority for ``Data`` messages.[Default]
     DATA = 5,
     /// Lowest priority for ``Data`` messages.
     DATA_LOW = 6,
@@ -520,7 +520,7 @@ pub extern "C" fn z_priority_default() -> z_priority_t {
 pub enum z_congestion_control_t {
     /// Messages are not dropped in case of congestion.
     BLOCK = 0,
-    /// Messages are dropped in case of congestion.
+    /// Messages are dropped in case of congestion.[Default]
     DROP = 1,
     #[cfg(feature = "unstable")]
     /// Messages except the first one are dropped in case of congestion.
