@@ -446,7 +446,7 @@ pub extern "C" fn z_querier_get_matching_status(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = z_undeclare_querier(this);
 }
 
 /// @brief Undeclares the given querier.
@@ -455,7 +455,7 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 #[no_mangle]
 pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
     if let Some(q) = this_.take_rust_type() {
-        if let Err(e) = q.undeclare().wait() {
+        if let Err(e) = q.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }

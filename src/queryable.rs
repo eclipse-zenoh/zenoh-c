@@ -333,7 +333,7 @@ pub extern "C" fn z_declare_background_queryable(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
-    std::mem::drop(this_.take_rust_type())
+    let _ = z_undeclare_queryable(this_);
 }
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
@@ -581,7 +581,7 @@ pub extern "C" fn z_query_accepts_replies(this_: &z_loaned_query_t) -> z_reply_k
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
     if let Some(qable) = this_.take_rust_type() {
-        if let Err(e) = qable.undeclare().wait() {
+        if let Err(e) = qable.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }

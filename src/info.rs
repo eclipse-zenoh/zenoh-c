@@ -890,7 +890,7 @@ pub extern "C" fn z_undeclare_transport_events_listener(
     this_: &mut z_moved_transport_events_listener_t,
 ) -> result::z_result_t {
     if let Some(listener) = this_.take_rust_type() {
-        if let Err(e) = listener.undeclare().wait() {
+        if let Err(e) = listener.undeclare().wait_callbacks().wait() {
             crate::report_error!("Failed to undeclare transport events listener: {}", e);
             return result::Z_ENETWORK;
         }
@@ -905,7 +905,7 @@ pub extern "C" fn z_undeclare_transport_events_listener(
 pub extern "C" fn z_transport_events_listener_drop(
     this_: &mut z_moved_transport_events_listener_t,
 ) {
-    std::mem::drop(this_.take_rust_type())
+    let _ = z_undeclare_transport_events_listener(this_);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1191,7 +1191,7 @@ pub extern "C" fn z_undeclare_link_events_listener(
     this_: &mut z_moved_link_events_listener_t,
 ) -> result::z_result_t {
     if let Some(listener) = this_.take_rust_type() {
-        if let Err(e) = listener.undeclare().wait() {
+        if let Err(e) = listener.undeclare().wait_callbacks().wait() {
             crate::report_error!("Failed to undeclare link events listener: {}", e);
             return result::Z_ENETWORK;
         }
@@ -1204,7 +1204,7 @@ pub extern "C" fn z_undeclare_link_events_listener(
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_events_listener_drop(this_: &mut z_moved_link_events_listener_t) {
-    std::mem::drop(this_.take_rust_type())
+    let _ = z_undeclare_link_events_listener(this_);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
