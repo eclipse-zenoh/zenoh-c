@@ -73,8 +73,8 @@ if [[ "$bump_deps_pattern" != '' ]]; then
 
       if [[ -n $bump_deps_branch ]]; then
         toml_set_in_place Cargo.toml "$deps_key.$dep.branch" "$bump_deps_branch"
-        # Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax
-        sed -i "/^\[$deps_key\]/,/^\[/ s/^\($dep = .*branch = \"\)[^\"]*\"/\1$bump_deps_branch\"/" Cargo.toml.in
+        # Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax. Use # separator in sed to avoid invalid sed expression error when branch contains a / (e.g. release/1.8.0)
+        sed -i "/^\[$deps_key\]/,/^\[/ s#^\($dep = .*branch = \"\)[^\"]*\"#\1$bump_deps_branch\"#" Cargo.toml.in
       fi
     done
   done
