@@ -218,7 +218,7 @@ To build with some other old rust version:
 cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.85" -DZENOHC_MSRV_1_75=TRUE
 ```
 
-To build on a system with preinstalled cargo of some old version which doesn't allow to select toolchain:
+To build on a system with preinstalled Rust of some old version if `cargo` doesn't allow to select toolchain:
 
 ```bash
 cmake ../zenoh-c -DZENOHC_MSRV_1_75=TRUE
