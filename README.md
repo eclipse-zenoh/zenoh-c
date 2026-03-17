@@ -198,24 +198,16 @@ There are two settings for building with a specific Rust version:
 - `ZENOHC_CARGO_CHANNEL` allows selecting a specific toolchain version.
 - `ZENOHC_MSRV_1_75` should be set to `TRUE` to lock dependencies to versions that can be built with Rust 1.75.
 
-When cargo channel is set to `+1.75` the `ZENOHC_MSRV_1_75` is automatically set to `TRUE`, otherwise it should be set explicitly if necessary.
-
-For example to build with Rust 1.75:
+For example to build with some old Rust version starting from Rust 1.75:
 
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0"
+cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0" -DZENOHC_MSRV_1_75=TRUE
 ```
 
 To build with nigtly Rust:
 
 ```bash
 cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+nightly"
-```
-
-To build with some other old rust version:
-
-```bash
-cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.85" -DZENOHC_MSRV_1_75=TRUE
 ```
 
 To build on a system with preinstalled Rust of some old version if `cargo` doesn't allow to select toolchain:
