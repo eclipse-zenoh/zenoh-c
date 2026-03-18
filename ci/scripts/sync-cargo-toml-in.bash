@@ -36,7 +36,10 @@ echo "Syncing Cargo.toml.in with Cargo.toml..."
 # Sync zenoh dependencies' version, branch, and git fields
 for deps_key in "dependencies" "build-dependencies"; do
     # Get all zenoh-related dependencies from this section
-    deps=$(toml get Cargo.toml "$deps_key" 2>/dev/null | jq -r 'keys[] | select(test("^zenoh"))' || true)
+    if ! deps=$(toml get Cargo.toml "$deps_key" | jq -r 'keys[] | select(test("^zenoh"))'); then
+        echo "Error: failed to read \"$deps_key\" from Cargo.toml using toml-cli and jq" >&2
+        exit 1
+    fi
 
     for dep in $deps; do
         # Get values from Cargo.toml (strip quotes from JSON output)
