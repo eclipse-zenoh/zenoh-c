@@ -48,7 +48,7 @@ jobs:
         run: |
           rm Cargo.lock
           mkdir -p build && cd build
-          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DZENOHC_MSRV_1_75=TRUE -DCMAKE_BUILD_TYPE=Release
           cmake --build . --config Release
 
   build:

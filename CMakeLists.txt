@@ -43,6 +43,7 @@ if(NOT("${_INTERNAL_ZENOHC_BUILD_TARGET}" STREQUAL ""))
 	message(STATUS "Build target: ${_INTERNAL_ZENOHC_BUILD_TARGET} (from ${_INTERNAL_ZENOHC_BUILD_TARGET_SOURCE})")
 endif()
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
+declare_cache_var(ZENOHC_MSRV_1_75 FALSE BOOL "Ensure that zenoh-c can be built Rust 1.75 by pinning dependencies to compatible versions")
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")
 declare_cache_var(ZENOHC_TREAT_WARNING_AS_ERROR OFF BOOL "Whether to treat compilation warnings as errors")
@@ -145,8 +146,8 @@ endfunction()
 #
 # Configure Cargo.toml files
 #
-# Set COMMENT_PINNED_DEPS based on ZENOHC_CARGO_CHANNEL
-if(ZENOHC_CARGO_CHANNEL STREQUAL "+1.75" OR ZENOHC_CARGO_CHANNEL STREQUAL "+1.75.0")
+# Set COMMENT_PINNED_DEPS based on ZENOHC_MSRV_1_75 to comment out or uncomment pinned dependencies in Cargo.toml.in
+if (ZENOHC_MSRV_1_75)
 	set(COMMENT_PINNED_DEPS "")
 else()
 	set(COMMENT_PINNED_DEPS "# ")
