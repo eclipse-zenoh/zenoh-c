@@ -19,7 +19,7 @@ sed_in_place() {
 ensure_toml_cli() {
     if ! command -v toml &> /dev/null; then
         echo "Installing toml-cli..."
-        cargo +stable install toml-cli
+        cargo +stable install toml-cli2
     fi
 }
 

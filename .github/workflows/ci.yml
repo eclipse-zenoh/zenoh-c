@@ -30,8 +30,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install toml-cli
-        run: cargo install toml-cli
+      - name: Install toml-cli2
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: toml-cli2
+        env:
+          CARGO_REGISTRY_DEFAULT: "crates-io"
 
       - name: Run sync script
         run: bash ci/scripts/sync-cargo-toml-in.bash
