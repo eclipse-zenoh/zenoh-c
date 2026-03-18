@@ -2,6 +2,10 @@
 
 set -xeo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=lib/cargo-toml.bash
+source "$SCRIPT_DIR/lib/cargo-toml.bash"
+
 readonly live_run=${LIVE_RUN:-false}
 # Release number
 readonly version=${VERSION:?input VERSION is required}
@@ -16,32 +20,7 @@ readonly git_user_name=${GIT_USER_NAME:?input GIT_USER_NAME is required}
 # Git actor email
 readonly git_user_email=${GIT_USER_EMAIL:?input GIT_USER_EMAIL is required}
 
-cargo +stable install toml-cli
-
-# NOTE(fuzzypixelz): toml-cli doesn't yet support in-place modification
-# See: https://github.com/gnprice/toml-cli?tab=readme-ov-file#writing-ish-toml-set
-function toml_set_in_place() {
-  local tmp=$(mktemp)
-  toml set "$1" "$2" "$3" > "$tmp"
-  mv "$tmp" "$1"
-}
-
-# Converts cmake version into a debian package version
-function to_debian_version() {
-  v="${1}"
-  deb_rev="${2:-1}"
-  # check if version has tweak component
-  if [ $(echo ${v//[^.]} | wc -c) == 4 ]; then
-    if [ ${v:0-2} == ".0" ]; then
-      deb_v=$(echo "${v}" | sed 's/\(.*\)\.0/\1~dev/')
-    else
-      deb_v=$(echo "${v}" | sed 's/\(.*\)\./\1~pre\./')
-    fi
-    echo "${deb_v}-${deb_rev}"
-  else
-    echo "${v}"
-  fi
-}
+ensure_toml_cli
 
 export GIT_AUTHOR_NAME=$git_user_name
 export GIT_AUTHOR_EMAIL=$git_user_email
@@ -53,28 +32,25 @@ printf '%s' "$version" > version.txt
 # Propagate version change to Cargo.toml and Cargo.toml.in
 cmake . -DZENOHC_BUILD_IN_SOURCE_TREE=TRUE -DCMAKE_BUILD_TYPE=Release
 # Update Debian dependency of libzenohc-dev
-debian_version=$(to_debian_version $version)
+debian_version=$(to_debian_version "$version")
 toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$debian_version)"
-# Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax
-sed -i 's/^depends = "libzenohc (=.*)"/depends = "libzenohc (='"$debian_version"')"/' Cargo.toml.in
+cargo_toml_in_set_debian_depends "libzenohc (=$debian_version)"
 
 git commit version.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $version"
 
 # Select all package dependencies that match $bump_deps_pattern and bump them to $bump_deps_version
 if [[ "$bump_deps_pattern" != '' ]]; then
   for deps_key in "dependencies" "build-dependencies"; do
-    deps=$(toml get Cargo.toml $deps_key | jq -r "keys[] | select(test(\"$bump_deps_pattern\"))")
+    deps=$(toml get Cargo.toml "$deps_key" | jq -r "keys[] | select(test(\"$bump_deps_pattern\"))")
     for dep in $deps; do
       if [[ -n $bump_deps_version ]]; then
         toml_set_in_place Cargo.toml "$deps_key.$dep.version" "$bump_deps_version"
-        # Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax
-        sed -i "/^\[$deps_key\]/,/^\[/ s/^\($dep = .*version = \"\)[^\"]*\"/\1$bump_deps_version\"/" Cargo.toml.in
+        cargo_toml_in_set_dep "$deps_key" "$dep" "version" "$bump_deps_version"
       fi
 
       if [[ -n $bump_deps_branch ]]; then
         toml_set_in_place Cargo.toml "$deps_key.$dep.branch" "$bump_deps_branch"
-        # Use sed instead of toml-cli because the CMakeFile config file is not valid toml due to presence of CMake variable replacement syntax. Use # separator in sed to avoid invalid sed expression error when branch contains a / (e.g. release/1.8.0)
-        sed -i "/^\[$deps_key\]/,/^\[/ s#^\($dep = .*branch = \"\)[^\"]*\"#\1$bump_deps_branch\"#" Cargo.toml.in
+        cargo_toml_in_set_dep "$deps_key" "$dep" "branch" "$bump_deps_branch"
       fi
     done
   done
