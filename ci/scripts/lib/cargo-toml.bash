@@ -53,7 +53,8 @@ cargo_toml_in_set_dep() {
     local file="${5:-Cargo.toml.in}"
 
     # Use # as delimiter to handle / in values (URLs, branch names like release/1.8.0)
-    sed_in_place "s#^\($dep = .*$field = \"\)[^\"]*\"#\1$value\"#" "$file"
+    # Scope the substitution to the requested section: from [$deps_key] to the next section header.
+    sed_in_place "/^\[$deps_key\]/,/^\[/ s#^\($dep = .*$field = \"\)[^\"]*\"#\1$value\"#" "$file"
 }
 
 # Update debian depends field in Cargo.toml.in
