@@ -193,13 +193,13 @@ and release files will be located at
 The minimal supported Rust version (MSRV) is 1.75, as specified in [Cargo.toml](Cargo.toml).
 By default, builds and tests are run using the version defined in [rust-toolchain.toml](rust-toolchain.toml).
 
-There are following settings related to building with a specific Rust version:
+The following settings are related to building with a specific Rust version:
 
 - `ZENOHC_CARGO_CHANNEL` allows selecting a specific toolchain version.
 - `ZENOHC_MSRV_1_75` should be set to `TRUE` to lock dependencies to versions that can be built with Rust 1.75.
 - `ZENOHC_COPY_SOURCE_CARGO_LOCK` can be set to `FALSE` if the source `Cargo.lock` is incompatible with the
-  selected channel. Automatically set to `FALSE` if `ZENOHC_MSRV_1_75` is selected: the dependencies for 
-  Rust 1.75 are known to be incompatible with source `Cargo.lock`
+  selected channel. Automatically set to `FALSE` if `ZENOHC_MSRV_1_75` is selected: the dependencies for
+  Rust 1.75 are known to be incompatible with the source `Cargo.lock`.
 
 For example to build with some old Rust version starting from Rust 1.75:
 

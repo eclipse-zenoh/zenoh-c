@@ -45,14 +45,14 @@ endif()
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_MSRV_1_75 FALSE BOOL "Ensure that zenoh-c can be built with Rust 1.75 by pinning dependencies to compatible versions")
 if (ZENOHC_MSRV_1_75)
-	# forcedly set ZENOHC_COPY_SOURCE_CARGO_LOCK to FALSE: the source Cargo.lock 
+	# forcibly set ZENOHC_COPY_SOURCE_CARGO_LOCK to FALSE: the source Cargo.lock 
 	# is incompatible with Rust 1.75 and will cause build failure if copied to build directory
 	set(ZENOHC_COPY_SOURCE_CARGO_LOCK FALSE)
-	message(STATUS "ZENOHC_COPY_SOURCE_CARGO_LOCK = FALSE (forcedly set due to ZENOHC_MSRV_1_75 = TRUE)")
-	# forcedly set ZENOHC_BUILD_IN_SOURCE_TREE to FALSE to avoid build failures due direct usage of incompatible
-	# Cargo.lock in the root of the source tree.
+	message(STATUS "ZENOHC_COPY_SOURCE_CARGO_LOCK = FALSE (forcibly set due to ZENOHC_MSRV_1_75 = TRUE)")
+	# forcibly set ZENOHC_BUILD_IN_SOURCE_TREE to FALSE to avoid build failures due to direct use of an incompatible
+	# Cargo.lock file at the root of the source tree.
 	set(ZENOHC_BUILD_IN_SOURCE_TREE FALSE)
-	message(STATUS "ZENOHC_BUILD_IN_SOURCE_TREE = FALSE (forcedly set due to ZENOHC_MSRV_1_75 = TRUE)")
+	message(STATUS "ZENOHC_BUILD_IN_SOURCE_TREE = FALSE (forcibly set due to ZENOHC_MSRV_1_75 = TRUE)")
 else()
 	declare_cache_var(ZENOHC_COPY_SOURCE_CARGO_LOCK TRUE BOOL "Copy Cargo.lock to build directory to ensure reproducible builds. Set to FALSE if source Cargo.lock is incompatible with the selected toolchain version")
 endif()
