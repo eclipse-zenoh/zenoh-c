@@ -45,7 +45,7 @@ declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Shoul
 declare_cache_var(ZENOHC_MSRV_1_75 FALSE BOOL "Ensure that zenoh-c can be built with Rust 1.75 by pinning dependencies to compatible versions")
 if (ZENOHC_MSRV_1_75)
 	message(STATUS "Due to ZENOHC_MSRV_1_75 setting the ZENOHC_COPY_SOURCE_CARGO_LOCK and ZENOHC_BUILD_IN_SOURCE_TREE cache variables are forcibly set to FALSE to avoid build failures due to incompatible source Cargo.lock file")
-	# forcibly set ZENOHC_COPY_SOURCE_CARGO_LOCK to FALSE: the source Cargo.lock 
+	# forcibly set ZENOHC_COPY_SOURCE_CARGO_LOCK to FALSE: the source Cargo.lock
 	# is incompatible with Rust 1.75 and will cause build failure if copied to build directory
 	declare_cache_var(ZENOHC_COPY_SOURCE_CARGO_LOCK FALSE BOOL "Copy Cargo.lock to build directory to ensure reproducible builds" FORCE)
 	# forcibly set ZENOHC_BUILD_IN_SOURCE_TREE to FALSE to avoid build failures due to direct use of an incompatible
