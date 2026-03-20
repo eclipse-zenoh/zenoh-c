@@ -26,7 +26,6 @@ enable_testing()
 #
 # Configuration options
 #
-declare_cache_var_true_if_vscode(ZENOHC_BUILD_IN_SOURCE_TREE "Do build inside source tree")
 declare_cache_var(ZENOHC_BUILD_WITH_SHARED_MEMORY FALSE BOOL "Enable shared-memory zenoh-c feature")
 declare_cache_var(ZENOHC_BUILD_WITH_UNSTABLE_API FALSE BOOL "Enable unstable API feature")
 declare_cache_var(ZENOHC_BUILD_TESTS_WITH_CXX FALSE BOOL "Use C++ compiler for building tests to check API's C++ compatibility")
@@ -45,16 +44,16 @@ endif()
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
 declare_cache_var(ZENOHC_MSRV_1_75 FALSE BOOL "Ensure that zenoh-c can be built with Rust 1.75 by pinning dependencies to compatible versions")
 if (ZENOHC_MSRV_1_75)
+	message(STATUS "Due to ZENOHC_MSRV_1_75 setting the ZENOHC_COPY_SOURCE_CARGO_LOCK and ZENOHC_BUILD_IN_SOURCE_TREE cache variables are forcibly set to FALSE to avoid build failures due to incompatible source Cargo.lock file")
 	# forcibly set ZENOHC_COPY_SOURCE_CARGO_LOCK to FALSE: the source Cargo.lock 
 	# is incompatible with Rust 1.75 and will cause build failure if copied to build directory
-	set(ZENOHC_COPY_SOURCE_CARGO_LOCK FALSE)
-	message(STATUS "ZENOHC_COPY_SOURCE_CARGO_LOCK = FALSE (forcibly set due to ZENOHC_MSRV_1_75 = TRUE)")
+	declare_cache_var(ZENOHC_COPY_SOURCE_CARGO_LOCK FALSE BOOL "Copy Cargo.lock to build directory to ensure reproducible builds" FORCE)
 	# forcibly set ZENOHC_BUILD_IN_SOURCE_TREE to FALSE to avoid build failures due to direct use of an incompatible
 	# Cargo.lock file at the root of the source tree.
-	set(ZENOHC_BUILD_IN_SOURCE_TREE FALSE)
-	message(STATUS "ZENOHC_BUILD_IN_SOURCE_TREE = FALSE (forcibly set due to ZENOHC_MSRV_1_75 = TRUE)")
+	declare_cache_var(ZENOHC_BUILD_IN_SOURCE_TREE FALSE BOOL "Do build inside source tree" FORCE)
 else()
-	declare_cache_var(ZENOHC_COPY_SOURCE_CARGO_LOCK TRUE BOOL "Copy Cargo.lock to build directory to ensure reproducible builds. Set to FALSE if source Cargo.lock is incompatible with the selected toolchain version")
+	declare_cache_var_true_if_vscode(ZENOHC_BUILD_IN_SOURCE_TREE "Do build inside source tree")
+	declare_cache_var(ZENOHC_COPY_SOURCE_CARGO_LOCK TRUE BOOL "Copy Cargo.lock to build directory to ensure reproducible builds")
 endif()
 declare_cache_var(ZENOHC_CARGO_FLAGS "" STRING "Additional cargo flags")
 declare_cache_var(BUILD_SHARED_LIBS TRUE BOOL "Alias zenohc::lib target to zenohc::shared if TRUE, to zenohc::static if FALSE")

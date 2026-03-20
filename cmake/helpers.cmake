@@ -29,7 +29,16 @@ endmacro()
 # Declare cache variable and print VARIABLE = value on configuration stage
 #
 function(declare_cache_var var default_value type docstring)
-	set(${var} ${default_value} CACHE ${type} ${docstring})
+	# Optional fifth parameter `force`: either "FORCE" or empty.
+	set(force "")
+	if(ARGC GREATER_EQUAL 5)
+		set(force "${ARGV4}")
+	endif()
+	if("${force}" STREQUAL "FORCE")
+		set(${var} ${default_value} CACHE ${type} ${docstring} FORCE)
+	else()
+		set(${var} ${default_value} CACHE ${type} ${docstring})
+	endif()
 	status_print(${var})
 endfunction()
 
