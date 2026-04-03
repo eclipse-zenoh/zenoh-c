@@ -80,7 +80,7 @@ zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git",
 zenoh-ext = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369", default-features = false, features=["internal"] }
 zenoh-runtime = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369" }
 zenoh-util = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369" }
-@COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369" }
+zenoh-pinned-deps-1-75 = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369" }
 rustc-hash = "=2.1.1"
 
 [target.'cfg(unix)'.dependencies]
@@ -88,7 +88,7 @@ ctor = "0.4.1"
 
 [build-dependencies]
 zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369", default-features = false, features = ["internal"] }
-@COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369" }
+zenoh-pinned-deps-1-75 = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", rev = "f27282e78c6e42e04249349049fa68cfbc941369" }
 cbindgen = "0.29.0"
 fs2 = "0.4.3"
 regex = "1.11.1"
