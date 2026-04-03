@@ -128,12 +128,8 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/cbindgen.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/version.txt
+			${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 			DESTINATION ${cargo_toml_dir})
-		if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock")
-			file(COPY
-				${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
-				DESTINATION ${cargo_toml_dir})
-		endif()
 		file(COPY
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh.h
 			${CMAKE_CURRENT_SOURCE_DIR}/include/zenoh_memory.h
@@ -244,6 +240,17 @@ set_genexpr_condition(cargo_flags DEBUG $<CONFIG:Debug>
 	"--manifest-path=${cargo_toml_dir_debug}/Cargo.toml"
 	"--release;--manifest-path=${cargo_toml_dir_release}/Cargo.toml")
 set(cargo_flags ${cargo_flags} ${ZENOHC_CARGO_FLAGS})
+
+# if Cargo.lock exists near the manifest file, use "--locked" flag to ensure Cargo.lock is respected
+# It may not exist only if it's manually deleted in the source directory for explicit regeneration. 
+# It's unconditionally copied to different build directory with `configure_cargo_toml`
+# so build out of source tree is impossible without Cargo.lock in the source directory.
+set_genexpr_condition(cargo_lock_file DEBUG $<CONFIG:Debug>
+	"${cargo_toml_dir_debug}/Cargo.lock"
+	"${cargo_toml_dir_release}/Cargo.lock")
+if(EXISTS ${cargo_lock_file})
+	set(cargo_flags ${cargo_flags} --locked)
+endif()
 
 if(ZENOHC_BUILD_WITH_SHARED_MEMORY)
 	set(cargo_flags ${cargo_flags} --features=shared-memory)
