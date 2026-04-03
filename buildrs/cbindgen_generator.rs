@@ -32,7 +32,8 @@ static RUST_TO_C_FEATURES: phf::Map<&'static str, &'static str> = phf_map! {
     "transport_udp" =>  "Z_FEATURE_TRANSPORT_UDP",
     "transport_unixsock-stream" =>  "Z_FEATURE_TRANSPORT_UNIXSOCK_STREAM",
     "transport_ws" =>  "Z_FEATURE_TRANSPORT_WS",
-    "transport_vsock" => "Z_FEATURE_VSOCK"
+    "transport_vsock" => "Z_FEATURE_VSOCK",
+    "transport_quic_datagram"  => "Z_FEATURE_TRANSPORT_QUIC_DATAGRAM",
 };
 
 pub fn generate_c_headers() {
