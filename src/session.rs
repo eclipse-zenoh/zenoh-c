@@ -256,7 +256,7 @@ pub extern "C" fn z_close(
     #[allow(unused)] options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
     #[allow(unused_mut)]
-    let mut close_builder = session.as_rust_type_mut().close();
+    let mut close_builder = session.as_rust_type_mut().close().wait_callbacks();
 
     #[cfg(feature = "unstable")]
     if let Some(options) = options {
@@ -294,7 +294,11 @@ pub extern "C" fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
 /// Closes and invalidates the session.
 #[no_mangle]
 pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
-    let _ = this_.take_rust_type();
+    if let Some(s) = this_.take_rust_type() {
+        // Session in zenoh-c is non-clonnable,
+        // so it it safe to close it on drop
+        let _ = s.close().wait_callbacks().wait();
+    }
 }
 
 #[cfg(feature = "unstable")]
