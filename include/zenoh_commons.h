@@ -5231,10 +5231,11 @@ struct z_loaned_bytes_t *z_query_payload_mut(struct z_loaned_query_t *this_);
 /**
  * Sends a reply to a query.
  *
- * This function must be called inside of a Queryable callback passing the
- * query received as parameters of the callback function. This function can
- * be called multiple times to send multiple replies to a query. The reply
- * will be considered complete when the Queryable callback returns.
+ * This function must be called passing the query received as parameters of the
+ * Queryable callback function. This function can be called multiple times to
+ * send multiple replies to a query. The reply will be considered complete when
+ * the query object is dropped, allowing `z_query_take_from_loaned()` to be
+ * used to produce replies outside of the Queryable callback.
  *
  * @param this_: The query to reply to.
  * @param key_expr: The key of this reply.
@@ -5251,10 +5252,11 @@ z_result_t z_query_reply(const struct z_loaned_query_t *this_,
 /**
  * Sends a delete reply to a query.
  *
- * This function must be called inside of a Queryable callback passing the
- * query received as parameters of the callback function. This function can
- * be called multiple times to send multiple replies to a query. The reply
- * will be considered complete when the Queryable callback returns.
+ * This function must be called passing the query received as parameters of the
+ * Queryable callback function. This function can be called multiple times to
+ * send multiple replies to a query. The reply will be considered complete when
+ * the query object is dropped, allowing `z_query_take_from_loaned()` to be
+ * used to produce replies outside of the Queryable callback.
  *
  * @param this_: The query to reply to.
  * @param key_expr: The key of this delete reply.
@@ -5273,10 +5275,11 @@ ZENOHC_API void z_query_reply_del_options_default(struct z_query_reply_del_optio
 /**
  * Sends a error reply to a query.
  *
- * This function must be called inside of a Queryable callback passing the
- * query received as parameters of the callback function. This function can
- * be called multiple times to send multiple replies to a query. The reply
- * will be considered complete when the Queryable callback returns.
+ * This function must be called passing the query received as parameters of the
+ * Queryable callback function. This function can be called multiple times to
+ * send multiple replies to a query. The reply will be considered complete when
+ * the query object is dropped, allowing `z_query_take_from_loaned()` to be
+ * used to produce replies outside of the Queryable callback.
  *
  * @param this_: The query to reply to.
  * @param payload: The payload carrying error message. Will be consumed.
