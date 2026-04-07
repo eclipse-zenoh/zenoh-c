@@ -49,12 +49,12 @@ jobs:
           fi
 
   check_rust:
-    name: Check zenoh-c using Rust 1.75
+    name: Check cargo lock generation using Rust 1.75 (except Windows due to multi config build issue)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest]
 
     steps:
       - name: Clone this repository
