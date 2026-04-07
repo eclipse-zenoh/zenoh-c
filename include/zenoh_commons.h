@@ -5576,8 +5576,7 @@ const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_
  *
  * Returns `NULL`, if sample does not contain any attachment.
  */
-ZENOHC_API
-struct z_loaned_bytes_t *z_sample_attachment_mut(struct z_loaned_sample_t *this_);
+ZENOHC_API struct z_loaned_bytes_t *z_sample_attachment_mut(struct z_loaned_sample_t *this_);
 /**
  * Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
  */
