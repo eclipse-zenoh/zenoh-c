@@ -32,7 +32,7 @@ use crate::{
     z_loaned_session_t, z_locality_default, z_locality_t, z_matching_status_t, z_moved_bytes_t,
     z_moved_closure_matching_status_t, z_moved_closure_reply_t, z_moved_encoding_t,
     z_moved_querier_t, z_owned_matching_listener_t, z_owned_querier_t, z_priority_t,
-    z_query_consolidation_t, z_query_target_t, zc_reply_keyexpr_default, zc_reply_keyexpr_t,
+    z_query_consolidation_t, z_query_target_t, z_reply_keyexpr_default, z_reply_keyexpr_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -53,7 +53,7 @@ pub struct z_querier_options_t {
     /// The allowed destination for the querier queries.
     pub allowed_destination: z_locality_t,
     /// The accepted replies for the querier queries.
-    pub accept_replies: zc_reply_keyexpr_t,
+    pub accept_replies: z_reply_keyexpr_t,
     /// The priority of the querier queries.
     pub priority: z_priority_t,
     /// The timeout for the querier queries in milliseconds. 0 means default query timeout from zenoh configuration.
@@ -70,7 +70,7 @@ pub extern "C" fn z_querier_options_default(this_: &mut MaybeUninit<z_querier_op
         priority: Priority::default().into(),
         is_express: false,
         allowed_destination: z_locality_default(),
-        accept_replies: zc_reply_keyexpr_default(),
+        accept_replies: z_reply_keyexpr_default(),
         timeout_ms: 0,
     });
 }
@@ -446,7 +446,7 @@ pub extern "C" fn z_querier_get_matching_status(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = z_undeclare_querier(this);
 }
 
 /// @brief Undeclares the given querier.
@@ -455,7 +455,7 @@ pub extern "C" fn z_querier_drop(this: &mut z_moved_querier_t) {
 #[no_mangle]
 pub extern "C" fn z_undeclare_querier(this_: &mut z_moved_querier_t) -> result::z_result_t {
     if let Some(q) = this_.take_rust_type() {
-        if let Err(e) = q.undeclare().wait() {
+        if let Err(e) = q.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }

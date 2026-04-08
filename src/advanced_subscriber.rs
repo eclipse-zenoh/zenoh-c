@@ -268,7 +268,7 @@ pub unsafe extern "C" fn ze_advanced_subscriber_loan(
 /// This is equivalent to calling `ze_undeclare_advanced_subscriber()` and discarding its return value.
 #[no_mangle]
 pub extern "C" fn ze_advanced_subscriber_drop(this_: &mut ze_moved_advanced_subscriber_t) {
-    std::mem::drop(this_.take_rust_type())
+    let _ = ze_undeclare_advanced_subscriber(this_);
 }
 
 /// Returns ``true`` if advanced subscriber is valid, ``false`` otherwise.
@@ -346,7 +346,7 @@ pub extern "C" fn ze_undeclare_advanced_subscriber(
     this_: &mut ze_moved_advanced_subscriber_t,
 ) -> result::z_result_t {
     if let Some(s) = this_.take_rust_type() {
-        if let Err(e) = s.undeclare().wait() {
+        if let Err(e) = s.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
@@ -387,15 +387,15 @@ pub extern "C" fn ze_internal_sample_miss_listener_check(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given sample miss listener, droping and invalidating it.
+/// @brief Undeclares the given sample miss listener, dropping and invalidating it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_sample_miss_listener_drop(this: &mut ze_moved_sample_miss_listener_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = ze_undeclare_sample_miss_listener(this);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Undeclares the given sample miss listener, droping and invalidating it.
+/// @brief Undeclares the given sample miss listener, dropping and invalidating it.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -403,7 +403,7 @@ pub extern "C" fn ze_undeclare_sample_miss_listener(
     this: &mut ze_moved_sample_miss_listener_t,
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
-        if let Err(e) = m.undeclare().wait() {
+        if let Err(e) = m.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }

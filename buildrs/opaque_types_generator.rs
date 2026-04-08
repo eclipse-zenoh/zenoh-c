@@ -96,10 +96,7 @@ impl Drop for {type_name} {{
     if good_error_count != total_error_count {
         panic!(
             "Failed to generate opaque types: there are {} errors in the input data, but only {} of them were processed as information about opaque types\n\nCommand executed:\n\n{}\n\nCompiler output:\n\n{}",
-            total_error_count,
-            good_error_count,
-            command,
-            data_in
+            total_error_count, good_error_count, command, data_in
         );
     }
 

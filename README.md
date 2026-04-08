@@ -188,26 +188,36 @@ and release files will be located at
 
 > :warning: **WARNING** :warning: : Perhaps additional efforts are necessary, that will depend of your environment.
 
-## Rust Version
+## Minimal supported Rust Version
 
 The minimal supported Rust version (MSRV) is 1.75, as specified in [Cargo.toml](Cargo.toml).
-Builds and tests are run using the version defined in [rust-toolchain.toml](rust-toolchain.toml).
-The rust version can be specified with CMake variable `ZENOHC_CARGO_CHANNEL`:
+By default, builds and tests are run using the version defined in [rust-toolchain.toml](rust-toolchain.toml).
+
+The following settings are related to building with a specific Rust version:
+
+- `ZENOHC_CARGO_CHANNEL` allows selecting a specific toolchain version.
+- `ZENOHC_MSRV_1_75` should be set to `TRUE` to lock dependencies to versions that can be built with Rust 1.75.
+- `ZENOHC_COPY_SOURCE_CARGO_LOCK` can be set to `FALSE` if the source `Cargo.lock` is incompatible with the
+  selected channel. Automatically set to `FALSE` if `ZENOHC_MSRV_1_75` is selected: the dependencies for
+  Rust 1.75 are known to be incompatible with the source `Cargo.lock`.
+
+For example to build with some old Rust version starting from Rust 1.75:
 
 ```bash
-cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0"
+cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+1.75.0" -DZENOHC_MSRV_1_75=TRUE
 ```
 
-or
+To build with nigtly Rust:
 
 ```bash
 cmake ../zenoh-c -DZENOHC_CARGO_CHANNEL="+nightly"
 ```
 
-Special efforts are made to keep Rust 1.75 compatibility. The base `zenoh` project provides crate [zenoh-pinned-deps-1-75](https://crates.io/crates/zenoh-pinned-deps-1-75) which
-pins crate dependencies to latest versions compatible with rust 1.75. This crate is separate from the [zenoh](https://crates.io/crates/zenoh) itself to avoid staying on obsolete versions and crate version conflicts.
-If some project needs compatibility with Rust 1.75, it adds a dependency on `zenoh-pinned-deps-1-75` and if necessary adds some additional version pins (like `crate_name="=X.Y.Z"`).
-On the `zenoh-c` level there is a special check in `CMakeLists.txt` which uncomments pinning in the generated `Cargo.toml` when `ZENOHC_CARGO_CHANNEL` == `+1.75.0`.
+To build on a system with preinstalled Rust of some old version if `cargo` doesn't allow to select toolchain:
+
+```bash
+cmake ../zenoh-c -DZENOHC_MSRV_1_75=TRUE
+```
 
 ## Zenoh features support (enabling/disabling protocols, etc)
 

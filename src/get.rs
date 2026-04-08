@@ -33,8 +33,8 @@ use crate::{
     z_closure_reply_call, z_closure_reply_loan, z_congestion_control_t, z_consolidation_mode_t,
     z_loaned_bytes_t, z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_sample_t,
     z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t, z_moved_closure_reply_t,
-    z_moved_encoding_t, z_priority_t, z_query_target_t, zc_reply_keyexpr_default,
-    zc_reply_keyexpr_t, CStringView,
+    z_moved_encoding_t, z_priority_t, z_query_target_t, z_reply_keyexpr_default, z_reply_keyexpr_t,
+    CStringView,
 };
 #[cfg(feature = "unstable")]
 use crate::{
@@ -224,7 +224,7 @@ pub struct z_get_options_t {
     /// The allowed destination for the query.
     pub allowed_destination: z_locality_t,
     /// The accepted replies for the query.
-    pub accept_replies: zc_reply_keyexpr_t,
+    pub accept_replies: z_reply_keyexpr_t,
     /// The priority of the query.
     pub priority: z_priority_t,
     #[cfg(feature = "unstable")]
@@ -269,7 +269,7 @@ pub extern "C" fn z_get_options_default(this_: &mut MaybeUninit<z_get_options_t>
         consolidation: QueryConsolidation::default().into(),
         congestion_control: CongestionControl::DEFAULT_REQUEST.into(),
         allowed_destination: z_locality_default(),
-        accept_replies: zc_reply_keyexpr_default(),
+        accept_replies: z_reply_keyexpr_default(),
         priority: Priority::default().into(),
         is_express: false,
         timeout_ms: 0,

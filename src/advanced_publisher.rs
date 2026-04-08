@@ -129,7 +129,10 @@ impl From<&ze_advanced_publisher_sample_miss_detection_options_t> for MissDetect
         } else if val.heartbeat_mode == ze_advanced_publisher_heartbeat_mode_t::PERIODIC {
             m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
         } else if val.heartbeat_period_ms > 0 {
-            tracing::warn!("ze_advanced_publisher_sample_miss_detection_options_t: heartbeat_mode=NONE but heartbeat_period_ms={}. heartbeat_mode=PERIODIC is used instead, but this behavor will be removed later", val.heartbeat_period_ms);
+            tracing::warn!(
+                "ze_advanced_publisher_sample_miss_detection_options_t: heartbeat_mode=NONE but heartbeat_period_ms={}. heartbeat_mode=PERIODIC is used instead, but this behavor will be removed later",
+                val.heartbeat_period_ms
+            );
             m = m.heartbeat(Duration::from_millis(val.heartbeat_period_ms))
         }
         m
@@ -516,7 +519,7 @@ pub extern "C" fn ze_advanced_publisher_get_matching_status(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn ze_advanced_publisher_drop(this: &mut ze_moved_advanced_publisher_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = ze_undeclare_advanced_publisher(this);
 }
 
 #[no_mangle]
@@ -528,7 +531,7 @@ pub extern "C" fn ze_undeclare_advanced_publisher(
     this_: &mut ze_moved_advanced_publisher_t,
 ) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
+        if let Err(e) = p.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }

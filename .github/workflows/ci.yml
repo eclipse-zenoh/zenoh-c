@@ -23,6 +23,31 @@ jobs:
       - name: Run clang-format dry-run
         run: find include/ src/ tests/ examples/ -iname "*.h" -o -iname "*.c" | xargs clang-format -n -Werror
 
+  check_cargo_toml_in_sync:
+    name: Check Cargo.toml.in is in sync with Cargo.toml
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install toml-cli2
+        uses: taiki-e/cache-cargo-install-action@v2
+        with:
+          tool: toml-cli2
+        env:
+          CARGO_REGISTRY_DEFAULT: "crates-io"
+
+      - name: Run sync script
+        run: bash ci/scripts/sync-cargo-toml-in.bash
+
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code Cargo.toml.in; then
+            echo "ERROR: Cargo.toml.in is out of sync with Cargo.toml"
+            echo "Run 'bash ci/scripts/sync-cargo-toml-in.bash' and commit the changes"
+            exit 1
+          fi
+
   check_rust:
     name: Check zenoh-c using Rust 1.75
     runs-on: ${{ matrix.os }}
@@ -48,7 +73,7 @@ jobs:
         run: |
           rm Cargo.lock
           mkdir -p build && cd build
-          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DZENOHC_MSRV_1_75=TRUE -DCMAKE_BUILD_TYPE=Release
           cmake --build . --config Release
 
   build:
@@ -283,7 +308,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [check_rust, build, cross-compile-mac-os, cross-compile-ubuntu, markdown_lint]
+    needs: [check_format, check_cargo_toml_in_sync, check_rust, build, cross-compile-mac-os, cross-compile-ubuntu, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass

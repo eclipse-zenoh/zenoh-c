@@ -110,7 +110,7 @@ pub extern "C" fn ze_closure_miss_call(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Drops the closure, resetting it to its gravestone state. Droping an uninitialized closure is a no-op.
+/// @brief Drops the closure, resetting it to its gravestone state. Dropping an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn ze_closure_miss_drop(closure_: &mut ze_moved_closure_miss_t) {
     let _ = closure_.take_rust_type();

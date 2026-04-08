@@ -47,14 +47,14 @@ pub struct z_matching_status_t {
     pub matching: bool,
 }
 
-/// @brief Undeclares the given matching listener, droping and invalidating it.
+/// @brief Undeclares the given matching listener, dropping and invalidating it.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_matching_listener_drop(this: &mut z_moved_matching_listener_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = z_undeclare_matching_listener(this);
 }
 
-/// @brief Undeclares the given matching listener, droping and invalidating it.
+/// @brief Undeclares the given matching listener, dropping and invalidating it.
 /// @return 0 in case of success, negative error code otherwise.
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
@@ -62,7 +62,7 @@ pub extern "C" fn z_undeclare_matching_listener(
     this: &mut z_moved_matching_listener_t,
 ) -> result::z_result_t {
     if let Some(m) = this.take_rust_type() {
-        if let Err(e) = m.undeclare().wait() {
+        if let Err(e) = m.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }
