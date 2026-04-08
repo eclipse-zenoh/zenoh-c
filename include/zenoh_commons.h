@@ -7127,26 +7127,6 @@ void zc_internal_transport_from_fields(struct z_owned_transport_t *this_,
                                        bool is_multicast);
 #endif
 /**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a transport from individual fields, including shared memory support.
- *
- * @param this_: The destination for the constructed transport.
- * @param zid: The ZenohId of the remote node.
- * @param whatami: The whatami (node type) of the remote node.
- * @param is_qos: Whether the transport supports QoS.
- * @param is_multicast: Whether the transport is multicast.
- * @param is_shm: Whether the transport supports shared memory.
- */
-#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_SHARED_MEMORY))
-ZENOHC_API
-void zc_internal_transport_from_fields_shm(struct z_owned_transport_t *this_,
-                                           struct z_id_t zid,
-                                           enum z_whatami_t whatami,
-                                           bool is_qos,
-                                           bool is_multicast,
-                                           bool is_shm);
-#endif
-/**
  * @warning This API is deprecated. Please use `z_locality_default().
  * @brief Returns default value of `z_locality_t`
  */
