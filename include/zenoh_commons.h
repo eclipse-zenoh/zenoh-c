@@ -7117,6 +7117,7 @@ void zc_internal_shm_client_list_null(struct zc_owned_shm_client_list_t *this_);
  * @param whatami: The whatami (node type) of the remote node.
  * @param is_qos: Whether the transport supports QoS.
  * @param is_multicast: Whether the transport is multicast.
+ * @param is_shm: Whether the transport uses shared memory (only present when shared memory feature is enabled).
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -7124,7 +7125,8 @@ void zc_internal_transport_from_fields(struct z_owned_transport_t *this_,
                                        struct z_id_t zid,
                                        enum z_whatami_t whatami,
                                        bool is_qos,
-                                       bool is_multicast);
+                                       bool is_multicast,
+                                       bool is_shm);
 #endif
 /**
  * @warning This API is deprecated. Please use `z_locality_default().

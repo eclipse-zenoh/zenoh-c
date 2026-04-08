@@ -237,6 +237,7 @@ pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_own
 /// @param whatami: The whatami (node type) of the remote node.
 /// @param is_qos: Whether the transport supports QoS.
 /// @param is_multicast: Whether the transport is multicast.
+/// @param is_shm: Whether the transport uses shared memory (only present when shared memory feature is enabled).
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn zc_internal_transport_from_fields(
@@ -245,6 +246,7 @@ pub extern "C" fn zc_internal_transport_from_fields(
     whatami: z_whatami_t,
     is_qos: bool,
     is_multicast: bool,
+    #[cfg(feature = "shared-memory")] is_shm: bool,
 ) {
     let zid = *zid.as_rust_type_ref();
     let whatami = match whatami {
@@ -257,7 +259,7 @@ pub extern "C" fn zc_internal_transport_from_fields(
         whatami,
         is_qos,
         is_multicast,
-        #[cfg(feature = "shared-memory")] false,
+        #[cfg(feature = "shared-memory")] is_shm,
     );
     this_.as_rust_type_mut_uninit().write(Some(transport));
 }
