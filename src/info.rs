@@ -230,26 +230,62 @@ pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_own
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs a transport from individual fields.
-///
-/// @param this_: The destination for the constructed transport.
-/// @param zid: The ZenohId of the remote node.
-/// @param whatami: The whatami (node type) of the remote node.
-/// @param is_qos: Whether the transport supports QoS.
-/// @param is_multicast: Whether the transport is multicast.
-/// @param is_shm: Whether the transport uses shared memory (only present when shared memory feature is enabled).
+/// @brief Options for constructing a transport via `zc_internal_create_transport`.
+#[cfg(feature = "unstable")]
+#[repr(C)]
+pub struct zc_internal_create_transport_options_t {
+    /// The ZenohId of the remote node.
+    pub zid: z_id_t,
+    /// The whatami (node type) of the remote node.
+    pub whatami: z_whatami_t,
+    /// Whether the transport supports QoS.
+    pub is_qos: bool,
+    /// Whether the transport is multicast.
+    pub is_multicast: bool,
+    #[cfg(feature = "shared-memory")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Whether the transport uses shared memory (only present when shared memory feature is enabled).
+    pub is_shm: bool,
+}
+
+#[cfg(feature = "unstable")]
+impl Default for zc_internal_create_transport_options_t {
+    fn default() -> Self {
+        Self {
+            zid: ZenohId::default().into_c_type(),
+            whatami: z_whatami_t::CLIENT,
+            is_qos: false,
+            is_multicast: false,
+            #[cfg(feature = "shared-memory")]
+            is_shm: false,
+        }
+    }
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs the default value for `zc_internal_create_transport_options_t`.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn zc_internal_transport_from_fields(
-    this_: &mut MaybeUninit<z_owned_transport_t>,
-    zid: z_id_t,
-    whatami: z_whatami_t,
-    is_qos: bool,
-    is_multicast: bool,
-    #[cfg(feature = "shared-memory")] is_shm: bool,
+pub extern "C" fn zc_internal_create_transport_options_default(
+    this_: &mut MaybeUninit<zc_internal_create_transport_options_t>,
 ) {
-    let zid = *zid.as_rust_type_ref();
-    let whatami = match whatami {
+    this_.write(zc_internal_create_transport_options_t::default());
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs a transport from the given options.
+///
+/// @param this_: The destination for the constructed transport.
+/// @param options: The options specifying transport parameters.
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn zc_internal_create_transport(
+    this_: &mut MaybeUninit<z_owned_transport_t>,
+    options: &zc_internal_create_transport_options_t,
+) {
+    let zid = *options.zid.as_rust_type_ref();
+    let whatami = match options.whatami {
         z_whatami_t::ROUTER => WhatAmI::Router,
         z_whatami_t::PEER => WhatAmI::Peer,
         z_whatami_t::CLIENT => WhatAmI::Client,
@@ -257,9 +293,10 @@ pub extern "C" fn zc_internal_transport_from_fields(
     let transport = Transport::new_from_fields(
         zid,
         whatami,
-        is_qos,
-        is_multicast,
-        #[cfg(feature = "shared-memory")] is_shm,
+        options.is_qos,
+        options.is_multicast,
+        #[cfg(feature = "shared-memory")]
+        options.is_shm,
     );
     this_.as_rust_type_mut_uninit().write(Some(transport));
 }
