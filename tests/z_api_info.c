@@ -716,19 +716,6 @@ void test_link_events_filtered() {
     z_drop(z_move(s2));
 }
 
-void test_zc_internal_create_transport_options_default() {
-    printf("=== Testing zc_internal_create_transport_options_default ===\n");
-    zc_internal_create_transport_options_t opts;
-    zc_internal_create_transport_options_default(&opts);
-    assert(opts.whatami == Z_WHATAMI_CLIENT && "Default whatami should be CLIENT");
-    assert(opts.is_qos == false && "Default is_qos should be false");
-    assert(opts.is_multicast == false && "Default is_multicast should be false");
-#if defined(Z_FEATURE_SHARED_MEMORY)
-    assert(opts.is_shm == false && "Default is_shm should be false");
-#endif
-    printf("PASS\n\n");
-}
-
 void test_zc_internal_create_transport_all_whatami() {
     printf("=== Testing zc_internal_create_transport for all whatami variants ===\n");
 
@@ -739,15 +726,12 @@ void test_zc_internal_create_transport_all_whatami() {
         z_id_t zid = {0};
         zid.id[15] = (uint8_t)(i + 1);
 
-        zc_internal_create_transport_options_t opts;
-        zc_internal_create_transport_options_default(&opts);
-        opts.zid = zid;
-        opts.whatami = variants[i];
-        opts.is_qos = true;
-        opts.is_multicast = false;
-
         z_owned_transport_t transport;
-        zc_internal_create_transport(&transport, &opts);
+#if defined(Z_FEATURE_SHARED_MEMORY)
+        zc_internal_create_transport_shm(&transport, zid, variants[i], true, false, false);
+#else
+        zc_internal_create_transport(&transport, zid, variants[i], true, false);
+#endif
 
         assert(z_internal_check(transport) && "Transport must be valid after creation");
 
@@ -769,11 +753,13 @@ void test_zc_internal_create_transport_all_whatami() {
 void test_zc_internal_create_transport_drop() {
     printf("=== Testing zc_internal_create_transport ownership/drop semantics ===\n");
 
-    zc_internal_create_transport_options_t opts;
-    zc_internal_create_transport_options_default(&opts);
-
+    z_id_t zid = {0};
     z_owned_transport_t transport;
-    zc_internal_create_transport(&transport, &opts);
+#if defined(Z_FEATURE_SHARED_MEMORY)
+    zc_internal_create_transport_shm(&transport, zid, Z_WHATAMI_CLIENT, false, false, false);
+#else
+    zc_internal_create_transport(&transport, zid, Z_WHATAMI_CLIENT, false, false);
+#endif
 
     assert(z_internal_check(transport) && "Transport must be valid before drop");
     z_drop(z_move(transport));
@@ -819,7 +805,6 @@ int main(int argc, char** argv) {
     test_link_events_filtered();
 
     // Test zc_internal_create_transport functions
-    test_zc_internal_create_transport_options_default();
     test_zc_internal_create_transport_all_whatami();
     test_zc_internal_create_transport_drop();
 

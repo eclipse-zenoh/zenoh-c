@@ -1255,38 +1255,6 @@ typedef struct zc_moved_closure_log_t {
 typedef struct zc_moved_concurrent_close_handle_t {
   struct zc_owned_concurrent_close_handle_t _this;
 } zc_moved_concurrent_close_handle_t;
-/**
- * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Options for constructing a transport via `zc_internal_create_transport`.
- */
-#if defined(Z_FEATURE_UNSTABLE_API)
-typedef struct zc_internal_create_transport_options_t {
-  /**
-   * The ZenohId of the remote node.
-   */
-  struct z_id_t zid;
-  /**
-   * The whatami (node type) of the remote node.
-   */
-  enum z_whatami_t whatami;
-  /**
-   * Whether the transport supports QoS.
-   */
-  bool is_qos;
-  /**
-   * Whether the transport is multicast.
-   */
-  bool is_multicast;
-#if defined(Z_FEATURE_SHARED_MEMORY)
-  /**
-   * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-   *
-   * Whether the transport uses shared memory (only present when shared memory feature is enabled).
-   */
-  bool is_shm;
-#endif
-} zc_internal_create_transport_options_t;
-#endif
 typedef struct zc_internal_encoding_data_t {
   uint16_t id;
   const uint8_t *schema_ptr;
@@ -7121,23 +7089,47 @@ void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_h
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a transport from the given options.
+ * @brief Constructs a transport with the given parameters.
+ *
+ * This function is only available when shared memory is NOT enabled.
+ * Use `zc_internal_create_transport_shm` in shared memory builds.
  *
  * @param this_: The destination for the constructed transport.
- * @param options: The options specifying transport parameters.
+ * @param zid: The ZenohId of the remote node.
+ * @param whatami: The whatami (node type) of the remote node.
+ * @param is_qos: Whether the transport supports QoS.
+ * @param is_multicast: Whether the transport is multicast.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(Z_FEATURE_UNSTABLE_API) && !defined(Z_FEATURE_SHARED_MEMORY))
 ZENOHC_API
 void zc_internal_create_transport(struct z_owned_transport_t *this_,
-                                  const struct zc_internal_create_transport_options_t *options);
+                                  struct z_id_t zid,
+                                  enum z_whatami_t whatami,
+                                  bool is_qos,
+                                  bool is_multicast);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs the default value for `zc_internal_create_transport_options_t`.
+ * @brief Constructs a transport with the given parameters, including shared memory support.
+ *
+ * This function is only available when shared memory IS enabled.
+ * Use `zc_internal_create_transport` in non-shared-memory builds.
+ *
+ * @param this_: The destination for the constructed transport.
+ * @param zid: The ZenohId of the remote node.
+ * @param whatami: The whatami (node type) of the remote node.
+ * @param is_qos: Whether the transport supports QoS.
+ * @param is_multicast: Whether the transport is multicast.
+ * @param is_shm: Whether the transport uses shared memory.
  */
-#if defined(Z_FEATURE_UNSTABLE_API)
+#if (defined(Z_FEATURE_UNSTABLE_API) && defined(Z_FEATURE_SHARED_MEMORY))
 ZENOHC_API
-void zc_internal_create_transport_options_default(struct zc_internal_create_transport_options_t *this_);
+void zc_internal_create_transport_shm(struct z_owned_transport_t *this_,
+                                      struct z_id_t zid,
+                                      enum z_whatami_t whatami,
+                                      bool is_qos,
+                                      bool is_multicast,
+                                      bool is_shm);
 #endif
 ZENOHC_API
 void zc_internal_encoding_from_data(struct z_owned_encoding_t *this_,
