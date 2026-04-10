@@ -82,10 +82,10 @@ flume = "*"
 # zenoh-ext = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
 # zenoh-runtime = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 # zenoh-util = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-zenoh = { version = "1.8.0", git = "https://github.com/milyin-zenoh-zbobr/zenoh.git", branch = "zbobr_fix-59-implement-transport-from-fields-constructor", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.8.0", git = "https://github.com/milyin-zenoh-zbobr/zenoh.git", branch = "zbobr_fix-59-implement-transport-from-fields-constructor", default-features = false, features=["internal"] }
-zenoh-runtime = { version = "1.8.0", git = "https://github.com/milyin-zenoh-zbobr/zenoh.git", branch = "zbobr_fix-59-implement-transport-from-fields-constructor" }
-zenoh-util = { version = "1.8.0", git = "https://github.com/milyin-zenoh-zbobr/zenoh.git", branch = "zbobr_fix-59-implement-transport-from-fields-constructor" }
+zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
+zenoh-runtime = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh-util = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 @COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
@@ -93,7 +93,7 @@ ctor = "0.4.1"
 
 [build-dependencies]
 # zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh = { version = "1.8.0", git = "https://github.com/milyin-zenoh-zbobr/zenoh.git", branch = "zbobr_fix-59-implement-transport-from-fields-constructor", default-features = false, features = ["internal"] }
+zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
 @COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 cbindgen = "0.29.0"
 fs2 = "0.4.3"
