@@ -230,6 +230,69 @@ pub unsafe extern "C" fn z_internal_transport_null(this_: &mut MaybeUninit<z_own
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs a transport with the given parameters. This function is intended for language bindings which stores transport as native objects and needs to recreate them back from their fields.
+///
+/// This function is only available when shared memory is NOT enabled.
+/// Use `zc_internal_create_transport_shm` in shared memory builds.
+///
+/// @param this_: The destination for the constructed transport.
+/// @param zid: The ZenohId of the remote node.
+/// @param whatami: The whatami (node type) of the remote node.
+/// @param is_qos: Whether the transport supports QoS.
+/// @param is_multicast: Whether the transport is multicast.
+#[cfg(all(feature = "unstable", not(feature = "shared-memory")))]
+#[no_mangle]
+pub extern "C" fn zc_internal_create_transport(
+    this_: &mut MaybeUninit<z_owned_transport_t>,
+    zid: z_id_t,
+    whatami: z_whatami_t,
+    is_qos: bool,
+    is_multicast: bool,
+) {
+    let zid = *zid.as_rust_type_ref();
+    let whatami = match whatami {
+        z_whatami_t::ROUTER => WhatAmI::Router,
+        z_whatami_t::PEER => WhatAmI::Peer,
+        z_whatami_t::CLIENT => WhatAmI::Client,
+    };
+    let transport = Transport::new_from_fields(zid, whatami, is_qos, is_multicast);
+    this_.as_rust_type_mut_uninit().write(Some(transport));
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief Constructs a transport with the given parameters. This function is intended for
+/// language bindings which stores transport as native objects and needs to recreate them back from their fields.
+///
+/// This function is only available when shared memory IS enabled.
+/// Use `zc_internal_create_transport` in non-shared-memory builds.
+///
+/// @param this_: The destination for the constructed transport.
+/// @param zid: The ZenohId of the remote node.
+/// @param whatami: The whatami (node type) of the remote node.
+/// @param is_qos: Whether the transport supports QoS.
+/// @param is_multicast: Whether the transport is multicast.
+/// @param is_shm: Whether the transport uses shared memory.
+#[cfg(all(feature = "unstable", feature = "shared-memory"))]
+#[no_mangle]
+pub extern "C" fn zc_internal_create_transport_shm(
+    this_: &mut MaybeUninit<z_owned_transport_t>,
+    zid: z_id_t,
+    whatami: z_whatami_t,
+    is_qos: bool,
+    is_multicast: bool,
+    is_shm: bool,
+) {
+    let zid = *zid.as_rust_type_ref();
+    let whatami = match whatami {
+        z_whatami_t::ROUTER => WhatAmI::Router,
+        z_whatami_t::PEER => WhatAmI::Peer,
+        z_whatami_t::CLIENT => WhatAmI::Client,
+    };
+    let transport = Transport::new_from_fields(zid, whatami, is_qos, is_multicast, is_shm);
+    this_.as_rust_type_mut_uninit().write(Some(transport));
+}
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Returns ``true`` if transport is valid, ``false`` if it is in gravestone state.
 #[cfg(feature = "unstable")]
 #[no_mangle]

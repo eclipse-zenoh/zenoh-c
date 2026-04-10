@@ -716,6 +716,58 @@ void test_link_events_filtered() {
     z_drop(z_move(s2));
 }
 
+void test_zc_internal_create_transport_all_whatami() {
+    printf("=== Testing zc_internal_create_transport for all whatami variants ===\n");
+
+    z_whatami_t variants[] = {Z_WHATAMI_CLIENT, Z_WHATAMI_PEER, Z_WHATAMI_ROUTER};
+    const char* names[] = {"CLIENT", "PEER", "ROUTER"};
+
+    for (int i = 0; i < 3; i++) {
+        z_id_t zid = {0};
+        zid.id[15] = (uint8_t)(i + 1);
+
+        z_owned_transport_t transport;
+#if defined(Z_FEATURE_SHARED_MEMORY)
+        zc_internal_create_transport_shm(&transport, zid, variants[i], true, false, false);
+#else
+        zc_internal_create_transport(&transport, zid, variants[i], true, false);
+#endif
+
+        assert(z_internal_check(transport) && "Transport must be valid after creation");
+
+        z_id_t got_zid = z_transport_zid(z_loan(transport));
+        assert(memcmp(&got_zid, &zid, sizeof(z_id_t)) == 0 && "ZID round-trip failed");
+
+        z_whatami_t got_whatami = z_transport_whatami(z_loan(transport));
+        assert(got_whatami == variants[i] && "whatami round-trip failed");
+
+        assert(z_transport_is_qos(z_loan(transport)) == true && "is_qos round-trip failed");
+        assert(z_transport_is_multicast(z_loan(transport)) == false && "is_multicast round-trip failed");
+
+        z_drop(z_move(transport));
+        printf("PASS: %s\n", names[i]);
+    }
+    printf("\n");
+}
+
+void test_zc_internal_create_transport_drop() {
+    printf("=== Testing zc_internal_create_transport ownership/drop semantics ===\n");
+
+    z_id_t zid = {0};
+    z_owned_transport_t transport;
+#if defined(Z_FEATURE_SHARED_MEMORY)
+    zc_internal_create_transport_shm(&transport, zid, Z_WHATAMI_CLIENT, false, false, false);
+#else
+    zc_internal_create_transport(&transport, zid, Z_WHATAMI_CLIENT, false, false);
+#endif
+
+    assert(z_internal_check(transport) && "Transport must be valid before drop");
+    z_drop(z_move(transport));
+    assert(!z_internal_check(transport) && "Transport must be gravestone after drop");
+
+    printf("PASS\n\n");
+}
+
 #endif
 
 int main(int argc, char** argv) {
@@ -751,6 +803,10 @@ int main(int argc, char** argv) {
 
     // Test link events listener with transport filter
     test_link_events_filtered();
+
+    // Test zc_internal_create_transport functions
+    test_zc_internal_create_transport_all_whatami();
+    test_zc_internal_create_transport_drop();
 
     printf("\nAll tests completed successfully!\n");
 #else
