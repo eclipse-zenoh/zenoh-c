@@ -29,9 +29,6 @@ panic = [
 default = ["zenoh/default"]
 
 [dependencies]
-# zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-# zenoh-ext = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-# zenoh-protocol = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh = { version = "1.8.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
     "internal",
 ] }
