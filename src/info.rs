@@ -260,7 +260,7 @@ pub extern "C" fn zc_internal_create_transport(
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Constructs a transport with the given parameters. This function is intended for 
+/// @brief Constructs a transport with the given parameters. This function is intended for
 /// language bindings which stores transport as native objects and needs to recreate them back from their fields.
 ///
 /// This function is only available when shared memory IS enabled.
