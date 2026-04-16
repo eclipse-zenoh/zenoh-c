@@ -7089,7 +7089,7 @@ void zc_internal_concurrent_close_handle_null(struct zc_owned_concurrent_close_h
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a transport with the given parameters.
+ * @brief Constructs a transport with the given parameters. This function is intended for language bindings which stores transport as native objects and needs to recreate them back from their fields.
  *
  * This function is only available when shared memory is NOT enabled.
  * Use `zc_internal_create_transport_shm` in shared memory builds.
@@ -7110,7 +7110,8 @@ void zc_internal_create_transport(struct z_owned_transport_t *this_,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Constructs a transport with the given parameters, including shared memory support.
+ * @brief Constructs a transport with the given parameters. This function is intended for
+ * language bindings which stores transport as native objects and needs to recreate them back from their fields.
  *
  * This function is only available when shared memory IS enabled.
  * Use `zc_internal_create_transport` in non-shared-memory builds.
