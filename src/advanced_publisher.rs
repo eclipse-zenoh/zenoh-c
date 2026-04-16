@@ -15,16 +15,12 @@
 use std::{mem::MaybeUninit, time::Duration};
 
 use zenoh::{
-    handlers::Callback,
-    matching::MatchingStatus,
-    qos::{CongestionControl, Priority},
-    session::SessionClosedError,
-    Wait,
+    Wait, handlers::Callback, matching::MatchingStatus, pubsub::PublicationBuilderPut, qos::{CongestionControl, Priority}, session::SessionClosedError
 };
-use zenoh_ext::{AdvancedPublisherBuilderExt, CacheConfig, MissDetectionConfig};
+use zenoh_ext::{AdvancedPublicationBuilder, AdvancedPublisherBuilderExt, CacheConfig, MissDetectionConfig};
 
 use crate::{
-    _apply_pubisher_delete_options, _apply_pubisher_put_options, _declare_publisher_inner,
+    _apply_pubisher_delete_options, _declare_publisher_inner,
     result::{self},
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
@@ -318,6 +314,24 @@ pub extern "C" fn ze_advanced_publisher_put_options_default(
     });
 }
 
+pub(crate) fn _apply_advanced_publisher_put_options<'a>(
+    builder: AdvancedPublicationBuilder<'a,PublicationBuilderPut>,
+    options: &mut ze_advanced_publisher_put_options_t,
+) -> AdvancedPublicationBuilder<'a,PublicationBuilderPut> {
+    let mut builder = builder;
+    if let Some(encoding) = options.put_options.encoding.take() {
+        builder = builder.encoding(encoding.take_rust_type());
+    };
+    if let Some(attachment) = options.put_options.attachment.take() {
+        builder = builder.attachment(attachment.take_rust_type());
+    }
+    if let Some(timestamp) = options.put_options.timestamp {
+        builder = builder.timestamp(Some(*timestamp.as_rust_type_ref()));
+    }
+    builder
+}
+
+
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Sends a `PUT` message onto the advanced publisher's key expression, transfering the payload ownership.
 ///
@@ -339,7 +353,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_put(
     let payload = payload.take_rust_type();
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        put = _apply_pubisher_put_options(put, &mut options.put_options);
+        put = _apply_advanced_publisher_put_options(put, options);
     }
     match put.wait() {
         Ok(_) => result::Z_OK,
