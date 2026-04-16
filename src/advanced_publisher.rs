@@ -15,9 +15,16 @@
 use std::{mem::MaybeUninit, time::Duration};
 
 use zenoh::{
-    Wait, handlers::Callback, matching::MatchingStatus, pubsub::PublicationBuilderPut, qos::{CongestionControl, Priority}, session::SessionClosedError
+    handlers::Callback,
+    matching::MatchingStatus,
+    pubsub::PublicationBuilderPut,
+    qos::{CongestionControl, Priority},
+    session::SessionClosedError,
+    Wait,
 };
-use zenoh_ext::{AdvancedPublicationBuilder, AdvancedPublisherBuilderExt, CacheConfig, MissDetectionConfig};
+use zenoh_ext::{
+    AdvancedPublicationBuilder, AdvancedPublisherBuilderExt, CacheConfig, MissDetectionConfig,
+};
 
 use crate::{
     _apply_pubisher_delete_options, _declare_publisher_inner,
@@ -315,9 +322,9 @@ pub extern "C" fn ze_advanced_publisher_put_options_default(
 }
 
 pub(crate) fn _apply_advanced_publisher_put_options<'a>(
-    builder: AdvancedPublicationBuilder<'a,PublicationBuilderPut>,
+    builder: AdvancedPublicationBuilder<'a, PublicationBuilderPut>,
     options: &mut ze_advanced_publisher_put_options_t,
-) -> AdvancedPublicationBuilder<'a,PublicationBuilderPut> {
+) -> AdvancedPublicationBuilder<'a, PublicationBuilderPut> {
     let mut builder = builder;
     if let Some(encoding) = options.put_options.encoding.take() {
         builder = builder.encoding(encoding.take_rust_type());
@@ -330,7 +337,6 @@ pub(crate) fn _apply_advanced_publisher_put_options<'a>(
     }
     builder
 }
-
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Sends a `PUT` message onto the advanced publisher's key expression, transfering the payload ownership.
