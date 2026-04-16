@@ -24,7 +24,7 @@ use zenoh::{
 use zenoh_ext::{AdvancedPublisherBuilderExt, CacheConfig, MissDetectionConfig};
 
 use crate::{
-    _apply_pubisher_delete_options, _apply_pubisher_put_options, _declare_publisher_inner,
+    _apply_publisher_delete_options, _apply_publisher_put_options, _declare_publisher_inner,
     result::{self},
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_closure_matching_status_call, z_closure_matching_status_loan, z_congestion_control_t,
@@ -339,7 +339,7 @@ pub unsafe extern "C" fn ze_advanced_publisher_put(
     let payload = payload.take_rust_type();
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        put = _apply_pubisher_put_options(put, &mut options.put_options);
+        put = _apply_publisher_put_options(put, &mut options.put_options);
     }
     match put.wait() {
         Ok(_) => result::Z_OK,
@@ -385,7 +385,7 @@ pub extern "C" fn ze_advanced_publisher_delete(
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
-        del = _apply_pubisher_delete_options(del, &mut options.delete_options)
+        del = _apply_publisher_delete_options(del, &mut options.delete_options)
     }
     if let Err(e) = del.wait() {
         crate::report_error!("{}", e);
