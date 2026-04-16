@@ -59,8 +59,7 @@ jobs:
         run: cargo metadata --locked --format-version=1
 
       - name: Validate opaque-types lockfile
-        run: cargo metadata --locked --format-version=1 \
-          --manifest-path build-resources/opaque-types/Cargo.toml
+        run: cargo metadata --locked --format-version=1 --manifest-path build-resources/opaque-types/Cargo.toml
 
       - name: Build with locked dependencies
         run: |
