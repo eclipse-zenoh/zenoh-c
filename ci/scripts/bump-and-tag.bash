@@ -36,6 +36,8 @@ debian_version=$(to_debian_version "$version")
 toml_set_in_place Cargo.toml "package.metadata.deb.variants.libzenohc-dev.depends" "libzenohc (=$debian_version)"
 cargo_toml_in_set_debian_depends "libzenohc (=$debian_version)"
 
+# Show the changes to be committed
+git diff version.txt Cargo.toml Cargo.toml.in Cargo.lock
 git commit version.txt Cargo.toml Cargo.toml.in Cargo.lock -m "chore: Bump version to $version"
 
 # Select all package dependencies that match $bump_deps_pattern and bump them to $bump_deps_version
@@ -65,8 +67,13 @@ if [[ "$bump_deps_pattern" != '' ]]; then
     fi
   done
 
+  # Regenerate Cargo.lock for both Cargo.toml files
+  cargo generate-lockfile
+  cargo generate-lockfile --manifest-path build-resources/opaque-types/Cargo.toml
 
   if [[ -n $bump_deps_version || -n $bump_deps_branch ]]; then
+    # Show the changes to be committed
+    git diff Cargo.toml Cargo.toml.in Cargo.lock build-resources/opaque-types/Cargo.lock
     git commit Cargo.toml Cargo.toml.in Cargo.lock build-resources/opaque-types/Cargo.toml build-resources/opaque-types/Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
   else
     echo "warn: no changes have been made to any dependencies matching $bump_deps_pattern"
