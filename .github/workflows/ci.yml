@@ -111,6 +111,12 @@ jobs:
       - name: Install Rust toolchain
         run: rustup component add rustfmt clippy
 
+      - name: Run clippy without Cargo.lock to ensure compatibility with latest zenoh
+        run: |
+          rm Cargo.lock
+          cargo clippy --all-targets --no-default-features --features unstable,shared-memory -- --deny warnings
+          git restore Cargo.lock
+
       - name: Run clippy without default features
         run: cargo clippy --all-targets --no-default-features --features unstable,shared-memory -- --deny warnings
 
