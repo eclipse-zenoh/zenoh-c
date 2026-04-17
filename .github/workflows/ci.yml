@@ -48,6 +48,25 @@ jobs:
             exit 1
           fi
 
+  check_lockfiles:
+    name: Check Cargo.lock files are in sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate root lockfile
+        run: cargo metadata --locked --format-version=1
+
+      - name: Validate opaque-types lockfile
+        run: cargo metadata --locked --format-version=1 --manifest-path build-resources/opaque-types/Cargo.toml
+
+      - name: Build with locked dependencies
+        run: |
+          mkdir -p build && cd build
+          cmake .. -DZENOHC_CARGO_FLAGS:STRING="--locked" -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
+
   check_rust:
     name: Check zenoh-c using Rust 1.75
     runs-on: ${{ matrix.os }}
