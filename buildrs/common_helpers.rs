@@ -24,7 +24,8 @@ pub fn features() -> BTreeSet<&'static str> {
 }
 
 pub fn test_feature(feature: &str) -> bool {
-    zenoh::FEATURES.contains(format!(" zenoh/{feature}").as_str())
+    let env_var = format!("CARGO_FEATURE_{}", feature.to_uppercase().replace('-', "_"));
+    std::env::var(env_var).is_ok()
 }
 
 // See: https://github.com/rust-lang/cargo/issues/9661

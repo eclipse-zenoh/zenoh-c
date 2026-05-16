@@ -81,3 +81,5 @@ release/
 
 # Ingore results of cargo vendor
 vendor/
+
+install-prefix
