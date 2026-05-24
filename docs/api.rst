@@ -252,6 +252,7 @@ Functions
 
 .. doxygenfunction:: z_sample_timestamp
 .. doxygenfunction:: z_sample_attachment
+.. doxygenfunction:: z_sample_attachment_mut
 .. doxygenfunction:: z_sample_encoding
 .. doxygenfunction:: z_sample_payload
 .. doxygenfunction:: z_sample_payload_mut

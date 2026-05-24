@@ -5572,6 +5572,12 @@ z_result_t z_ring_handler_sample_try_recv(const struct z_loaned_ring_handler_sam
 ZENOHC_API
 const struct z_loaned_bytes_t *z_sample_attachment(const struct z_loaned_sample_t *this_);
 /**
+ * Returns the mutable sample attachment.
+ *
+ * Returns `NULL`, if sample does not contain any attachment.
+ */
+ZENOHC_API struct z_loaned_bytes_t *z_sample_attachment_mut(struct z_loaned_sample_t *this_);
+/**
  * Constructs an owned shallow copy of the sample (i.e. all modficiations applied to the copy, might be visible in the original) in provided uninitilized memory location.
  */
 ZENOHC_API
