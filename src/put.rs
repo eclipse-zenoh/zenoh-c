@@ -20,7 +20,7 @@ use zenoh::{
 };
 
 #[cfg(feature = "unstable")]
-use crate::z_source_info_t;
+use crate::{z_source_info_t, timestamp_stack::z_loaned_timestamp_instrumentation_t};
 use crate::{
     commons::*,
     result,
@@ -57,6 +57,12 @@ pub struct z_put_options_t {
     pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to this message.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Opt-in timestamp instrumentation. When set, the message will carry a TsStack extension
+    /// recording timestamps at the configured interception points.
+    pub timestamp_instrumentation: Option<&'static z_loaned_timestamp_instrumentation_t>,
 }
 
 /// Constructs the default value for `z_put_options_t`.
@@ -75,6 +81,8 @@ pub extern "C" fn z_put_options_default(this_: &mut MaybeUninit<z_put_options_t>
         #[cfg(feature = "unstable")]
         source_info: None,
         attachment: None,
+        #[cfg(feature = "unstable")]
+        timestamp_instrumentation: None,
     });
 }
 
@@ -119,6 +127,9 @@ pub extern "C" fn z_put(
             if let Some(source_info) = options.source_info {
                 put = put.source_info(source_info.as_rust_type_ref().clone());
             };
+            if let Some(instr) = options.timestamp_instrumentation {
+                put = put.timestamp_instrumentation(Some(*instr.as_rust_type_ref()));
+            }
         }
     }
     match put.wait() {

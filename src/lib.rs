@@ -83,6 +83,10 @@ pub use advanced_subscriber::*;
 mod advanced_publisher;
 #[cfg(feature = "unstable")]
 pub use advanced_publisher::*;
+#[cfg(feature = "unstable")]
+mod timestamp_stack;
+#[cfg(feature = "unstable")]
+pub use timestamp_stack::*;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 pub mod context;
 

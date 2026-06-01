@@ -38,6 +38,7 @@ use zenoh::{
         EntityGlobalId, Link, LinkEvent, LinkEventsListener, Transport, TransportEvent,
         TransportEventsListener,
     },
+    timestamp_stack::{TimestampInstrumentation, TimestampStack, TimestampStackRecord},
 };
 
 #[macro_export]
@@ -658,3 +659,21 @@ get_opaque_type_data!(Option<CancellationToken>, z_owned_cancellation_token_t);
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief A loaned cancellation token, which can be used to interrupt GET queries.
 get_opaque_type_data!(CancellationToken, z_loaned_cancellation_token_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief An owned timestamp instrumentation config. Specifies which interception points to record.
+get_opaque_type_data!(Option<TimestampInstrumentation>, z_owned_timestamp_instrumentation_t);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned timestamp instrumentation config.
+get_opaque_type_data!(TimestampInstrumentation, z_loaned_timestamp_instrumentation_t);
+
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned timestamp stack received on a sample or reply.
+get_opaque_type_data!(TimestampStack, z_loaned_timestamp_stack_t);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// @brief A loaned record within a timestamp stack.
+get_opaque_type_data!(TimestampStackRecord, z_loaned_timestamp_stack_record_t);

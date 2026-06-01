@@ -24,6 +24,8 @@ use crate::{
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t,
 };
+#[cfg(feature = "unstable")]
+use crate::timestamp_stack::z_owned_session_ts_callback_t;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{
     result::z_result_t,
@@ -73,12 +75,24 @@ pub extern "C" fn z_internal_session_null(this_: &mut MaybeUninit<z_owned_sessio
 #[repr(C)]
 pub struct z_open_options_t {
     _dummy: u8,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable.
+    ///
+    /// Optional session-level timestamp callback. When set, the callback is called at each
+    /// instrumented interception point to produce custom timestamp bytes.
+    /// Pass `NULL` (leave at default) to use the built-in UHLC timestamps.
+    /// Ownership is transferred to the session on `z_open()`.
+    pub timestamp_callback: z_owned_session_ts_callback_t,
 }
 
 /// Constructs the default value for `z_open_options_t`.
 #[no_mangle]
 pub extern "C" fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_t>) {
-    this_.write(z_open_options_t { _dummy: 0 });
+    this_.write(z_open_options_t {
+        _dummy: 0,
+        #[cfg(feature = "unstable")]
+        timestamp_callback: z_owned_session_ts_callback_t::default(),
+    });
 }
 
 /// Constructs and opens a new Zenoh session.
@@ -89,7 +103,7 @@ pub extern "C" fn z_open_options_default(this_: &mut MaybeUninit<z_open_options_
 pub extern "C" fn z_open(
     this: &mut MaybeUninit<z_owned_session_t>,
     config: &mut z_moved_config_t,
-    _options: Option<&z_open_options_t>,
+    options: Option<&mut z_open_options_t>,
 ) -> result::z_result_t {
     let this = this.as_rust_type_mut_uninit();
     let Some(config) = config.take_rust_type() else {
@@ -97,7 +111,20 @@ pub extern "C" fn z_open(
         this.write(None);
         return result::Z_EINVAL;
     };
-    match zenoh::open(config).wait() {
+    let mut builder = zenoh::open(config);
+    #[cfg(feature = "unstable")]
+    if let Some(opts) = options {
+        let cb = std::mem::replace(
+            &mut opts.timestamp_callback,
+            z_owned_session_ts_callback_t::default(),
+        );
+        if let Some(rust_cb) = cb.into_rust_callback() {
+            builder = builder.with_timestamp_callback(rust_cb);
+        }
+    }
+    #[cfg(not(feature = "unstable"))]
+    let _ = options;
+    match builder.wait() {
         Ok(s) => {
             this.write(Some(s));
             result::Z_OK

@@ -34,8 +34,9 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    transmute::IntoCType, z_entity_global_id_t, z_reliability_default, z_reliability_t,
-    z_source_info_t,
+    timestamp_stack::z_loaned_timestamp_instrumentation_t,
+    transmute::IntoCType,
+    z_entity_global_id_t, z_reliability_default, z_reliability_t, z_source_info_t,
 };
 /// Options passed to the `z_declare_publisher()` function.
 #[repr(C)]
@@ -55,6 +56,12 @@ pub struct z_publisher_options_t {
     pub reliability: z_reliability_t,
     /// The allowed destination for this publisher.
     pub allowed_destination: z_locality_t,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Default timestamp instrumentation for all `z_publisher_put()` calls on this publisher.
+    /// Can be overridden per-put via `z_publisher_put_options_t.timestamp_instrumentation`.
+    pub timestamp_instrumentation: Option<&'static z_loaned_timestamp_instrumentation_t>,
 }
 
 impl Default for z_publisher_options_t {
@@ -67,6 +74,8 @@ impl Default for z_publisher_options_t {
             #[cfg(feature = "unstable")]
             reliability: z_reliability_default(),
             allowed_destination: z_locality_default(),
+            #[cfg(feature = "unstable")]
+            timestamp_instrumentation: None,
         }
     }
 }
@@ -100,6 +109,9 @@ pub(crate) fn _declare_publisher_inner(
         #[cfg(feature = "unstable")]
         {
             p = p.reliability(options.reliability.into());
+            if let Some(instr) = options.timestamp_instrumentation {
+                p = p.timestamp_instrumentation(Some(*instr.as_rust_type_ref()));
+            }
         }
         if let Some(encoding) = options.encoding.take() {
             p = p.encoding(encoding.take_rust_type());
@@ -191,6 +203,12 @@ pub struct z_publisher_put_options_t {
     pub source_info: Option<&'static z_source_info_t>,
     /// The attachment to attach to the publication.
     pub attachment: Option<&'static mut z_moved_bytes_t>,
+    #[cfg(feature = "unstable")]
+    /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+    ///
+    /// Per-put timestamp instrumentation override. When set, takes precedence over the
+    /// publisher's default instrumentation set via `z_publisher_options_t`.
+    pub timestamp_instrumentation: Option<&'static z_loaned_timestamp_instrumentation_t>,
 }
 
 /// Constructs the default value for `z_publisher_put_options_t`.
@@ -205,6 +223,8 @@ pub extern "C" fn z_publisher_put_options_default(
         #[cfg(feature = "unstable")]
         source_info: None,
         attachment: None,
+        #[cfg(feature = "unstable")]
+        timestamp_instrumentation: None,
     });
 }
 
@@ -227,6 +247,10 @@ pub(crate) fn _apply_publisher_put_options<
     }
     if let Some(timestamp) = options.timestamp {
         builder = builder.timestamp(Some(*timestamp.as_rust_type_ref()));
+    }
+    #[cfg(feature = "unstable")]
+    if let Some(instr) = options.timestamp_instrumentation {
+        builder = builder.timestamp_instrumentation(Some(*instr.as_rust_type_ref()));
     }
     builder
 }
