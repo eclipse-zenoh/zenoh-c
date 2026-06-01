@@ -238,18 +238,10 @@ typedef enum z_whatami_t {
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 typedef enum z_interception_point_t {
-#if defined(Z_FEATURE_UNSTABLE_API)
-  Z_INTERCEPTION_POINT_Z_INTERCEPTION_POINT_SEND = 0,
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-  Z_INTERCEPTION_POINT_Z_INTERCEPTION_POINT_ROUTE = 1,
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-  Z_INTERCEPTION_POINT_Z_INTERCEPTION_POINT_RECEIVE = 2,
-#endif
-#if defined(Z_FEATURE_UNSTABLE_API)
-  Z_INTERCEPTION_POINT_Z_INTERCEPTION_POINT_UNKNOWN = 255,
-#endif
+  Z_INTERCEPTION_POINT_SEND = 0,
+  Z_INTERCEPTION_POINT_ROUTE = 1,
+  Z_INTERCEPTION_POINT_RECEIVE = 2,
+  Z_INTERCEPTION_POINT_UNKNOWN = 255,
 } z_interception_point_t;
 #endif
 /**
@@ -1121,6 +1113,9 @@ typedef struct z_owned_session_ts_callback_t {
                 void *context);
   void (*_drop)(void *context);
 } z_owned_session_ts_callback_t;
+typedef struct z_moved_session_ts_callback_t {
+  z_owned_session_ts_callback_t _this;
+} z_moved_session_ts_callback_t;
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -2324,7 +2319,7 @@ ZENOHC_API
 z_result_t z_bytes_to_string(const struct z_loaned_bytes_t *this_,
                              struct z_owned_string_t *dst);
 /**
- * Appends bytes.
+ * Appends bytes.     
  * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
  * Said in other terms, it allows to create a linear view on different memory regions without copy.
  *
@@ -4568,7 +4563,7 @@ void z_keyexpr_as_view_string(const struct z_loaned_keyexpr_t *this_,
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- *
+ *  
  * @return 0 upon success, negative error values upon failure (if the passed string was an invalid
  * key expression for reasons other than a non-canon form).
  */
@@ -5131,7 +5126,7 @@ ZENOHC_API
 z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Each session's runtime may create its own provider to manage internal optimizations.
+ * @brief Each session's runtime may create its own provider to manage internal optimizations.  
  * This method exposes that provider so it can also be accessed at the application level.
  *
  * Note that the provider may not be immediately available or may be disabled via configuration.

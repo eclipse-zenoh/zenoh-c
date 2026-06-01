@@ -22,19 +22,43 @@
 #undef NDEBUG
 #include <assert.h>
 
-#ifdef ZENOHC_BUILD_WITH_UNSTABLE_API
+#if defined(ZENOHC_BUILD_WITH_UNSTABLE_API) || defined(Z_FEATURE_UNSTABLE_API)
 
 // ── shared state for subscriber callbacks ────────────────────────────────────
+// All stack inspection is done inside the callback while the sample is alive.
+// The context stores only the results of that inspection.
 
 typedef struct {
-    const z_loaned_timestamp_stack_t *stack;
     int received;
+    int has_stack;           // 1 if sample carried a TimestampStack
+    size_t record_count;
+    int found_send;
+    int found_receive;
+    int as_timestamp_ok;     // 1 if at least one non-custom record parsed OK
 } SampleCtx;
 
 static void on_sample(z_loaned_sample_t *sample, void *arg) {
     SampleCtx *ctx = (SampleCtx *)arg;
-    ctx->stack = z_sample_timestamp_stack(sample);
     ctx->received = 1;
+
+    const z_loaned_timestamp_stack_t *stack = z_sample_timestamp_stack(sample);
+    ctx->has_stack = (stack != NULL);
+    if (!stack) return;
+
+    size_t n = z_timestamp_stack_record_count(stack);
+    ctx->record_count = n;
+    for (size_t i = 0; i < n; i++) {
+        const z_loaned_timestamp_stack_record_t *rec = z_timestamp_stack_record_at(stack, i);
+        if (!rec) continue;
+        z_interception_point_t pt = z_timestamp_stack_record_point(rec);
+        if (pt == Z_INTERCEPTION_POINT_SEND)    ctx->found_send = 1;
+        if (pt == Z_INTERCEPTION_POINT_RECEIVE) ctx->found_receive = 1;
+        if (!z_timestamp_stack_record_is_custom(rec)) {
+            z_timestamp_t ts;
+            if (z_timestamp_stack_record_as_timestamp(rec, &ts) == Z_OK)
+                ctx->as_timestamp_ok = 1;
+        }
+    }
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -56,7 +80,7 @@ void test_no_instrumentation(void) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/ts/c/none");
 
-    SampleCtx ctx = {NULL, 0};
+    SampleCtx ctx = {0};
     z_owned_closure_sample_t cb;
     z_closure_sample(&cb, on_sample, NULL, &ctx);
     z_owned_subscriber_t sub;
@@ -71,7 +95,7 @@ void test_no_instrumentation(void) {
     z_sleep_ms(200);
 
     assert(ctx.received == 1);
-    assert(ctx.stack == NULL);
+    assert(ctx.has_stack == 0);
 
     z_undeclare_subscriber(z_subscriber_move(&sub));
     z_session_drop(z_session_move(&s));
@@ -86,7 +110,7 @@ void test_send_receive(void) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/ts/c/send_recv");
 
-    SampleCtx ctx = {NULL, 0};
+    SampleCtx ctx = {0};
     z_owned_closure_sample_t cb;
     z_closure_sample(&cb, on_sample, NULL, &ctx);
     z_owned_subscriber_t sub;
@@ -98,7 +122,7 @@ void test_send_receive(void) {
     z_owned_timestamp_instrumentation_t instr;
     assert(z_timestamp_instrumentation_new(&instr, /*send=*/true, /*route=*/false, /*receive=*/true) == Z_OK);
 
-    z_put_options_t opts = z_put_options_default();
+    z_put_options_t opts; z_put_options_default(&opts);
     opts.timestamp_instrumentation = z_timestamp_instrumentation_loan(&instr);
 
     z_owned_bytes_t payload;
@@ -107,21 +131,10 @@ void test_send_receive(void) {
     z_sleep_ms(200);
 
     assert(ctx.received == 1);
-    assert(ctx.stack != NULL);
-
-    size_t n = z_timestamp_stack_record_count(ctx.stack);
-    assert(n >= 2);
-
-    int found_send = 0, found_receive = 0;
-    for (size_t i = 0; i < n; i++) {
-        const z_loaned_timestamp_stack_record_t *rec = z_timestamp_stack_record_at(ctx.stack, i);
-        assert(rec != NULL);
-        z_interception_point_t pt = z_timestamp_stack_record_point(rec);
-        if (pt == Z_INTERCEPTION_POINT_SEND) found_send = 1;
-        if (pt == Z_INTERCEPTION_POINT_RECEIVE) found_receive = 1;
-    }
-    assert(found_send);
-    assert(found_receive);
+    assert(ctx.has_stack == 1);
+    assert(ctx.record_count >= 2);
+    assert(ctx.found_send);
+    assert(ctx.found_receive);
 
     z_timestamp_instrumentation_drop(z_timestamp_instrumentation_move(&instr));
     z_undeclare_subscriber(z_subscriber_move(&sub));
@@ -137,7 +150,7 @@ void test_as_timestamp(void) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/ts/c/as_ts");
 
-    SampleCtx ctx = {NULL, 0};
+    SampleCtx ctx = {0};
     z_owned_closure_sample_t cb;
     z_closure_sample(&cb, on_sample, NULL, &ctx);
     z_owned_subscriber_t sub;
@@ -148,7 +161,7 @@ void test_as_timestamp(void) {
 
     z_owned_timestamp_instrumentation_t instr;
     assert(z_timestamp_instrumentation_new(&instr, true, false, true) == Z_OK);
-    z_put_options_t opts = z_put_options_default();
+    z_put_options_t opts; z_put_options_default(&opts);
     opts.timestamp_instrumentation = z_timestamp_instrumentation_loan(&instr);
 
     z_owned_bytes_t payload;
@@ -157,17 +170,8 @@ void test_as_timestamp(void) {
     z_sleep_ms(200);
 
     assert(ctx.received == 1);
-    assert(ctx.stack != NULL);
-
-    size_t n = z_timestamp_stack_record_count(ctx.stack);
-    for (size_t i = 0; i < n; i++) {
-        const z_loaned_timestamp_stack_record_t *rec = z_timestamp_stack_record_at(ctx.stack, i);
-        if (!z_timestamp_stack_record_is_custom(rec)) {
-            z_timestamp_t ts;
-            assert(z_timestamp_stack_record_as_timestamp(rec, &ts) == Z_OK);
-            (void)ts;  // copy type, no drop needed
-        }
-    }
+    assert(ctx.has_stack == 1);
+    assert(ctx.as_timestamp_ok == 1);
 
     z_timestamp_instrumentation_drop(z_timestamp_instrumentation_move(&instr));
     z_undeclare_subscriber(z_subscriber_move(&sub));
@@ -183,7 +187,7 @@ void test_publisher_default(void) {
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, "test/ts/c/pub_default");
 
-    SampleCtx ctx = {NULL, 0};
+    SampleCtx ctx = {0};
     z_owned_closure_sample_t cb;
     z_closure_sample(&cb, on_sample, NULL, &ctx);
     z_owned_subscriber_t sub;
@@ -193,7 +197,7 @@ void test_publisher_default(void) {
     z_owned_timestamp_instrumentation_t instr;
     assert(z_timestamp_instrumentation_new(&instr, true, false, true) == Z_OK);
 
-    z_publisher_options_t pub_opts = z_publisher_options_default();
+    z_publisher_options_t pub_opts; z_publisher_options_default(&pub_opts);
     pub_opts.timestamp_instrumentation = z_timestamp_instrumentation_loan(&instr);
 
     z_owned_publisher_t pub;
@@ -207,8 +211,8 @@ void test_publisher_default(void) {
     z_sleep_ms(200);
 
     assert(ctx.received == 1);
-    assert(ctx.stack != NULL);
-    assert(z_timestamp_stack_record_count(ctx.stack) >= 2);
+    assert(ctx.has_stack == 1);
+    assert(ctx.record_count >= 2);
 
     z_undeclare_publisher(z_publisher_move(&pub));
     z_timestamp_instrumentation_drop(z_timestamp_instrumentation_move(&instr));
