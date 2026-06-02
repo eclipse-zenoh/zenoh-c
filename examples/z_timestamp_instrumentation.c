@@ -27,24 +27,24 @@
 
 #ifdef ZENOHC_BUILD_WITH_UNSTABLE_API
 
-static void print_stack(const z_loaned_timestamp_stack_t *stack) {
+static void print_stack(const z_loaned_timestamp_stack_t* stack) {
     if (stack == NULL) {
         printf("  (no timestamp stack)\n");
         return;
     }
     size_t n = z_timestamp_stack_record_count(stack);
     for (size_t i = 0; i < n; i++) {
-        const z_loaned_timestamp_stack_record_t *rec = z_timestamp_stack_record_at(stack, i);
+        const z_loaned_timestamp_stack_record_t* rec = z_timestamp_stack_record_at(stack, i);
         z_interception_point_t pt = z_timestamp_stack_record_point(rec);
-        const char *pt_name =
-            pt == Z_INTERCEPTION_POINT_SEND    ? "SEND   " :
-            pt == Z_INTERCEPTION_POINT_ROUTE   ? "ROUTE  " :
-            pt == Z_INTERCEPTION_POINT_RECEIVE ? "RECEIVE" : "UNKNOWN";
+        const char* pt_name = pt == Z_INTERCEPTION_POINT_SEND      ? "SEND   "
+                              : pt == Z_INTERCEPTION_POINT_ROUTE   ? "ROUTE  "
+                              : pt == Z_INTERCEPTION_POINT_RECEIVE ? "RECEIVE"
+                                                                   : "UNKNOWN";
 
         size_t ts_len = 0;
-        const uint8_t *ts_bytes = z_timestamp_stack_record_timestamp(rec, &ts_len);
-        printf("  %s  custom=%-5s  ts_bytes=%zu", pt_name,
-               z_timestamp_stack_record_is_custom(rec) ? "true" : "false", ts_len);
+        const uint8_t* ts_bytes = z_timestamp_stack_record_timestamp(rec, &ts_len);
+        printf("  %s  custom=%-5s  ts_bytes=%zu", pt_name, z_timestamp_stack_record_is_custom(rec) ? "true" : "false",
+               ts_len);
 
         if (!z_timestamp_stack_record_is_custom(rec)) {
             z_timestamp_t ts;
@@ -57,14 +57,15 @@ static void print_stack(const z_loaned_timestamp_stack_t *stack) {
     }
 }
 
-typedef struct { const z_loaned_timestamp_stack_t *stack; } SampleCtx;
+typedef struct {
+    const z_loaned_timestamp_stack_t* stack;
+} SampleCtx;
 
-static void on_sample(z_loaned_sample_t *sample, void *arg) {
-    SampleCtx *ctx = (SampleCtx *)arg;
+static void on_sample(z_loaned_sample_t* sample, void* arg) {
+    SampleCtx* ctx = (SampleCtx*)arg;
     z_owned_string_t keystr;
     z_keyexpr_to_string(z_sample_keyexpr(sample), &keystr);
-    printf("Received sample on '%.*s':\n",
-           (int)z_string_len(z_string_loan(&keystr)),
+    printf("Received sample on '%.*s':\n", (int)z_string_len(z_string_loan(&keystr)),
            z_string_data(z_string_loan(&keystr)));
     z_string_drop(z_string_move(&keystr));
     ctx->stack = z_sample_timestamp_stack(sample);
@@ -92,8 +93,8 @@ int main(void) {
         z_owned_closure_sample_t cb;
         z_closure_sample(&cb, on_sample, NULL, &ctx);
         z_owned_subscriber_t sub;
-        z_declare_subscriber(z_session_loan(&session), &sub, z_view_keyexpr_loan(&ke),
-                             z_closure_sample_move(&cb), NULL);
+        z_declare_subscriber(z_session_loan(&session), &sub, z_view_keyexpr_loan(&ke), z_closure_sample_move(&cb),
+                             NULL);
         z_sleep_ms(50);
 
         z_owned_timestamp_instrumentation_t instr;
@@ -121,8 +122,8 @@ int main(void) {
         z_owned_closure_sample_t cb;
         z_closure_sample(&cb, on_sample, NULL, &ctx);
         z_owned_subscriber_t sub;
-        z_declare_subscriber(z_session_loan(&session), &sub, z_view_keyexpr_loan(&ke),
-                             z_closure_sample_move(&cb), NULL);
+        z_declare_subscriber(z_session_loan(&session), &sub, z_view_keyexpr_loan(&ke), z_closure_sample_move(&cb),
+                             NULL);
 
         z_owned_timestamp_instrumentation_t instr;
         z_timestamp_instrumentation_new(&instr, true, false, true);
