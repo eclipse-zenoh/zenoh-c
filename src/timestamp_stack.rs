@@ -321,7 +321,7 @@ pub struct z_owned_session_ts_callback_t {
 /// Moved session timestamp callback.
 #[repr(C)]
 pub struct z_moved_session_ts_callback_t {
-    _this: z_owned_session_ts_callback_t,
+    pub _this: z_owned_session_ts_callback_t,
 }
 
 impl Default for z_owned_session_ts_callback_t {
@@ -405,7 +405,6 @@ pub extern "C" fn z_internal_session_ts_callback_check(
 ///
 /// Drops the session timestamp callback (calls the drop function if set).
 #[no_mangle]
-pub extern "C" fn z_session_ts_callback_drop(this_: &mut z_owned_session_ts_callback_t) {
-    // Drop is called automatically when the value is replaced.
-    let _ = std::mem::take(this_);
+pub extern "C" fn z_session_ts_callback_drop(this_: &mut z_moved_session_ts_callback_t) {
+    let _ = std::mem::take(&mut this_._this);
 }

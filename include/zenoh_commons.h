@@ -6125,7 +6125,7 @@ ZENOHC_API struct z_loaned_session_t *z_session_loan_mut(struct z_owned_session_
  * Drops the session timestamp callback (calls the drop function if set).
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
-ZENOHC_API void z_session_ts_callback_drop(struct z_owned_session_ts_callback_t *this_);
+ZENOHC_API void z_session_ts_callback_drop(struct z_moved_session_ts_callback_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.

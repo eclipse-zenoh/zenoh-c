@@ -193,7 +193,7 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         z_moved_ring_handler_sample_t* : z_ring_handler_sample_drop, \
         z_moved_sample_t* : z_sample_drop, \
         z_moved_session_t* : z_session_drop, \
-        z_owned_session_ts_callback_t* : z_session_ts_callback_drop, \
+        z_moved_session_ts_callback_t* : z_session_ts_callback_drop, \
         z_moved_slice_t* : z_slice_drop, \
         z_moved_string_array_t* : z_string_array_drop, \
         z_moved_string_t* : z_string_drop, \
@@ -799,7 +799,7 @@ inline void z_drop(z_moved_ring_handler_reply_t* this_) { z_ring_handler_reply_d
 inline void z_drop(z_moved_ring_handler_sample_t* this_) { z_ring_handler_sample_drop(this_); };
 inline void z_drop(z_moved_sample_t* this_) { z_sample_drop(this_); };
 inline void z_drop(z_moved_session_t* this_) { z_session_drop(this_); };
-inline void z_drop(z_owned_session_ts_callback_t* this_) { z_session_ts_callback_drop(this_); };
+inline void z_drop(z_moved_session_ts_callback_t* this_) { z_session_ts_callback_drop(this_); };
 inline void z_drop(z_moved_slice_t* this_) { z_slice_drop(this_); };
 inline void z_drop(z_moved_string_array_t* this_) { z_string_array_drop(this_); };
 inline void z_drop(z_moved_string_t* this_) { z_string_drop(this_); };
