@@ -316,6 +316,14 @@ pub struct z_owned_session_ts_callback_t {
     pub _drop: Option<unsafe extern "C" fn(context: *mut c_void)>,
 }
 
+/// @warning This API has been marked as unstable.
+///
+/// Moved session timestamp callback.
+#[repr(C)]
+pub struct z_moved_session_ts_callback_t {
+    _this: z_owned_session_ts_callback_t,
+}
+
 impl Default for z_owned_session_ts_callback_t {
     fn default() -> Self {
         Self {
