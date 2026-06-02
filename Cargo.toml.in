@@ -78,17 +78,17 @@ tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
 flume = "*"
-zenoh = { path = "../../worktree-zenoh/routing-timestamps/zenoh", default-features = false, features = ["internal"] }
-zenoh-ext = { path = "../../worktree-zenoh/routing-timestamps/zenoh-ext", default-features = false, features=["internal"] }
-zenoh-runtime = { path = "../../worktree-zenoh/routing-timestamps/commons/zenoh-runtime" }
-zenoh-util = { path = "../../worktree-zenoh/routing-timestamps/commons/zenoh-util" }
+zenoh = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps", default-features = false, features=["internal"] }
+zenoh-runtime = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps" }
+zenoh-util = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps" }
 @COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { path = "../../worktree-zenoh/routing-timestamps/zenoh", default-features = false, features = ["internal"] }
+zenoh = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps", default-features = false, features = ["internal"] }
 @COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 cbindgen = "0.29.0"
 fs2 = "0.4.3"
