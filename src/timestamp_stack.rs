@@ -45,19 +45,19 @@ use crate::{
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum z_interception_point_t {
-    Z_INTERCEPTION_POINT_SEND = 0,
-    Z_INTERCEPTION_POINT_ROUTE = 1,
-    Z_INTERCEPTION_POINT_RECEIVE = 2,
-    Z_INTERCEPTION_POINT_UNKNOWN = 255,
+    Send = 0,
+    Route = 1,
+    Receive = 2,
+    Unknown = 255,
 }
 
 impl From<InterceptionPoint> for z_interception_point_t {
     fn from(v: InterceptionPoint) -> Self {
         match v {
-            InterceptionPoint::Send => Self::Z_INTERCEPTION_POINT_SEND,
-            InterceptionPoint::Route => Self::Z_INTERCEPTION_POINT_ROUTE,
-            InterceptionPoint::Receive => Self::Z_INTERCEPTION_POINT_RECEIVE,
-            _ => Self::Z_INTERCEPTION_POINT_UNKNOWN,
+            InterceptionPoint::Send => Self::Send,
+            InterceptionPoint::Route => Self::Route,
+            InterceptionPoint::Receive => Self::Receive,
+            _ => Self::Unknown,
         }
     }
 }
