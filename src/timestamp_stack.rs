@@ -124,6 +124,9 @@ pub extern "C" fn z_internal_timestamp_instrumentation_check(
 /// @warning This API has been marked as unstable.
 ///
 /// Borrows the instrumentation config.
+///
+/// # Safety
+/// Caller must ensure `this_` is a valid, initialized pointer.
 #[no_mangle]
 pub unsafe extern "C" fn z_timestamp_instrumentation_loan(
     this_: &z_owned_timestamp_instrumentation_t,
@@ -256,6 +259,9 @@ pub extern "C" fn z_sample_timestamp_stack(
 ///
 /// Returns a loaned pointer to the timestamp stack on a successful reply's sample,
 /// or NULL if not present.
+///
+/// # Safety
+/// Caller must ensure `this_` is a valid, initialized pointer.
 #[no_mangle]
 pub unsafe extern "C" fn z_reply_timestamp_stack(
     this_: &z_loaned_reply_t,
@@ -396,5 +402,5 @@ pub extern "C" fn z_session_ts_callback_drop(
     this_: &mut z_owned_session_ts_callback_t,
 ) {
     // Drop is called automatically when the value is replaced.
-    let _ = std::mem::replace(this_, z_owned_session_ts_callback_t::default());
+    let _ = std::mem::take(this_);
 }

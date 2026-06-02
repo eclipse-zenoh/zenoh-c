@@ -114,10 +114,7 @@ pub extern "C" fn z_open(
     let mut builder = zenoh::open(config);
     #[cfg(feature = "unstable")]
     if let Some(opts) = options {
-        let cb = std::mem::replace(
-            &mut opts.timestamp_callback,
-            z_owned_session_ts_callback_t::default(),
-        );
+        let cb = std::mem::take(&mut opts.timestamp_callback);
         if let Some(rust_cb) = cb.into_rust_callback() {
             builder = builder.with_timestamp_callback(rust_cb);
         }
