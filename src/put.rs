@@ -19,8 +19,6 @@ use zenoh::{
     Wait,
 };
 
-#[cfg(feature = "unstable")]
-use crate::{z_source_info_t, timestamp_stack::z_loaned_timestamp_instrumentation_t};
 use crate::{
     commons::*,
     result,
@@ -28,6 +26,8 @@ use crate::{
     z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t, z_moved_bytes_t,
     z_moved_encoding_t, z_timestamp_t,
 };
+#[cfg(feature = "unstable")]
+use crate::{timestamp_stack::z_loaned_timestamp_instrumentation_t, z_source_info_t};
 
 /// Options passed to the `z_put()` function.
 #[repr(C)]

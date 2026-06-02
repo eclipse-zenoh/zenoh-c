@@ -151,9 +151,7 @@ pub extern "C" fn z_timestamp_instrumentation_drop(
 // ── z_timestamp_stack_t / z_loaned_timestamp_stack_t ─────────────────────────
 // z_loaned_timestamp_stack_t is defined in opaque_types (correct size from build).
 
-decl_c_type!(
-    loaned(z_loaned_timestamp_stack_t, RustTimestampStack),
-);
+decl_c_type!(loaned(z_loaned_timestamp_stack_t, RustTimestampStack),);
 
 /// @warning This API has been marked as unstable.
 ///
@@ -181,9 +179,10 @@ pub extern "C" fn z_timestamp_stack_record_at(
 // ── z_loaned_timestamp_stack_record_t ────────────────────────────────────────
 // z_loaned_timestamp_stack_record_t is defined in opaque_types (correct size from build).
 
-decl_c_type!(
-    loaned(z_loaned_timestamp_stack_record_t, zenoh::timestamp_stack::TimestampStackRecord),
-);
+decl_c_type!(loaned(
+    z_loaned_timestamp_stack_record_t,
+    zenoh::timestamp_stack::TimestampStackRecord
+),);
 
 /// @warning This API has been marked as unstable.
 ///
@@ -398,9 +397,7 @@ pub extern "C" fn z_internal_session_ts_callback_check(
 ///
 /// Drops the session timestamp callback (calls the drop function if set).
 #[no_mangle]
-pub extern "C" fn z_session_ts_callback_drop(
-    this_: &mut z_owned_session_ts_callback_t,
-) {
+pub extern "C" fn z_session_ts_callback_drop(this_: &mut z_owned_session_ts_callback_t) {
     // Drop is called automatically when the value is replaced.
     let _ = std::mem::take(this_);
 }

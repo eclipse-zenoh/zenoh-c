@@ -18,14 +18,14 @@ use std::mem::MaybeUninit;
 use zenoh::shm::ShmProviderState;
 use zenoh::{Session, Wait};
 
+#[cfg(feature = "unstable")]
+use crate::timestamp_stack::z_owned_session_ts_callback_t;
 use crate::{
     opaque_types::{z_loaned_session_t, z_owned_session_t},
     result,
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
     z_moved_config_t, z_moved_session_t,
 };
-#[cfg(feature = "unstable")]
-use crate::timestamp_stack::z_owned_session_ts_callback_t;
 #[cfg(all(feature = "shared-memory", feature = "unstable"))]
 use crate::{
     result::z_result_t,

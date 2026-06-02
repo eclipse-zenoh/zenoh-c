@@ -34,8 +34,7 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    timestamp_stack::z_loaned_timestamp_instrumentation_t,
-    transmute::IntoCType,
+    timestamp_stack::z_loaned_timestamp_instrumentation_t, transmute::IntoCType,
     z_entity_global_id_t, z_reliability_default, z_reliability_t, z_source_info_t,
 };
 /// Options passed to the `z_declare_publisher()` function.

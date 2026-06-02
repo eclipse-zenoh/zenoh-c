@@ -38,8 +38,7 @@ use crate::{
 };
 #[cfg(feature = "unstable")]
 use crate::{
-    timestamp_stack::z_loaned_timestamp_instrumentation_t,
-    transmute::IntoCType,
+    timestamp_stack::z_loaned_timestamp_instrumentation_t, transmute::IntoCType,
     z_entity_global_id_t, z_moved_cancellation_token_t, z_source_info_t,
 };
 decl_c_type!(
