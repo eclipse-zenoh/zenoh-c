@@ -29,13 +29,13 @@ panic = [
 default = ["zenoh/default"]
 
 [dependencies]
-zenoh = { path = "../../../../worktree-zenoh/routing-timestamps/zenoh", default-features = false, features = [
+zenoh = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps", default-features = false, features = [
     "internal",
 ] }
-zenoh-ext = { path = "../../../../worktree-zenoh/routing-timestamps/zenoh-ext", default-features = false, features = [
+zenoh-ext = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps", default-features = false, features = [
     "internal",
 ] }
-zenoh-protocol = { path = "../../../../worktree-zenoh/routing-timestamps/commons/zenoh-protocol" }
+zenoh-protocol = { version = "1.9.0", git = "https://github.com/YuanYuYuan/zenoh.git", branch = "feat/routing-timestamps" }
 const_format = "0.2.32"
 flume = "*"
 tokio = "*"
