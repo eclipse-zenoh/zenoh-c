@@ -25,6 +25,8 @@ use zenoh::timestamp_stack::{
     TimestampStack as RustTimestampStack, TsStackContext,
 };
 
+// Re-export so that put.rs / get.rs / publisher.rs can import via `timestamp_stack::`.
+pub use crate::opaque_types::z_loaned_timestamp_instrumentation_t;
 use crate::{
     get::{z_loaned_reply_err_t, z_loaned_reply_t},
     opaque_types::{
@@ -33,8 +35,6 @@ use crate::{
     },
     transmute::{LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
 };
-// Re-export so that put.rs / get.rs / publisher.rs can import via `timestamp_stack::`.
-pub use crate::opaque_types::z_loaned_timestamp_instrumentation_t;
 
 // ── z_interception_point_t ────────────────────────────────────────────────────
 
