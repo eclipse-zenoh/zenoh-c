@@ -160,7 +160,8 @@ pub extern "C" fn z_obtain_shm_provider(
         }
         ShmProviderState::Initializing(waiter) => {
             if blocking {
-                let result = zenoh_runtime::ZRuntime::Application.block_in_place(async move {waiter.recv_async().await.ok().flatten()});
+                let result = zenoh_runtime::ZRuntime::Application
+                    .block_in_place(async move { waiter.recv_async().await.ok().flatten() });
                 if let Some(provider) = result {
                     out_state.write(z_shm_provider_state::READY);
                     out_provider
