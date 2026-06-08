@@ -477,13 +477,10 @@ int run_transport_provider() {
 
     z_owned_shared_shm_provider_t shared_provider;
     z_shm_provider_state state;
-    ASSERT_ERR(z_obtain_shm_provider(z_loan(session), &shared_provider, &state));
+    ASSERT_ERR(z_obtain_shm_provider(z_loan(session), false, &shared_provider, &state));
     ASSERT_TRUE(state == Z_SHM_PROVIDER_STATE_INITIALIZING);
 
-    while (z_obtain_shm_provider(z_loan(session), &shared_provider, &state) != Z_OK) {
-        z_sleep_ms(100);
-    }
-
+    ASSERT_OK(z_obtain_shm_provider(z_loan(session), true, &shared_provider, &state));
     ASSERT_TRUE(state == Z_SHM_PROVIDER_STATE_READY);
 
     const z_loaned_shm_provider_t* provider = z_shared_shm_provider_loan_as(z_loan(shared_provider));
