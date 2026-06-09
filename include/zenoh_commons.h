@@ -1955,7 +1955,7 @@ ZENOHC_API
 z_result_t z_bytes_to_string(const struct z_loaned_bytes_t *this_,
                              struct z_owned_string_t *dst);
 /**
- * Appends bytes.
+ * Appends bytes.     
  * This allows to compose a serialized data out of multiple `z_owned_bytes_t` that may point to different memory regions.
  * Said in other terms, it allows to create a linear view on different memory regions without copy.
  *
@@ -4164,7 +4164,7 @@ void z_keyexpr_as_view_string(const struct z_loaned_keyexpr_t *this_,
  * Canonizes the passed string in place, possibly shortening it by modifying `len`.
  *
  * May SEGFAULT if `start` is NULL or lies in read-only memory (as values initialized with string litterals do).
- *
+ *  
  * @return 0 upon success, negative error values upon failure (if the passed string was an invalid
  * key expression for reasons other than a non-canon form).
  */
@@ -4727,7 +4727,7 @@ ZENOHC_API
 z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Each session's runtime may create its own provider to manage internal optimizations.
+ * @brief Each session's runtime may create its own provider to manage internal optimizations.  
  * This method exposes that provider so it can also be accessed at the application level.
  *
  * Note that the provider may not be immediately available or may be disabled via configuration.
@@ -4735,6 +4735,8 @@ z_result_t z_mutex_unlock(struct z_loaned_mutex_t *this_);
  *
  * To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
  *
+ * @param blocking: If `true`, this function will block until provider is ready or an error occurs. If `false`,
+ * this function will return immediately with provider state.
  * @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
  * initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
  * @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
