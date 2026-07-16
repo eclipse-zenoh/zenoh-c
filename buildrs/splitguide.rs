@@ -607,7 +607,7 @@ pub fn split_bindings(genetation_path: impl AsRef<Path>) -> Result<Vec<PathBuf>,
         for file in appropriate_files {
             let writer = files.get_mut(&file).unwrap();
             record.used = true;
-            write!(writer, "{}", &record).unwrap();
+            write!(writer, "{}", record).unwrap();
         }
     }
     for record in &records {

@@ -525,7 +525,7 @@ fn evaluate_c_defines_line(line: &str) -> bool {
     s = s.replace("#if", "");
     match evalexpr::eval(&s) {
         Ok(v) => v == evalexpr::Value::from(false),
-        Err(_) => panic!("Failed to evaluate {}", &s),
+        Err(_) => panic!("Failed to evaluate {}", s),
     }
 }
 
@@ -958,7 +958,7 @@ fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
             .clone()
             .typename
             .typename
-            .replace(" (*call)", &format!("(*{})", &callback_typename));
+            .replace(" (*call)", &format!("(*{})", callback_typename));
 
         out += &format!("typedef {};\n", prototype);
     }
@@ -1130,7 +1130,7 @@ fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
         let prototype = processed_f.args[1]
             .typename
             .typename
-            .replace(&format!(" (*{})", &processed_f.args[1].name), "");
+            .replace(&format!(" (*{})", processed_f.args[1].name), "");
         let callback_typename = f.func_name.clone() + "_callback_t";
         out += &format!(
             "extern \"C\" using {} = {};\n",
