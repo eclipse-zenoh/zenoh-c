@@ -13,7 +13,8 @@
 #
 [package]
 name = "zenoh-c"
-version = "1.7.1"
+version = "1.9.0"
+rust-version = "1.75.0"
 repository = "https://github.com/eclipse-zenoh/zenoh-c"
 homepage = "http://zenoh.io"
 authors = [
@@ -46,6 +47,7 @@ transport_udp = ["zenoh/transport_udp"]
 transport_unixsock-stream = ["zenoh/transport_unixsock-stream"]
 transport_ws = ["zenoh/transport_ws"]
 transport_vsock = ["zenoh/transport_vsock"]
+transport_quic_datagram = ["zenoh/transport_quic_datagram"]
 stats = ["zenoh/stats"]
 default = [
     "auth_pubkey",
@@ -58,6 +60,7 @@ default = [
     "transport_udp",
     "transport_unixsock-stream",
     "transport_ws",
+    "transport_quic_datagram",
 ]
 
 [badges]
@@ -74,17 +77,19 @@ spin = "0.9.5"
 tokio = "*"
 unwrap-infallible = "0.1.5"
 const_format = "0.2.32"
-zenoh = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
-zenoh-ext = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
-zenoh-runtime = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
-zenoh-util = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 flume = "*"
+zenoh = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh-ext = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features=["internal"] }
+zenoh-runtime = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh-util = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+# zenoh-pinned-deps-1-75 = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
 
 [build-dependencies]
-zenoh = { version = "1.7.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+zenoh = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = ["internal"] }
+# zenoh-pinned-deps-1-75 = { version = "1.9.0", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 cbindgen = "0.29.0"
 fs2 = "0.4.3"
 regex = "1.11.1"
@@ -112,7 +117,7 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2017, 2022 ZettaScale Technology"
 section = "net"
 license-file = ["LICENSE", "0"]
-depends = "libzenohc (=1.7.1)"
+depends = "libzenohc (=1.9.0)"
 assets = [["include/*", "usr/include/", "755"]]
 
 [profile.dev]

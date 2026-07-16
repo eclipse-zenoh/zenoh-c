@@ -257,13 +257,14 @@ Examples:
 `z_move` and `z_take` usage:
 
 .. code-block:: c
+
     void consume_string(z_moved_string_t* ps) {
         z_owned_string_t s;
         z_take(&s, ps);
         printf("%.*s\n", z_string_len(z_loan(s)), z_string_data(z_loan(s)));
         z_drop(s);
     }
-    ...
+    //...
     z_owned_string_t s;
     z_string_copy_from_str(&s, "Hello, world!");
     consume_string(z_move(s));
@@ -273,12 +274,13 @@ Examples:
 for types used in callbacks at this moment: `z_loaned_sample_t*`, `z_loaned_reply_t*`, `z_loaned_hello_t*`, `z_loaned_query_t*`)*:
 
 .. code-block:: c
+    
     void sub_callback(z_loaned_sample_t* sample, void* arg) {
         z_owned_sample_t s;
         z_take_from_loaned(&s, sample);
         // Now we can save `s` for further processing, e.g. send it to another thread
     }
-    ...
+    //...
     z_owned_closure_sample_t callback;
     z_closure(&callback, sub_callback, NULL, NULL);
     z_owned_subscriber_t sub;

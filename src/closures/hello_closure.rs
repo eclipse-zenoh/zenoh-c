@@ -95,7 +95,7 @@ pub extern "C" fn z_closure_hello_call(
         }
     }
 }
-/// Drops the closure. Droping an uninitialized closure is a no-op.
+/// Drops the closure. Dropping an uninitialized closure is a no-op.
 #[no_mangle]
 pub extern "C" fn z_closure_hello_drop(this_: &mut z_moved_closure_hello_t) {
     let _ = this_.take_rust_type();

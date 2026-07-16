@@ -136,6 +136,8 @@ pub enum z_shm_provider_state {
 ///
 /// To use this provider, both *shared_memory* and *transport_optimization* config sections must be enabled.
 ///
+/// @param blocking: If `true`, this function will block until provider is ready or an error occurs. If `false`,
+/// this function will return immediately with provider state.
 /// @param out_provider: A [`z_owned_shared_shm_provider_t`](z_owned_shared_shm_provider_t) object that will be
 /// initialized from Session's provider if it exists. Initialized only if the returned value is `Z_OK`.
 /// @param out_state: A [`z_shm_provider_state`](z_shm_provider_state) that indicates the status of the provider.
@@ -145,18 +147,35 @@ pub enum z_shm_provider_state {
 #[no_mangle]
 pub extern "C" fn z_obtain_shm_provider(
     this: &z_loaned_session_t,
+    blocking: bool,
     out_provider: &mut MaybeUninit<z_owned_shared_shm_provider_t>,
     out_state: &mut MaybeUninit<z_shm_provider_state>,
 ) -> z_result_t {
     let s = this.as_rust_type_ref();
+
     match s.get_shm_provider() {
         ShmProviderState::Disabled => {
             out_state.write(z_shm_provider_state::DISABLED);
             result::Z_EUNAVAILABLE
         }
-        ShmProviderState::Initializing => {
-            out_state.write(z_shm_provider_state::INITIALIZING);
-            result::Z_EUNAVAILABLE
+        ShmProviderState::Initializing(waiter) => {
+            if blocking {
+                let result = zenoh_runtime::ZRuntime::Application
+                    .block_in_place(async move { waiter.recv_async().await.ok().flatten() });
+                if let Some(provider) = result {
+                    out_state.write(z_shm_provider_state::READY);
+                    out_provider
+                        .as_rust_type_mut_uninit()
+                        .write(Some(SharedShmProvider(CSHMProvider::SharedPosix(provider))));
+                    result::Z_OK
+                } else {
+                    out_state.write(z_shm_provider_state::ERROR);
+                    result::Z_EUNAVAILABLE
+                }
+            } else {
+                out_state.write(z_shm_provider_state::INITIALIZING);
+                result::Z_EUNAVAILABLE
+            }
         }
         ShmProviderState::Ready(provider) => {
             out_state.write(z_shm_provider_state::READY);
@@ -256,7 +275,7 @@ pub extern "C" fn z_close(
     #[allow(unused)] options: Option<&mut z_close_options_t>,
 ) -> result::z_result_t {
     #[allow(unused_mut)]
-    let mut close_builder = session.as_rust_type_mut().close();
+    let mut close_builder = session.as_rust_type_mut().close().wait_callbacks();
 
     #[cfg(feature = "unstable")]
     if let Some(options) = options {
@@ -294,7 +313,11 @@ pub extern "C" fn z_session_is_closed(session: &z_loaned_session_t) -> bool {
 /// Closes and invalidates the session.
 #[no_mangle]
 pub extern "C" fn z_session_drop(this_: &mut z_moved_session_t) {
-    let _ = this_.take_rust_type();
+    if let Some(s) = this_.take_rust_type() {
+        // Session in zenoh-c is non-clonnable,
+        // so it it safe to close it on drop
+        let _ = s.close().wait_callbacks().wait();
+    }
 }
 
 #[cfg(feature = "unstable")]

@@ -42,6 +42,26 @@ pub use matching_status_closure::*;
 mod matching_status_closure;
 
 #[cfg(feature = "unstable")]
+pub use transport_closure::*;
+#[cfg(feature = "unstable")]
+mod transport_closure;
+
+#[cfg(feature = "unstable")]
+pub use link_closure::*;
+#[cfg(feature = "unstable")]
+mod link_closure;
+
+#[cfg(feature = "unstable")]
 pub use miss_closure::*;
 #[cfg(feature = "unstable")]
 mod miss_closure;
+
+#[cfg(feature = "unstable")]
+pub use transport_event_closure::*;
+#[cfg(feature = "unstable")]
+mod transport_event_closure;
+
+#[cfg(feature = "unstable")]
+pub use link_event_closure::*;
+#[cfg(feature = "unstable")]
+mod link_event_closure;

@@ -111,12 +111,11 @@ pub extern "C" fn z_put(
         put = put
             .priority(options.priority.into())
             .congestion_control(options.congestion_control.into())
-            .express(options.is_express);
+            .express(options.is_express)
+            .allowed_destination(options.allowed_destination.into());
         #[cfg(feature = "unstable")]
         {
-            put = put
-                .reliability(options.reliability.into())
-                .allowed_destination(options.allowed_destination.into());
+            put = put.reliability(options.reliability.into());
             if let Some(source_info) = options.source_info {
                 put = put.source_info(source_info.as_rust_type_ref().clone());
             };
@@ -192,13 +191,12 @@ pub extern "C" fn z_delete(
         del = del
             .congestion_control(options.congestion_control.into())
             .priority(options.priority.into())
-            .express(options.is_express);
+            .express(options.is_express)
+            .allowed_destination(options.allowed_destination.into());
 
         #[cfg(feature = "unstable")]
         {
-            del = del
-                .reliability(options.reliability.into())
-                .allowed_destination(options.allowed_destination.into());
+            del = del.reliability(options.reliability.into());
         }
     }
 

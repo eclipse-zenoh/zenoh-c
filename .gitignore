@@ -78,3 +78,6 @@ include/zenoh_opaque.h
 CMakeFiles/
 debug/
 release/
+
+# Ingore results of cargo vendor
+vendor/

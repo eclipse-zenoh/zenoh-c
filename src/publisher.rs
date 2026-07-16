@@ -208,7 +208,7 @@ pub extern "C" fn z_publisher_put_options_default(
     });
 }
 
-pub(crate) fn _apply_pubisher_put_options<
+pub(crate) fn _apply_publisher_put_options<
     T: SampleBuilderTrait + TimestampBuilderTrait + EncodingBuilderTrait,
 >(
     builder: T,
@@ -252,7 +252,7 @@ pub unsafe extern "C" fn z_publisher_put(
     let payload = payload.take_rust_type();
     let mut put = publisher.put(payload);
     if let Some(options) = options {
-        put = _apply_pubisher_put_options(put, options);
+        put = _apply_publisher_put_options(put, options);
     }
 
     match put.wait() {
@@ -283,7 +283,7 @@ pub extern "C" fn z_publisher_delete_options_default(
     this.write(z_publisher_delete_options_t::default());
 }
 
-pub(crate) fn _apply_pubisher_delete_options<T: TimestampBuilderTrait>(
+pub(crate) fn _apply_publisher_delete_options<T: TimestampBuilderTrait>(
     builder: T,
     options: &mut z_publisher_delete_options_t,
 ) -> T {
@@ -306,7 +306,7 @@ pub extern "C" fn z_publisher_delete(
     let publisher = publisher.as_rust_type_ref();
     let mut del = publisher.delete();
     if let Some(options) = options {
-        del = _apply_pubisher_delete_options(del, options);
+        del = _apply_publisher_delete_options(del, options);
     }
     if let Err(e) = del.wait() {
         crate::report_error!("{}", e);
@@ -427,7 +427,7 @@ pub extern "C" fn z_publisher_get_matching_status(
 #[no_mangle]
 #[allow(clippy::missing_safety_doc)]
 pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
-    std::mem::drop(this.take_rust_type())
+    let _ = z_undeclare_publisher(this);
 }
 
 #[no_mangle]
@@ -436,7 +436,7 @@ pub extern "C" fn z_publisher_drop(this: &mut z_moved_publisher_t) {
 /// @return 0 in case of success, negative error code otherwise.
 pub extern "C" fn z_undeclare_publisher(this_: &mut z_moved_publisher_t) -> result::z_result_t {
     if let Some(p) = this_.take_rust_type() {
-        if let Err(e) = p.undeclare().wait() {
+        if let Err(e) = p.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_ENETWORK;
         }

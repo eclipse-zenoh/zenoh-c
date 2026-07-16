@@ -28,7 +28,7 @@ use crate::{
     z_closure_query_call, z_closure_query_loan, z_congestion_control_t, z_loaned_bytes_t,
     z_loaned_encoding_t, z_loaned_keyexpr_t, z_loaned_session_t, z_locality_default, z_locality_t,
     z_moved_bytes_t, z_moved_closure_query_t, z_moved_encoding_t, z_moved_queryable_t,
-    z_priority_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
+    z_priority_t, z_reply_keyexpr_t, z_timestamp_t, z_view_string_from_substr, z_view_string_t,
 };
 #[cfg(feature = "unstable")]
 use crate::{transmute::IntoCType, z_entity_global_id_t, z_source_info_t};
@@ -149,8 +149,10 @@ pub extern "C" fn z_queryable_options_default(this_: &mut MaybeUninit<z_queryabl
 pub struct z_query_reply_options_t {
     /// The encoding of the reply payload.
     pub encoding: Option<&'static mut z_moved_encoding_t>,
+    /// @warning This API is deprecated. Reply congestion control is not supported anymore.
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
+    /// @warning This API is deprecated. Reply priority is not supported anymore.
     /// The priority of the reply.
     pub priority: z_priority_t,
     /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
@@ -172,7 +174,7 @@ pub struct z_query_reply_options_t {
 pub extern "C" fn z_query_reply_options_default(this_: &mut MaybeUninit<z_query_reply_options_t>) {
     this_.write(z_query_reply_options_t {
         encoding: None,
-        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
+        congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -205,8 +207,10 @@ pub extern "C" fn z_query_reply_err_options_default(
 #[allow(non_camel_case_types)]
 #[repr(C)]
 pub struct z_query_reply_del_options_t {
+    /// @warning This API is deprecated. Reply congestion control is not supported anymore.
     /// The congestion control to apply when routing the reply.
     pub congestion_control: z_congestion_control_t,
+    /// @warning This API is deprecated. Reply priority is not supported anymore.
     /// The priority of the reply.
     pub priority: z_priority_t,
     /// If set to ``true``, this reply will not be batched. This usually has a positive impact on latency but negative impact on throughput.
@@ -229,7 +233,7 @@ pub extern "C" fn z_query_reply_del_options_default(
     this: &mut MaybeUninit<z_query_reply_del_options_t>,
 ) {
     this.write(z_query_reply_del_options_t {
-        congestion_control: CongestionControl::DEFAULT_RESPONSE.into(),
+        congestion_control: CongestionControl::Block.into(),
         priority: Priority::default().into(),
         is_express: false,
         timestamp: None,
@@ -329,7 +333,7 @@ pub extern "C" fn z_declare_background_queryable(
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub extern "C" fn z_queryable_drop(this_: &mut z_moved_queryable_t) {
-    std::mem::drop(this_.take_rust_type())
+    let _ = z_undeclare_queryable(this_);
 }
 
 /// Returns ``true`` if queryable is valid, ``false`` otherwise.
@@ -348,10 +352,10 @@ pub extern "C" fn z_queryable_id(queryable: &z_loaned_queryable_t) -> z_entity_g
 
 /// Sends a reply to a query.
 ///
-/// This function must be called inside of a Queryable callback passing the
-/// query received as parameters of the callback function. This function can
-/// be called multiple times to send multiple replies to a query. The reply
-/// will be considered complete when the Queryable callback returns.
+/// This function can be called multiple times to send multiple replies to a
+/// query. The query will be considered finalized when the query object has no
+/// live references, allowing `z_query_clone()` or `z_query_take_from_loaned()`
+/// to be used to produce replies outside of the Queryable callback.
 ///
 /// @param this_: The query to reply to.
 /// @param key_expr: The key of this reply.
@@ -385,8 +389,6 @@ pub extern "C" fn z_query_reply(
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
-        reply = reply.priority(options.priority.into());
-        reply = reply.congestion_control(options.congestion_control.into());
         reply = reply.express(options.is_express);
     }
 
@@ -399,10 +401,10 @@ pub extern "C" fn z_query_reply(
 
 /// Sends a error reply to a query.
 ///
-/// This function must be called inside of a Queryable callback passing the
-/// query received as parameters of the callback function. This function can
-/// be called multiple times to send multiple replies to a query. The reply
-/// will be considered complete when the Queryable callback returns.
+/// This function can be called multiple times to send multiple replies to a
+/// query. The query will be considered finalized when the query object has no
+/// live references, allowing `z_query_clone()` or `z_query_take_from_loaned()`
+/// to be used to produce replies outside of the Queryable callback.
 ///
 /// @param this_: The query to reply to.
 /// @param payload: The payload carrying error message. Will be consumed.
@@ -434,10 +436,10 @@ pub unsafe extern "C" fn z_query_reply_err(
 
 /// Sends a delete reply to a query.
 ///
-/// This function must be called inside of a Queryable callback passing the
-/// query received as parameters of the callback function. This function can
-/// be called multiple times to send multiple replies to a query. The reply
-/// will be considered complete when the Queryable callback returns.
+/// This function can be called multiple times to send multiple replies to a
+/// query. The query will be considered finalized when the query object has no
+/// live references, allowing `z_query_clone()` or `z_query_take_from_loaned()`
+/// to be used to produce replies outside of the Queryable callback.
 ///
 /// @param this_: The query to reply to.
 /// @param key_expr: The key of this delete reply.
@@ -466,8 +468,6 @@ pub unsafe extern "C" fn z_query_reply_del(
         if let Some(timestamp) = options.timestamp.as_ref() {
             reply = reply.timestamp(Some(timestamp.into_rust_type()));
         }
-        reply = reply.priority(options.priority.into());
-        reply = reply.congestion_control(options.congestion_control.into());
         reply = reply.express(options.is_express);
     }
 
@@ -569,12 +569,19 @@ pub extern "C" fn z_query_source_info(this_: &z_loaned_query_t) -> Option<&z_sou
         .map(|si| si.as_ctype_ref())
 }
 
+/// @brief Gets the accept replies setting of the query,
+/// i.e. which replies are accepted by the query originator.
+#[no_mangle]
+pub extern "C" fn z_query_accepts_replies(this_: &z_loaned_query_t) -> z_reply_keyexpr_t {
+    this_.as_rust_type_ref().accepts_replies().into()
+}
+
 /// Undeclares a `z_owned_queryable_t`.
 /// Returns 0 in case of success, negative error code otherwise.
 #[no_mangle]
 pub extern "C" fn z_undeclare_queryable(this_: &mut z_moved_queryable_t) -> result::z_result_t {
     if let Some(qable) = this_.take_rust_type() {
-        if let Err(e) = qable.undeclare().wait() {
+        if let Err(e) = qable.undeclare().wait_callbacks().wait() {
             crate::report_error!("{}", e);
             return result::Z_EGENERIC;
         }
