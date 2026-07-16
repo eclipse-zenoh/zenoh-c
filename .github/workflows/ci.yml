@@ -208,6 +208,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew tap messense/macos-cross-toolchains
+          brew trust messense/macos-cross-toolchains
           brew install armv7-unknown-linux-gnueabihf
           brew install mingw-w64
           brew install x86_64-unknown-linux-gnu
