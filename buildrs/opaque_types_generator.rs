@@ -123,12 +123,21 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         feature_args.push(feature);
     }
 
-    let mut command = std::process::Command::new("cargo");
-
-    // Preserve the toolchain channel if one was specified (e.g., +1.75)
-    if let Ok(toolchain) = std::env::var("RUSTUP_TOOLCHAIN") {
-        command.arg(format!("+{}", toolchain));
-    }
+    // The cargo command can be overridden with the CARGO_COMMAND environment variable
+    // (same variable as used by colcon-cargo), e.g. 'cargo-1.91' on Ubuntu.
+    // In this case the toolchain is ignored, since the toolchain is already baked into the cargo command.
+    // Otherwise fall back to the default cargo command and toolchain.
+    let mut command = match std::env::var("CARGO_COMMAND") {
+        Ok(cargo_command) if !cargo_command.is_empty() => std::process::Command::new(cargo_command),
+        _ => {
+            let mut command = std::process::Command::new("cargo");
+            // Preserve the toolchain channel if one was specified (e.g., +1.75)
+            if let Ok(toolchain) = std::env::var("RUSTUP_TOOLCHAIN") {
+                command.arg(format!("+{}", toolchain));
+            }
+            command
+        }
+    };
 
     command
         .arg("build")

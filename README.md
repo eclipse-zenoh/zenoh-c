@@ -219,6 +219,39 @@ To build on a system with preinstalled Rust of some old version if `cargo` doesn
 cmake ../zenoh-c -DZENOHC_MSRV_1_75=TRUE
 ```
 
+## Selecting the cargo command
+
+By default the build invokes the `cargo` command found in the `PATH`. It can be overridden with the
+`CARGO_COMMAND` environment variable (the same variable as used by
+[colcon-cargo](https://github.com/colcon/colcon-cargo)). This is useful when Rust is installed via
+distribution packages providing versioned commands, such as the Ubuntu `cargo-1.91` package:
+
+```bash
+CARGO_COMMAND=cargo-1.91 cmake ../zenoh-c
+cmake --build .
+```
+
+The variable is read at cmake configuration time and baked into the generated build rules, so it has
+to be set when running `cmake` to configure the project. The same variable is also honored by the
+internal `build.rs` invocations of cargo.
+
+> :warning: `CARGO_COMMAND` selects the cargo executable, not the rustc executable: the compiler is
+> the one that the selected cargo resolves for itself. A cargo installed from distribution packages
+> resolves the matching rustc of its own toolchain, but on a system managed by
+> [rustup](https://rustup.rs) do **not** point `CARGO_COMMAND` at a toolchain binary such as
+> `~/.rustup/toolchains/<toolchain>/bin/cargo`. This bypasses the rustup proxies, leaving
+> `RUSTUP_TOOLCHAIN` unset, and the `rustc` proxy then resolves a toolchain independently for each
+> crate being compiled: dependencies from the registry get the rustup default toolchain, while
+> crates whose sources are covered by a `rust-toolchain.toml` get the pinned one. The build ends up
+> mixing rustc versions and fails with
+> `error[E0514]: found crate ... compiled by an incompatible version of rustc`. To select a rustup
+> toolchain, set `RUSTUP_TOOLCHAIN=<toolchain>`, run the build under `rustup run <toolchain> ...`,
+> or use the [`ZENOHC_CARGO_CHANNEL`](#minimal-supported-rust-version) option.
+>
+> :warning: [rust-toolchain.toml](rust-toolchain.toml) is a rustup feature. When `CARGO_COMMAND`
+> designates a cargo that is not managed by rustup, the version pinned by that file is ignored and
+> the build uses the toolchain of the selected cargo.
+
 ## Zenoh features support (enabling/disabling protocols, etc)
 
 It's necessary sometimes to build zenoh-c library with set of features different from default. For example: enable TCP and UDP only. This can be done by changing `ZENOHC_CARGO_FLAGS` parameter for cmake (notice ";" instead of space due to cmake peculiarities)

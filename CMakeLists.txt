@@ -42,6 +42,14 @@ if(NOT("${_INTERNAL_ZENOHC_BUILD_TARGET}" STREQUAL ""))
 	message(STATUS "Build target: ${_INTERNAL_ZENOHC_BUILD_TARGET} (from ${_INTERNAL_ZENOHC_BUILD_TARGET_SOURCE})")
 endif()
 declare_cache_var(ZENOHC_CARGO_CHANNEL "" STRING "Cargo channel parameter. Should be '+stable', '+nightly' or empty value")
+# The cargo command to use can be overridden with the CARGO_COMMAND environment variable
+# (same variable as used by colcon-cargo), e.g. with 'cargo-1.91' package on Ubuntu. Defaults to 'cargo'.
+if(NOT("$ENV{CARGO_COMMAND}" STREQUAL ""))
+	set(cargo_executable "$ENV{CARGO_COMMAND}")
+	message(STATUS "Cargo command: ${cargo_executable} (from ENV{CARGO_COMMAND})")
+else()
+	set(cargo_executable "cargo")
+endif()
 declare_cache_var(ZENOHC_MSRV_1_75 FALSE BOOL "Ensure that zenoh-c can be built with Rust 1.75 by pinning dependencies to compatible versions")
 if (ZENOHC_MSRV_1_75)
 	message(STATUS "Due to ZENOHC_MSRV_1_75 setting the ZENOHC_COPY_SOURCE_CARGO_LOCK and ZENOHC_BUILD_IN_SOURCE_TREE cache variables are forcibly set to FALSE to avoid build failures due to incompatible source Cargo.lock file")
@@ -281,8 +289,8 @@ file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide
 add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
-	COMMAND ${CMAKE_COMMAND} -E echo \"cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
-	COMMAND ${CMAKE_COMMAND} -E env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types cargo ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E echo \"${cargo_executable} ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
+	COMMAND ${CMAKE_COMMAND} -E env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types ${cargo_executable} ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
