@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
 
-use std::{mem::MaybeUninit, ptr::null};
+use std::{mem::MaybeUninit, ptr::{null, null_mut}};
 
 use libc::c_ulong;
 #[cfg(feature = "unstable")]
@@ -147,6 +147,19 @@ pub extern "C" fn z_sample_attachment(this_: &z_loaned_sample_t) -> *const z_loa
     match this_.as_rust_type_ref().attachment() {
         Some(attachment) => attachment.as_loaned_c_type_ref() as *const _,
         None => null(),
+    }
+}
+
+/// Returns the mutable sample attachment.
+///
+/// Returns `NULL`, if sample does not contain any attachment.
+#[no_mangle]
+pub extern "C" fn z_sample_attachment_mut(
+    this_: &mut z_loaned_sample_t,
+) -> *mut z_loaned_bytes_t {
+    match this_.as_rust_type_mut().attachment_mut() {
+        Some(attachment) => attachment.as_loaned_c_type_mut() as *mut _,
+        None => null_mut(),
     }
 }
 #[cfg(feature = "unstable")]
