@@ -166,6 +166,14 @@ jobs:
           cmake --build . --target tests --config Release
           ctest -C Release --output-on-failure -E "(unit_z_api_alignment_test|build_z_build_shared)"
 
+      - name: Verify static installation
+        shell: bash
+        run: |
+          cd build
+          static_install="$PWD/static-install"
+          cmake --install . --config Release --prefix "$static_install"
+          cmake -DZENOHC_INSTALL_PREFIX="$static_install" -P ../tests/check_static_install.cmake
+
       - name: Build examples with zenoh-c
         shell: bash
         run: |

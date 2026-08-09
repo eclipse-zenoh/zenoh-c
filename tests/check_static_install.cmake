@@ -1,0 +1,15 @@
+if(NOT DEFINED ZENOHC_INSTALL_PREFIX)
+    message(FATAL_ERROR "ZENOHC_INSTALL_PREFIX is required")
+endif()
+
+if(WIN32)
+    set(shared_library "${ZENOHC_INSTALL_PREFIX}/bin/zenohc.dll")
+elseif(APPLE)
+    set(shared_library "${ZENOHC_INSTALL_PREFIX}/lib/libzenohc.dylib")
+else()
+    set(shared_library "${ZENOHC_INSTALL_PREFIX}/lib/libzenohc.so")
+endif()
+
+if(EXISTS "${shared_library}")
+    message(FATAL_ERROR "Static installation contains shared library: ${shared_library}")
+endif()
