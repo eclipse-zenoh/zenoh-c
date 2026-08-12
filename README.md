@@ -96,9 +96,9 @@ This repository provides a C binding based on the main [Zenoh implementation wri
    The result of installation is the header files in `include` directory, the library files in `lib` directory and cmake package configuration files for package `zenohc` in `lib/cmake` directory. The library later can be loaded with CMake command `find_package(zenohc)`.
    Add dependency in CMakeLists.txt on target
 
-   - `zenohc::shared` for linking dynamic library
-   - `zenohc::static` for linking static library
-   - `zenohc::lib` for linking static or dynamic library depending on boolean variable `BUILD_SHARED_LIBS`
+   - `zenohc::shared` for linking the dynamic library when installed with `BUILD_SHARED_LIBS=TRUE`
+   - `zenohc::static` for linking the static library when installed with `BUILD_SHARED_LIBS=FALSE`
+   - `zenohc::lib` for linking the installed library variant
 
 5. VScode
 
