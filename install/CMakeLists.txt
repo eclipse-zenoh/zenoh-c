@@ -9,17 +9,44 @@ status_print(CMAKE_INSTALL_PREFIX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
+
+if(IS_ABSOLUTE ${CMAKE_INSTALL_INCLUDEDIR})
+    set(CMAKE_INSTALL_INCLUDEDIR_EXPORTS "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(CMAKE_INSTALL_INCLUDEDIR_PC "${CMAKE_INSTALL_INCLUDEDIR}")
+else()
+    set(CMAKE_INSTALL_INCLUDEDIR_EXPORTS "\${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_INCLUDEDIR}")
+    set(CMAKE_INSTALL_INCLUDEDIR_PC "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
+
+if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
+    set(CMAKE_INSTALL_LIBDIR_EXPORTS "${CMAKE_INSTALL_LIBDIR}")
+    set(CMAKE_INSTALL_LIBDIR_PC "${CMAKE_INSTALL_LIBDIR}")
+else()
+    set(CMAKE_INSTALL_LIBDIR_EXPORTS "\${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}")
+    set(CMAKE_INSTALL_LIBDIR_PC "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+endif()
+
 function(install_zenohc_lib configurations property_postfix package_name)
     get_target_property(dylib_path zenohc::shared IMPORTED_LOCATION_${property_postfix})
     get_target_property_if_set(implib_path zenohc::shared IMPORTED_IMPLIB_${property_postfix})
     get_filename_component(DYLIB ${dylib_path} NAME)
     get_filename_component(IMPLIB "${implib_path}" NAME)
-    # On Windows .dll need to be installed in ${CMAKE_INSTALL_BINDIR}, 
+    # On Windows .dll need to be installed in ${CMAKE_INSTALL_BINDIR},
     # while on Linux and macOS .so and .dylib need to be installed in ${CMAKE_INSTALL_LIBDIR}
     if(WIN32)
         set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_BINDIR})
+        if(IS_ABSOLUTE ${CMAKE_INSTALL_BINDIR})
+            set(ZENOHC_INSTALL_DYLIBDIR_EXPORTS "${CMAKE_INSTALL_BINDIR}")
+        else()
+            set(ZENOHC_INSTALL_DYLIBDIR_EXPORTS "\${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_BINDIR}")
+        endif()
     else()
         set(ZENOHC_INSTALL_DYLIBDIR ${CMAKE_INSTALL_LIBDIR})
+        if(IS_ABSOLUTE ${CMAKE_INSTALL_LIBDIR})
+            set(ZENOHC_INSTALL_DYLIBDIR_EXPORTS "${CMAKE_INSTALL_LIBDIR}")
+        else()
+            set(ZENOHC_INSTALL_DYLIBDIR_EXPORTS "\${PACKAGE_PREFIX_DIR}/${CMAKE_INSTALL_LIBDIR}")
+        endif()
     endif()
     install(FILES ${dylib_path} DESTINATION ${ZENOHC_INSTALL_DYLIBDIR} CONFIGURATIONS ${configurations} COMPONENT lib)
     if(DEFINED implib_path)
@@ -29,8 +56,8 @@ function(install_zenohc_lib configurations property_postfix package_name)
         get_filename_component(LIBNAME ${DYLIB} NAME_WE)
         string(REGEX REPLACE "^lib" "" LIBNAME ${LIBNAME})
         configure_file(${CMAKE_CURRENT_SOURCE_DIR}/zenohc.pc.in ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc @ONLY)
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc 
-            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig" 
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${package_name}_${property_postfix}.pc
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig"
             CONFIGURATIONS ${configurations}
             RENAME ${package_name}.pc
             OPTIONAL
@@ -84,7 +111,7 @@ foreach(dir ${include_dirs})
 endforeach()
 
 #
-# Install lib files 
+# Install lib files
 #
 install_zenohc_lib("Release;RelWithDebInfo;MinSizeRel;None" "RELEASE" zenohc)
 install_zenohc_lib("Debug" "DEBUG" zenohc)
