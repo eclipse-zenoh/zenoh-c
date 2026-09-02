@@ -2,11 +2,14 @@ name: CI
 
 on:
   push:
-    branches: ["**"]
+    branches: ["main", "release/*", "!release/dry-run/*"]
   pull_request:
     branches: ["**"]
-  schedule:
-    - cron: "0 6 * * 1-5"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
@@ -18,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Run clang-format dry-run
         run: find include/ src/ tests/ examples/ -iname "*.h" -o -iname "*.c" | xargs clang-format -n -Werror
@@ -28,10 +31,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install toml-cli2
-        uses: taiki-e/cache-cargo-install-action@v2
+        uses: taiki-e/cache-cargo-install-action@9ee83daaa7b96a6fab930949ecf1122bba04a389  # 3.0.8
         with:
           tool: toml-cli2
         env:
@@ -53,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Validate root lockfile
         run: cargo metadata --locked --format-version=1
@@ -77,13 +80,13 @@ jobs:
 
     steps:
       - name: Clone this repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Update Rust 1.75.0 toolchain
         run: rustup update 1.75.0
 
       - name: Setup rust-cache
-        uses: Swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6  # v2.9.2
         with:
           cache-bin: false
 
@@ -106,7 +109,7 @@ jobs:
         unstable: [false, true]
 
     steps:
-      - uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install Rust toolchain
         run: rustup component add rustfmt clippy
@@ -134,8 +137,10 @@ jobs:
           cmake --build . --target install --config Release
 
       - name: Install valgrind
-        uses: taiki-e/install-action@valgrind
         if: matrix.os == 'ubuntu-latest'
+        uses: taiki-e/install-action@e67fa11c4b9316fa714ddf0abed07a0c3143b95b  # v2.87.4
+        with:
+          tool: valgrind
 
       - name: Run cmake tests with zenoh-c as dynamic library
         shell: bash
@@ -185,7 +190,7 @@ jobs:
 
       - name: Upload artifact
         if: ${{ matrix.unstable == 'false' && matrix.shm == 'false' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # 7.0.1
         with:
           # Artifact name
           name: zenoh-c-${{ matrix.os }}
@@ -203,7 +208,7 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install dependencies
         run: |
@@ -246,7 +251,7 @@ jobs:
     strategy:
       fail-fast: false
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install dependencies
         run: |
@@ -320,8 +325,8 @@ jobs:
   markdown_lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: DavidAnson/markdownlint-cli2-action@v18
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: DavidAnson/markdownlint-cli2-action@21c1be1b93ad9ed58fa840aacc3f279cde2a72ff  # v24.2.0
         with:
           config: '.markdownlint.yaml'
           globs: '**/README.md'
