@@ -266,6 +266,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-print"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8e6738dfb11354886f890621b4a34c0b177f75538023f7100b608ab9adbd66b"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4268,6 +4274,7 @@ dependencies = [
 name = "zenoh-c"
 version = "1.10.0"
 dependencies = [
+ "build-print",
  "cbindgen",
  "chrono",
  "const_format",
