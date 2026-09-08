@@ -26,7 +26,7 @@ This repository provides a C binding based on the main [Zenoh implementation wri
 ## How to build it
 
 1. Make sure that [Rust](https://www.rust-lang.org) is available on your platform.
-   Please check [here](https://www.rust-lang.org/tools/install) to learn how to install it.
+   You can [install Rust](https://www.rust-lang.org/tools/install) using rustup.
    If you already have the Rust toolchain installed, make sure it is up-to-date with:
 
    ```bash
@@ -140,7 +140,7 @@ cmake ../zenoh-c/examples -DCMAKE_INSTALL_PREFIX=~/.local
 
 ## Running the Examples
 
-See information about running examples [here](./examples/README.md).
+See [documentation](./examples/README.md) about running examples.
 
 ## Documentation
 
