@@ -673,9 +673,6 @@ name = "fastrand"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "da7c62ceae207dd37ea5b845da6a0696c799f85e97da1ab5b7910be3c1c80223"
-dependencies = [
- "getrandom 0.4.3",
-]
 
 [[package]]
 name = "filepath"
@@ -719,18 +716,6 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "nanorand",
- "spin 0.9.9",
-]
-
-[[package]]
-name = "flume"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e139bc46ca777eb5efaf62df0ab8cc5fd400866427e56c68b22e414e53bd3be"
-dependencies = [
- "fastrand",
- "futures-core",
- "futures-sink",
  "spin 0.9.9",
 ]
 
@@ -1718,7 +1703,7 @@ name = "opaque-types"
 version = "0.1.0"
 dependencies = [
  "const_format",
- "flume 0.12.0",
+ "flume",
  "tokio",
  "zenoh",
  "zenoh-ext",
@@ -3934,7 +3919,7 @@ dependencies = [
  "bytes",
  "const_format",
  "flate2",
- "flume 0.11.1",
+ "flume",
  "futures",
  "git-version",
  "itertools",
@@ -4059,7 +4044,7 @@ version = "1.10.1"
 source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#d3757e6c3a40985924cb9675ec0566fe07752096"
 dependencies = [
  "bincode",
- "flume 0.11.1",
+ "flume",
  "futures",
  "leb128",
  "lru",
@@ -4117,7 +4102,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "bytes",
- "flume 0.11.1",
+ "flume",
  "futures",
  "quinn",
  "quinn-proto",
@@ -4482,7 +4467,7 @@ source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#d3757e6c3a4
 dependencies = [
  "async-trait",
  "crossbeam-utils",
- "flume 0.11.1",
+ "flume",
  "futures",
  "lazy_static",
  "lockfree",
@@ -4520,7 +4505,7 @@ source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#d3757e6c3a4
 dependencies = [
  "async-trait",
  "const_format",
- "flume 0.11.1",
+ "flume",
  "home",
  "humantime",
  "lazy_static",
