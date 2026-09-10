@@ -730,22 +730,24 @@ fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
+        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+([^(]+?)\s*\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     let multiple_spaces = Regex::new(r"\s\s+").unwrap();
+    let normalize = |s: &str| {
+        multiple_spaces
+            .replace_all(&s.replace("struct ", "").replace("enum ", ""), " ")
+            .to_string()
+    };
     for (
         _,
-        [return_type, prefix, suffix, closure_type, closure_name, call_signature_raw, drop_signature],
+        [return_type, prefix, suffix, closure_type, closure_name, call_return_type, call_signature, drop_signature],
     ) in re.captures_iter(&bindings).map(|c| c.extract())
     {
-        let mut call_signature: String = call_signature_raw.to_string().replace("struct ", "");
-        call_signature = call_signature.replace("enum ", "");
-        call_signature = multiple_spaces
-            .replace_all(&call_signature, " ")
-            .to_string();
+        let call_return_type = normalize(call_return_type);
+        let call_signature = normalize(call_signature);
         let (_, _, semantic, _) = split_type_name(closure_type);
         let f = FunctionSignature::new(
             semantic,
@@ -753,7 +755,7 @@ fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
             prefix.to_string() + "_closure_" + suffix,
             vec![
                 FuncArg::new(&(closure_type.to_string() + "*"), closure_name),
-                FuncArg::new(&("void (*call)".to_string() + &call_signature), "call"),
+                FuncArg::new(&(call_return_type + " (*call)" + &call_signature), "call"),
                 FuncArg::new(&("void (*drop)".to_string() + drop_signature), "drop"),
                 FuncArg::new("void*", "context"),
             ],
