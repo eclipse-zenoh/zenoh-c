@@ -122,6 +122,13 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         feature_args.push("-F");
         feature_args.push(feature);
     }
+    // Set by CMake when the ZENOHC_MSRV_1_75 option is on, in which case the main crate depends
+    // on zenoh-pinned-deps-1-75. The opaque types are built from their own manifest, resolved
+    // independently, so that dependency has to be requested here as well.
+    if std::env::var("ZENOHC_MSRV_1_75").is_ok_and(|v| !v.is_empty()) {
+        feature_args.push("-F");
+        feature_args.push("msrv_1_75");
+    }
 
     // The cargo command can be overridden with the CARGO_COMMAND environment variable
     // (same variable as used by colcon-cargo), e.g. 'cargo-1.91' on Ubuntu.

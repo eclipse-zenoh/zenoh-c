@@ -26,6 +26,9 @@ stats = ["zenoh/stats"]
 
 panic = [
 ] # The whole purpose of this project is to generate set of compilation panic messages with calculated structure sizes. To do it the "panic" feature should be set. By default we just want to check if build is successful.
+msrv_1_75 = [
+    "dep:zenoh-pinned-deps-1-75",
+] # Mirrors the ZENOHC_MSRV_1_75 CMake option: this project is resolved independently from the main crate, so it needs its own dependency on the pinned versions to stay buildable with Rust 1.75.
 default = ["zenoh/default"]
 
 [dependencies]
@@ -36,6 +39,7 @@ zenoh-ext = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.
     "internal",
 ] }
 zenoh-protocol = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh-pinned-deps-1-75 = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", optional = true }
 const_format = "0.2.32"
 flume = "*"
 tokio = "*"
