@@ -116,8 +116,8 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
     _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.size, "s", "size", atoi, DEFAULT_RING_BUFFER_SIZE);
-    _Z_PARSE_ARG(args.interval, "i", "interval", atoi, DEFAULT_PULL_INTERVAL);
+    _Z_PARSE_ARG(args.size, "s", "size", parse_uint, DEFAULT_RING_BUFFER_SIZE);
+    _Z_PARSE_ARG(args.interval, "i", "interval", parse_uint, DEFAULT_PULL_INTERVAL);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

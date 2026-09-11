@@ -103,7 +103,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     struct args_t args;
     _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
     _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
-    _Z_PARSE_ARG(args.history, "i", "hisotry", atoi, DEFAULT_HISTORY);
+    _Z_PARSE_ARG(args.history, "i", "history", parse_uint, DEFAULT_HISTORY);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* unknown_arg = check_unknown_opts(argc, argv);

@@ -101,7 +101,7 @@ void print_help() {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.shared_memory_size_mb, "s", "shared-memory", atoi, DEFAULT_SHARED_MEMORY_SIZE);
+    _Z_PARSE_ARG(args.shared_memory_size_mb, "s", "shared-memory", parse_uint, DEFAULT_SHARED_MEMORY_SIZE);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);
@@ -119,7 +119,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
-    args.size = atoi(pos_args[0]);
+    args.size = parse_uint(pos_args[0]);
     free(pos_args);
     return args;
 }
