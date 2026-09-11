@@ -155,8 +155,8 @@ void print_help() {
 struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.number_of_pings, "n", "samples", atoi, DEFAULT_PING_NB);
-    _Z_PARSE_ARG(args.warmup_ms, "w", "warmup", atoi, DEFAULT_WARMUP_MS);
+    _Z_PARSE_ARG(args.number_of_pings, "n", "samples", parse_uint, DEFAULT_PING_NB);
+    _Z_PARSE_ARG(args.warmup_ms, "w", "warmup", parse_uint, DEFAULT_WARMUP_MS);
     args.no_express = _Z_CHECK_FLAG("no-express");
 
     parse_zenoh_common_args(argc, argv, config);
@@ -171,7 +171,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
-    args.size = atoi(pos_args[0]);
+    args.size = parse_uint(pos_args[0]);
     free(pos_args);
     return args;
 }
