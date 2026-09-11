@@ -286,11 +286,22 @@ endif()
 status_print(cargo_flags)
 status_print(libs)
 file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide.yaml")
+
+# Environment passed to cargo, and through build.rs to the nested opaque types build
+set(cargo_env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types)
+if(ZENOHC_MSRV_1_75)
+	# The opaque types are built from build-resources/opaque-types/Cargo.toml, which is resolved
+	# independently from Cargo.toml.in and therefore does not see the zenoh-pinned-deps-1-75
+	# dependency added there. Its msrv_1_75 feature adds the same dependency, so that both builds
+	# agree on versions compatible with Rust 1.75.
+	list(APPEND cargo_env ZENOHC_MSRV_1_75=TRUE)
+endif()
+
 add_custom_command(
 	OUTPUT ${libs}
 	COMMAND ${CMAKE_COMMAND} -E echo \"RUSTFLAGS = $$RUSTFLAGS\"
 	COMMAND ${CMAKE_COMMAND} -E echo \"${cargo_executable} ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}\"
-	COMMAND ${CMAKE_COMMAND} -E env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types ${cargo_executable} ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
+	COMMAND ${CMAKE_COMMAND} -E env ${cargo_env} ${cargo_executable} ${ZENOHC_CARGO_CHANNEL} build ${cargo_flags}
 	VERBATIM
 	COMMAND_EXPAND_LISTS
 	DEPENDS "${rust_sources}"
