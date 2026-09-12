@@ -4758,7 +4758,7 @@ z_result_t z_obtain_shm_provider(const struct z_loaned_session_t *this_,
 ZENOHC_API
 z_result_t z_open(struct z_owned_session_t *this_,
                   struct z_moved_config_t *config,
-                  const struct z_open_options_t *_options);
+                  struct z_open_options_t *_options);
 /**
  * Constructs the default value for `z_open_options_t`.
  */
