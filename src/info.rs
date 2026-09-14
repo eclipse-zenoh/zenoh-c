@@ -80,16 +80,17 @@ pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_str
     dst.as_rust_type_mut_uninit().write(zid.to_string().into());
 }
 
-/// @brief Length of the string representation of `z_id_t`, including the terminating NUL.
+/// @brief Size of a buffer holding the string representation of any `z_id_t`: up to 32 hex
+/// digits plus the terminating NUL.
 pub const Z_ID_STR_LEN: usize = 33;
 
-/// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order) written to `buf`,
-/// NUL-terminated. Returns `buf`, so it can be used in place:
+/// @brief Formats the `z_id_t` into a hex number (LSB-first order, without leading zeros)
+/// written to `buf`, NUL-terminated. Returns `buf`, so it can be used in place:
 /// `char buf[Z_ID_STR_LEN]; printf("%s", z_id_as_str(&zid, &buf));`
 #[no_mangle]
 pub extern "C" fn z_id_as_str(zid: &z_id_t, buf: &mut [c_char; Z_ID_STR_LEN]) -> *const c_char {
     let s = zid.as_rust_type_ref().to_string();
-    debug_assert_eq!(s.len() + 1, Z_ID_STR_LEN);
+    debug_assert!(s.len() < Z_ID_STR_LEN);
     for (dst, src) in buf.iter_mut().zip(s.bytes().chain(std::iter::once(0))) {
         *dst = src as c_char;
     }
@@ -1347,5 +1348,11 @@ mod tests {
             std::slice::from_raw_parts(z_string_data(loaned).cast::<u8>(), z_string_len(loaned))
         };
         assert_eq!(as_str.as_bytes(), to_string);
+
+        // Leading zero digits and trailing zero bytes are omitted from the text, so the string
+        // is usually shorter than the buffer.
+        let short = z_id_t::from([0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+        let ptr = z_id_as_str(&short, &mut buf);
+        assert_eq!(unsafe { CStr::from_ptr(ptr) }.to_str().unwrap(), "1");
     }
 }
