@@ -203,6 +203,10 @@ int main(int argc, char **argv) {
     z_owned_string_t str;
     z_id_to_string(&_ret_zid, &str);
     printf("Session 1 with PID: 0x%.*s\n", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
+    char zid_buf[Z_ID_STR_LEN];
+    assert(z_id_as_str(&_ret_zid, &zid_buf) == zid_buf);
+    assert(strlen(zid_buf) == Z_ID_STR_LEN - 1);
+    assert(strncmp(zid_buf, z_string_data(z_loan(str)), z_string_len(z_loan(str))) == 0);
     z_drop(z_move(str));
 
     z_owned_closure_zid_t _ret_closure_zid;

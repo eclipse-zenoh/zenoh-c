@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh team, <zenoh@zettascale.tech>
 //
-use std::mem::MaybeUninit;
+use std::{ffi::c_char, mem::MaybeUninit};
 
 #[cfg(feature = "unstable")]
 use zenoh::config::WhatAmI;
@@ -78,6 +78,22 @@ impl From<[u8; 16]> for z_id_t {
 pub extern "C" fn z_id_to_string(zid: &z_id_t, dst: &mut MaybeUninit<z_owned_string_t>) {
     let zid = zid.as_rust_type_ref();
     dst.as_rust_type_mut_uninit().write(zid.to_string().into());
+}
+
+/// @brief Length of the string representation of `z_id_t`, including the terminating NUL.
+pub const Z_ID_STR_LEN: usize = 33;
+
+/// @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order) written to `buf`,
+/// NUL-terminated. Returns `buf`, so it can be used in place:
+/// `char buf[Z_ID_STR_LEN]; printf("%s", z_id_as_str(&zid, &buf));`
+#[no_mangle]
+pub extern "C" fn z_id_as_str(zid: &z_id_t, buf: &mut [c_char; Z_ID_STR_LEN]) -> *const c_char {
+    let s = zid.as_rust_type_ref().to_string();
+    debug_assert_eq!(s.len() + 1, Z_ID_STR_LEN);
+    for (dst, src) in buf.iter_mut().zip(s.bytes().chain(std::iter::once(0))) {
+        *dst = src as c_char;
+    }
+    buf.as_ptr()
 }
 
 /// @brief Returns the session's Zenoh ID.
@@ -1302,4 +1318,34 @@ pub extern "C" fn z_link_events_listener_loan(
     this_: &z_owned_link_events_listener_t,
 ) -> *const z_loaned_link_events_listener_t {
     this_ as *const z_owned_link_events_listener_t as *const z_loaned_link_events_listener_t
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ffi::CStr;
+
+    use super::*;
+    use crate::{z_string_data, z_string_len, z_string_loan};
+
+    #[test]
+    fn id_as_str_matches_to_string() {
+        let zid = z_id_t::from([
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54,
+            0x32, 0x10,
+        ]);
+        let mut buf = [0x7f as c_char; Z_ID_STR_LEN];
+        let ptr = z_id_as_str(&zid, &mut buf);
+        assert_eq!(ptr, buf.as_ptr());
+        let as_str = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap();
+        assert_eq!(as_str.len(), Z_ID_STR_LEN - 1);
+
+        let mut owned = MaybeUninit::uninit();
+        z_id_to_string(&zid, &mut owned);
+        let owned = unsafe { owned.assume_init() };
+        let loaned = z_string_loan(&owned);
+        let to_string = unsafe {
+            std::slice::from_raw_parts(z_string_data(loaned).cast::<u8>(), z_string_len(loaned))
+        };
+        assert_eq!(as_str.as_bytes(), to_string);
+    }
 }

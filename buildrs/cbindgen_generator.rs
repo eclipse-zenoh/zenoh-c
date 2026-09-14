@@ -267,7 +267,15 @@ fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_drop_array_c();
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_move_c(&move_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_move_array_c();
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -330,7 +338,15 @@ fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_drop_array_cpp();
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_move_cpp(&move_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_move_array_cpp();
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -875,6 +891,20 @@ fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_move", true)
 }
 
+/// `z_drop_array(z_move_array(arr), len)` drops `len` owned objects moved as a
+/// contiguous array; elements in the gravestone state are no-ops.
+fn generate_generic_drop_array_c() -> String {
+    "#define z_drop_array(this_, len) \\\n    do { \\\n        for (size_t z_i_ = 0; z_i_ < (len); ++z_i_) z_drop((this_) + z_i_); \\\n    } while (0)".to_string()
+}
+
+/// `z_move_array(arr)` moves a contiguous array of owned objects (a C array or a
+/// pointer to its first element) for functions taking `z_moved_xxx_t*` plus a length.
+/// The moved type wraps the owned one, so a pointer to the first moved element
+/// spans the whole array.
+fn generate_generic_move_array_c() -> String {
+    "#define z_move_array(this_) z_move((this_)[0])".to_string()
+}
+
 fn generate_generic_take_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_take", false)
 }
@@ -1080,6 +1110,14 @@ fn generate_generic_drop_cpp(macro_func: &[FunctionSignature]) -> String {
 
 fn generate_generic_move_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_move", true)
+}
+
+fn generate_generic_drop_array_cpp() -> String {
+    "template <typename T> inline void z_drop_array(T* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_drop(this_ + i); }".to_string()
+}
+
+fn generate_generic_move_array_cpp() -> String {
+    "template <typename T> inline auto z_move_array(T* this_) -> decltype(z_move(*this_)) { return z_move(*this_); }".to_string()
 }
 
 fn generate_generic_take_cpp(macro_func: &[FunctionSignature]) -> String {

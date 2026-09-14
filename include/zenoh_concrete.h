@@ -21,6 +21,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+/**
+ * @brief Length of the string representation of `z_id_t`, including the terminating NUL.
+ */
+#define Z_ID_STR_LEN 33
 #define DEFAULT_SCOUTING_TIMEOUT 1000
 #define Z_CHANNEL_DISCONNECTED 1
 #define Z_CHANNEL_NODATA 2
