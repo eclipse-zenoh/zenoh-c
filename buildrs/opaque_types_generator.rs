@@ -33,6 +33,15 @@ pub fn generate_opaque_types() {
         .filter(|line| line.starts_with("error[E"))
         .count();
 
+    // The "panic" feature makes every opaque type produce a compilation error, so no error at all
+    // means that cargo failed before compiling opaque-types, with a message not matched above
+    // (e.g. "error: no matching package named ... found" in offline dependency resolution).
+    if total_error_count == 0 {
+        panic!(
+            "Failed to generate opaque types: no type information found in the build output\n\nCommand executed:\n\n{command}\n\nCargo output:\n\n{data_in}"
+        );
+    }
+
     // Scan for type size and layout information which is generated as compilation errors
     let mut good_error_count = 0;
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
