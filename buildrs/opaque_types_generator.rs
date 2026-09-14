@@ -122,9 +122,10 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         feature_args.push("-F");
         feature_args.push(feature);
     }
-    // Set by CMake when the ZENOHC_MSRV_1_75 option is on, in which case the main crate depends
-    // on zenoh-pinned-deps-1-75. The opaque types are built from their own manifest, resolved
-    // independently, so that dependency has to be requested here as well.
+    // Set by CMake when the ZENOHC_MSRV_1_75 option is on. The opaque types get the same crate
+    // versions as the main build through the copied Cargo.lock, but not the features selected
+    // by zenoh-pinned-deps-1-75: the msrv_1_75 feature enables those that are required
+    // in opaque-types/Cargo.toml.
     if std::env::var("ZENOHC_MSRV_1_75").is_ok_and(|v| !v.is_empty()) {
         feature_args.push("-F");
         feature_args.push("msrv_1_75");

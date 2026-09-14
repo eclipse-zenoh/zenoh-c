@@ -290,10 +290,10 @@ file(GLOB_RECURSE rust_sources "Cargo.toml.in" "src/*.rs" "build.rs" "splitguide
 # Environment passed to cargo, and through build.rs to the nested opaque types build
 set(cargo_env OPAQUE_TYPES_BUILD_DIR=${CMAKE_BINARY_DIR}/opaque-types)
 if(ZENOHC_MSRV_1_75)
-	# The opaque types are built from build-resources/opaque-types/Cargo.toml, which is resolved
-	# independently from Cargo.toml.in and therefore does not see the zenoh-pinned-deps-1-75
-	# dependency added there. Its msrv_1_75 feature adds the same dependency, so that both builds
-	# agree on versions compatible with Rust 1.75.
+	# The opaque types are built from build-resources/opaque-types/Cargo.toml. They get the crate
+	# versions pinned for Rust 1.75 through the copied Cargo.lock, but not the dependency features
+	# selected in Cargo.toml.in. This env makes opaque_types_generator.rs enable the msrv_1_75
+	# feature which adds them.
 	list(APPEND cargo_env ZENOHC_MSRV_1_75=TRUE)
 endif()
 
