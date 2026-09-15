@@ -59,7 +59,19 @@
 // build an array of two live values and one null
 // drop the whole array through z_move_array / z_drop_array
 // make sure that every element is null now, and that dropping again is a no-op
-#define TEST_ARRAY(name, init)                        {                                                     name arr[3];                                      init(&arr[0]);                                    init(&arr[1]);                                    z_internal_null(&arr[2]);                         assert(z_internal_check(arr[0]));                 z_drop_array(z_move_array(arr), 3);               for (size_t i = 0; i < 3; ++i) {                      assert(!z_internal_check(arr[i]));            }                                                 z_drop_array(z_move_array(arr), 3);           }
+#define TEST_ARRAY(name, init)                 \
+    {                                          \
+        name arr[3];                           \
+        init(&arr[0]);                         \
+        init(&arr[1]);                         \
+        z_internal_null(&arr[2]);              \
+        assert(z_internal_check(arr[0]));      \
+        z_drop_array(z_move_array(arr), 3);    \
+        for (size_t i = 0; i < 3; ++i) {       \
+            assert(!z_internal_check(arr[i])); \
+        }                                      \
+        z_drop_array(z_move_array(arr), 3);    \
+    }
 
 static void init_string(z_owned_string_t* s) { z_string_copy_from_str(s, "abc"); }
 static void init_bytes(z_owned_bytes_t* b) { z_bytes_copy_from_str(b, "abc"); }
