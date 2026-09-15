@@ -267,7 +267,15 @@ fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_drop_array_c();
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_move_c(&move_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_move_array_c();
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -330,7 +338,15 @@ fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
+    let out = generate_generic_drop_array_cpp();
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
     let out = generate_generic_move_cpp(&move_funcs);
+    file_out.write_all(out.as_bytes()).unwrap();
+    file_out.write_all("\n\n".as_bytes()).unwrap();
+
+    let out = generate_generic_move_array_cpp();
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -730,22 +746,24 @@ fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
+        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+([^(]+?)\s*\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     let multiple_spaces = Regex::new(r"\s\s+").unwrap();
+    let normalize = |s: &str| {
+        multiple_spaces
+            .replace_all(&s.replace("struct ", "").replace("enum ", ""), " ")
+            .to_string()
+    };
     for (
         _,
-        [return_type, prefix, suffix, closure_type, closure_name, call_signature_raw, drop_signature],
+        [return_type, prefix, suffix, closure_type, closure_name, call_return_type, call_signature, drop_signature],
     ) in re.captures_iter(&bindings).map(|c| c.extract())
     {
-        let mut call_signature: String = call_signature_raw.to_string().replace("struct ", "");
-        call_signature = call_signature.replace("enum ", "");
-        call_signature = multiple_spaces
-            .replace_all(&call_signature, " ")
-            .to_string();
+        let call_return_type = normalize(call_return_type);
+        let call_signature = normalize(call_signature);
         let (_, _, semantic, _) = split_type_name(closure_type);
         let f = FunctionSignature::new(
             semantic,
@@ -753,7 +771,7 @@ fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
             prefix.to_string() + "_closure_" + suffix,
             vec![
                 FuncArg::new(&(closure_type.to_string() + "*"), closure_name),
-                FuncArg::new(&("void (*call)".to_string() + &call_signature), "call"),
+                FuncArg::new(&(call_return_type + " (*call)" + &call_signature), "call"),
                 FuncArg::new(&("void (*drop)".to_string() + drop_signature), "drop"),
                 FuncArg::new("void*", "context"),
             ],
@@ -871,6 +889,20 @@ fn generate_generic_loan_mut_c(macro_func: &[FunctionSignature]) -> String {
 
 fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_move", true)
+}
+
+/// `z_drop_array(z_move_array(arr), len)` drops `len` owned objects moved as a
+/// contiguous array; elements in the gravestone state are no-ops.
+fn generate_generic_drop_array_c() -> String {
+    "#define z_drop_array(this_, len) \\\n    do { \\\n        for (size_t z_i_ = 0; z_i_ < (len); ++z_i_) z_drop((this_) + z_i_); \\\n    } while (0)".to_string()
+}
+
+/// `z_move_array(arr)` moves a contiguous array of owned objects (a C array or a
+/// pointer to its first element) for functions taking `z_moved_xxx_t*` plus a length.
+/// The moved type wraps the owned one, so a pointer to the first moved element
+/// spans the whole array.
+fn generate_generic_move_array_c() -> String {
+    "#define z_move_array(this_) z_move((this_)[0])".to_string()
 }
 
 fn generate_generic_take_c(macro_func: &[FunctionSignature]) -> String {
@@ -1078,6 +1110,14 @@ fn generate_generic_drop_cpp(macro_func: &[FunctionSignature]) -> String {
 
 fn generate_generic_move_cpp(macro_func: &[FunctionSignature]) -> String {
     generate_generic_cpp(macro_func, "z_move", true)
+}
+
+fn generate_generic_drop_array_cpp() -> String {
+    "template <typename T> inline void z_drop_array(T* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_drop(this_ + i); }".to_string()
+}
+
+fn generate_generic_move_array_cpp() -> String {
+    "template <typename T> inline auto z_move_array(T* this_) -> decltype(z_move(*this_)) { return z_move(*this_); }".to_string()
 }
 
 fn generate_generic_take_cpp(macro_func: &[FunctionSignature]) -> String {
