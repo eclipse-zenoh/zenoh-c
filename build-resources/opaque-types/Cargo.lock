@@ -1694,6 +1694,7 @@ version = "0.1.0"
 dependencies = [
  "const_format",
  "flume",
+ "static_init",
  "tokio",
  "zenoh",
  "zenoh-ext",

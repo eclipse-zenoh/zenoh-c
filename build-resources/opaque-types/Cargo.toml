@@ -26,6 +26,9 @@ stats = ["zenoh/stats"]
 
 panic = [
 ] # The whole purpose of this project is to generate set of compilation panic messages with calculated structure sizes. To do it the "panic" feature should be set. By default we just want to check if build is successful.
+msrv_1_75 = [
+    "dep:static_init",
+] # Set when the ZENOHC_MSRV_1_75 CMake option is on. See the static_init dependency below.
 default = ["zenoh/default"]
 
 [dependencies]
@@ -36,6 +39,15 @@ zenoh-ext = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.
     "internal",
 ] }
 zenoh-protocol = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+# With ZENOHC_MSRV_1_75, static_init is pinned to 1.0.3 (via zenoh-c dependency to zenoh-pinned-deps-1-75
+# and the Cargo.lock copied from the main build).
+# That version fails to compile on Linux in dev profile (which is used for this project) unless the
+# "debug_order" feature is enabled (see eclipse-zenoh/zenoh#2782).
+# The feature is enabled by zenoh-pinned-deps-1-75 in the main build, but features are not recorded
+# in Cargo.lock, so it has to be enabled here too.
+# The version must NOT be pinned: optional dependencies are resolved even when disabled, so an exact
+# version requirement would conflict with the Cargo.lock copied from non-MSRV_1_75 builds.
+static_init = { version = "1", features = ["debug_order"], optional = true }
 const_format = "0.2.32"
 flume = "*"
 tokio = "*"
