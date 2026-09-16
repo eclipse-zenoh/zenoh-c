@@ -3422,6 +3422,12 @@ ZENOHC_API enum z_whatami_t z_hello_whatami(const struct z_loaned_hello_t *this_
  */
 ZENOHC_API struct z_id_t z_hello_zid(const struct z_loaned_hello_t *this_);
 /**
+ * @brief Formats the `z_id_t` into a hex number (LSB-first order, without leading zeros)
+ * written to `buf`, NUL-terminated. Returns `buf`, so it can be used in place:
+ * `char buf[Z_ID_STR_LEN]; printf("%s", z_id_as_str(&zid, &buf));`
+ */
+ZENOHC_API const char *z_id_as_str(const struct z_id_t *zid, char (*buf)[Z_ID_STR_LEN]);
+/**
  * @brief Formats the `z_id_t` into 16-digit hex string (LSB-first order)
  */
 ZENOHC_API void z_id_to_string(const struct z_id_t *zid, struct z_owned_string_t *dst);

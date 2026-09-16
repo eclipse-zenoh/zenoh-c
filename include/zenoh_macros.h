@@ -243,6 +243,11 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         ze_moved_serializer_t* : ze_serializer_drop \
     )(this_)
 
+#define z_drop_array(this_, len) \
+    do { \
+        for (size_t z_i_ = 0; z_i_ < (len); ++z_i_) z_drop((this_) + z_i_); \
+    } while (0)
+
 #define z_move(this_) \
     _Generic((this_), \
         z_owned_bytes_t : z_bytes_move, \
@@ -312,6 +317,8 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         ze_owned_sample_miss_listener_t : ze_sample_miss_listener_move, \
         ze_owned_serializer_t : ze_serializer_move \
     )(&this_)
+
+#define z_move_array(this_) z_move((this_)[0])
 
 #define z_internal_null(this_) \
     _Generic((this_), \
@@ -603,7 +610,7 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         ze_owned_serializer_t : ze_internal_serializer_check \
     )(&this_)
 
-#define z_call(closure, hello) \
+#define z_call(closure, ...) \
     _Generic((closure), \
         const z_loaned_closure_hello_t* : z_closure_hello_call, \
         const z_loaned_closure_link_t* : z_closure_link_call, \
@@ -615,8 +622,9 @@ static inline void ze_serializer_take(ze_owned_serializer_t* this_, ze_moved_ser
         const z_loaned_closure_transport_t* : z_closure_transport_call, \
         const z_loaned_closure_transport_event_t* : z_closure_transport_event_call, \
         const z_loaned_closure_zid_t* : z_closure_zid_call, \
+        const zc_loaned_closure_log_t* : zc_closure_log_call, \
         const ze_loaned_closure_miss_t* : ze_closure_miss_call \
-    )(closure, hello)
+    )(closure, __VA_ARGS__)
 
 typedef void(*z_closure_drop_callback_t)(void *context);
 typedef void(*z_closure_hello_callback_t)(z_loaned_hello_t *hello, void *context);
@@ -926,6 +934,8 @@ inline void z_drop(ze_moved_querying_subscriber_t* this_) { ze_querying_subscrib
 inline void z_drop(ze_moved_sample_miss_listener_t* this_) { ze_sample_miss_listener_drop(this_); };
 inline void z_drop(ze_moved_serializer_t* this_) { ze_serializer_drop(this_); };
 
+template <typename T> inline void z_drop_array(T* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_drop(this_ + i); }
+
 
 inline z_moved_bytes_t* z_move(z_owned_bytes_t& this_) { return z_bytes_move(&this_); };
 inline z_moved_bytes_writer_t* z_move(z_owned_bytes_writer_t& this_) { return z_bytes_writer_move(&this_); };
@@ -993,6 +1003,8 @@ inline ze_moved_publication_cache_t* z_move(ze_owned_publication_cache_t& this_)
 inline ze_moved_querying_subscriber_t* z_move(ze_owned_querying_subscriber_t& this_) { return ze_querying_subscriber_move(&this_); };
 inline ze_moved_sample_miss_listener_t* z_move(ze_owned_sample_miss_listener_t& this_) { return ze_sample_miss_listener_move(&this_); };
 inline ze_moved_serializer_t* z_move(ze_owned_serializer_t& this_) { return ze_serializer_move(&this_); };
+
+template <typename T> inline auto z_move_array(T* this_) -> decltype(z_move(*this_)) { return z_move(*this_); }
 
 
 inline void z_internal_null(z_owned_bytes_t* this_) { z_internal_bytes_null(this_); };
@@ -1454,6 +1466,10 @@ inline void z_call(const z_loaned_closure_transport_event_t* closure, z_loaned_t
 };
 inline void z_call(const z_loaned_closure_zid_t* closure, const z_id_t* z_id) {
     z_closure_zid_call(closure, z_id);
+};
+inline void z_call(const zc_loaned_closure_log_t* closure, zc_log_severity_t severity,
+    const z_loaned_string_t* msg) {
+    zc_closure_log_call(closure, severity, msg);
 };
 inline void z_call(const ze_loaned_closure_miss_t* closure, const ze_miss_t* mathing_status) {
     ze_closure_miss_call(closure, mathing_status);

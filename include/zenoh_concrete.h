@@ -21,6 +21,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+/**
+ * @brief Size of a buffer holding the string representation of any `z_id_t`: up to 32 hex
+ * digits plus the terminating NUL.
+ */
+#define Z_ID_STR_LEN 33
 #define DEFAULT_SCOUTING_TIMEOUT 1000
 #define Z_CHANNEL_DISCONNECTED 1
 #define Z_CHANNEL_NODATA 2
