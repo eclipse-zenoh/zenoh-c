@@ -712,32 +712,33 @@ fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(
-        r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) (\*?)(\w+)\);",
-    )
-    .unwrap();
+    let re =
+        Regex::new(r"(\w+) (\w+_closure_\w+)_call\(const struct (\w+) \*(\w+),([^;]+)\);").unwrap();
+    let arg_re = Regex::new(r"^(const |)(?:struct |enum )?(\w+) (\*?)(\w+)$").unwrap();
+    let multiple_spaces = Regex::new(r"\s+").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (
-        _,
-        [return_type, func_name, closure_type, closure_name, arg_cv, arg_type, arg_deref, arg_name],
-    ) in re.captures_iter(&bindings).map(|c| c.extract())
+    for (_, [return_type, func_name, closure_type, closure_name, call_args]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
     {
-        let arg_cv: String = if arg_cv.is_empty() {
-            "".to_string()
-        } else {
-            "const ".to_string()
-        };
-        let (_, _, semantic, _) = split_type_name(arg_type);
-        let f = FunctionSignature::new(
-            semantic,
-            return_type,
-            func_name.to_string() + "_call",
-            vec![
-                FuncArg::new(&("const ".to_string() + closure_type + "*"), closure_name),
-                FuncArg::new(&(arg_cv + arg_type + arg_deref), arg_name),
-            ],
-        );
+        let mut args = vec![FuncArg::new(
+            &("const ".to_string() + closure_type + "*"),
+            closure_name,
+        )];
+        for arg in call_args.split(',') {
+            let arg = multiple_spaces.replace_all(arg.trim(), " ");
+            let (_, [arg_cv, arg_type, arg_deref, arg_name]) = arg_re
+                .captures(&arg)
+                .unwrap_or_else(|| panic!("unsupported argument '{arg}' of {func_name}_call"))
+                .extract();
+            args.push(FuncArg::new(
+                &(arg_cv.to_string() + arg_type + arg_deref),
+                arg_name,
+            ));
+        }
+        let (_, _, semantic, _) = split_type_name(closure_type);
+        let f =
+            FunctionSignature::new(semantic, return_type, func_name.to_string() + "_call", args);
         res.push(f);
     }
     res
@@ -978,8 +979,18 @@ fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_internal_check", true)
 }
 
+/// Closures take different numbers of call arguments, so `z_call` is variadic
+/// after the closure: `z_call(closure, args...)`.
 fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_call", false)
+    let mut out = "#define z_call(closure, ...) \\\n    _Generic((closure)".to_string();
+    for func in macro_func {
+        out += &format!(
+            ", \\\n        {} : {}",
+            func.args[0].typename.typename, func.func_name
+        );
+    }
+    out += " \\\n    )(closure, __VA_ARGS__)";
+    out
 }
 
 fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
