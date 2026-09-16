@@ -171,8 +171,8 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--target-dir")
         .arg(match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
             Ok(opaque_types_build_dir) => {
-                println!(
-                    "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
+                build_print::info!(
+                    "OPAQUE_TYPES_BUILD_DIR = {}",
                     opaque_types_build_dir
                 );
                 opaque_types_build_dir.into()
