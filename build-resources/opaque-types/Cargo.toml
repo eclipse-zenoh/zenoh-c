@@ -32,13 +32,13 @@ msrv_1_75 = [
 default = ["zenoh/default"]
 
 [dependencies]
-zenoh = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+zenoh = { version = "1.10.1", git = "https://github.com/Tobias-Fischer/zenoh.git", branch = "wasm32-full", default-features = false, features = [
     "internal",
 ] }
-zenoh-ext = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", default-features = false, features = [
+zenoh-ext = { version = "1.10.1", git = "https://github.com/Tobias-Fischer/zenoh.git", branch = "wasm32-full", default-features = false, features = [
     "internal",
 ] }
-zenoh-protocol = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+zenoh-protocol = { version = "1.10.1", git = "https://github.com/Tobias-Fischer/zenoh.git", branch = "wasm32-full" }
 # With ZENOHC_MSRV_1_75, static_init is pinned to 1.0.3 (via zenoh-c dependency to zenoh-pinned-deps-1-75
 # and the Cargo.lock copied from the main build).
 # That version fails to compile on Linux in dev profile (which is used for this project) unless the
@@ -50,4 +50,8 @@ zenoh-protocol = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/z
 static_init = { version = "1", features = ["debug_order"], optional = true }
 const_format = "0.2.32"
 flume = "*"
-tokio = "*"
+tokio = { version = "*", default-features = false, features = ["time"] }
+
+[patch.crates-io]
+mio = { git = "https://github.com/Tobias-Fischer/mio.git", branch = "emscripten-nonatomic-selector" }
+tokio = { git = "https://github.com/Tobias-Fischer/tokio.git", branch = "wasm-no-atomics-pump-once" }

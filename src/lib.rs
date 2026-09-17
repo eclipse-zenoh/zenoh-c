@@ -94,6 +94,11 @@ mod serialization;
 #[cfg(feature = "unstable")]
 mod cancellation_token;
 
+#[cfg(target_arch = "wasm32")]
+mod wasm_runtime;
+#[cfg(target_arch = "wasm32")]
+pub use wasm_runtime::*;
+
 // This is the entry point for zenoh-c
 // When compiling normal Rust executable, it includes rusty entry point `lang_start` that internally
 // calls `std::rt::init()` that is intended to initialize some of the internals for Rust and std.
