@@ -14,7 +14,7 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6caee7d48f930f9ad3fc9546f8cbf843365da0c5b0ca4eee1d1ac3dd12d8f93"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi",
 ]
 
@@ -63,7 +63,7 @@ version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ae221649c9976a6f6c56ae1facf410f3ddb33cc661c4b7b61020a912d4237fbc"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -460,7 +460,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b2a6cd9ae233e7f62ba4e9353e81a88df7fc8a5987b8d445b4d90c879bd156f6"
 dependencies = [
  "core-foundation-sys",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -475,7 +475,7 @@ version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "59ed5838eebb26a2bb2e58f6d5b5316989ae9d08bab10e0e6d103e656d1b0280"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -484,7 +484,7 @@ version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5ca28b0ae3115b884660db4118d803791fd6756b6e88f39c0f3f7859060d7566"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -710,7 +710,7 @@ version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e01a3366d27ee9890022452ee61b2b63a67e6f13f58900b651ff5665f0bb1fab"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "option-ext",
  "redox_users",
  "windows-sys 0.61.2",
@@ -773,7 +773,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f639046355ee4f37944e44f60642c6f3a7efa3cf6b78c78a0d989a8ce6c396a1"
 dependencies = [
  "errno-dragonfly",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi",
 ]
 
@@ -783,8 +783,8 @@ version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
- "libc",
- "windows-sys 0.61.2",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -794,7 +794,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa68f1b12764fab894d2755d2518754e71b4fd80ecfb822714a1206c2aab39bf"
 dependencies = [
  "cc",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -893,7 +893,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9564fc758e15025b46aa6643b1b77d047d1a56a1aea6e01002ac0c7026876213"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi",
 ]
 
@@ -1009,7 +1009,7 @@ checksum = "ff2abc00be7fca6ebc474524697ae276ad847ad0a6b3faa4bcb027e9a4614ad0"
 dependencies = [
  "cfg-if",
  "js-sys",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "wasi",
  "wasm-bindgen",
 ]
@@ -1021,9 +1021,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "899def5c37c4fd7b2664648c28120ecec138e4d395b459e5ca34f9cce2dd77fd"
 dependencies = [
  "cfg-if",
- "libc",
+ "js-sys",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "r-efi 5.3.0",
  "wasip2",
+ "wasm-bindgen",
 ]
 
 [[package]]
@@ -1034,7 +1036,7 @@ checksum = "300e883d756b2e4ec94e02791f39b04b522276138852cfc41d9fb7e904106099"
 dependencies = [
  "cfg-if",
  "js-sys",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "r-efi 6.0.0",
  "rand_core 0.10.1",
  "wasm-bindgen",
@@ -1545,6 +1547,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
+name = "libc"
+version = "0.2.189"
+source = "git+https://github.com/rust-lang/libc?branch=libc-0.2#b02fb9c863e05c9a8a2720bbbc35cc8c06238bc1"
+
+[[package]]
 name = "libloading"
 version = "0.8.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1566,7 +1573,7 @@ version = "0.1.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d8f1ea3f21fd3405dcaf6c9b5c1630af9afc422d9073ea39c5f6d6c772e08ed"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1635,7 +1642,7 @@ version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d640282b302c0bb0a2a8e0233ead9035e3bed871f0b7e81fe4a1ec829765db44"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1681,10 +1688,9 @@ dependencies = [
 [[package]]
 name = "mio"
 version = "1.2.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b18443e9c262bfe8fa82f51666e2642c53393f7e5c27b3e1aeab922cff5b9d8"
+source = "git+https://github.com/Tobias-Fischer/mio.git?branch=emscripten-nonatomic-selector#98d68711664098e7532023dd4420489c65c42601"
 dependencies = [
- "libc",
+ "libc 0.2.189 (git+https://github.com/rust-lang/libc?branch=libc-0.2)",
  "log",
  "wasi",
  "windows-sys 0.61.2",
@@ -1720,7 +1726,7 @@ checksum = "598beaf3cc6fdd9a5dfb1630c2800c7acd31df7aaf0f565796fba2b53ca1af1b"
 dependencies = [
  "bitflags 1.3.2",
  "cfg-if",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1731,7 +1737,7 @@ checksum = "2eb04e9c688eff1c89d72b407f168cf79bb9e867a9d3323ed6c01519eb9cc053"
 dependencies = [
  "bitflags 2.13.1",
  "cfg-if",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "memoffset",
 ]
 
@@ -1744,7 +1750,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cfg-if",
  "cfg_aliases 0.2.2",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1756,7 +1762,7 @@ dependencies = [
  "bitflags 2.13.1",
  "cfg-if",
  "cfg_aliases 0.2.2",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1861,7 +1867,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "91df4bbde75afed763b708b7eee1e8e7651e02d97f6d5dd763e89367e957b23b"
 dependencies = [
  "hermit-abi",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -1926,7 +1932,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2621685985a2ebf1c516881c026032ac7deafcda1a2c9b7850dc81e3dfcb64c1"
 dependencies = [
  "cfg-if",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "redox_syscall",
  "smallvec",
  "windows-link",
@@ -2145,7 +2151,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e79e70ec0be163102a332e1d2d5586d362ad76b01cec86f830241f2b6452a7b7"
 dependencies = [
  "ipnetwork",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "pnet_base",
  "pnet_sys",
  "winapi",
@@ -2157,7 +2163,7 @@ version = "0.35.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d4643d3d4db6b08741050c2f3afa9a892c4244c085a72fcda93c9c2c9a00f4b"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi",
 ]
 
@@ -2254,7 +2260,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2 0.6.5",
+ "socket2 0.5.10",
  "thiserror 2.0.20",
  "tokio",
  "tracing",
@@ -2292,11 +2298,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "35a133f956daabe89a61a685c2649f13d82d5aa4bd5d12d1277e1072a21c0694"
 dependencies = [
  "cfg_aliases 0.2.2",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "once_cell",
- "socket2 0.6.5",
+ "socket2 0.5.10",
  "tracing",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2326,7 +2332,7 @@ version = "0.8.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e058c7de0b26af77780c769414d6257830bb240f3c38477dbc2c16e5f54d6d4c"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "rand_chacha 0.3.1",
  "rand_core 0.6.4",
 ]
@@ -2497,7 +2503,7 @@ dependencies = [
  "cc",
  "cfg-if",
  "getrandom 0.2.17",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "untrusted",
  "windows-sys 0.52.0",
 ]
@@ -2518,7 +2524,7 @@ version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7043b63bd0cd1aaa628e476b80e6d4023a3b50eb32789f2728908107bd0c793a"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2587,9 +2593,9 @@ checksum = "b6fe4565b9518b83ef4f91bb47ce29620ca828bd32cb7e408f0062e9930ba190"
 dependencies = [
  "bitflags 2.13.1",
  "errno 0.3.14",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "linux-raw-sys",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2656,7 +2662,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2769,7 +2775,7 @@ dependencies = [
  "bitflags 2.13.1",
  "core-foundation",
  "core-foundation-sys",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "security-framework-sys",
 ]
 
@@ -2780,7 +2786,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2691df843ecc5d231c0b14ece2acc3efb62c0a398c7e1d875f3983ce020e3"
 dependencies = [
  "core-foundation-sys",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -3023,7 +3029,7 @@ version = "0.5.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e22376abed350d73dd1cd119b57ffccad95b4e585a7cda43e286245ce23c0678"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "windows-sys 0.52.0",
 ]
 
@@ -3033,7 +3039,7 @@ version = "0.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "windows-sys 0.61.2",
 ]
 
@@ -3116,7 +3122,7 @@ checksum = "8bae1df58c5fea7502e8e352ec26b5579f6178e1fdb311e088580c980dee25ed"
 dependencies = [
  "bitflags 1.3.2",
  "cfg_aliases 0.2.2",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot",
  "parking_lot_core",
  "static_init_macro",
@@ -3208,7 +3214,7 @@ dependencies = [
  "getrandom 0.4.3",
  "once_cell",
  "rustix",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3259,7 +3265,7 @@ checksum = "cfe075d7053dae61ac5413a34ea7d4913b6e6207844fd726bdd858b37ff72bf5"
 dependencies = [
  "bitflags 2.13.1",
  "cfg-if",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "rustversion",
  "winapi",
@@ -3356,11 +3362,10 @@ dependencies = [
 [[package]]
 name = "tokio"
 version = "1.53.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "202caea871b69668250d242070849eb495be178ed697a3e98aebce5bc81a0bed"
+source = "git+https://github.com/Tobias-Fischer/tokio.git?branch=wasm-no-atomics-pump-once#b20bfd52fc67a57bd00c9584c3b544a5b34e948b"
 dependencies = [
  "bytes",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "mio",
  "pin-project-lite",
  "socket2 0.6.5",
@@ -3438,7 +3443,7 @@ checksum = "2e336ac4b36df625d5429a735dd5847732fe5f62010e3ce0c50f3705d44730f8"
 dependencies = [
  "bytes",
  "futures",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
  "vsock",
 ]
@@ -3666,7 +3671,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ad653da8f36ac5825ba06642b5a3cce14a4e52c6a5fab4a8928d53f4426dae2"
 dependencies = [
  "errno 0.2.8",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -3787,7 +3792,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2dfb6e7a74830912f1f4a7655227c9ded1ea4e9136676311fedf54bedb412f35"
 dependencies = [
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "nix 0.27.1",
 ]
 
@@ -3920,7 +3925,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4207,7 +4212,7 @@ dependencies = [
 [[package]]
 name = "zenoh"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "ahash",
  "arc-swap",
@@ -4229,7 +4234,7 @@ dependencies = [
  "rustc_version",
  "serde",
  "serde_json",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "tokio",
  "tokio-util",
  "tracing",
@@ -4259,7 +4264,7 @@ dependencies = [
 [[package]]
 name = "zenoh-buffers"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "zenoh-collections",
 ]
@@ -4279,7 +4284,7 @@ dependencies = [
  "fs_extra",
  "json5",
  "lazy_static",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "phf 0.11.3",
  "rand 0.9.5",
  "regex",
@@ -4297,7 +4302,7 @@ dependencies = [
 [[package]]
 name = "zenoh-codec"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "rand 0.8.8",
  "tracing",
@@ -4310,7 +4315,7 @@ dependencies = [
 [[package]]
 name = "zenoh-collections"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "ahash",
 ]
@@ -4318,7 +4323,7 @@ dependencies = [
 [[package]]
 name = "zenoh-config"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "json5",
  "nonempty-collections",
@@ -4343,7 +4348,7 @@ dependencies = [
 [[package]]
 name = "zenoh-core"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "lazy_static",
  "tokio",
@@ -4354,7 +4359,7 @@ dependencies = [
 [[package]]
 name = "zenoh-crypto"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "aes",
  "hmac",
@@ -4367,7 +4372,7 @@ dependencies = [
 [[package]]
 name = "zenoh-ext"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "bincode",
  "flume",
@@ -4387,7 +4392,7 @@ dependencies = [
 [[package]]
 name = "zenoh-keyexpr"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "getrandom 0.2.17",
  "hashbrown 0.16.1",
@@ -4402,7 +4407,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "zenoh-config",
  "zenoh-link-commons",
@@ -4423,7 +4428,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-commons"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4439,7 +4444,7 @@ dependencies = [
  "rustls-webpki",
  "secrecy",
  "serde",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "time",
  "tokio",
  "tokio-util",
@@ -4459,7 +4464,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-quic"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "rustls-webpki",
@@ -4475,7 +4480,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-quic_datagram"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "rustls-webpki",
@@ -4491,7 +4496,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-serial"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "tokio",
@@ -4509,10 +4514,10 @@ dependencies = [
 [[package]]
 name = "zenoh-link-tcp"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "tokio",
  "tokio-util",
  "tracing",
@@ -4526,7 +4531,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-tls"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4535,7 +4540,7 @@ dependencies = [
  "rustls-pki-types",
  "rustls-webpki",
  "secrecy",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "time",
  "tls-listener",
  "tokio",
@@ -4555,11 +4560,11 @@ dependencies = [
 [[package]]
 name = "zenoh-link-udp"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
- "libc",
- "socket2 0.5.10",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
+ "socket2 0.6.5",
  "tokio",
  "tokio-util",
  "tracing",
@@ -4577,7 +4582,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-unixpipe"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "advisory-lock",
  "async-trait",
@@ -4598,7 +4603,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-unixsock_stream"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "nix 0.29.0",
@@ -4616,10 +4621,10 @@ dependencies = [
 [[package]]
 name = "zenoh-link-vsock"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "tokio",
  "tokio-util",
  "tokio-vsock",
@@ -4634,7 +4639,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-ws"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "futures-util",
@@ -4654,7 +4659,7 @@ dependencies = [
 [[package]]
 name = "zenoh-macros"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4665,7 +4670,7 @@ dependencies = [
 [[package]]
 name = "zenoh-plugin-trait"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "git-version",
  "libloading",
@@ -4682,7 +4687,7 @@ dependencies = [
 [[package]]
 name = "zenoh-protocol"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "const_format",
  "rand 0.8.8",
@@ -4697,7 +4702,7 @@ dependencies = [
 [[package]]
 name = "zenoh-result"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "anyhow",
 ]
@@ -4705,7 +4710,7 @@ dependencies = [
 [[package]]
 name = "zenoh-runtime"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "lazy_static",
  "ron",
@@ -4719,7 +4724,7 @@ dependencies = [
 [[package]]
 name = "zenoh-shm"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "advisory-lock",
  "async-trait",
@@ -4748,7 +4753,7 @@ dependencies = [
 [[package]]
 name = "zenoh-stats"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "ahash",
  "prometheus-client",
@@ -4761,7 +4766,7 @@ dependencies = [
 [[package]]
 name = "zenoh-sync"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "arc-swap",
  "event-listener",
@@ -4775,7 +4780,7 @@ dependencies = [
 [[package]]
 name = "zenoh-task"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "futures",
  "tokio",
@@ -4788,12 +4793,13 @@ dependencies = [
 [[package]]
 name = "zenoh-transport"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "crossbeam-utils",
  "flume",
  "futures",
+ "getrandom 0.3.4",
  "lazy_static",
  "lockfree",
  "lz4_flex",
@@ -4826,7 +4832,7 @@ dependencies = [
 [[package]]
 name = "zenoh-util"
 version = "1.10.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#9fcd9cb5d364192c3e8a27e66de76f4bc750d1d5"
+source = "git+https://github.com/Tobias-Fischer/zenoh.git?branch=wasm32-full#af00024eafcce7c41840914b02e7b237cec33799"
 dependencies = [
  "async-trait",
  "const_format",
@@ -4834,7 +4840,7 @@ dependencies = [
  "home",
  "humantime",
  "lazy_static",
- "libc",
+ "libc 0.2.189 (registry+https://github.com/rust-lang/crates.io-index)",
  "libloading",
  "pnet_datalink",
  "schemars 1.2.2",

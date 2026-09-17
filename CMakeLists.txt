@@ -237,6 +237,16 @@ elseif(APPLE)
 	set_lib(dylibsd dylibd libzenohc.dylib)
 	set_lib(staticlibsr staticlibr libzenohc.a)
 	set_lib(staticlibsd staticlibd libzenohc.a)
+elseif(EMSCRIPTEN)
+	# cdylib output on wasm32-unknown-emscripten is named after the crate
+	# directly (no "lib" prefix, .wasm not .so) -- confirmed via a real
+	# build: cargo produced target/wasm32-unknown-emscripten/{debug,release}/
+	# zenohc.wasm, not libzenohc.so. staticlib output keeps the normal
+	# lib<name>.a convention.
+	set_lib(dylibsr dylibr zenohc.wasm)
+	set_lib(dylibsd dylibd zenohc.wasm)
+	set_lib(staticlibsr staticlibr libzenohc.a)
+	set_lib(staticlibsd staticlibd libzenohc.a)
 else() #UNIX
 	set_lib(dylibsr dylibr libzenohc.so)
 	set_lib(dylibsd dylibd libzenohc.so)
