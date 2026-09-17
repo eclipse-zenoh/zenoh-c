@@ -36,13 +36,46 @@ use crate::{
 /// The embedder must call `zc_runtime_pump_once()` repeatedly, from its own externally-driven
 /// loop (e.g. `emscripten_set_main_loop_arg`), for anything to actually happen: no zenoh-c call
 /// on this target performs real I/O by itself.
+///
+/// Also owns a `LocalSet`: some internal zenoh tasks (e.g. `zenoh-ext`'s `AdvancedSubscriber`
+/// garbage-collector) are spawned with `tokio::task::spawn_local()` on this target rather than a
+/// regular `spawn()`, since it has no `Send` bound to satisfy on a single-threaded runtime.
+/// `spawn_local()` panics unless a `LocalSet` is active *at the point it's called* -- which, for
+/// a synchronous zenoh-c call like `ze_declare_advanced_subscriber()`, is whenever the embedder
+/// happens to call it, not just from inside this module's own pumped futures. So the `LocalSet`
+/// is entered once, permanently, for this runtime's whole lifetime (`_enter_guard`), in addition
+/// to being polled via `LocalSet::run_until()` inside `pump_once_local()` so that tasks spawned
+/// onto it actually make progress.
 pub struct zc_runtime_t {
     runtime: tokio::runtime::Runtime,
+    // Struct fields drop in declaration order: this goes before `local_set` so the thread-local
+    // "current LocalSet" pointer is cleared before `local_set` itself is torn down. Doesn't
+    // actually borrow `local_set` (`LocalEnterGuard` just clones an `Rc`), so storing both here
+    // is fine regardless, but the order still reads as the intended cleanup sequence.
+    _enter_guard: tokio::task::LocalEnterGuard,
+    local_set: tokio::task::LocalSet,
     // A future that never completes, reused across calls: `pump_once()` only runs its "ready
     // local tasks" pass (the actual point of `zc_runtime_pump_once()` -- draining the TX
     // pipeline, delivering subscriber callbacks, etc.) when the top-level future it's given
     // does *not* resolve this pump.
     idle: Pin<Box<dyn Future<Output = ()>>>,
+}
+
+/// Wraps `future` so that polling it also polls any tasks spawned onto `local_set` via
+/// `spawn_local()`, then drives it forward by one non-blocking pump on `runtime`. Returns
+/// whether `future` completed this pump, mirroring `Runtime::pump_once()`.
+///
+/// A free function, not a method on `zc_runtime_t`, so callers can pass a future borrowed from
+/// one of that struct's own fields without the borrow checker treating this as re-borrowing the
+/// whole struct.
+fn pump_once_local(
+    runtime: &tokio::runtime::Runtime,
+    local_set: &tokio::task::LocalSet,
+    future: Pin<&mut dyn Future<Output = ()>>,
+) -> bool {
+    let wrapped = local_set.run_until(future);
+    let mut wrapped: Pin<Box<dyn Future<Output = ()>>> = Box::pin(wrapped);
+    runtime.pump_once(wrapped.as_mut())
 }
 
 /// Creates a new single-threaded runtime for driving zenoh on targets without real threads.
@@ -51,16 +84,20 @@ pub struct zc_runtime_t {
 /// `zc_runtime_free()`.
 #[no_mangle]
 pub extern "C" fn zc_runtime_new() -> *mut zc_runtime_t {
-    match tokio::runtime::Builder::new_current_thread()
+    let Ok(runtime) = tokio::runtime::Builder::new_current_thread()
         .enable_all()
         .build()
-    {
-        Ok(runtime) => Box::into_raw(Box::new(zc_runtime_t {
-            runtime,
-            idle: Box::pin(std::future::pending()),
-        })),
-        Err(_) => std::ptr::null_mut(),
-    }
+    else {
+        return std::ptr::null_mut();
+    };
+    let local_set = tokio::task::LocalSet::new();
+    let _enter_guard = local_set.enter();
+    Box::into_raw(Box::new(zc_runtime_t {
+        runtime,
+        _enter_guard,
+        local_set,
+        idle: Box::pin(std::future::pending()),
+    }))
 }
 
 /// Drops a runtime created by `zc_runtime_new()`. Safe to call with NULL.
@@ -79,7 +116,7 @@ pub unsafe extern "C" fn zc_runtime_free(rt: *mut zc_runtime_t) {
 #[no_mangle]
 pub unsafe extern "C" fn zc_runtime_pump_once(rt: *mut zc_runtime_t) {
     let rt = &mut *rt;
-    let _ = rt.runtime.pump_once(rt.idle.as_mut());
+    let _ = pump_once_local(&rt.runtime, &rt.local_set, rt.idle.as_mut());
 }
 
 type OpenResult = Result<Session, Box<dyn std::error::Error + Send + Sync>>;
@@ -123,9 +160,9 @@ pub unsafe extern "C" fn zc_open_poll(
     task: *mut zc_open_task_t,
     out_session: &mut std::mem::MaybeUninit<z_owned_session_t>,
 ) -> i8 {
-    let rt = &(*rt).runtime;
+    let rt = &*rt;
     let task = &mut *task;
-    if !rt.pump_once(task.future.as_mut()) {
+    if !pump_once_local(&rt.runtime, &rt.local_set, task.future.as_mut()) {
         return -1;
     }
     match task.result.borrow_mut().take() {
