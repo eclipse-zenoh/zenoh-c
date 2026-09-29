@@ -16,15 +16,16 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "z_test_session.h"
 #include "zenoh.h"
 
 #undef NDEBUG
 #include <assert.h>
 
-const char *GET_KEY_EXPR = "test/valgrind/data";
-const char *QUERYABLE_KEY_EXPR = "test/valgrind/**";
+const char* GET_KEY_EXPR = "test/valgrind/data";
+const char* QUERYABLE_KEY_EXPR = "test/valgrind/**";
 
-void query_handler(z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t* query, void* context) {
     (void)context;
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
@@ -32,7 +33,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_view_string_t params;
     z_query_parameters(query, &params);
 
-    const z_loaned_bytes_t *payload = z_query_payload(query);
+    const z_loaned_bytes_t* payload = z_query_payload(query);
 
     z_owned_string_t payload_string;
     z_bytes_to_string(payload, &payload_string);
@@ -50,11 +51,11 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_query_reply(query, z_query_keyexpr(query), z_move(reply_payload), &options);
 }
 
-void reply_handler(z_loaned_reply_t *reply, void *context) {
-    size_t *received_replies = (size_t *)context;
+void reply_handler(z_loaned_reply_t* reply, void* context) {
+    size_t* received_replies = (size_t*)context;
     (*received_replies)++;
 
-    const z_loaned_sample_t *sample = z_reply_ok(reply);
+    const z_loaned_sample_t* sample = z_reply_ok(reply);
     assert(sample != NULL);
 
     z_view_string_t key_str;
@@ -68,17 +69,14 @@ void reply_handler(z_loaned_reply_t *reply, void *context) {
     z_drop(z_move(reply_str));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     printf("Declaring Queryable on %s\n", QUERYABLE_KEY_EXPR);
 
     z_owned_keyexpr_t queryable_keyexpr;
     z_keyexpr_from_str(&queryable_keyexpr, QUERYABLE_KEY_EXPR);
 
-    z_owned_config_t queryable_config;
-    z_config_default(&queryable_config);
-
-    z_owned_session_t queryable_session;
-    z_open(&queryable_session, z_move(queryable_config), NULL);
+    z_owned_session_t queryable_session, get_session;
+    z_test_open_session_pair(&queryable_session, &get_session);
 
     z_owned_closure_query_t callback;
     z_closure(&callback, query_handler, NULL, NULL);
@@ -87,12 +85,6 @@ int main(int argc, char **argv) {
 
     z_view_keyexpr_t get_keyexpr;
     z_view_keyexpr_from_str(&get_keyexpr, GET_KEY_EXPR);
-
-    z_owned_config_t get_config;
-    z_config_default(&get_config);
-
-    z_owned_session_t get_session;
-    z_open(&get_session, z_move(get_config), NULL);
 
     z_sleep_s(1);
 

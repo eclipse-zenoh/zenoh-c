@@ -16,15 +16,16 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "z_test_session.h"
 #include "zenoh.h"
 
 #undef NDEBUG
 #include <assert.h>
 
-const char *PUB_KEY_EXPR = "test/valgrind/data";
-const char *SUB_KEY_EXPR = "test/valgrind/**";
+const char* PUB_KEY_EXPR = "test/valgrind/data";
+const char* SUB_KEY_EXPR = "test/valgrind/**";
 
-void data_handler(z_loaned_sample_t *sample, void *context) {
+void data_handler(z_loaned_sample_t* sample, void* context) {
     (void)context;
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
@@ -38,17 +39,14 @@ void data_handler(z_loaned_sample_t *sample, void *context) {
     z_drop(z_move(payload_string));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     printf("Declaring Publisher on %s\n", PUB_KEY_EXPR);
 
     z_owned_keyexpr_t pub_keyexpr;
     z_keyexpr_from_str(&pub_keyexpr, PUB_KEY_EXPR);
 
-    z_owned_config_t pub_config;
-    z_config_default(&pub_config);
-
-    z_owned_session_t pub_session;
-    z_open(&pub_session, z_move(pub_config), NULL);
+    z_owned_session_t pub_session, sub_session;
+    z_test_open_session_pair(&pub_session, &sub_session);
 
     z_owned_publisher_t publisher;
     z_declare_publisher(z_loan(pub_session), &publisher, z_loan(pub_keyexpr), NULL);
@@ -57,12 +55,6 @@ int main(int argc, char **argv) {
 
     z_view_keyexpr_t sub_keyexpr;
     z_view_keyexpr_from_str(&sub_keyexpr, SUB_KEY_EXPR);
-
-    z_owned_config_t sub_config;
-    z_config_default(&sub_config);
-
-    z_owned_session_t sub_session;
-    z_open(&sub_session, z_move(sub_config), NULL);
 
     z_owned_closure_sample_t callback;
     z_closure(&callback, data_handler, NULL, NULL);
