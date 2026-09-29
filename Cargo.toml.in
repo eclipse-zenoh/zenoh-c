@@ -83,6 +83,10 @@ zenoh-ext = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.
 zenoh-runtime = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 zenoh-util = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
 @COMMENT_PINNED_DEPS@zenoh-pinned-deps-1-75 = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+# hyper-util 0.1.21 requires edition 2024, which Cargo 1.75 cannot parse.
+@COMMENT_PINNED_DEPS@hyper-util = { version = "=0.1.20", default-features = false }
+# thiserror 2.0.21 requires Rust 1.77.
+@COMMENT_PINNED_DEPS@thiserror = "=2.0.20"
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
