@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "z_test_session.h"
 #include "zenoh.h"
 
 #undef NDEBUG
@@ -55,16 +56,12 @@ void test_liveliness_sub() {
     const char* expr = "zenoh/liveliness/test/*";
 
     z_owned_session_t s1, s2;
-    z_owned_config_t c1, c2;
-    z_config_default(&c1);
-    z_config_default(&c2);
     z_view_keyexpr_t k, k1, k2;
     z_view_keyexpr_from_str(&k, expr);
     z_view_keyexpr_from_str(&k1, token1_expr);
     z_view_keyexpr_from_str(&k2, token2_expr);
 
-    z_open(&s1, z_move(c1), NULL);
-    z_open(&s2, z_move(c2), NULL);
+    z_test_open_session_pair(&s1, &s2);
 
     z_owned_closure_sample_t closure;
     context_t context = {false, false, false, false};
@@ -102,15 +99,11 @@ void test_liveliness_get() {
     const char* expr = "zenoh/liveliness/test/*";
 
     z_owned_session_t s1, s2;
-    z_owned_config_t c1, c2;
-    z_config_default(&c1);
-    z_config_default(&c2);
     z_view_keyexpr_t k, k1;
     z_view_keyexpr_from_str(&k, expr);
     z_view_keyexpr_from_str(&k1, token1_expr);
 
-    z_open(&s1, z_move(c1), NULL);
-    z_open(&s2, z_move(c2), NULL);
+    z_test_open_session_pair(&s1, &s2);
 
     z_sleep_s(1);
     z_owned_liveliness_token_t t1;
