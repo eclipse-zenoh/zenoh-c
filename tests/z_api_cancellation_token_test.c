@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "z_test_session.h"
 #include "zenoh.h"
 
 #undef NDEBUG
@@ -36,14 +37,10 @@ void test_cancel_get(void) {
     const char* query_expr = "zenoh-pico/query/cancellation/test";
 
     z_owned_session_t s1, s2;
-    z_owned_config_t c1, c2;
-    z_config_default(&c1);
-    z_config_default(&c2);
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, query_expr);
 
-    assert(z_open(&s1, z_config_move(&c1), NULL) == Z_OK);
-    assert(z_open(&s2, z_config_move(&c2), NULL) == Z_OK);
+    z_test_open_session_pair(&s1, &s2);
 
     z_owned_queryable_t queryable;
     z_owned_closure_query_t query_callback;
@@ -125,14 +122,10 @@ void test_cancel_querier_get(void) {
     const char* query_expr = "zenoh-pico/querier/cancellation/test";
 
     z_owned_session_t s1, s2;
-    z_owned_config_t c1, c2;
-    z_config_default(&c1);
-    z_config_default(&c2);
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, query_expr);
 
-    assert(z_open(&s1, z_config_move(&c1), NULL) == Z_OK);
-    assert(z_open(&s2, z_config_move(&c2), NULL) == Z_OK);
+    z_test_open_session_pair(&s1, &s2);
 
     z_owned_queryable_t queryable;
     z_owned_closure_query_t query_callback;
@@ -219,14 +212,10 @@ void test_liveliness_get(void) {
     const char* query_expr = "zenoh-pico/liveliness_query/cancellation/test";
 
     z_owned_session_t s1, s2;
-    z_owned_config_t c1, c2;
-    z_config_default(&c1);
-    z_config_default(&c2);
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, query_expr);
 
-    assert(z_open(&s1, z_config_move(&c1), NULL) == Z_OK);
-    assert(z_open(&s2, z_config_move(&c2), NULL) == Z_OK);
+    z_test_open_session_pair(&s1, &s2);
 
     z_owned_liveliness_token_t token;
     z_liveliness_declare_token(z_session_loan(&s1), &token, z_view_keyexpr_loan(&ke), NULL);

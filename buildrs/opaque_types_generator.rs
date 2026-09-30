@@ -33,6 +33,15 @@ pub fn generate_opaque_types() {
         .filter(|line| line.starts_with("error[E"))
         .count();
 
+    // The "panic" feature makes every opaque type produce a compilation error, so no error at all
+    // means that cargo failed before compiling opaque-types, with a message not matched above
+    // (e.g. "error: no matching package named ... found" in offline dependency resolution).
+    if total_error_count == 0 {
+        panic!(
+            "Failed to generate opaque types: no type information found in the build output\n\nCommand executed:\n\n{command}\n\nCargo output:\n\n{data_in}"
+        );
+    }
+
     // Scan for type size and layout information which is generated as compilation errors
     let mut good_error_count = 0;
     let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
@@ -122,6 +131,14 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         feature_args.push("-F");
         feature_args.push(feature);
     }
+    // Set by CMake when the ZENOHC_MSRV_1_75 option is on. The opaque types get the same crate
+    // versions as the main build through the copied Cargo.lock, but not the features selected
+    // by zenoh-pinned-deps-1-75: the msrv_1_75 feature enables those that are required
+    // in opaque-types/Cargo.toml.
+    if std::env::var("ZENOHC_MSRV_1_75").is_ok_and(|v| !v.is_empty()) {
+        feature_args.push("-F");
+        feature_args.push("msrv_1_75");
+    }
 
     // The cargo command can be overridden with the CARGO_COMMAND environment variable
     // (same variable as used by colcon-cargo), e.g. 'cargo-1.91' on Ubuntu.
@@ -154,10 +171,7 @@ fn produce_opaque_types_data() -> (String, PathBuf) {
         .arg("--target-dir")
         .arg(match std::env::var("OPAQUE_TYPES_BUILD_DIR") {
             Ok(opaque_types_build_dir) => {
-                println!(
-                    "cargo:warning=OPAQUE_TYPES_BUILD_DIR = {}",
-                    opaque_types_build_dir
-                );
+                build_print::info!("OPAQUE_TYPES_BUILD_DIR = {}", opaque_types_build_dir);
                 opaque_types_build_dir.into()
             }
             Err(_) => get_out_rs_path().join("build_resources/opaque_types"),

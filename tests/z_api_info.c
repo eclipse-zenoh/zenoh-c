@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "z_test_session.h"
 #include "zenoh.h"
 
 #undef NDEBUG
@@ -142,59 +143,6 @@ void capture_link_events(z_loaned_link_event_t* event, void* arg) {
 
 #endif
 
-// Helper to create an isolated session configuration
-// This prevents the session from discovering or connecting to external zenoh nodes
-void create_isolated_config_with_mode(z_owned_config_t* config, const char* mode, const char* listen_endpoints,
-                                      const char* connect_endpoints) {
-    z_config_default(config);
-
-    // Set mode
-    zc_config_insert_json5(z_loan_mut(*config), "mode", mode);
-
-    // Disable multicast scouting
-    zc_config_insert_json5(z_loan_mut(*config), "scouting/multicast/enabled", "false");
-
-    // Disable gossip scouting
-    zc_config_insert_json5(z_loan_mut(*config), "scouting/gossip/enabled", "false");
-
-    // Configure listen endpoints
-    zc_config_insert_json5(z_loan_mut(*config), "listen/endpoints", listen_endpoints);
-
-    // Configure connect endpoints
-    zc_config_insert_json5(z_loan_mut(*config), "connect/endpoints", connect_endpoints);
-}
-
-// Helper to create an isolated session configuration in peer mode
-void create_isolated_config(z_owned_config_t* config, const char* listen_endpoints, const char* connect_endpoints) {
-    create_isolated_config_with_mode(config, "\"peer\"", listen_endpoints, connect_endpoints);
-}
-
-// Helper to create an isolated session pair (router + peer) that won't connect to external zenoh nodes
-// Session 1 (router): listens on a specific port
-// Session 2 (peer): connects to session 1's port
-// Both sessions have scouting disabled to prevent discovery of external nodes
-void create_session_pair(z_owned_session_t* s1, z_owned_session_t* s2) {
-    // Create config for router session: listener on localhost
-    z_owned_config_t config1;
-    create_isolated_config_with_mode(&config1, "\"router\"", "[\"tcp/127.0.0.1:17447\"]", "[]");
-
-    z_result_t res = z_open(s1, z_move(config1), NULL);
-    assert(res == 0);
-
-    // Give router session time to start listening
-    z_sleep_s(1);
-
-    // Create config for peer session: connects to router
-    z_owned_config_t config2;
-    create_isolated_config_with_mode(&config2, "\"peer\"", "[]", "[\"tcp/127.0.0.1:17447\"]");
-
-    res = z_open(s2, z_move(config2), NULL);
-    assert(res == 0);
-
-    // Sleep to allow sessions to establish connection
-    z_sleep_s(1);
-}
-
 // Context for counting ZIDs and storing the first one
 typedef struct {
     int count;
@@ -215,7 +163,7 @@ void test_z_info_stable() {
     printf("=== Testing stable z_info functions ===\n");
 
     z_owned_session_t router_session, peer_session;
-    create_session_pair(&router_session, &peer_session);
+    z_test_open_session_pair_with_modes(&router_session, &peer_session, "\"router\"", "\"peer\"");
 
     // Get ZIDs of both sessions
     z_id_t router_zid = z_info_zid(z_loan(router_session));
@@ -268,7 +216,7 @@ void test_z_info_stable() {
 void test_z_info_transports_and_links() {
     printf("=== Testing z_info_transports and z_info_links ===\n");
     z_owned_session_t s1, s2;
-    create_session_pair(&s1, &s2);
+    z_test_open_session_pair_with_modes(&s1, &s2, "\"router\"", "\"peer\"");
 
     // Capture transport from session 1
     context_t ctx;
@@ -310,7 +258,7 @@ void test_z_info_transports_and_links() {
 void test_z_info_links_filtered() {
     printf("=== Testing z_info_links with transport filter ===\n");
     z_owned_session_t s1, s2;
-    create_session_pair(&s1, &s2);
+    z_test_open_session_pair_with_modes(&s1, &s2, "\"router\"", "\"peer\"");
 
     // Capture transports from s1 and s2
     context_t ctx_s1, ctx_s2;
@@ -371,9 +319,8 @@ void test_transport_events() {
 
     // Session 1
     z_owned_session_t s1;
-    z_owned_config_t cfg1;
-    create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17448\"]", "[]");
-    assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
+    z_test_endpoint_t endpoint;
+    z_test_open_listener(&s1, &endpoint, "\"peer\"");
 
     context_t ctx;
     init_context(&ctx);
@@ -394,9 +341,7 @@ void test_transport_events() {
 
     // Session 2 connects
     z_owned_session_t s2;
-    z_owned_config_t cfg2;
-    create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17448\"]");
-    assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
+    z_test_open_connector(&s2, &endpoint, "\"peer\"");
 
     z_sleep_s(2);
 
@@ -432,7 +377,7 @@ void test_transport_events_history() {
     printf("=== Test: Transport events with history ===\n");
 
     z_owned_session_t s1, s2;
-    create_session_pair(&s1, &s2);
+    z_test_open_session_pair_with_modes(&s1, &s2, "\"router\"", "\"peer\"");
 
     context_t ctx;
     init_context(&ctx);
@@ -468,9 +413,8 @@ void test_transport_events_background() {
     printf("=== Test: Transport events (background) ===\n");
 
     z_owned_session_t s1;
-    z_owned_config_t cfg1;
-    create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17449\"]", "[]");
-    assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
+    z_test_endpoint_t endpoint;
+    z_test_open_listener(&s1, &endpoint, "\"peer\"");
 
     context_t ctx;
     init_context(&ctx);
@@ -484,9 +428,7 @@ void test_transport_events_background() {
            "Unable to declare background transport events listener");
 
     z_owned_session_t s2;
-    z_owned_config_t cfg2;
-    create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17449\"]");
-    assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
+    z_test_open_connector(&s2, &endpoint, "\"peer\"");
 
     z_sleep_s(2);
 
@@ -509,9 +451,8 @@ void test_link_events() {
 
     // Session 1
     z_owned_session_t s1;
-    z_owned_config_t cfg1;
-    create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17450\"]", "[]");
-    assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
+    z_test_endpoint_t endpoint;
+    z_test_open_listener(&s1, &endpoint, "\"peer\"");
 
     context_t ctx;
     init_context(&ctx);
@@ -532,9 +473,7 @@ void test_link_events() {
 
     // Session 2 connects
     z_owned_session_t s2;
-    z_owned_config_t cfg2;
-    create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17450\"]");
-    assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
+    z_test_open_connector(&s2, &endpoint, "\"peer\"");
 
     z_sleep_s(2);
 
@@ -569,7 +508,7 @@ void test_link_events_history() {
     printf("=== Test: Link events with history ===\n");
 
     z_owned_session_t s1, s2;
-    create_session_pair(&s1, &s2);
+    z_test_open_session_pair_with_modes(&s1, &s2, "\"router\"", "\"peer\"");
 
     context_t ctx;
     init_context(&ctx);
@@ -605,9 +544,8 @@ void test_link_events_background() {
     printf("=== Test: Link events (background) ===\n");
 
     z_owned_session_t s1;
-    z_owned_config_t cfg1;
-    create_isolated_config(&cfg1, "[\"tcp/127.0.0.1:17451\"]", "[]");
-    assert(z_open(&s1, z_move(cfg1), NULL) >= 0 && "Unable to open session 1");
+    z_test_endpoint_t endpoint;
+    z_test_open_listener(&s1, &endpoint, "\"peer\"");
 
     context_t ctx;
     init_context(&ctx);
@@ -621,9 +559,7 @@ void test_link_events_background() {
            "Unable to declare background link events listener");
 
     z_owned_session_t s2;
-    z_owned_config_t cfg2;
-    create_isolated_config(&cfg2, "[]", "[\"tcp/127.0.0.1:17451\"]");
-    assert(z_open(&s2, z_move(cfg2), NULL) >= 0 && "Unable to open session 2");
+    z_test_open_connector(&s2, &endpoint, "\"peer\"");
 
     z_sleep_s(2);
 
@@ -643,7 +579,7 @@ void test_link_events_filtered() {
     printf("=== Test: Link events with transport filter ===\n");
 
     z_owned_session_t s1, s2;
-    create_session_pair(&s1, &s2);
+    z_test_open_session_pair_with_modes(&s1, &s2, "\"router\"", "\"peer\"");
 
     // Capture transports from s1 and s2
     context_t ctx_s1, ctx_s2;

@@ -95,7 +95,8 @@ jobs:
         run: |
           rm Cargo.lock
           mkdir -p build && cd build
-          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DZENOHC_MSRV_1_75=TRUE -DCMAKE_BUILD_TYPE=Release
+          # shared-memory and unstable API are enabled to reflect ROS 2 use case
+          cmake .. -DZENOHC_CARGO_CHANNEL="+1.75" -DZENOHC_MSRV_1_75=TRUE -DCMAKE_BUILD_TYPE=Release -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE -DZENOHC_CARGO_FLAGS='--features=shared-memory zenoh/transport_serial'
           cmake --build . --config Release
 
   build:
