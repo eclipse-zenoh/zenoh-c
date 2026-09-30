@@ -243,10 +243,142 @@ static inline ze_moved_serializer_t* ze_serializer_move(ze_owned_serializer_t* x
         ze_moved_serializer_t* : ze_serializer_drop \
     )(this_)
 
+static inline void z_bytes_drop_array(z_moved_bytes_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_bytes_drop(this_ + i); }
+static inline void z_bytes_writer_drop_array(z_moved_bytes_writer_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_bytes_writer_drop(this_ + i); }
+static inline void z_cancellation_token_drop_array(z_moved_cancellation_token_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_cancellation_token_drop(this_ + i); }
+static inline void z_chunk_alloc_result_drop_array(z_moved_chunk_alloc_result_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_chunk_alloc_result_drop(this_ + i); }
+static inline void z_closure_hello_drop_array(z_moved_closure_hello_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_hello_drop(this_ + i); }
+static inline void z_closure_link_drop_array(z_moved_closure_link_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_link_drop(this_ + i); }
+static inline void z_closure_link_event_drop_array(z_moved_closure_link_event_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_link_event_drop(this_ + i); }
+static inline void z_closure_matching_status_drop_array(z_moved_closure_matching_status_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_matching_status_drop(this_ + i); }
+static inline void z_closure_query_drop_array(z_moved_closure_query_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_query_drop(this_ + i); }
+static inline void z_closure_reply_drop_array(z_moved_closure_reply_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_reply_drop(this_ + i); }
+static inline void z_closure_sample_drop_array(z_moved_closure_sample_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_sample_drop(this_ + i); }
+static inline void z_closure_transport_drop_array(z_moved_closure_transport_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_transport_drop(this_ + i); }
+static inline void z_closure_transport_event_drop_array(z_moved_closure_transport_event_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_transport_event_drop(this_ + i); }
+static inline void z_closure_zid_drop_array(z_moved_closure_zid_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_closure_zid_drop(this_ + i); }
+static inline void z_condvar_drop_array(z_moved_condvar_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_condvar_drop(this_ + i); }
+static inline void z_config_drop_array(z_moved_config_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_config_drop(this_ + i); }
+static inline void z_encoding_drop_array(z_moved_encoding_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_encoding_drop(this_ + i); }
+static inline void z_fifo_handler_query_drop_array(z_moved_fifo_handler_query_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_fifo_handler_query_drop(this_ + i); }
+static inline void z_fifo_handler_reply_drop_array(z_moved_fifo_handler_reply_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_fifo_handler_reply_drop(this_ + i); }
+static inline void z_fifo_handler_sample_drop_array(z_moved_fifo_handler_sample_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_fifo_handler_sample_drop(this_ + i); }
+static inline void z_hello_drop_array(z_moved_hello_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_hello_drop(this_ + i); }
+static inline void z_keyexpr_drop_array(z_moved_keyexpr_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_keyexpr_drop(this_ + i); }
+static inline void z_link_drop_array(z_moved_link_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_link_drop(this_ + i); }
+static inline void z_link_event_drop_array(z_moved_link_event_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_link_event_drop(this_ + i); }
+static inline void z_link_events_listener_drop_array(z_moved_link_events_listener_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_link_events_listener_drop(this_ + i); }
+static inline void z_liveliness_token_drop_array(z_moved_liveliness_token_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_liveliness_token_drop(this_ + i); }
+static inline void z_matching_listener_drop_array(z_moved_matching_listener_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_matching_listener_drop(this_ + i); }
+static inline void z_memory_layout_drop_array(z_moved_memory_layout_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_memory_layout_drop(this_ + i); }
+static inline void z_mutex_drop_array(z_moved_mutex_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_mutex_drop(this_ + i); }
+static inline void z_precomputed_layout_drop_array(z_moved_precomputed_layout_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_precomputed_layout_drop(this_ + i); }
+static inline void z_ptr_in_segment_drop_array(z_moved_ptr_in_segment_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_ptr_in_segment_drop(this_ + i); }
+static inline void z_publisher_drop_array(z_moved_publisher_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_publisher_drop(this_ + i); }
+static inline void z_querier_drop_array(z_moved_querier_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_querier_drop(this_ + i); }
+static inline void z_query_drop_array(z_moved_query_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_query_drop(this_ + i); }
+static inline void z_queryable_drop_array(z_moved_queryable_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_queryable_drop(this_ + i); }
+static inline void z_reply_drop_array(z_moved_reply_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_reply_drop(this_ + i); }
+static inline void z_reply_err_drop_array(z_moved_reply_err_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_reply_err_drop(this_ + i); }
+static inline void z_ring_handler_query_drop_array(z_moved_ring_handler_query_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_ring_handler_query_drop(this_ + i); }
+static inline void z_ring_handler_reply_drop_array(z_moved_ring_handler_reply_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_ring_handler_reply_drop(this_ + i); }
+static inline void z_ring_handler_sample_drop_array(z_moved_ring_handler_sample_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_ring_handler_sample_drop(this_ + i); }
+static inline void z_sample_drop_array(z_moved_sample_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_sample_drop(this_ + i); }
+static inline void z_session_drop_array(z_moved_session_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_session_drop(this_ + i); }
+static inline void z_shared_shm_provider_drop_array(z_moved_shared_shm_provider_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_shared_shm_provider_drop(this_ + i); }
+static inline void z_shm_client_drop_array(z_moved_shm_client_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_shm_client_drop(this_ + i); }
+static inline void z_shm_client_storage_drop_array(z_moved_shm_client_storage_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_shm_client_storage_drop(this_ + i); }
+static inline void z_shm_drop_array(z_moved_shm_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_shm_drop(this_ + i); }
+static inline void z_shm_mut_drop_array(z_moved_shm_mut_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_shm_mut_drop(this_ + i); }
+static inline void z_shm_provider_drop_array(z_moved_shm_provider_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_shm_provider_drop(this_ + i); }
+static inline void z_slice_drop_array(z_moved_slice_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_slice_drop(this_ + i); }
+static inline void z_string_array_drop_array(z_moved_string_array_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_string_array_drop(this_ + i); }
+static inline void z_string_drop_array(z_moved_string_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_string_drop(this_ + i); }
+static inline void z_subscriber_drop_array(z_moved_subscriber_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_subscriber_drop(this_ + i); }
+static inline void z_task_drop_array(z_moved_task_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_task_drop(this_ + i); }
+static inline void z_transport_drop_array(z_moved_transport_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_transport_drop(this_ + i); }
+static inline void z_transport_event_drop_array(z_moved_transport_event_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_transport_event_drop(this_ + i); }
+static inline void z_transport_events_listener_drop_array(z_moved_transport_events_listener_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) z_transport_events_listener_drop(this_ + i); }
+static inline void zc_closure_log_drop_array(zc_moved_closure_log_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) zc_closure_log_drop(this_ + i); }
+static inline void zc_concurrent_close_handle_drop_array(zc_moved_concurrent_close_handle_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) zc_concurrent_close_handle_drop(this_ + i); }
+static inline void zc_shm_client_list_drop_array(zc_moved_shm_client_list_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) zc_shm_client_list_drop(this_ + i); }
+static inline void ze_advanced_publisher_drop_array(ze_moved_advanced_publisher_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_advanced_publisher_drop(this_ + i); }
+static inline void ze_advanced_subscriber_drop_array(ze_moved_advanced_subscriber_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_advanced_subscriber_drop(this_ + i); }
+static inline void ze_closure_miss_drop_array(ze_moved_closure_miss_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_closure_miss_drop(this_ + i); }
+static inline void ze_publication_cache_drop_array(ze_moved_publication_cache_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_publication_cache_drop(this_ + i); }
+static inline void ze_querying_subscriber_drop_array(ze_moved_querying_subscriber_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_querying_subscriber_drop(this_ + i); }
+static inline void ze_sample_miss_listener_drop_array(ze_moved_sample_miss_listener_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_sample_miss_listener_drop(this_ + i); }
+static inline void ze_serializer_drop_array(ze_moved_serializer_t* this_, size_t len) { for (size_t i = 0; i < len; ++i) ze_serializer_drop(this_ + i); }
+
 #define z_drop_array(this_, len) \
-    do { \
-        for (size_t z_i_ = 0; z_i_ < (len); ++z_i_) z_drop((this_) + z_i_); \
-    } while (0)
+    _Generic((this_), \
+        z_moved_bytes_t* : z_bytes_drop_array, \
+        z_moved_bytes_writer_t* : z_bytes_writer_drop_array, \
+        z_moved_cancellation_token_t* : z_cancellation_token_drop_array, \
+        z_moved_chunk_alloc_result_t* : z_chunk_alloc_result_drop_array, \
+        z_moved_closure_hello_t* : z_closure_hello_drop_array, \
+        z_moved_closure_link_t* : z_closure_link_drop_array, \
+        z_moved_closure_link_event_t* : z_closure_link_event_drop_array, \
+        z_moved_closure_matching_status_t* : z_closure_matching_status_drop_array, \
+        z_moved_closure_query_t* : z_closure_query_drop_array, \
+        z_moved_closure_reply_t* : z_closure_reply_drop_array, \
+        z_moved_closure_sample_t* : z_closure_sample_drop_array, \
+        z_moved_closure_transport_t* : z_closure_transport_drop_array, \
+        z_moved_closure_transport_event_t* : z_closure_transport_event_drop_array, \
+        z_moved_closure_zid_t* : z_closure_zid_drop_array, \
+        z_moved_condvar_t* : z_condvar_drop_array, \
+        z_moved_config_t* : z_config_drop_array, \
+        z_moved_encoding_t* : z_encoding_drop_array, \
+        z_moved_fifo_handler_query_t* : z_fifo_handler_query_drop_array, \
+        z_moved_fifo_handler_reply_t* : z_fifo_handler_reply_drop_array, \
+        z_moved_fifo_handler_sample_t* : z_fifo_handler_sample_drop_array, \
+        z_moved_hello_t* : z_hello_drop_array, \
+        z_moved_keyexpr_t* : z_keyexpr_drop_array, \
+        z_moved_link_t* : z_link_drop_array, \
+        z_moved_link_event_t* : z_link_event_drop_array, \
+        z_moved_link_events_listener_t* : z_link_events_listener_drop_array, \
+        z_moved_liveliness_token_t* : z_liveliness_token_drop_array, \
+        z_moved_matching_listener_t* : z_matching_listener_drop_array, \
+        z_moved_memory_layout_t* : z_memory_layout_drop_array, \
+        z_moved_mutex_t* : z_mutex_drop_array, \
+        z_moved_precomputed_layout_t* : z_precomputed_layout_drop_array, \
+        z_moved_ptr_in_segment_t* : z_ptr_in_segment_drop_array, \
+        z_moved_publisher_t* : z_publisher_drop_array, \
+        z_moved_querier_t* : z_querier_drop_array, \
+        z_moved_query_t* : z_query_drop_array, \
+        z_moved_queryable_t* : z_queryable_drop_array, \
+        z_moved_reply_t* : z_reply_drop_array, \
+        z_moved_reply_err_t* : z_reply_err_drop_array, \
+        z_moved_ring_handler_query_t* : z_ring_handler_query_drop_array, \
+        z_moved_ring_handler_reply_t* : z_ring_handler_reply_drop_array, \
+        z_moved_ring_handler_sample_t* : z_ring_handler_sample_drop_array, \
+        z_moved_sample_t* : z_sample_drop_array, \
+        z_moved_session_t* : z_session_drop_array, \
+        z_moved_shared_shm_provider_t* : z_shared_shm_provider_drop_array, \
+        z_moved_shm_client_t* : z_shm_client_drop_array, \
+        z_moved_shm_client_storage_t* : z_shm_client_storage_drop_array, \
+        z_moved_shm_t* : z_shm_drop_array, \
+        z_moved_shm_mut_t* : z_shm_mut_drop_array, \
+        z_moved_shm_provider_t* : z_shm_provider_drop_array, \
+        z_moved_slice_t* : z_slice_drop_array, \
+        z_moved_string_array_t* : z_string_array_drop_array, \
+        z_moved_string_t* : z_string_drop_array, \
+        z_moved_subscriber_t* : z_subscriber_drop_array, \
+        z_moved_task_t* : z_task_drop_array, \
+        z_moved_transport_t* : z_transport_drop_array, \
+        z_moved_transport_event_t* : z_transport_event_drop_array, \
+        z_moved_transport_events_listener_t* : z_transport_events_listener_drop_array, \
+        zc_moved_closure_log_t* : zc_closure_log_drop_array, \
+        zc_moved_concurrent_close_handle_t* : zc_concurrent_close_handle_drop_array, \
+        zc_moved_shm_client_list_t* : zc_shm_client_list_drop_array, \
+        ze_moved_advanced_publisher_t* : ze_advanced_publisher_drop_array, \
+        ze_moved_advanced_subscriber_t* : ze_advanced_subscriber_drop_array, \
+        ze_moved_closure_miss_t* : ze_closure_miss_drop_array, \
+        ze_moved_publication_cache_t* : ze_publication_cache_drop_array, \
+        ze_moved_querying_subscriber_t* : ze_querying_subscriber_drop_array, \
+        ze_moved_sample_miss_listener_t* : ze_sample_miss_listener_drop_array, \
+        ze_moved_serializer_t* : ze_serializer_drop_array \
+    )(this_, len)
 
 #define z_move(this_) \
     _Generic((this_), \

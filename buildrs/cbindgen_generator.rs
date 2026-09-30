@@ -267,7 +267,7 @@ fn create_generics_header(path_in: &str, path_out: &str) {
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
-    let out = generate_generic_drop_array_c();
+    let out = generate_generic_drop_array_c(&drop_funcs);
     file_out.write_all(out.as_bytes()).unwrap();
     file_out.write_all("\n\n".as_bytes()).unwrap();
 
@@ -808,7 +808,7 @@ fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+)\s+z_(\w+)_clone\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
+        r"(\w+)\s+(\w+_clone)\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -820,7 +820,7 @@ fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
         let f = FunctionSignature::new(
             semantic,
             return_type,
-            "z_".to_string() + func_name + "_clone",
+            func_name.to_string(),
             vec![
                 FuncArg::new(&(dst_type.to_string() + "*"), dst_name),
                 FuncArg::new(&("const ".to_string() + src_type + "*"), src_name),
@@ -894,8 +894,27 @@ fn generate_generic_move_c(macro_func: &[FunctionSignature]) -> String {
 
 /// `z_drop_array(z_move_array(arr), len)` drops `len` owned objects moved as a
 /// contiguous array; elements in the gravestone state are no-ops.
-fn generate_generic_drop_array_c() -> String {
-    "#define z_drop_array(this_, len) \\\n    do { \\\n        for (size_t z_i_ = 0; z_i_ < (len); ++z_i_) z_drop((this_) + z_i_); \\\n    } while (0)".to_string()
+fn generate_generic_drop_array_c(drop_funcs: &[FunctionSignature]) -> String {
+    let mut out = String::new();
+    let mut array_funcs = Vec::new();
+    for func in drop_funcs {
+        let name = format!("{}_array", func.func_name);
+        let typename = &func.args[0].typename.typename;
+        out += &format!(
+            "static inline void {name}({typename} this_, size_t len) {{ for (size_t i = 0; i < len; ++i) {}(this_ + i); }}\n",
+            func.func_name
+        );
+        array_funcs.push(FunctionSignature::new(
+            &func.entity_name,
+            "void",
+            name,
+            vec![
+                FuncArg::new(typename, "this_"),
+                FuncArg::new("size_t", "len"),
+            ],
+        ));
+    }
+    out + "\n" + &generate_generic_c(&array_funcs, "z_drop_array", false)
 }
 
 /// `z_move_array(arr)` moves a contiguous array of owned objects (a C array or a
@@ -1194,4 +1213,69 @@ fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
 
     out += &generate_generic_cpp(&processed, "z_closure", false);
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn with_header(test: &str, header: &str, check: impl FnOnce(&str)) {
+        let path =
+            std::env::temp_dir().join(format!("zenoh-c-generator-{}-{test}.h", std::process::id()));
+        std::fs::write(&path, header).unwrap();
+        check(path.to_str().unwrap());
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn closure_callback_return_types() {
+        with_header(
+            "closure-return",
+            "void zc_closure_auth(struct zc_owned_closure_auth_t *this_,\n  enum zc_auth_result_t (*call)(const struct z_loaned_string_t *claim, void *context),\n  void (*drop)(void *context), void *context);",
+            |path| {
+                let funcs = find_closure_constructors(path);
+                assert_eq!(funcs.len(), 1);
+                assert_eq!(funcs[0].args[1].typename.typename,
+                    "zc_auth_result_t (*call)(const z_loaned_string_t *claim, void *context)");
+                assert!(generate_generic_closure_c(&funcs).contains(
+                    "typedef zc_auth_result_t(*zc_closure_auth_callback_t)"));
+                assert!(generate_generic_closure_cpp(&funcs).contains(
+                    "using zc_closure_auth_callback_t = zc_auth_result_t("));
+            },
+        );
+    }
+
+    #[test]
+    fn call_forwards_arguments_and_return_value() {
+        with_header(
+            "call-args",
+            "z_result_t zc_closure_auth_call(const struct zc_loaned_closure_auth_t *closure,\n  enum zc_log_severity_t severity, const struct z_loaned_string_t *msg);",
+            |path| {
+                let funcs = find_call_functions(path);
+                assert_eq!(funcs.len(), 1);
+                assert_eq!(funcs[0].args.len(), 3);
+                assert_eq!(funcs[0].args[1].typename.typename, "zc_log_severity_t");
+                assert!(generate_generic_call_c(&funcs).contains("(closure, __VA_ARGS__)"));
+                assert!(generate_generic_call_cpp(&funcs).contains(
+                    "return zc_closure_auth_call(closure, severity, msg);"));
+            },
+        );
+    }
+
+    #[test]
+    fn clone_supports_all_prefixes() {
+        with_header(
+            "clone-prefixes",
+            "void z_string_clone(struct z_owned_string_t *dst, const struct z_loaned_string_t *src);\nvoid zc_claim_clone(struct zc_owned_claim_t *dst, const struct zc_loaned_claim_t *src);\nvoid ze_sample_clone(struct ze_owned_sample_t *dst, const struct ze_loaned_sample_t *src);",
+            |path| {
+                let funcs = find_clone_functions(path);
+                assert_eq!(funcs.len(), 3);
+                assert_eq!(funcs[0].func_name, "z_string_clone");
+                assert_eq!(funcs[1].func_name, "zc_claim_clone");
+                assert_eq!(funcs[2].func_name, "ze_sample_clone");
+                assert!(generate_generic_clone_c(&funcs).contains("zc_claim_clone"));
+                assert!(generate_generic_clone_cpp(&funcs).contains("ze_sample_clone"));
+            },
+        );
+    }
 }

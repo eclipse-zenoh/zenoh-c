@@ -87,14 +87,21 @@ pub const Z_ID_STR_LEN: usize = 33;
 /// @brief Formats the `z_id_t` into a hex number (LSB-first order, without leading zeros)
 /// written to `buf`, NUL-terminated. Returns `buf`, so it can be used in place:
 /// `char buf[Z_ID_STR_LEN]; printf("%s", z_id_as_str(&zid, &buf));`
+///
+/// `buf` must point to a writable array of `Z_ID_STR_LEN` characters;
+/// its contents do not need to be initialized.
+#[allow(clippy::missing_safety_doc)]
 #[no_mangle]
-pub extern "C" fn z_id_as_str(zid: &z_id_t, buf: &mut [c_char; Z_ID_STR_LEN]) -> *const c_char {
+pub unsafe extern "C" fn z_id_as_str(
+    zid: &z_id_t,
+    buf: *mut [c_char; Z_ID_STR_LEN],
+) -> *const c_char {
     let s = zid.as_rust_type_ref().to_string();
     debug_assert!(s.len() < Z_ID_STR_LEN);
-    for (dst, src) in buf.iter_mut().zip(s.bytes().chain(std::iter::once(0))) {
-        *dst = src as c_char;
-    }
-    buf.as_ptr()
+    let buf = buf.cast::<c_char>();
+    std::ptr::copy_nonoverlapping(s.as_ptr().cast::<c_char>(), buf, s.len());
+    buf.add(s.len()).write(0);
+    buf
 }
 
 /// @brief Returns the session's Zenoh ID.
@@ -1334,9 +1341,9 @@ mod tests {
             0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54,
             0x32, 0x10,
         ]);
-        let mut buf = [0x7f as c_char; Z_ID_STR_LEN];
-        let ptr = z_id_as_str(&zid, &mut buf);
-        assert_eq!(ptr, buf.as_ptr());
+        let mut uninit = MaybeUninit::<[c_char; Z_ID_STR_LEN]>::uninit();
+        let ptr = unsafe { z_id_as_str(&zid, uninit.as_mut_ptr()) };
+        assert_eq!(ptr, uninit.as_ptr().cast::<c_char>());
         let as_str = unsafe { CStr::from_ptr(ptr) }.to_str().unwrap();
         assert_eq!(as_str.len(), Z_ID_STR_LEN - 1);
 
@@ -1352,7 +1359,7 @@ mod tests {
         // Leading zero digits and trailing zero bytes are omitted from the text, so the string
         // is usually shorter than the buffer.
         let short = z_id_t::from([0x01, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-        let ptr = z_id_as_str(&short, &mut buf);
+        let ptr = unsafe { z_id_as_str(&short, uninit.as_mut_ptr()) };
         assert_eq!(unsafe { CStr::from_ptr(ptr) }.to_str().unwrap(), "1");
     }
 }
