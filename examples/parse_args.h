@@ -14,6 +14,7 @@
 
 #pragma once
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -294,8 +295,19 @@ z_query_target_t parse_query_target(const char* arg) {
     }
 }
 
+unsigned long parse_uint(const char* arg) {
+    char* end;
+    errno = 0;
+    unsigned long value = strtoul(arg, &end, 10);
+    if (errno != 0 || *arg < '0' || *arg > '9' || *end != '\0') {
+        printf("Invalid unsigned integer value [%s]\n", arg);
+        exit(-1);
+    }
+    return value;
+}
+
 z_priority_t parse_priority(const char* arg) {
-    int p = atoi(arg);
+    unsigned long p = parse_uint(arg);
     if (p < Z_PRIORITY_REAL_TIME || p > Z_PRIORITY_BACKGROUND) {
         printf("Unsupported priority value [%s]\n", arg);
         exit(-1);

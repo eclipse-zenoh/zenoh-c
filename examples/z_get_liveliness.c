@@ -86,7 +86,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
     _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", atoi, DEFAULT_TIMEOUT_MS);
+    _Z_PARSE_ARG(args.timeout_ms, "o", "timeout", parse_uint, DEFAULT_TIMEOUT_MS);
 
     parse_zenoh_common_args(argc, argv, config);
     const char* arg = check_unknown_opts(argc, argv);

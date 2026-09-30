@@ -134,8 +134,8 @@ void print_help() {
 args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
     _Z_CHECK_HELP;
     args_t args;
-    _Z_PARSE_ARG(args.samples, "s", "samples", atoi, DEFAULT_MEASUREMENTS);
-    _Z_PARSE_ARG(args.num_messages, "n", "number", atoi, DEFAULT_MESSAGES);
+    _Z_PARSE_ARG(args.samples, "s", "samples", parse_uint, DEFAULT_MEASUREMENTS);
+    _Z_PARSE_ARG(args.num_messages, "n", "number", parse_uint, DEFAULT_MESSAGES);
 
     parse_zenoh_common_args(argc, argv, config);
     const char *arg = check_unknown_opts(argc, argv);
