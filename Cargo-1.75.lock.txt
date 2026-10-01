@@ -1,0 +1,20 @@
+The Cargo-1I75.lock file has been generated with thos commands:
+
+cd zenoh-c
+
+cmake -S . -B build/msrv175 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DZENOHC_MSRV_1_75=TRUE \
+  -DZENOHC_BUILD_WITH_UNSTABLE_API=TRUE \
+  -DZENOHC_CARGO_FLAGS="--features=shared-memory zenoh/transport_serial"
+
+cp Cargo.lock build/msrv175/release/Cargo.lock
+
+RUSTUP_TOOLCHAIN=1.97.1 cargo update \
+  --manifest-path build/msrv175/release/Cargo.toml \
+  --config 'resolver.incompatible-rust-versions="fallback"'
+
+cp build/msrv175/release/Cargo.lock Cargo-1.75.lock
+
+
+

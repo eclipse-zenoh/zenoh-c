@@ -51,11 +51,12 @@ else()
 	set(cargo_executable "cargo")
 endif()
 declare_cache_var(ZENOHC_MSRV_1_75 FALSE BOOL "Ensure that zenoh-c can be built with Rust 1.75 by pinning dependencies to compatible versions")
+set(ZENOHC_MSRV_1_75_CARGO_LOCK "${CMAKE_CURRENT_SOURCE_DIR}/Cargo-1.75.lock")
 if (ZENOHC_MSRV_1_75)
+	if(NOT EXISTS "${ZENOHC_MSRV_1_75_CARGO_LOCK}")
+		message(FATAL_ERROR "ZENOHC_MSRV_1_75 is ON but ${ZENOHC_MSRV_1_75_CARGO_LOCK} is missing")
+	endif()
 	message(STATUS "Due to ZENOHC_MSRV_1_75 setting the ZENOHC_COPY_SOURCE_CARGO_LOCK and ZENOHC_BUILD_IN_SOURCE_TREE cache variables are forcibly set to FALSE to avoid build failures due to incompatible source Cargo.lock file")
-	# forcibly set ZENOHC_COPY_SOURCE_CARGO_LOCK to FALSE: the source Cargo.lock
-	# is incompatible with Rust 1.75 and will cause build failure if copied to build directory
-	declare_cache_var(ZENOHC_COPY_SOURCE_CARGO_LOCK FALSE BOOL "Copy Cargo.lock to build directory to ensure reproducible builds" FORCE)
 	# forcibly set ZENOHC_BUILD_IN_SOURCE_TREE to FALSE to avoid build failures due to direct use of an incompatible
 	# Cargo.lock file at the root of the source tree.
 	declare_cache_var(ZENOHC_BUILD_IN_SOURCE_TREE FALSE BOOL "Do build inside source tree" FORCE)
@@ -148,7 +149,10 @@ function(configure_cargo_toml cargo_toml_dir CARGO_PROJECT_VERSION CARGO_LIB_NAM
 			${CMAKE_CURRENT_SOURCE_DIR}/rust-toolchain.toml
 			${CMAKE_CURRENT_SOURCE_DIR}/version.txt
 			DESTINATION ${cargo_toml_dir})
-		if(ZENOHC_COPY_SOURCE_CARGO_LOCK AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock")
+		if(ZENOHC_MSRV_1_75)
+			configure_file("${ZENOHC_MSRV_1_75_CARGO_LOCK}"
+						"${cargo_toml_dir}/Cargo.lock" COPYONLY)
+		elseif(ZENOHC_COPY_SOURCE_CARGO_LOCK AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock")
 			file(COPY
 				${CMAKE_CURRENT_SOURCE_DIR}/Cargo.lock
 				DESTINATION ${cargo_toml_dir})
@@ -281,6 +285,13 @@ endif()
 
 if(NOT(ZENOHC_CUSTOM_TARGET STREQUAL ""))
 	set(cargo_flags ${cargo_flags} --target=${ZENOHC_CUSTOM_TARGET})
+endif()
+
+# The Rust 1.75 dependency set is pinned by Cargo-1.75.lock, copied into the build directory by
+# configure_cargo_toml(). Pass --locked so that cargo fails loudly instead of silently
+# re-resolving to crate versions requiring a newer Rust.
+if(ZENOHC_MSRV_1_75)
+	set(cargo_flags ${cargo_flags} --locked)
 endif()
 
 status_print(cargo_flags)
