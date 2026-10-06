@@ -106,7 +106,7 @@ struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
         free(pos_args);
         exit(-1);
     }
-    args.size = atoi(pos_args[0]);
+    args.size = parse_uint(pos_args[0]);
     free(pos_args);
     return args;
 }
