@@ -65,6 +65,15 @@ void print_link(const z_loaned_link_t* link) {
     z_drop(z_move(zid_str));
 }
 
+void check_link_locator(const z_loaned_locator_t* locator) {
+    z_view_string_t text, protocol, address;
+    z_locator_as_view_string(locator, &text);
+    z_locator_protocol(locator, &protocol);
+    z_locator_address(locator, &address);
+    assert(z_string_data(z_loan(protocol)) == z_string_data(z_loan(text)));
+    assert(z_string_data(z_loan(address)) == z_string_data(z_loan(text)) + z_string_len(z_loan(protocol)) + 1);
+}
+
 void print_transport_event(const z_loaned_transport_event_t* event) {
     z_sample_kind_t kind = z_transport_event_kind(event);
     const char* kind_str = (kind == Z_SAMPLE_KIND_PUT) ? "PUT" : "DELETE";
@@ -122,6 +131,13 @@ void capture_links(z_loaned_link_t* link, void* arg) {
     context_t* ctx = (context_t*)arg;
     assert(ctx->link_count < MAX_CAPTURE && "Exceeded maximum link capture limit");
     z_take_from_loaned(&ctx->links[ctx->link_count], link);
+    const z_loaned_locator_t* empty_locators[] = {z_link_src(link), z_link_dst(link)};
+    for (size_t i = 0; i < sizeof(empty_locators) / sizeof(empty_locators[0]); ++i) {
+        z_view_string_t address;
+        assert(z_view_string_from_str(&address, "previous value") == Z_OK);
+        z_locator_address(empty_locators[i], &address);
+        assert(z_string_len(z_loan(address)) == 0);
+    }
     ctx->link_count++;
 }
 
@@ -248,6 +264,46 @@ void test_z_info_transports_and_links() {
     assert(memcmp(&captured_link_zid, &s2_zid, sizeof(z_id_t)) == 0 &&
            "Captured link ZID doesn't match session 2's ZID");
     printf("PASS: Session 1's link connects to session 2 (ZIDs match)\n\n");
+
+    // Link locators are borrowed objects; component views require no allocations or drops.
+    const z_loaned_locator_t* src = z_link_src(z_loan(ctx.links[0]));
+    const z_loaned_locator_t* dst = z_link_dst(z_loan(ctx.links[0]));
+    assert(src == z_link_src(z_loan(ctx.links[0])));
+    assert(dst == z_link_dst(z_loan(ctx.links[0])));
+    assert(z_link_group(z_loan(ctx.links[0])) == NULL);
+    check_link_locator(src);
+    check_link_locator(dst);
+    z_view_string_t protocol;
+    z_locator_protocol(src, &protocol);
+    assert(z_string_len(z_loan(protocol)) == 3);
+    assert(memcmp(z_string_data(z_loan(protocol)), "tcp", 3) == 0);
+    z_locator_protocol(dst, &protocol);
+    assert(z_string_len(z_loan(protocol)) == 3);
+    assert(memcmp(z_string_data(z_loan(protocol)), "tcp", 3) == 0);
+
+    // TCP has no authentication identifier; the getter initializes an empty view.
+    z_view_string_t auth_id;
+    z_view_string_from_str(&auth_id, "sentinel");
+    assert(!z_link_auth_identifier(z_loan(ctx.links[0]), &auth_id));
+    assert(z_string_len(z_loan(auth_id)) == 0);
+
+    // Iterator copies advance independently, and exhaustion preserves the output.
+    z_link_interfaces_iterator_t interfaces = z_link_get_interfaces_iterator(z_loan(ctx.links[0]));
+    z_link_interfaces_iterator_t copy = interfaces;
+    z_view_string_t iface, copied_iface;
+    z_view_string_from_str(&iface, "sentinel");
+    z_view_string_from_str(&copied_iface, "sentinel");
+    while (z_link_interfaces_iterator_next(&interfaces, &iface)) {
+        assert(z_link_interfaces_iterator_next(&copy, &copied_iface));
+        assert(z_string_len(z_loan(iface)) == z_string_len(z_loan(copied_iface)));
+        assert(z_string_data(z_loan(iface)) == z_string_data(z_loan(copied_iface)));
+    }
+    assert(!z_link_interfaces_iterator_next(&copy, &copied_iface));
+    const char* last_data = z_string_data(z_loan(iface));
+    size_t last_len = z_string_len(z_loan(iface));
+    assert(!z_link_interfaces_iterator_next(&interfaces, &iface));
+    assert(z_string_data(z_loan(iface)) == last_data);
+    assert(z_string_len(z_loan(iface)) == last_len);
 
     // Cleanup
     drop_context(&ctx);

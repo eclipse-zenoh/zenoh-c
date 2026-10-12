@@ -15,32 +15,36 @@
 
 #include "zenoh.h"
 
-void fprintpid(FILE *stream, z_id_t pid) {
+void fprintpid(FILE* stream, z_id_t pid) {
     z_owned_string_t str;
     z_id_to_string(&pid, &str);
     fprintf(stream, "%.*s", (int)z_string_len(z_loan(str)), z_string_data(z_loan(str)));
     z_drop(z_move(str));
 }
 
-void fprintwhatami(FILE *stream, z_whatami_t whatami) {
+void fprintwhatami(FILE* stream, z_whatami_t whatami) {
     z_view_string_t whatami_str;
     z_whatami_to_view_string(whatami, &whatami_str);
     fprintf(stream, "%.*s", (int)z_string_len(z_loan(whatami_str)), z_string_data(z_loan(whatami_str)));
 }
 
-void fprintlocators(FILE *stream, const z_loaned_string_array_t *locs) {
+void fprintlocators(FILE* stream, z_hello_locators_iterator_t locs) {
     fprintf(stream, "[");
-    for (unsigned int i = 0; i < z_string_array_len(locs); i++) {
-        const z_loaned_string_t *loc = z_string_array_get(locs, i);
-        fprintf(stream, "%.*s", (int)z_string_len(loc), z_string_data(loc));
-        if (i < z_string_array_len(locs) - 1) {
+    const z_loaned_locator_t* locator;
+    z_view_string_t loc;
+    bool first = true;
+    while (z_hello_locators_iterator_next(&locs, &locator)) {
+        if (!first) {
             fprintf(stream, ", ");
         }
+        first = false;
+        z_locator_as_view_string(locator, &loc);
+        fprintf(stream, "%.*s", (int)z_string_len(z_loan(loc)), z_string_data(z_loan(loc)));
     }
     fprintf(stream, "]");
 }
 
-void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
+void fprinthello(FILE* stream, const z_loaned_hello_t* hello) {
     fprintf(stream, "Hello { pid: ");
 
     fprintpid(stream, z_hello_zid(hello));
@@ -48,33 +52,30 @@ void fprinthello(FILE *stream, const z_loaned_hello_t *hello) {
     fprintwhatami(stream, z_hello_whatami(hello));
 
     fprintf(stream, ", locators: ");
-    z_owned_string_array_t locators;
-    z_hello_locators(hello, &locators);
-    fprintlocators(stream, z_loan(locators));
-    z_string_array_drop(z_move(locators));
+    fprintlocators(stream, z_hello_get_locators_iterator(hello));
 
     fprintf(stream, " }");
 }
 
-void callback(z_loaned_hello_t *hello, void *context) {
+void callback(z_loaned_hello_t* hello, void* context) {
     fprinthello(stdout, hello);
     fprintf(stdout, "\n");
-    (*(int *)context)++;
+    (*(int*)context)++;
 }
 
-void drop(void *context) {
+void drop(void* context) {
     printf("Dropping scout\n");
-    int count = *(int *)context;
+    int count = *(int*)context;
     z_free(context);
     if (!count) {
         printf("Did not find any zenoh process.\n");
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
-    int *context = z_malloc(sizeof(int));
+    int* context = z_malloc(sizeof(int));
     *context = 0;
     z_owned_config_t config;
     z_config_default(&config);

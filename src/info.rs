@@ -34,9 +34,9 @@ use crate::{
     z_owned_string_t,
 };
 #[cfg(feature = "unstable")]
-use crate::{z_owned_string_array_t, z_reliability_t, z_whatami_t, CStringOwned};
+use crate::{z_link_interfaces_iterator_t, z_loaned_locator_t, z_view_string_t, CStringView};
 #[cfg(feature = "unstable")]
-use crate::{CStringInner, ZVector};
+use crate::{z_reliability_t, z_whatami_t};
 decl_c_type!(copy(z_id_t, ZenohId));
 
 #[cfg(feature = "unstable")]
@@ -520,47 +520,32 @@ pub extern "C" fn z_link_zid(link: &z_loaned_link_t) -> z_id_t {
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.
-///
-/// Stores the source locator string in `str_out`.
+/// Returns the borrowed source (local endpoint) locator.
+/// The link must remain alive and unchanged while the locator or its views are used.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_src(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z_owned_string_t>) {
-    let link = link.as_rust_type_ref();
-    str_out
-        .as_rust_type_mut_uninit()
-        .write(link.src().to_string().into());
+pub extern "C" fn z_link_src(link: &z_loaned_link_t) -> &z_loaned_locator_t {
+    link.as_rust_type_ref().src().as_loaned_c_type_ref()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Gets the destination locator (remote endpoint) from the `z_loaned_link_t`.
-///
-/// Stores the destination locator string in `str_out`.
+/// Returns the borrowed destination (remote endpoint) locator.
+/// The link must remain alive and unchanged while the locator or its views are used.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_dst(link: &z_loaned_link_t, str_out: &mut MaybeUninit<z_owned_string_t>) {
-    let link = link.as_rust_type_ref();
-    str_out
-        .as_rust_type_mut_uninit()
-        .write(link.dst().to_string().into());
+pub extern "C" fn z_link_dst(link: &z_loaned_link_t) -> &z_loaned_locator_t {
+    link.as_rust_type_ref().dst().as_loaned_c_type_ref()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Gets the group locator from the `z_loaned_link_t` (for multicast links).
-///
-/// Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
+/// Returns the borrowed group locator for a multicast link, or NULL when absent.
+/// The link must remain alive and unchanged while the locator or its views are used.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_group(
-    link: &z_loaned_link_t,
-    str_out: &mut MaybeUninit<z_owned_string_t>,
-) {
-    let link = link.as_rust_type_ref();
-    str_out.as_rust_type_mut_uninit().write(
-        link.group()
-            .map(|g| g.to_string().into())
-            .unwrap_or(CStringOwned::gravestone()),
-    );
+pub extern "C" fn z_link_group(link: &z_loaned_link_t) -> Option<&z_loaned_locator_t> {
+    link.as_rust_type_ref()
+        .group()
+        .map(|locator| locator.as_loaned_c_type_ref())
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -588,37 +573,63 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets the network interfaces associated with the `z_loaned_link_t`.
 ///
-/// Stores an array of interface name strings in `interfaces_out`.
+/// Returns an iterator without allocating. The iterator and the string views it yields
+/// borrow from `link`, which must remain alive and unchanged while they are used.
+/// Neither the iterator nor the views need to be dropped. Copying the iterator creates
+/// an independent cursor at the same position.
 #[cfg(feature = "unstable")]
 #[no_mangle]
-pub extern "C" fn z_link_interfaces(
-    link: &z_loaned_link_t,
-    interfaces_out: &mut MaybeUninit<z_owned_string_array_t>,
-) {
-    let link = link.as_rust_type_ref();
-    let mut interfaces = ZVector::with_capacity(link.interfaces().len());
-    for iface in link.interfaces().iter() {
-        interfaces.push(CStringInner::new_borrowed_from_slice(iface.as_bytes()));
+pub extern "C" fn z_link_get_interfaces_iterator(
+    link: &'static z_loaned_link_t,
+) -> z_link_interfaces_iterator_t {
+    *link
+        .as_rust_type_ref()
+        .interfaces_iter()
+        .as_loaned_c_type_ref()
+}
+
+#[cfg(feature = "unstable")]
+decl_c_type!(loaned(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>));
+
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// Gets the next interface name as a borrowed string view.
+/// @param this_: Interface iterator.
+/// @param out: An uninitialized memory location for the next string view.
+/// @return `true` if a view was written, or `false` at the end (leaving `out` unchanged).
+#[cfg(feature = "unstable")]
+#[no_mangle]
+pub extern "C" fn z_link_interfaces_iterator_next(
+    this_: &mut z_link_interfaces_iterator_t,
+    out: &mut MaybeUninit<z_view_string_t>,
+) -> bool {
+    match this_.as_rust_type_mut().next() {
+        Some(interface) => {
+            out.as_rust_type_mut_uninit()
+                .write(CStringView::new_borrowed_from_slice(interface.as_bytes()));
+            true
+        }
+        None => false,
     }
-    interfaces_out.as_rust_type_mut_uninit().write(interfaces);
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// @brief Gets the authentication identifier from the `z_loaned_link_t`.
-///
-/// Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
+/// @brief Gets the authentication identifier as a borrowed string view, without allocating.
+/// Returns true if an identifier is present (including an empty identifier), or false otherwise.
+/// When absent, writes an empty view to str_out.
+/// The link must remain alive and unchanged while the view is used. The view needs no drop.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_auth_identifier(
     link: &z_loaned_link_t,
-    str_out: &mut MaybeUninit<z_owned_string_t>,
-) {
-    let link = link.as_rust_type_ref();
-    str_out.as_rust_type_mut_uninit().write(
-        link.auth_identifier()
-            .map(|s| s.to_string().into())
-            .unwrap_or(CStringOwned::gravestone()),
-    );
+    str_out: &mut MaybeUninit<z_view_string_t>,
+) -> bool {
+    let identifier = link.as_rust_type_ref().auth_identifier();
+    str_out
+        .as_rust_type_mut_uninit()
+        .write(CStringView::new_borrowed_from_slice(
+            identifier.unwrap_or_default().as_bytes(),
+        ));
+    identifier.is_some()
 }
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -1302,4 +1313,75 @@ pub extern "C" fn z_link_events_listener_loan(
     this_: &z_owned_link_events_listener_t,
 ) -> *const z_loaned_link_events_listener_t {
     this_ as *const z_owned_link_events_listener_t as *const z_loaned_link_events_listener_t
+}
+
+#[cfg(all(test, feature = "unstable"))]
+mod iterator_tests {
+    use std::sync::OnceLock;
+
+    use super::*;
+
+    #[test]
+    fn link_interfaces_iterator_borrows_names() {
+        static INTERFACES: OnceLock<Vec<String>> = OnceLock::new();
+        let interfaces = INTERFACES.get_or_init(|| vec!["eth0".into(), "lo".into()]);
+        let mut iter = *interfaces.iter().as_loaned_c_type_ref();
+        let mut out = MaybeUninit::uninit();
+        assert!(z_link_interfaces_iterator_next(&mut iter, &mut out));
+        let first = unsafe { out.assume_init() };
+        let first_bytes = first.as_rust_type_ref().slice();
+        assert_eq!(first_bytes, interfaces[0].as_bytes());
+        assert_eq!(first_bytes.as_ptr(), interfaces[0].as_ptr());
+        let mut copy = iter;
+        for cursor in [&mut iter, &mut copy] {
+            assert!(z_link_interfaces_iterator_next(cursor, &mut out));
+            let view = unsafe { out.assume_init_ref() }.as_rust_type_ref();
+            assert_eq!(view.slice(), interfaces[1].as_bytes());
+            assert_eq!(view.slice().as_ptr(), interfaces[1].as_ptr());
+            assert!(!z_link_interfaces_iterator_next(cursor, &mut out));
+            assert!(!z_link_interfaces_iterator_next(cursor, &mut out));
+            assert_eq!(
+                unsafe { out.assume_init_ref() }.as_rust_type_ref().slice(),
+                interfaces[1].as_bytes()
+            );
+        }
+        // Advancing both cursors does not invalidate the first view.
+        assert_eq!(first_bytes, interfaces[0].as_bytes());
+    }
+
+    #[test]
+    fn empty_link_interfaces_iterator() {
+        assert!(!std::mem::needs_drop::<z_link_interfaces_iterator_t>());
+        static LINK: OnceLock<Link> = OnceLock::new();
+        let link = LINK.get_or_init(Link::empty);
+        let mut iter = z_link_get_interfaces_iterator(link.as_loaned_c_type_ref());
+        assert!(!z_link_interfaces_iterator_next(
+            &mut iter,
+            &mut MaybeUninit::uninit()
+        ));
+    }
+
+    #[test]
+    fn missing_link_auth_identifier_initializes_empty_view() {
+        let link = Link::empty();
+        let mut out = MaybeUninit::uninit();
+        out.as_rust_type_mut_uninit()
+            .write(CStringView::new_borrowed_from_slice(b"previous value"));
+        assert!(!z_link_auth_identifier(
+            link.as_loaned_c_type_ref(),
+            &mut out
+        ));
+        assert!(unsafe { out.assume_init_ref() }
+            .as_rust_type_ref()
+            .slice()
+            .is_empty());
+        assert!(!z_link_auth_identifier(
+            link.as_loaned_c_type_ref(),
+            &mut out
+        ));
+        assert!(unsafe { out.assume_init_ref() }
+            .as_rust_type_ref()
+            .slice()
+            .is_empty());
+    }
 }
