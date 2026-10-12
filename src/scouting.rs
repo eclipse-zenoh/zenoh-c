@@ -312,8 +312,8 @@ mod iterator_tests {
         let hello_c = hello.as_loaned_c_type_ref();
         let mut array = MaybeUninit::uninit();
         z_hello_locators(hello_c, &mut array);
-        let array = unsafe { array.assume_init() };
-        let array = unsafe { z_string_array_loan(&array) };
+        let owned_array = unsafe { array.assume_init() };
+        let array = unsafe { z_string_array_loan(&owned_array) };
         let mut iter = z_hello_get_locators_iterator(hello_c);
         let mut copy = iter;
         let mut out = MaybeUninit::uninit();
@@ -345,6 +345,7 @@ mod iterator_tests {
                 .as_bytes(),
             hello.locators()[0].as_str().as_bytes()
         );
+        drop(owned_array);
     }
 
     #[test]
