@@ -589,16 +589,7 @@ pub extern "C" fn z_link_get_interfaces_iterator(
 }
 
 #[cfg(feature = "unstable")]
-decl_c_type!(loaned(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>));
-
-// C discards this iterator without running the underlying Rust type's drop glue.
-#[cfg(feature = "unstable")]
-const _: () = {
-    assert!(
-        !std::mem::needs_drop::<<z_link_interfaces_iterator_t as RustTypeRef>::RustType>(),
-        "Link interface iterator must not require drop"
-    );
-};
+decl_c_type!(loaned(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>, no_drop));
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Gets the next interface name as a borrowed string view.

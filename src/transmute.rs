@@ -529,6 +529,24 @@ macro_rules! decl_c_type {
     };
 
     //
+    // Borrowed value passed to C without a drop function.
+    //
+    (loaned ($c_loaned_type:ty, $rust_loaned_type:ty, no_drop $(,)?) $(,)?) => {
+        const _: () = {
+            assert!(
+                !std::mem::needs_drop::<$rust_loaned_type>(),
+                concat!(
+                    "Borrowed C value ",
+                    stringify!($c_loaned_type),
+                    " must not require dropping its Rust type ",
+                    stringify!($rust_loaned_type)
+                )
+            );
+        };
+        decl_c_type!(loaned($c_loaned_type, $rust_loaned_type));
+    };
+
+    //
     // Specific case: no owned type exists
     //
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
