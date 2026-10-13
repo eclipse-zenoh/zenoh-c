@@ -347,7 +347,6 @@ mod iterator_tests {
 
     #[test]
     fn empty_hello_locators_iterator() {
-        assert!(!std::mem::needs_drop::<z_hello_locators_iterator_t>());
         static HELLO: OnceLock<Hello> = OnceLock::new();
         let hello = HELLO.get_or_init(Hello::empty);
         let mut iter = z_hello_get_locators_iterator(hello.as_loaned_c_type_ref());

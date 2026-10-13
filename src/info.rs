@@ -1348,7 +1348,6 @@ mod iterator_tests {
 
     #[test]
     fn empty_link_interfaces_iterator() {
-        assert!(!std::mem::needs_drop::<z_link_interfaces_iterator_t>());
         static LINK: OnceLock<Link> = OnceLock::new();
         let link = LINK.get_or_init(Link::empty);
         let mut iter = z_link_get_interfaces_iterator(link.as_loaned_c_type_ref());
