@@ -34,6 +34,14 @@ decl_c_type!(
 
 decl_c_type!(loaned(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>));
 
+// C discards this iterator without running the underlying Rust type's drop glue.
+const _: () = {
+    assert!(
+        !std::mem::needs_drop::<<z_hello_locators_iterator_t as RustTypeRef>::RustType>(),
+        "Hello locator iterator must not require drop"
+    );
+};
+
 /// Returns an iterator over the locators of this Hello message without allocating.
 ///
 /// The iterator, returned locators, and their string views borrow from `this_`, which must remain
