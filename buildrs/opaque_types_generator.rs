@@ -50,7 +50,9 @@ pub fn generate_opaque_types() {
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
         let mut s = String::new();
-        if category != Some("owned") {
+        // Loaned types are accessed through pointers, never copied into standalone values.
+        // Omitting both traits prevents dereference-copy and clone from loaned references.
+        if category != Some("owned") && category != Some("loaned") {
             s += "#[derive(Copy, Clone)]\n";
         };
         s += format!(

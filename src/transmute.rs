@@ -519,7 +519,11 @@ macro_rules! decl_c_type {
 
     //
     // C value that can be copied without cleanup, including borrowed cursors.
-    // The underlying Rust type need not implement Copy, but must not require drop.
+    // SAFETY: each mapping must permit bitwise duplication into independent valid values.
+    // Any borrowed storage must be shared, and advancing one copy must not invalidate
+    // another copy or its borrowed storage. Exclusive borrows must not be duplicated.
+    // The no-drop assertion checks cleanup only; it cannot establish this aliasing contract.
+    // Rust Copy/Clone is not required: the Zenoh byte cursors do not implement those traits.
     //
     (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {
         const _: () = {
@@ -541,9 +545,20 @@ macro_rules! decl_c_type {
     };
 
     //
-    // Specific case: no owned type exists
+    // Specific case: no owned type exists. Only pointer access is provided.
     //
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
+        // Generated loaned types have neither Copy nor Clone. Reject cloneable wrappers
+        // here too, so a by-value type cannot bypass copy(...) by using this arm instead.
+        const _: () = {
+            trait AmbiguousIfClone<A> {
+                fn check() {}
+            }
+            impl<T> AmbiguousIfClone<()> for T {}
+            impl<T: Clone> AmbiguousIfClone<u8> for T {}
+            // Clone gives two possible implementations, making inference fail.
+            let _ = <$c_loaned_type as AmbiguousIfClone<_>>::check;
+        };
         validate_equivalence!($c_loaned_type, $rust_loaned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));
