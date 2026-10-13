@@ -33,7 +33,9 @@ use crate::result::Z_ENULL;
 use crate::{
     result::{self, z_result_t, Z_EINVAL, Z_EIO, Z_OK},
     strlen_or_zero,
-    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        Gravestone, IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+    },
     z_loaned_slice_t, z_loaned_string_t, z_moved_bytes_t, z_moved_slice_t, z_moved_string_t,
     z_owned_slice_t, z_owned_string_t, z_view_slice_t, CSlice, CSliceOwned, CSliceView,
     CStringInner, CStringOwned,
@@ -455,7 +457,7 @@ pub unsafe extern "C" fn z_bytes_copy_from_str(
 }
 
 pub use crate::z_bytes_slice_iterator_t;
-decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>, no_drop));
+decl_c_type!(copy(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 
 /// Returns an iterator on raw bytes slices contained in the `z_loaned_bytes_t`.
 ///
@@ -467,7 +469,7 @@ decl_c_type!(loaned(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>, no_d
 pub extern "C" fn z_bytes_get_slice_iterator(
     this: &'static z_loaned_bytes_t,
 ) -> z_bytes_slice_iterator_t {
-    *this.as_rust_type_ref().slices().as_loaned_c_type_ref()
+    this.as_rust_type_ref().slices().into_c_type()
 }
 
 /// Gets next slice.
@@ -550,14 +552,14 @@ pub unsafe extern "C" fn z_bytes_from_shm_mut(
 }
 
 pub use crate::z_bytes_reader_t;
-decl_c_type!(loaned(z_bytes_reader_t, ZBytesReader<'static>, no_drop));
+decl_c_type!(copy(z_bytes_reader_t, ZBytesReader<'static>));
 
 /// Returns a reader for the data.
 ///
 /// The `data` should outlive the reader.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
-    *data.as_rust_type_ref().reader().as_loaned_c_type_ref()
+    data.as_rust_type_ref().reader().into_c_type()
 }
 
 /// Reads data into specified destination.

@@ -32,7 +32,7 @@ decl_c_type!(
     loaned(z_loaned_hello_t),
 );
 
-decl_c_type!(loaned(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>, no_drop));
+decl_c_type!(copy(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>));
 
 /// Returns an iterator over the locators of this Hello message without allocating.
 ///
@@ -43,10 +43,7 @@ decl_c_type!(loaned(z_hello_locators_iterator_t, std::slice::Iter<'static, Locat
 pub extern "C" fn z_hello_get_locators_iterator(
     this_: &'static z_loaned_hello_t,
 ) -> z_hello_locators_iterator_t {
-    *this_
-        .as_rust_type_ref()
-        .locators_iter()
-        .as_loaned_c_type_ref()
+    this_.as_rust_type_ref().locators_iter().into_c_type()
 }
 
 /// Gets the next borrowed locator, in the order of `z_hello_locators()`.

@@ -518,32 +518,26 @@ macro_rules! decl_c_type {
     };
 
     //
-    // Rust type is copyable plain data type, just allow to convert references or copy whole structure
+    // C value that can be copied without cleanup, including borrowed cursors.
+    // The underlying Rust type need not implement Copy, but must not require drop.
     //
     (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {
+        const _: () = {
+            assert!(
+                !std::mem::needs_drop::<$rust_type>(),
+                concat!(
+                    "Copyable C value ",
+                    stringify!($c_type),
+                    " must not require dropping its Rust type ",
+                    stringify!($rust_type)
+                )
+            );
+        };
         validate_equivalence!($c_type, $rust_type);
         impl_transmute!(as_c($rust_type, $c_type));
         impl_transmute!(as_rust($c_type, $rust_type));
         impl_transmute!(into_c($rust_type, $c_type));
         impl_transmute!(into_rust($c_type, $rust_type));
-    };
-
-    //
-    // Borrowed value passed to C without a drop function.
-    //
-    (loaned ($c_loaned_type:ty, $rust_loaned_type:ty, no_drop $(,)?) $(,)?) => {
-        const _: () = {
-            assert!(
-                !std::mem::needs_drop::<$rust_loaned_type>(),
-                concat!(
-                    "Borrowed C value ",
-                    stringify!($c_loaned_type),
-                    " must not require dropping its Rust type ",
-                    stringify!($rust_loaned_type)
-                )
-            );
-        };
-        decl_c_type!(loaned($c_loaned_type, $rust_loaned_type));
     };
 
     //

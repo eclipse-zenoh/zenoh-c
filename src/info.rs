@@ -582,14 +582,11 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
 pub extern "C" fn z_link_get_interfaces_iterator(
     link: &'static z_loaned_link_t,
 ) -> z_link_interfaces_iterator_t {
-    *link
-        .as_rust_type_ref()
-        .interfaces_iter()
-        .as_loaned_c_type_ref()
+    link.as_rust_type_ref().interfaces_iter().into_c_type()
 }
 
 #[cfg(feature = "unstable")]
-decl_c_type!(loaned(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>, no_drop));
+decl_c_type!(copy(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>));
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Gets the next interface name as a borrowed string view.
@@ -1325,7 +1322,7 @@ mod iterator_tests {
     fn link_interfaces_iterator_borrows_names() {
         static INTERFACES: OnceLock<Vec<String>> = OnceLock::new();
         let interfaces = INTERFACES.get_or_init(|| vec!["eth0".into(), "lo".into()]);
-        let mut iter = *interfaces.iter().as_loaned_c_type_ref();
+        let mut iter = interfaces.iter().into_c_type();
         let mut out = MaybeUninit::uninit();
         assert!(z_link_interfaces_iterator_next(&mut iter, &mut out));
         let first = unsafe { out.assume_init() };
