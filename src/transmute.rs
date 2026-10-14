@@ -171,6 +171,17 @@ macro_rules! impl_transmute {
     };
 
     (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
+        // Reject cloneable wrappers for every loaned mapping, including owned+loaned
+        // declarations, so a by-value type cannot bypass copy(...) via a loaned arm.
+        const _: () = {
+            trait AmbiguousIfClone<A> {
+                fn check() {}
+            }
+            impl<T> AmbiguousIfClone<()> for T {}
+            impl<T: Clone> AmbiguousIfClone<u8> for T {}
+            // Clone gives two possible implementations, making inference fail.
+            let _ = <$c_type as AmbiguousIfClone<_>>::check;
+        };
         impl $crate::transmute::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
             fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType {
@@ -548,17 +559,6 @@ macro_rules! decl_c_type {
     // Specific case: no owned type exists. Only pointer access is provided.
     //
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
-        // Generated loaned types have neither Copy nor Clone. Reject cloneable wrappers
-        // here too, so a by-value type cannot bypass copy(...) by using this arm instead.
-        const _: () = {
-            trait AmbiguousIfClone<A> {
-                fn check() {}
-            }
-            impl<T> AmbiguousIfClone<()> for T {}
-            impl<T: Clone> AmbiguousIfClone<u8> for T {}
-            // Clone gives two possible implementations, making inference fail.
-            let _ = <$c_loaned_type as AmbiguousIfClone<_>>::check;
-        };
         validate_equivalence!($c_loaned_type, $rust_loaned_type);
         impl_transmute!(as_c_loaned($rust_loaned_type, $c_loaned_type));
         impl_transmute!(as_rust($c_loaned_type, $rust_loaned_type));

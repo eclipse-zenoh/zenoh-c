@@ -48,8 +48,17 @@ macro_rules! get_opaque_type_data {
             const DST_NAME: &str = stringify!($name);
             const ALIGN: usize = std::mem::align_of::<$src_type>();
             const SIZE: usize = std::mem::size_of::<$src_type>();
-            const INFO_MESSAGE: &str =
-                concatcp!("type: ", DST_NAME, ", align: ", ALIGN, ", size: ", SIZE);
+            const NEEDS_DROP: bool = std::mem::needs_drop::<$src_type>();
+            const INFO_MESSAGE: &str = concatcp!(
+                "type: ",
+                DST_NAME,
+                ", align: ",
+                ALIGN,
+                ", size: ",
+                SIZE,
+                ", needs_drop: ",
+                NEEDS_DROP
+            );
             #[cfg(feature = "panic")]
             panic!("{}", INFO_MESSAGE);
         };

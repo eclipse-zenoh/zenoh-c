@@ -3405,6 +3405,8 @@ ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
  * The iterator, returned locators, and their string views borrow from `this_`, which must remain
  * alive and unchanged while they are used. Neither the iterator, locators, nor their views need
  * to be dropped. Copying the iterator creates an independent cursor at the same position.
+ * The owning Hello message must outlive every copy of the iterator and all locators and
+ * string views returned by any copy. Copying the iterator does not retain the Hello message.
  */
 ZENOHC_API
 struct z_hello_locators_iterator_t z_hello_get_locators_iterator(const struct z_loaned_hello_t *this_);
@@ -4471,6 +4473,8 @@ void z_link_events_listener_options_default(struct z_link_events_listener_option
  * borrow from `link`, which must remain alive and unchanged while they are used.
  * Neither the iterator nor the views need to be dropped. Copying the iterator creates
  * an independent cursor at the same position.
+ * The owning link must outlive every copy of the iterator and every view returned by
+ * any copy. Copying the iterator does not retain the link or extend its lifetime.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API

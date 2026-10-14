@@ -577,6 +577,8 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
 /// borrow from `link`, which must remain alive and unchanged while they are used.
 /// Neither the iterator nor the views need to be dropped. Copying the iterator creates
 /// an independent cursor at the same position.
+/// The owning link must outlive every copy of the iterator and every view returned by
+/// any copy. Copying the iterator does not retain the link or extend its lifetime.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_get_interfaces_iterator(
