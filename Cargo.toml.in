@@ -87,6 +87,8 @@ zenoh-util = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh
 @COMMENT_PINNED_DEPS@hyper-util = { version = "=0.1.20", default-features = false }
 # thiserror 2.0.21 requires Rust 1.77.
 @COMMENT_PINNED_DEPS@thiserror = "=2.0.20"
+# tokio-util 0.7.20 requires Rust 1.85.
+@COMMENT_PINNED_DEPS@tokio-util = { version = "=0.7.19", default-features = false }
 
 [target.'cfg(unix)'.dependencies]
 ctor = "0.4.1"
