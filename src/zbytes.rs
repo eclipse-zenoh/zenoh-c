@@ -457,6 +457,9 @@ pub unsafe extern "C" fn z_bytes_copy_from_str(
 }
 
 pub use crate::z_bytes_slice_iterator_t;
+// SAFETY: ZBytesSliceIterator wraps Map<slice::Iter<ZSlice>, fn(&ZSlice) -> &[u8]>:
+// only shared borrows, an independent iterator position, and a function pointer.
+// Re-audit this mapping if the upstream representation changes.
 decl_c_type!(copy(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 
 /// Returns an iterator on raw bytes slices contained in the `z_loaned_bytes_t`.
@@ -465,6 +468,8 @@ decl_c_type!(copy(z_bytes_slice_iterator_t, ZBytesSliceIterator<'static>));
 /// then allows to access raw data directly without any attempt of deserializing it.
 /// Please note that no guarantee is provided on the internal memory layout.
 /// The only provided guarantee is on the bytes order that is preserved.
+/// The bytes must remain alive and unchanged while the iterator, any copy, or a returned
+/// slice view is used. See @ref borrowed_cursor_types for the shared copy contract.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_slice_iterator(
     this: &'static z_loaned_bytes_t,
@@ -552,11 +557,14 @@ pub unsafe extern "C" fn z_bytes_from_shm_mut(
 }
 
 pub use crate::z_bytes_reader_t;
+// SAFETY: ZBytesReader wraps ZBufReader, whose state is a shared &ZBuf and a value
+// cursor (slice/byte offsets). Re-audit if the upstream representation changes.
 decl_c_type!(copy(z_bytes_reader_t, ZBytesReader<'static>));
 
 /// Returns a reader for the data.
 ///
-/// The `data` should outlive the reader.
+/// The `data` must remain alive and unchanged while the reader or any copy is used.
+/// See @ref borrowed_cursor_types for the shared copy contract.
 #[no_mangle]
 pub extern "C" fn z_bytes_get_reader(data: &'static z_loaned_bytes_t) -> z_bytes_reader_t {
     data.as_rust_type_ref().reader().into_c_type()

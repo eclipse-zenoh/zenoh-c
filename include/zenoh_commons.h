@@ -336,9 +336,8 @@ typedef struct z_moved_string_t {
 } z_moved_string_t;
 /**
  * An iterator over slices of serialized data.
- * Copies are independent cursors at the same position, sharing the source bytes.
- * The source bytes must remain alive and unchanged while any iterator copy or returned
- * slice view is used. No drop is required; copying an iterator does not retain the bytes.
+ * @ingroup borrowed_cursor_types
+ * See @ref borrowed_cursor_types for copy and lifetime requirements.
  */
 typedef struct ALIGN(8) z_bytes_slice_iterator_t {
   uint8_t _0[24];
@@ -879,9 +878,9 @@ typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
 /**
- * A borrowed iterator over locators. Copies are independent cursors at the same position.
- * The Hello message must remain alive and unchanged while any copy, returned locator, or
- * string view is used. No drop is required; copying an iterator does not retain the Hello.
+ * A borrowed iterator over locators.
+ * @ingroup borrowed_cursor_types
+ * See @ref borrowed_cursor_types for copy and lifetime requirements.
  */
 typedef struct ALIGN(8) z_hello_locators_iterator_t {
   uint8_t _0[16];
@@ -1866,7 +1865,8 @@ z_result_t z_bytes_get_contiguous_view(const struct z_loaned_bytes_t *this_,
 /**
  * Returns a reader for the data.
  *
- * The `data` should outlive the reader.
+ * The `data` must remain alive and unchanged while the reader or any copy is used.
+ * See @ref borrowed_cursor_types for the shared copy contract.
  */
 ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_bytes_t *data);
 /**
@@ -1876,6 +1876,8 @@ ZENOHC_API struct z_bytes_reader_t z_bytes_get_reader(const struct z_loaned_byte
  * then allows to access raw data directly without any attempt of deserializing it.
  * Please note that no guarantee is provided on the internal memory layout.
  * The only provided guarantee is on the bytes order that is preserved.
+ * The bytes must remain alive and unchanged while the iterator, any copy, or a returned
+ * slice view is used. See @ref borrowed_cursor_types for the shared copy contract.
  */
 ZENOHC_API
 struct z_bytes_slice_iterator_t z_bytes_get_slice_iterator(const struct z_loaned_bytes_t *this_);
@@ -3407,11 +3409,8 @@ ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
 /**
  * Returns an iterator over the locators of this Hello message without allocating.
  *
- * The iterator, all its copies, and the locators and string views returned by any copy
- * borrow from `this_`, whose owning Hello message must remain alive and unchanged while
- * any of them is used. Neither iterators, locators, nor views need to be dropped.
- * Copying creates an independent cursor at the same position without retaining the Hello
- * message or extending its lifetime.
+ * The Hello message must remain alive and unchanged while the iterator, any copy, returned
+ * locator, or string view is used. See @ref borrowed_cursor_types for the shared copy contract.
  */
 ZENOHC_API
 struct z_hello_locators_iterator_t z_hello_get_locators_iterator(const struct z_loaned_hello_t *this_);
@@ -4474,11 +4473,9 @@ void z_link_events_listener_options_default(struct z_link_events_listener_option
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * @brief Gets the network interfaces associated with the `z_loaned_link_t`.
  *
- * Returns an iterator without allocating. The iterator, all its copies, and the string
- * views returned by any copy borrow from `link`, which must remain alive and unchanged
- * while any of them is used. Neither iterators nor views need to be dropped.
- * Copying creates an independent cursor at the same position without retaining the link
- * or extending its lifetime.
+ * Returns an iterator without allocating. The link must remain alive and unchanged while
+ * the iterator, any copy, or a returned string view is used.
+ * See @ref borrowed_cursor_types for the shared copy contract.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
@@ -7904,7 +7901,9 @@ ZENOHC_API
 z_result_t ze_deserializer_deserialize_uint8(struct ze_deserializer_t *this_,
                                              uint8_t *dst);
 /**
- * @brief Gets deserializer for`this_`.
+ * @brief Gets a deserializer for `this`.
+ * The bytes must remain alive and unchanged while the deserializer or any copy is used.
+ * See @ref borrowed_cursor_types for the shared copy contract.
  */
 ZENOHC_API
 struct ze_deserializer_t ze_deserializer_from_bytes(const struct z_loaned_bytes_t *this_);

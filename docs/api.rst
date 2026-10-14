@@ -16,6 +16,12 @@
 API Reference
 *************
 
+Borrowed cursor copy and lifetime contract
+==========================================
+
+.. doxygengroup:: borrowed_cursor_types
+   :desc-only:
+
 Containers
 =============
 

@@ -32,15 +32,14 @@ decl_c_type!(
     loaned(z_loaned_hello_t),
 );
 
+// SAFETY: slice::Iter contains shared borrows and a value cursor; copies do not own
+// locators or introduce exclusive borrows.
 decl_c_type!(copy(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>));
 
 /// Returns an iterator over the locators of this Hello message without allocating.
 ///
-/// The iterator, all its copies, and the locators and string views returned by any copy
-/// borrow from `this_`, whose owning Hello message must remain alive and unchanged while
-/// any of them is used. Neither iterators, locators, nor views need to be dropped.
-/// Copying creates an independent cursor at the same position without retaining the Hello
-/// message or extending its lifetime.
+/// The Hello message must remain alive and unchanged while the iterator, any copy, returned
+/// locator, or string view is used. See @ref borrowed_cursor_types for the shared copy contract.
 #[no_mangle]
 pub extern "C" fn z_hello_get_locators_iterator(
     this_: &'static z_loaned_hello_t,

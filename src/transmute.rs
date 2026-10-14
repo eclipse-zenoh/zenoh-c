@@ -145,6 +145,23 @@ macro_rules! validate_equivalence {
     };
 }
 
+// Only value mappings may implement Copy/Clone. Reference and owned mappings must
+// reject these traits even when the C wrapper is hand-written rather than generated.
+macro_rules! assert_noncopy_c_type {
+    ($c_type:ty) => {
+        const _: () = {
+            /// Owned, loaned and view C wrappers must not implement Clone or Copy.
+            /// E0283 intentionally rejects a wrapper that implements either trait.
+            trait NonCopyCTypeMustNotImplementCloneOrCopy<A> {
+                fn check() {}
+            }
+            impl<T> NonCopyCTypeMustNotImplementCloneOrCopy<()> for T {}
+            impl<T: Clone> NonCopyCTypeMustNotImplementCloneOrCopy<u8> for T {}
+            let _ = <$c_type as NonCopyCTypeMustNotImplementCloneOrCopy<_>>::check;
+        };
+    };
+}
+
 #[macro_export]
 macro_rules! impl_transmute {
     (as_c ($rust_type:ty, $c_type:ty)) => {
@@ -159,6 +176,7 @@ macro_rules! impl_transmute {
         }
     };
     (as_c_owned ($rust_type:ty, $c_type:ty)) => {
+        assert_noncopy_c_type!($c_type);
         impl $crate::transmute::OwnedCTypeRef for $rust_type {
             type OwnedCType = $c_type;
             fn as_owned_c_type_ref(&self) -> &Self::OwnedCType {
@@ -171,19 +189,7 @@ macro_rules! impl_transmute {
     };
 
     (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
-        // Reject cloneable wrappers for every loaned mapping, including owned+loaned
-        // declarations, so a by-value type cannot bypass copy(...) via a loaned arm.
-        const _: () = {
-            /// Loaned C wrappers must not implement Clone or Copy.
-            /// E0283 here intentionally rejects a wrapper that implements either trait.
-            trait LoanedCTypeMustNotImplementCloneOrCopy<A> {
-                fn check() {}
-            }
-            impl<T> LoanedCTypeMustNotImplementCloneOrCopy<()> for T {}
-            impl<T: Clone> LoanedCTypeMustNotImplementCloneOrCopy<u8> for T {}
-            // Clone gives two possible implementations, making inference fail.
-            let _ = <$c_type as LoanedCTypeMustNotImplementCloneOrCopy<_>>::check;
-        };
+        assert_noncopy_c_type!($c_type);
         impl $crate::transmute::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
             fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType {
@@ -195,6 +201,7 @@ macro_rules! impl_transmute {
         }
     };
     (as_c_view ($rust_type:ty, $c_type:ty)) => {
+        assert_noncopy_c_type!($c_type);
         impl $crate::transmute::ViewCTypeRef for $rust_type {
             type ViewCType = $c_type;
             fn as_view_c_type_ref(&self) -> &Self::ViewCType {

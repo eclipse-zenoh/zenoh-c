@@ -573,11 +573,9 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets the network interfaces associated with the `z_loaned_link_t`.
 ///
-/// Returns an iterator without allocating. The iterator, all its copies, and the string
-/// views returned by any copy borrow from `link`, which must remain alive and unchanged
-/// while any of them is used. Neither iterators nor views need to be dropped.
-/// Copying creates an independent cursor at the same position without retaining the link
-/// or extending its lifetime.
+/// Returns an iterator without allocating. The link must remain alive and unchanged while
+/// the iterator, any copy, or a returned string view is used.
+/// See @ref borrowed_cursor_types for the shared copy contract.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_get_interfaces_iterator(
@@ -587,6 +585,8 @@ pub extern "C" fn z_link_get_interfaces_iterator(
 }
 
 #[cfg(feature = "unstable")]
+// SAFETY: slice::Iter contains shared borrows and a value cursor; copies do not own
+// interface strings or introduce exclusive borrows.
 decl_c_type!(copy(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>));
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
