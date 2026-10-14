@@ -213,7 +213,6 @@ void parse_zenoh_json_list_config(int argc, char** argv, const char* opt_short, 
 }
 
 void parse_zenoh_json_list_cfg(int argc, char** argv, const char* opt_long, z_owned_config_t* config) {
-    char* buf = (char*)calloc(1, sizeof(char));
     const char* value;
     _Z_PARSE_ARG_SINGLE_OPT(value, opt_long, (char*), NULL);
     while (value) {

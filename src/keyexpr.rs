@@ -377,7 +377,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str_autocanonize(
 
 /// Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
 ///
-/// - `start` MUST be valid UTF8.
+/// - `start` MUST be nonempty and valid UTF8.
 /// - `start` MUST follow the Key Expression specification, i.e.:
 ///  - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
 ///  - any instance of ``**`` may only be lead or followed by ``/``.
@@ -403,7 +403,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_substr_unchecked(
 
 /// Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
 ///
-///  - `s` MUST be valid UTF8.
+///  - `s` MUST be nonempty and valid UTF8.
 ///  - `s` MUST follow the Key Expression specification, i.e.:
 ///   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
 ///   - any instance of `**` may only be lead or followed by `/`.
@@ -420,6 +420,7 @@ pub unsafe extern "C" fn z_view_keyexpr_from_str_unchecked(
 }
 
 /// Constructs a non-owned non-null-terminated string from key expression.
+/// An empty source produces an empty string view.
 #[allow(clippy::missing_safety_doc)]
 #[no_mangle]
 pub unsafe extern "C" fn z_keyexpr_as_view_string(
@@ -427,7 +428,11 @@ pub unsafe extern "C" fn z_keyexpr_as_view_string(
     out_string: &mut MaybeUninit<z_view_string_t>,
 ) {
     let this = this.as_rust_type_ref();
-    unsafe { z_view_string_from_substr(out_string, this.as_bytes().as_ptr() as _, this.len()) };
+    if this.is_gravestone() {
+        crate::z_view_string_empty(out_string);
+    } else {
+        z_view_string_from_substr(out_string, this.as_bytes().as_ptr().cast(), this.len());
+    }
 }
 
 /// Constructs and declares a key expression on the network. This reduces key key expression to a numerical id,

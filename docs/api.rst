@@ -511,6 +511,7 @@ Functions
 .. doxygenfunction:: z_info_routers_zid
 .. doxygenfunction:: z_info_peers_zid
 .. doxygenfunction:: z_id_to_string
+.. doxygenfunction:: z_id_as_str
 
 .. doxygenfunction:: z_info_transports
 .. doxygenfunction:: z_transport_loan

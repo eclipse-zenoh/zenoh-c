@@ -340,7 +340,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [check_format, check_cargo_toml_in_sync, check_rust, build, cross-compile-mac-os, cross-compile-ubuntu, markdown_lint]
+    needs: [check_format, check_cargo_toml_in_sync, check_lockfiles, check_rust, build, cross-compile-mac-os, cross-compile-ubuntu, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass

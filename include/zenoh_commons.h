@@ -4165,6 +4165,7 @@ void z_internal_transport_null(struct z_owned_transport_t *this_);
 #endif
 /**
  * Constructs a non-owned non-null-terminated string from key expression.
+ * An empty source produces an empty string view.
  */
 ZENOHC_API
 void z_keyexpr_as_view_string(const struct z_loaned_keyexpr_t *this_,
@@ -6770,7 +6771,7 @@ z_result_t z_view_keyexpr_from_str_autocanonize(struct z_view_keyexpr_t *this_,
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a string without checking any of `z_view_keyexpr_t`'s assertions:
  *
- *  - `s` MUST be valid UTF8.
+ *  - `s` MUST be nonempty and valid UTF8.
  *  - `s` MUST follow the Key Expression specification, i.e.:
  *   - MUST NOT contain `//`, MUST NOT start nor end with `/`, MUST NOT contain any of the characters `?#$`.
  *   - any instance of `**` may only be lead or followed by `/`.
@@ -6811,7 +6812,7 @@ z_result_t z_view_keyexpr_from_substr_autocanonize(struct z_view_keyexpr_t *this
 /**
  * Constructs a `z_view_keyexpr_t` by aliasing a substring without checking any of `z_view_keyexpr_t`'s assertions:
  *
- * - `start` MUST be valid UTF8.
+ * - `start` MUST be nonempty and valid UTF8.
  * - `start` MUST follow the Key Expression specification, i.e.:
  *  - MUST NOT contain ``//``, MUST NOT start nor end with ``/``, MUST NOT contain any of the characters ``?#$``.
  *  - any instance of ``**`` may only be lead or followed by ``/``.
