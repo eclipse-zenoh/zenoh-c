@@ -42,24 +42,16 @@ pub fn generate_opaque_types() {
         );
     }
 
-    // Scan for type layout and drop information which is generated as compilation errors
+    // Scan for type size and layout information which is generated as compilation errors
     let mut good_error_count = 0;
-    let re =
-        Regex::new(r"type: (\w+), align: (\d+), size: (\d+), needs_drop: (true|false)").unwrap();
-    for (_, [type_name, align, size, needs_drop]) in re.captures_iter(&data_in).map(|c| c.extract())
-    {
+    let re = Regex::new(r"type: (\w+), align: (\d+), size: (\d+)").unwrap();
+    for (_, [type_name, align, size]) in re.captures_iter(&data_in).map(|c| c.extract()) {
         good_error_count += 1;
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
         let mut s = String::new();
-        // Loaned types are accessed through pointers, never copied into standalone values.
-        // Omitting both traits prevents dereference-copy and clone from loaned references.
-        // Other wrappers, including views, may only derive these traits if their source
-        // Rust type has no drop glue. Views of drop-requiring types use borrowed states
-        // enforced by their constructors, rather than supporting Rust bitwise copies.
-        if category != Some("owned") && category != Some("loaned") && needs_drop == "false" {
-            s += "#[derive(Copy, Clone)]\n";
-        };
+        // Copy/Clone are granted by decl_c_type!(copy(...)), which checks the real Rust
+        // type. These layout-only stand-ins cannot establish the real type's drop behavior.
         s += format!(
             "#[repr(C, align({align}))]
 #[rustfmt::skip]

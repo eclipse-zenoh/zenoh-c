@@ -36,11 +36,11 @@ decl_c_type!(copy(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator
 
 /// Returns an iterator over the locators of this Hello message without allocating.
 ///
-/// The iterator, returned locators, and their string views borrow from `this_`, which must remain
-/// alive and unchanged while they are used. Neither the iterator, locators, nor their views need
-/// to be dropped. Copying the iterator creates an independent cursor at the same position.
-/// The owning Hello message must outlive every copy of the iterator and all locators and
-/// string views returned by any copy. Copying the iterator does not retain the Hello message.
+/// The iterator, all its copies, and the locators and string views returned by any copy
+/// borrow from `this_`, whose owning Hello message must remain alive and unchanged while
+/// any of them is used. Neither iterators, locators, nor views need to be dropped.
+/// Copying creates an independent cursor at the same position without retaining the Hello
+/// message or extending its lifetime.
 #[no_mangle]
 pub extern "C" fn z_hello_get_locators_iterator(
     this_: &'static z_loaned_hello_t,

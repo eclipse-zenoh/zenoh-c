@@ -174,13 +174,15 @@ macro_rules! impl_transmute {
         // Reject cloneable wrappers for every loaned mapping, including owned+loaned
         // declarations, so a by-value type cannot bypass copy(...) via a loaned arm.
         const _: () = {
-            trait AmbiguousIfClone<A> {
+            /// Loaned C wrappers must not implement Clone or Copy.
+            /// E0283 here intentionally rejects a wrapper that implements either trait.
+            trait LoanedCTypeMustNotImplementCloneOrCopy<A> {
                 fn check() {}
             }
-            impl<T> AmbiguousIfClone<()> for T {}
-            impl<T: Clone> AmbiguousIfClone<u8> for T {}
+            impl<T> LoanedCTypeMustNotImplementCloneOrCopy<()> for T {}
+            impl<T: Clone> LoanedCTypeMustNotImplementCloneOrCopy<u8> for T {}
             // Clone gives two possible implementations, making inference fail.
-            let _ = <$c_type as AmbiguousIfClone<_>>::check;
+            let _ = <$c_type as LoanedCTypeMustNotImplementCloneOrCopy<_>>::check;
         };
         impl $crate::transmute::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
@@ -549,6 +551,12 @@ macro_rules! decl_c_type {
             );
         };
         validate_equivalence!($c_type, $rust_type);
+        impl Copy for $c_type {}
+        impl Clone for $c_type {
+            fn clone(&self) -> Self {
+                *self
+            }
+        }
         impl_transmute!(as_c($rust_type, $c_type));
         impl_transmute!(as_rust($c_type, $rust_type));
         impl_transmute!(into_c($rust_type, $c_type));

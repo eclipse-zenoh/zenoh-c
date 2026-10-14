@@ -101,7 +101,6 @@ impl From<z_layout_error_t> for ZLayoutError {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief An AllocAlignment.
 #[repr(C)]
-#[derive(Clone, Copy)]
 pub struct z_alloc_alignment_t {
     pub pow: u8,
 }

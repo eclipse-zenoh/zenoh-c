@@ -573,12 +573,11 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets the network interfaces associated with the `z_loaned_link_t`.
 ///
-/// Returns an iterator without allocating. The iterator and the string views it yields
-/// borrow from `link`, which must remain alive and unchanged while they are used.
-/// Neither the iterator nor the views need to be dropped. Copying the iterator creates
-/// an independent cursor at the same position.
-/// The owning link must outlive every copy of the iterator and every view returned by
-/// any copy. Copying the iterator does not retain the link or extend its lifetime.
+/// Returns an iterator without allocating. The iterator, all its copies, and the string
+/// views returned by any copy borrow from `link`, which must remain alive and unchanged
+/// while any of them is used. Neither iterators nor views need to be dropped.
+/// Copying creates an independent cursor at the same position without retaining the link
+/// or extending its lifetime.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_get_interfaces_iterator(
@@ -1328,6 +1327,7 @@ mod iterator_tests {
         let mut out = MaybeUninit::uninit();
         assert!(z_link_interfaces_iterator_next(&mut iter, &mut out));
         let first = unsafe { out.assume_init() };
+        let mut out = MaybeUninit::uninit();
         let first_bytes = first.as_rust_type_ref().slice();
         assert_eq!(first_bytes, interfaces[0].as_bytes());
         assert_eq!(first_bytes.as_ptr(), interfaces[0].as_ptr());
