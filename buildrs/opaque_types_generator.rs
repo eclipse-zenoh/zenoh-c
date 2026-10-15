@@ -50,9 +50,8 @@ pub fn generate_opaque_types() {
         let inner_field_name = type_to_inner_field_name.get(type_name).unwrap_or(&"_0");
         let (prefix, category, semantic, postfix) = split_type_name(type_name);
         let mut s = String::new();
-        if category != Some("owned") {
-            s += "#[derive(Copy, Clone)]\n";
-        };
+        // Copy/Clone are granted by decl_c_type!(copy(...)), which checks the real Rust
+        // type. These layout-only stand-ins cannot establish the real type's drop behavior.
         s += format!(
             "#[repr(C, align({align}))]
 #[rustfmt::skip]

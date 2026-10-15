@@ -573,23 +573,21 @@ pub extern "C" fn z_link_is_streamed(link: &z_loaned_link_t) -> bool {
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// @brief Gets the network interfaces associated with the `z_loaned_link_t`.
 ///
-/// Returns an iterator without allocating. The iterator and the string views it yields
-/// borrow from `link`, which must remain alive and unchanged while they are used.
-/// Neither the iterator nor the views need to be dropped. Copying the iterator creates
-/// an independent cursor at the same position.
+/// Returns an iterator without allocating. The link must remain alive and unchanged while
+/// the iterator, any copy, or a returned string view is used.
+/// See @ref borrowed_cursor_types for the shared copy contract.
 #[cfg(feature = "unstable")]
 #[no_mangle]
 pub extern "C" fn z_link_get_interfaces_iterator(
     link: &'static z_loaned_link_t,
 ) -> z_link_interfaces_iterator_t {
-    *link
-        .as_rust_type_ref()
-        .interfaces_iter()
-        .as_loaned_c_type_ref()
+    link.as_rust_type_ref().interfaces_iter().into_c_type()
 }
 
 #[cfg(feature = "unstable")]
-decl_c_type!(loaned(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>));
+// SAFETY: slice::Iter contains shared borrows and a value cursor; copies do not own
+// interface strings or introduce exclusive borrows.
+decl_c_type!(copy(z_link_interfaces_iterator_t, std::slice::Iter<'static, String>));
 
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 /// Gets the next interface name as a borrowed string view.
@@ -1325,10 +1323,11 @@ mod iterator_tests {
     fn link_interfaces_iterator_borrows_names() {
         static INTERFACES: OnceLock<Vec<String>> = OnceLock::new();
         let interfaces = INTERFACES.get_or_init(|| vec!["eth0".into(), "lo".into()]);
-        let mut iter = *interfaces.iter().as_loaned_c_type_ref();
+        let mut iter = interfaces.iter().into_c_type();
         let mut out = MaybeUninit::uninit();
         assert!(z_link_interfaces_iterator_next(&mut iter, &mut out));
         let first = unsafe { out.assume_init() };
+        let mut out = MaybeUninit::uninit();
         let first_bytes = first.as_rust_type_ref().slice();
         assert_eq!(first_bytes, interfaces[0].as_bytes());
         assert_eq!(first_bytes.as_ptr(), interfaces[0].as_ptr());
@@ -1351,7 +1350,6 @@ mod iterator_tests {
 
     #[test]
     fn empty_link_interfaces_iterator() {
-        assert!(!std::mem::needs_drop::<z_link_interfaces_iterator_t>());
         static LINK: OnceLock<Link> = OnceLock::new();
         let link = LINK.get_or_init(Link::empty);
         let mut iter = z_link_get_interfaces_iterator(link.as_loaned_c_type_ref());

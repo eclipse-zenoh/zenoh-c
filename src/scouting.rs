@@ -32,21 +32,19 @@ decl_c_type!(
     loaned(z_loaned_hello_t),
 );
 
-decl_c_type!(loaned(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>));
+// SAFETY: slice::Iter contains shared borrows and a value cursor; copies do not own
+// locators or introduce exclusive borrows.
+decl_c_type!(copy(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>));
 
 /// Returns an iterator over the locators of this Hello message without allocating.
 ///
-/// The iterator, returned locators, and their string views borrow from `this_`, which must remain
-/// alive and unchanged while they are used. Neither the iterator, locators, nor their views need
-/// to be dropped. Copying the iterator creates an independent cursor at the same position.
+/// The Hello message must remain alive and unchanged while the iterator, any copy, returned
+/// locator, or string view is used. See @ref borrowed_cursor_types for the shared copy contract.
 #[no_mangle]
 pub extern "C" fn z_hello_get_locators_iterator(
     this_: &'static z_loaned_hello_t,
 ) -> z_hello_locators_iterator_t {
-    *this_
-        .as_rust_type_ref()
-        .locators_iter()
-        .as_loaned_c_type_ref()
+    this_.as_rust_type_ref().locators_iter().into_c_type()
 }
 
 /// Gets the next borrowed locator, in the order of `z_hello_locators()`.
@@ -350,7 +348,6 @@ mod iterator_tests {
 
     #[test]
     fn empty_hello_locators_iterator() {
-        assert!(!std::mem::needs_drop::<z_hello_locators_iterator_t>());
         static HELLO: OnceLock<Hello> = OnceLock::new();
         let hello = HELLO.get_or_init(Hello::empty);
         let mut iter = z_hello_get_locators_iterator(hello.as_loaned_c_type_ref());
