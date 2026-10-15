@@ -696,32 +696,33 @@ fn find_check_functions(path_in: &str) -> Vec<FunctionSignature> {
 
 fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
-    let re = Regex::new(
-        r"(\w+) (\w+)_call\(const struct (\w+) \*(\w+),\s+(\w*)\s*struct (\w+) (\*?)(\w+)\);",
-    )
-    .unwrap();
+    let re =
+        Regex::new(r"(\w+) (\w+_closure_\w+)_call\(const struct (\w+) \*(\w+),([^;]+)\);").unwrap();
+    let arg_re = Regex::new(r"^(const |)(?:struct |enum )?(\w+) (\*?)(\w+)$").unwrap();
+    let multiple_spaces = Regex::new(r"\s+").unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
-    for (
-        _,
-        [return_type, func_name, closure_type, closure_name, arg_cv, arg_type, arg_deref, arg_name],
-    ) in re.captures_iter(&bindings).map(|c| c.extract())
+    for (_, [return_type, func_name, closure_type, closure_name, call_args]) in
+        re.captures_iter(&bindings).map(|c| c.extract())
     {
-        let arg_cv: String = if arg_cv.is_empty() {
-            "".to_string()
-        } else {
-            "const ".to_string()
-        };
-        let (_, _, semantic, _) = split_type_name(arg_type);
-        let f = FunctionSignature::new(
-            semantic,
-            return_type,
-            func_name.to_string() + "_call",
-            vec![
-                FuncArg::new(&("const ".to_string() + closure_type + "*"), closure_name),
-                FuncArg::new(&(arg_cv + arg_type + arg_deref), arg_name),
-            ],
-        );
+        let mut args = vec![FuncArg::new(
+            &("const ".to_string() + closure_type + "*"),
+            closure_name,
+        )];
+        for arg in call_args.split(',') {
+            let arg = multiple_spaces.replace_all(arg.trim(), " ");
+            let (_, [arg_cv, arg_type, arg_deref, arg_name]) = arg_re
+                .captures(&arg)
+                .unwrap_or_else(|| panic!("unsupported argument '{arg}' of {func_name}_call"))
+                .extract();
+            args.push(FuncArg::new(
+                &(arg_cv.to_string() + arg_type + arg_deref),
+                arg_name,
+            ));
+        }
+        let (_, _, semantic, _) = split_type_name(closure_type);
+        let f =
+            FunctionSignature::new(semantic, return_type, func_name.to_string() + "_call", args);
         res.push(f);
     }
     res
@@ -730,22 +731,24 @@ fn find_call_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+void\s+\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
+        r"(\w+) (\w+)_closure_(\w+)\(struct\s+(\w+)\s+\*(\w+),\s+([^(]+?)\s*\(\*call\)(\([\s\w,\*]*\)),\s+void\s+\(\*drop\)(\(.*\)),\s+void\s+\*context\);"
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
 
     let multiple_spaces = Regex::new(r"\s\s+").unwrap();
+    let normalize = |s: &str| {
+        multiple_spaces
+            .replace_all(&s.replace("struct ", "").replace("enum ", ""), " ")
+            .to_string()
+    };
     for (
         _,
-        [return_type, prefix, suffix, closure_type, closure_name, call_signature_raw, drop_signature],
+        [return_type, prefix, suffix, closure_type, closure_name, call_return_type, call_signature, drop_signature],
     ) in re.captures_iter(&bindings).map(|c| c.extract())
     {
-        let mut call_signature: String = call_signature_raw.to_string().replace("struct ", "");
-        call_signature = call_signature.replace("enum ", "");
-        call_signature = multiple_spaces
-            .replace_all(&call_signature, " ")
-            .to_string();
+        let call_return_type = normalize(call_return_type);
+        let call_signature = normalize(call_signature);
         let (_, _, semantic, _) = split_type_name(closure_type);
         let f = FunctionSignature::new(
             semantic,
@@ -753,7 +756,7 @@ fn find_closure_constructors(path_in: &str) -> Vec<FunctionSignature> {
             prefix.to_string() + "_closure_" + suffix,
             vec![
                 FuncArg::new(&(closure_type.to_string() + "*"), closure_name),
-                FuncArg::new(&("void (*call)".to_string() + &call_signature), "call"),
+                FuncArg::new(&(call_return_type + " (*call)" + &call_signature), "call"),
                 FuncArg::new(&("void (*drop)".to_string() + drop_signature), "drop"),
                 FuncArg::new("void*", "context"),
             ],
@@ -789,7 +792,7 @@ fn find_recv_functions(path_in: &str) -> Vec<FunctionSignature> {
 fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
     let bindings = std::fs::read_to_string(path_in).unwrap();
     let re = Regex::new(
-        r"(\w+)\s+z_(\w+)_clone\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
+        r"(\w+)\s+(\w+_clone)\(struct\s+(\w+)\s+\*(\w+),\s+const\s+struct\s+(\w+)\s+\*(\w+)\);",
     )
     .unwrap();
     let mut res = Vec::<FunctionSignature>::new();
@@ -801,7 +804,7 @@ fn find_clone_functions(path_in: &str) -> Vec<FunctionSignature> {
         let f = FunctionSignature::new(
             semantic,
             return_type,
-            "z_".to_string() + func_name + "_clone",
+            func_name.to_string(),
             vec![
                 FuncArg::new(&(dst_type.to_string() + "*"), dst_name),
                 FuncArg::new(&("const ".to_string() + src_type + "*"), src_name),
@@ -946,8 +949,18 @@ fn generate_generic_check_c(macro_func: &[FunctionSignature]) -> String {
     generate_generic_c(macro_func, "z_internal_check", true)
 }
 
+/// Closures take different numbers of call arguments, so `z_call` is variadic
+/// after the closure: `z_call(closure, args...)`.
 fn generate_generic_call_c(macro_func: &[FunctionSignature]) -> String {
-    generate_generic_c(macro_func, "z_call", false)
+    let mut out = "#define z_call(closure, ...) \\\n    _Generic((closure)".to_string();
+    for func in macro_func {
+        out += &format!(
+            ", \\\n        {} : {}",
+            func.args[0].typename.typename, func.func_name
+        );
+    }
+    out += " \\\n    )(closure, __VA_ARGS__)";
+    out
 }
 
 fn generate_generic_closure_c(macro_func: &[FunctionSignature]) -> String {
@@ -1143,4 +1156,69 @@ fn generate_generic_closure_cpp(macro_func: &[FunctionSignature]) -> String {
 
     out += &generate_generic_cpp(&processed, "z_closure", false);
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn with_header(test: &str, header: &str, check: impl FnOnce(&str)) {
+        let path =
+            std::env::temp_dir().join(format!("zenoh-c-generator-{}-{test}.h", std::process::id()));
+        std::fs::write(&path, header).unwrap();
+        check(path.to_str().unwrap());
+        std::fs::remove_file(path).unwrap();
+    }
+
+    #[test]
+    fn closure_callback_return_types() {
+        with_header(
+            "closure-return",
+            "void zc_closure_auth(struct zc_owned_closure_auth_t *this_,\n  enum zc_auth_result_t (*call)(const struct z_loaned_string_t *claim, void *context),\n  void (*drop)(void *context), void *context);",
+            |path| {
+                let funcs = find_closure_constructors(path);
+                assert_eq!(funcs.len(), 1);
+                assert_eq!(funcs[0].args[1].typename.typename,
+                    "zc_auth_result_t (*call)(const z_loaned_string_t *claim, void *context)");
+                assert!(generate_generic_closure_c(&funcs).contains(
+                    "typedef zc_auth_result_t(*zc_closure_auth_callback_t)"));
+                assert!(generate_generic_closure_cpp(&funcs).contains(
+                    "using zc_closure_auth_callback_t = zc_auth_result_t("));
+            },
+        );
+    }
+
+    #[test]
+    fn call_forwards_arguments_and_return_value() {
+        with_header(
+            "call-args",
+            "z_result_t zc_closure_auth_call(const struct zc_loaned_closure_auth_t *closure,\n  enum zc_log_severity_t severity, const struct z_loaned_string_t *msg);",
+            |path| {
+                let funcs = find_call_functions(path);
+                assert_eq!(funcs.len(), 1);
+                assert_eq!(funcs[0].args.len(), 3);
+                assert_eq!(funcs[0].args[1].typename.typename, "zc_log_severity_t");
+                assert!(generate_generic_call_c(&funcs).contains("(closure, __VA_ARGS__)"));
+                assert!(generate_generic_call_cpp(&funcs).contains(
+                    "return zc_closure_auth_call(closure, severity, msg);"));
+            },
+        );
+    }
+
+    #[test]
+    fn clone_supports_all_prefixes() {
+        with_header(
+            "clone-prefixes",
+            "void z_string_clone(struct z_owned_string_t *dst, const struct z_loaned_string_t *src);\nvoid zc_claim_clone(struct zc_owned_claim_t *dst, const struct zc_loaned_claim_t *src);\nvoid ze_sample_clone(struct ze_owned_sample_t *dst, const struct ze_loaned_sample_t *src);",
+            |path| {
+                let funcs = find_clone_functions(path);
+                assert_eq!(funcs.len(), 3);
+                assert_eq!(funcs[0].func_name, "z_string_clone");
+                assert_eq!(funcs[1].func_name, "zc_claim_clone");
+                assert_eq!(funcs[2].func_name, "ze_sample_clone");
+                assert!(generate_generic_clone_c(&funcs).contains("zc_claim_clone"));
+                assert!(generate_generic_clone_cpp(&funcs).contains("ze_sample_clone"));
+            },
+        );
+    }
 }

@@ -71,7 +71,7 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
                 if (finished_pid == child_pids[i]) {
                     child_pids[i] = 0;
                     --remaining_children;
-                    if ((WIFEXITED(status) && WEXITSTATUS(status) != 0)) {
+                    if ((WIFEXITED(status) && WEXITSTATUS(status) != 0) || WIFSIGNALED(status)) {
                         result = -1;
                         break;
                     }

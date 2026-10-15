@@ -111,7 +111,53 @@ void relation_to() {
 }
 #endif
 
-int main(int argc, char **argv) {
+static void assert_empty_keyexpr_string(const z_loaned_keyexpr_t* source) {
+    z_view_string_t text;
+    z_view_keyexpr_t roundtrip;
+    z_keyexpr_as_view_string(source, &text);
+    assert(z_string_len(z_loan(text)) == 0);
+    assert(z_view_keyexpr_from_substr(&roundtrip, z_string_data(z_loan(text)), z_string_len(z_loan(text))) == Z_EINVAL);
+    assert(z_view_keyexpr_is_empty(&roundtrip));
+}
+
+static void keyexpr_string_views(void) {
+    const char raw[] = {'d', 'e', 'm', 'o', '/', '*', '*'};
+    z_owned_keyexpr_t owned_key;
+    assert(z_keyexpr_from_substr(&owned_key, raw, sizeof(raw)) == Z_OK);
+    z_view_keyexpr_t key_view;
+    assert(z_view_keyexpr_from_substr(&key_view, raw, sizeof(raw)) == Z_OK);
+    z_view_string_t text;
+    z_keyexpr_as_view_string(z_loan(owned_key), &text);
+    assert(z_string_len(z_loan(text)) == sizeof(raw));
+    assert(memcmp(z_string_data(z_loan(text)), raw, sizeof(raw)) == 0);
+    z_keyexpr_as_view_string(z_loan(key_view), &text);
+    assert(z_string_data(z_loan(text)) == raw);
+
+    z_view_keyexpr_t invalid;
+    const char* bad[] = {"bad/**x", "a/**/**", "", "\xff"};
+    for (size_t i = 0; i < sizeof(bad) / sizeof(bad[0]); ++i) {
+        assert(z_view_keyexpr_from_str(&invalid, bad[i]) != Z_OK);
+        assert(z_view_keyexpr_is_empty(&invalid));
+        assert_empty_keyexpr_string(z_loan(invalid));
+    }
+    z_view_keyexpr_empty(&invalid);
+    assert_empty_keyexpr_string(z_loan(invalid));
+    z_owned_keyexpr_t empty_key;
+    z_internal_keyexpr_null(&empty_key);
+    assert_empty_keyexpr_string(z_loan(empty_key));
+    z_drop(z_move(empty_key));
+
+    // A valid key named "dummy" must remain distinct from the empty sentinel.
+    assert(z_view_keyexpr_from_str(&key_view, "dummy") == Z_OK);
+    z_keyexpr_as_view_string(z_loan(key_view), &text);
+    assert(z_string_len(z_loan(text)) == 5);
+    assert(memcmp(z_string_data(z_loan(text)), "dummy", 5) == 0);
+    assert(z_view_keyexpr_from_substr(&key_view, z_string_data(z_loan(text)), z_string_len(z_loan(text))) == Z_OK);
+    z_drop(z_move(owned_key));
+}
+
+int main(int argc, char** argv) {
+    keyexpr_string_views();
     canonize();
     includes();
     intersects();
