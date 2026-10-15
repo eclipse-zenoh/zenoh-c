@@ -17,7 +17,7 @@ use zenoh::shm::{
 };
 use zenoh::{
     bytes::{Encoding, ZBytes, ZBytesReader, ZBytesSliceIterator, ZBytesWriter},
-    config::Config,
+    config::{Config, Locator},
     handlers::{FifoChannelHandler, RingChannelHandler},
     key_expr::KeyExpr,
     liveliness::LivelinessToken,
@@ -108,6 +108,20 @@ get_opaque_type_data!(ZBytesWriter, z_loaned_bytes_writer_t);
 /// An iterator over slices of serialized data.
 get_opaque_type_data!(ZBytesSliceIterator<'static>, z_bytes_slice_iterator_t);
 
+/// A borrowed locator. Its owner must remain alive and unchanged while it is used.
+get_opaque_type_data!(Locator, z_loaned_locator_t);
+/// A borrowed iterator over locators. Its owner must outlive it and returned locators. No drop is required.
+get_opaque_type_data!(
+    std::slice::Iter<'static, Locator>,
+    z_hello_locators_iterator_t
+);
+#[cfg(feature = "unstable")]
+/// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+/// A borrowed iterator over interface names. Its link must outlive it and its views. No drop is required.
+get_opaque_type_data!(
+    std::slice::Iter<'static, String>,
+    z_link_interfaces_iterator_t
+);
 /// The <a href="https://zenoh.io/docs/manual/abstractions/#encoding"> encoding </a> of Zenoh data.
 get_opaque_type_data!(Encoding, z_owned_encoding_t);
 /// A loaned Zenoh encoding.

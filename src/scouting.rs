@@ -14,7 +14,7 @@
 use std::mem::MaybeUninit;
 
 use zenoh::{
-    config::{WhatAmI, WhatAmIMatcher},
+    config::{Locator, WhatAmI, WhatAmIMatcher},
     scouting::Hello,
 };
 use zenoh_runtime::ZRuntime;
@@ -23,13 +23,49 @@ pub use crate::opaque_types::{z_loaned_hello_t, z_moved_hello_t, z_owned_hello_t
 use crate::{
     result,
     transmute::{IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
-    z_closure_hello_call, z_closure_hello_loan, z_id_t, z_moved_closure_hello_t, z_moved_config_t,
-    z_owned_string_array_t, z_view_string_t, CStringInner, CStringView, ZVector,
+    z_closure_hello_call, z_closure_hello_loan, z_hello_locators_iterator_t, z_id_t,
+    z_loaned_locator_t, z_moved_closure_hello_t, z_moved_config_t, z_owned_string_array_t,
+    z_view_string_t, CStringInner, CStringView, ZVector,
 };
 decl_c_type!(
     owned(z_owned_hello_t, option Hello ),
     loaned(z_loaned_hello_t),
 );
+
+decl_c_type!(loaned(z_hello_locators_iterator_t, std::slice::Iter<'static, Locator>));
+
+/// Returns an iterator over the locators of this Hello message without allocating.
+///
+/// The iterator, returned locators, and their string views borrow from `this_`, which must remain
+/// alive and unchanged while they are used. Neither the iterator, locators, nor their views need
+/// to be dropped. Copying the iterator creates an independent cursor at the same position.
+#[no_mangle]
+pub extern "C" fn z_hello_get_locators_iterator(
+    this_: &'static z_loaned_hello_t,
+) -> z_hello_locators_iterator_t {
+    *this_
+        .as_rust_type_ref()
+        .locators_iter()
+        .as_loaned_c_type_ref()
+}
+
+/// Gets the next borrowed locator, in the order of `z_hello_locators()`.
+/// @param this_: Locator iterator.
+/// @param out: An uninitialized memory location for a pointer to the next locator.
+/// @return `true` if a locator was written, or `false` at the end (leaving `out` unchanged).
+#[no_mangle]
+pub extern "C" fn z_hello_locators_iterator_next(
+    this_: &mut z_hello_locators_iterator_t,
+    out: &mut MaybeUninit<&'static z_loaned_locator_t>,
+) -> bool {
+    match this_.as_rust_type_mut().next() {
+        Some(locator) => {
+            out.write(locator.as_loaned_c_type_ref());
+            true
+        }
+        None => false,
+    }
+}
 
 /// Frees memory and resets hello message to its gravestone state.
 #[no_mangle]
@@ -246,5 +282,81 @@ pub extern "C" fn z_whatami_to_view_string(
             str_out.as_rust_type_mut_uninit().write(slice);
             result::Z_OK
         }
+    }
+}
+
+#[cfg(test)]
+mod iterator_tests {
+    use std::sync::OnceLock;
+
+    use zenoh_protocol::{core::ZenohIdProto, scouting::HelloProto};
+
+    use super::*;
+    use crate::{z_string_array_get, z_string_array_len, z_string_array_loan};
+
+    #[test]
+    fn hello_locators_iterator_matches_array() {
+        static HELLO: OnceLock<Hello> = OnceLock::new();
+        let hello = HELLO.get_or_init(|| {
+            HelloProto {
+                version: zenoh_protocol::VERSION,
+                whatami: WhatAmI::default(),
+                zid: ZenohIdProto::default(),
+                locators: vec![
+                    "tcp/127.0.0.1:7447".parse().unwrap(),
+                    "udp/127.0.0.1:7448".parse().unwrap(),
+                ],
+            }
+            .into()
+        });
+        let hello_c = hello.as_loaned_c_type_ref();
+        let mut array = MaybeUninit::uninit();
+        z_hello_locators(hello_c, &mut array);
+        let owned_array = unsafe { array.assume_init() };
+        let array = unsafe { z_string_array_loan(&owned_array) };
+        let mut iter = z_hello_get_locators_iterator(hello_c);
+        let mut copy = iter;
+        let mut out = MaybeUninit::uninit();
+        for i in 0..z_string_array_len(array) {
+            assert!(z_hello_locators_iterator_next(&mut iter, &mut out));
+            let view = unsafe { out.assume_init_ref() }.as_rust_type_ref();
+            assert!(std::ptr::eq(view, &hello.locators()[i]));
+            let expected = z_string_array_get(array, i).unwrap().as_rust_type_ref();
+            assert_eq!(view.as_str().as_bytes(), expected.slice());
+            assert_eq!(view.as_str().as_bytes().as_ptr(), expected.slice().as_ptr());
+        }
+        let last = unsafe { out.assume_init() };
+        let saved = last.as_rust_type_ref().as_str().as_bytes();
+        let mut out = MaybeUninit::new(last);
+        assert!(!z_hello_locators_iterator_next(&mut iter, &mut out));
+        assert!(!z_hello_locators_iterator_next(&mut iter, &mut out));
+        assert_eq!(
+            unsafe { out.assume_init_ref() }
+                .as_rust_type_ref()
+                .as_str()
+                .as_bytes(),
+            saved
+        );
+        assert!(z_hello_locators_iterator_next(&mut copy, &mut out));
+        assert_eq!(
+            unsafe { out.assume_init_ref() }
+                .as_rust_type_ref()
+                .as_str()
+                .as_bytes(),
+            hello.locators()[0].as_str().as_bytes()
+        );
+        drop(owned_array);
+    }
+
+    #[test]
+    fn empty_hello_locators_iterator() {
+        assert!(!std::mem::needs_drop::<z_hello_locators_iterator_t>());
+        static HELLO: OnceLock<Hello> = OnceLock::new();
+        let hello = HELLO.get_or_init(Hello::empty);
+        let mut iter = z_hello_get_locators_iterator(hello.as_loaned_c_type_ref());
+        assert!(!z_hello_locators_iterator_next(
+            &mut iter,
+            &mut MaybeUninit::uninit()
+        ));
     }
 }
