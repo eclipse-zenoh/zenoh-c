@@ -152,6 +152,16 @@ pub enum z_whatami_t {
     CLIENT = 0x04,
 }
 
+impl From<WhatAmI> for z_whatami_t {
+    fn from(w: WhatAmI) -> Self {
+        match w {
+            WhatAmI::Router => z_whatami_t::ROUTER,
+            WhatAmI::Peer => z_whatami_t::PEER,
+            WhatAmI::Client => z_whatami_t::CLIENT,
+        }
+    }
+}
+
 #[allow(non_camel_case_types)]
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]

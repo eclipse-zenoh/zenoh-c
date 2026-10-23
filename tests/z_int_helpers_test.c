@@ -20,6 +20,11 @@ int run_success() { return 0; }
 
 int run_failed() { return 1; }
 
+int run_signaled() {
+    raise(SIGTERM);
+    return 0;
+}
+
 int run_hanged() {
     while (1) {
         sleep(1000);
@@ -47,6 +52,11 @@ void last_failed() {
     assert(run_timeouted_test(funcs, 3, 10) == -1);
 }
 
+void one_signaled() {
+    func_ptr_t funcs[] = {run_success, run_signaled, run_success};
+    assert(run_timeouted_test(funcs, 3, 10) == -1);
+}
+
 void all_hanged() {
     func_ptr_t funcs[] = {run_hanged, run_hanged, run_hanged};
     assert(run_timeouted_test(funcs, 3, 1) == -1);
@@ -62,6 +72,7 @@ int main() {
     all_failed();
     first_failed();
     last_failed();
+    one_signaled();
     all_hanged();
     one_hanged();
 
