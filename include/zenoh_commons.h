@@ -876,6 +876,12 @@ typedef struct z_moved_hello_t {
   struct z_owned_hello_t _this;
 } z_moved_hello_t;
 /**
+ * A borrowed iterator over locators. Its owner must outlive it and returned locators. No drop is required.
+ */
+typedef struct ALIGN(8) z_hello_locators_iterator_t {
+  uint8_t _0[16];
+} z_hello_locators_iterator_t;
+/**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  * Options for `z_info_links()`.
  */
@@ -3394,6 +3400,15 @@ ZENOHC_API void z_hello_clone(struct z_owned_hello_t *dst, const struct z_loaned
  */
 ZENOHC_API void z_hello_drop(struct z_moved_hello_t *this_);
 /**
+ * Returns an iterator over the locators of this Hello message without allocating.
+ *
+ * The iterator, returned locators, and their string views borrow from `this_`, which must remain
+ * alive and unchanged while they are used. Neither the iterator, locators, nor their views need
+ * to be dropped. Copying the iterator creates an independent cursor at the same position.
+ */
+ZENOHC_API
+struct z_hello_locators_iterator_t z_hello_get_locators_iterator(const struct z_loaned_hello_t *this_);
+/**
  * Borrows hello message.
  */
 ZENOHC_API const struct z_loaned_hello_t *z_hello_loan(const struct z_owned_hello_t *this_);
@@ -3409,6 +3424,15 @@ ZENOHC_API struct z_loaned_hello_t *z_hello_loan_mut(struct z_owned_hello_t *thi
 ZENOHC_API
 void z_hello_locators(const struct z_loaned_hello_t *this_,
                       struct z_owned_string_array_t *locators_out);
+/**
+ * Gets the next borrowed locator, in the order of `z_hello_locators()`.
+ * @param this_: Locator iterator.
+ * @param out: An uninitialized memory location for a pointer to the next locator.
+ * @return `true` if a locator was written, or `false` at the end (leaving `out` unchanged).
+ */
+ZENOHC_API
+bool z_hello_locators_iterator_next(struct z_hello_locators_iterator_t *this_,
+                                    const struct z_loaned_locator_t **out);
 /**
  * Takes ownership of the mutably borrowed hello
  */
@@ -4293,14 +4317,15 @@ enum z_keyexpr_intersection_level_t z_keyexpr_relation_to(const struct z_loaned_
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets the authentication identifier from the `z_loaned_link_t`.
- *
- * Stores the authentication identifier string in `str_out` if present, or initializes a null string otherwise.
+ * @brief Gets the authentication identifier as a borrowed string view, without allocating.
+ * Returns true if an identifier is present (including an empty identifier), or false otherwise.
+ * When absent, writes an empty view to str_out.
+ * The link must remain alive and unchanged while the view is used. The view needs no drop.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_link_auth_identifier(const struct z_loaned_link_t *link,
-                            struct z_owned_string_t *str_out);
+bool z_link_auth_identifier(const struct z_loaned_link_t *link,
+                            struct z_view_string_t *str_out);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4329,14 +4354,12 @@ void z_link_drop(struct z_moved_link_t *this_);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets the destination locator (remote endpoint) from the `z_loaned_link_t`.
- *
- * Stores the destination locator string in `str_out`.
+ * Returns the borrowed destination (remote endpoint) locator.
+ * The link must remain alive and unchanged while the locator or its views are used.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_link_dst(const struct z_loaned_link_t *link,
-                struct z_owned_string_t *str_out);
+const struct z_loaned_locator_t *z_link_dst(const struct z_loaned_link_t *link);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4442,25 +4465,37 @@ void z_link_events_listener_options_default(struct z_link_events_listener_option
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets the group locator from the `z_loaned_link_t` (for multicast links).
+ * @brief Gets the network interfaces associated with the `z_loaned_link_t`.
  *
- * Stores the group locator string in `str_out` if present, or initializes a null string otherwise.
+ * Returns an iterator without allocating. The iterator and the string views it yields
+ * borrow from `link`, which must remain alive and unchanged while they are used.
+ * Neither the iterator nor the views need to be dropped. Copying the iterator creates
+ * an independent cursor at the same position.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_link_group(const struct z_loaned_link_t *link,
-                  struct z_owned_string_t *str_out);
+struct z_link_interfaces_iterator_t z_link_get_interfaces_iterator(const struct z_loaned_link_t *link);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Gets the network interfaces associated with the `z_loaned_link_t`.
- *
- * Stores an array of interface name strings in `interfaces_out`.
+ * Returns the borrowed group locator for a multicast link, or NULL when absent.
+ * The link must remain alive and unchanged while the locator or its views are used.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_link_interfaces(const struct z_loaned_link_t *link,
-                       struct z_owned_string_array_t *interfaces_out);
+const struct z_loaned_locator_t *z_link_group(const struct z_loaned_link_t *link);
+#endif
+/**
+ * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
+ * Gets the next interface name as a borrowed string view.
+ * @param this_: Interface iterator.
+ * @param out: An uninitialized memory location for the next string view.
+ * @return `true` if a view was written, or `false` at the end (leaving `out` unchanged).
+ */
+#if defined(Z_FEATURE_UNSTABLE_API)
+ZENOHC_API
+bool z_link_interfaces_iterator_next(struct z_link_interfaces_iterator_t *this_,
+                                     struct z_view_string_t *out);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4531,14 +4566,12 @@ bool z_link_reliability(const struct z_loaned_link_t *link,
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
- * @brief Get the source locator (local endpoint) from the `z_loaned_link_t`.
- *
- * Stores the source locator string in `str_out`.
+ * Returns the borrowed source (local endpoint) locator.
+ * The link must remain alive and unchanged while the locator or its views are used.
  */
 #if defined(Z_FEATURE_UNSTABLE_API)
 ZENOHC_API
-void z_link_src(const struct z_loaned_link_t *link,
-                struct z_owned_string_t *str_out);
+const struct z_loaned_locator_t *z_link_src(const struct z_loaned_link_t *link);
 #endif
 /**
  * @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
@@ -4656,6 +4689,28 @@ ZENOHC_API z_result_t z_liveliness_undeclare_token(struct z_moved_liveliness_tok
  * @brief Returns default value of `z_locality_t`
  */
 ZENOHC_API enum z_locality_t z_locality_default(void);
+/**
+ * Constructs a borrowed view of the locator's address, without allocating.
+ * An empty locator produces an empty view.
+ * The owner must remain alive and unchanged while the view is used. The view needs no drop.
+ */
+ZENOHC_API
+void z_locator_address(const struct z_loaned_locator_t *this_,
+                       struct z_view_string_t *out);
+/**
+ * Constructs a borrowed view of the complete locator string, without allocating.
+ * The owner must remain alive and unchanged while the view is used. The view needs no drop.
+ */
+ZENOHC_API
+void z_locator_as_view_string(const struct z_loaned_locator_t *this_,
+                              struct z_view_string_t *out);
+/**
+ * Constructs a borrowed view of the locator's protocol, without allocating.
+ * The owner must remain alive and unchanged while the view is used. The view needs no drop.
+ */
+ZENOHC_API
+void z_locator_protocol(const struct z_loaned_locator_t *this_,
+                        struct z_view_string_t *out);
 /**
  * @brief Undeclares the given matching listener, dropping and invalidating it.
  */

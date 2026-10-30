@@ -25,6 +25,7 @@ Zenoh-C types fall into these categories:
 - Loaned types: `z_loaned_xxx_t`
 - Moved types: `z_moved_xxx_t`
 - View types: `z_view_xxx_t`
+- Borrowed iterators: `z_xxx_iterator_t`
 - Option structures: `z_xxx_options_t`
 - Enums and plain data structures: `z_xxx_t`
 
@@ -116,6 +117,55 @@ owned types that do not own the data. This allows using view and owned types int
     z_string_clone(&dst, z_loan(view));
     z_drop(z_move(dst));
     z_drop(z_move(owned)); // but no need to drop view
+
+Borrowed Iterators
+------------------
+
+Some collections provide an iterator that borrows directly from their owner.
+For example, ``z_hello_get_locators_iterator`` returns a
+``z_hello_locators_iterator_t`` without allocating an array:
+
+.. code-block:: c
+
+    // hello is a const z_loaned_hello_t*.
+    z_hello_locators_iterator_t locators = z_hello_get_locators_iterator(hello);
+    const z_loaned_locator_t* locator;
+    while (z_hello_locators_iterator_next(&locators, &locator)) {
+        z_view_string_t text;
+        z_locator_as_view_string(locator, &text);
+        printf("%.*s\n", (int)z_string_len(z_loan(text)),
+               z_string_data(z_loan(text)));
+    }
+
+Neither the iterator, returned locators, nor their string views need to be
+dropped. Keep the owner alive and unchanged while using any of them. Locators
+and views remain valid when the iterator advances. Copying an iterator creates
+an independent cursor at its current position. The ``next`` function returns
+``false`` at the end and leaves its outputs unchanged.
+
+The stable ``z_hello_locators`` string-array getter remains available. The
+unstable ``z_link_get_interfaces_iterator`` returns a separate
+``z_link_interfaces_iterator_t``; its ``z_link_interfaces_iterator_next``
+function yields borrowed string views of interface names.
+
+The unstable ``z_link_auth_identifier`` getter also returns a borrowed string
+view. It returns ``true`` when an identifier is present, including an empty
+identifier, or ``false`` when absent. When absent, it writes an empty view.
+Keep the link alive and unchanged while using the view; no drop is required.
+
+Locators
+--------
+
+The ``z_loaned_locator_t`` type identifies a network address and exposes the
+complete locator string, protocol, and address as borrowed string views.
+Scouting iterators return borrowed locators, as do the unstable ``z_link_src``,
+``z_link_dst``, and ``z_link_group`` getters. ``z_link_group`` returns ``NULL``
+when no group exists.
+
+The locator and its string views borrow from the hello message or link that
+provides it. Keep that owner alive and unchanged while using either of them.
+To retain locator text after the owner is dropped, copy its string view with
+``z_string_clone``.
 
 Options Structures `z_xxx_options_t`
 ------------------------------------

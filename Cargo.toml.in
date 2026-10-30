@@ -105,6 +105,9 @@ evalexpr = "11.3.0" # Bumping to 12.x.x will cause 1.75 check fails
 phf = { version = "0.11.2", features = ["macros"] }
 build-print = "0.1.1" # Bumping to 1.x.x will cause 1.75 check fails
 
+[dev-dependencies]
+zenoh-protocol = { version = "1.10.1", git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main" }
+
 [lib]
 path = "@CARGO_PROJECT_DIR@src/lib.rs"
 name = "@CARGO_LIB_NAME@"
