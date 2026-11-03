@@ -25,9 +25,11 @@ pub mod opaque_types;
 pub use crate::opaque_types::*;
 
 mod collections;
-pub mod result;
 pub use crate::collections::*;
+mod locator;
+pub use crate::locator::*;
 mod config;
+pub mod result;
 pub use crate::config::*;
 #[cfg(feature = "unstable")]
 mod close;

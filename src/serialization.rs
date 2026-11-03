@@ -26,7 +26,9 @@ pub use crate::opaque_types::{
 use crate::{
     result::{self, z_result_t},
     strlen_or_zero,
-    transmute::{Gravestone, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType},
+    transmute::{
+        Gravestone, IntoCType, LoanedCTypeRef, RustTypeRef, RustTypeRefUninit, TakeRustType,
+    },
     z_loaned_bytes_t, z_loaned_slice_t, z_loaned_string_t, z_owned_bytes_t, z_owned_slice_t,
     z_owned_string_t, CSliceOwned, CStringOwned,
 };
@@ -102,7 +104,9 @@ pub unsafe extern "C" fn ze_serializer_finish(
         .write(this.take_rust_type().unwrap_unchecked().finish());
 }
 
-decl_c_type! {loaned(ze_deserializer_t, ZDeserializer<'static>)}
+// SAFETY: ZDeserializer wraps ZBytesReader: a shared &ZBuf and value cursor offsets.
+// Copies do not introduce exclusive borrows. Re-audit if the upstream representation changes.
+decl_c_type!(copy(ze_deserializer_t, ZDeserializer<'static>));
 
 fn ze_serialize_arithmetic<T>(this: &mut MaybeUninit<z_owned_bytes_t>, val: &T)
 where
@@ -449,10 +453,12 @@ pub unsafe extern "C" fn ze_deserialize_string(
     }
 }
 
-/// @brief Gets deserializer for`this_`.
+/// @brief Gets a deserializer for `this`.
+/// The bytes must remain alive and unchanged while the deserializer or any copy is used.
+/// See @ref borrowed_cursor_types for the shared copy contract.
 #[no_mangle]
 extern "C" fn ze_deserializer_from_bytes(this: &'static z_loaned_bytes_t) -> ze_deserializer_t {
-    *ZDeserializer::new(this.as_rust_type_ref()).as_loaned_c_type_ref()
+    ZDeserializer::new(this.as_rust_type_ref()).into_c_type()
 }
 
 /// @brief Checks if deserializer parsed all of its data.

@@ -68,6 +68,7 @@ zenoh_opaque.h:
   - z_owned_condvar_t!
   - z_loaned_condvar_t!
   - z_owned_task_t!
+  - z_loaned_locator_t!
   - z_owned_hello_t!
   - z_loaned_hello_t!
   - z_loaned_closure_hello_t!
@@ -137,6 +138,7 @@ zenoh_opaque.h:
   - z_loaned_transport_t!#unstable
   - z_owned_link_t!#unstable
   - z_loaned_link_t!#unstable
+  - z_link_interfaces_iterator_t!#unstable
   - z_owned_transport_event_t!#unstable
   - z_loaned_transport_event_t!#unstable
   - z_owned_link_event_t!#unstable

@@ -16,6 +16,12 @@
 API Reference
 *************
 
+Borrowed cursor copy and lifetime contract
+==========================================
+
+.. doxygengroup:: borrowed_cursor_types
+   :desc-only:
+
 Containers
 =============
 
@@ -71,6 +77,18 @@ Functions
 .. doxygenfunction:: z_string_len
 .. doxygenfunction:: z_string_is_empty
 .. doxygenfunction:: z_string_as_slice
+
+Locator
+-------
+Types
+^^^^^
+.. doxygenstruct:: z_loaned_locator_t
+
+Functions
+^^^^^^^^^
+.. doxygenfunction:: z_locator_as_view_string
+.. doxygenfunction:: z_locator_protocol
+.. doxygenfunction:: z_locator_address
 
 String Array
 ------------
@@ -474,6 +492,7 @@ Types
 .. doxygenstruct:: z_loaned_transport_t
 .. doxygenstruct:: z_owned_link_t
 .. doxygenstruct:: z_loaned_link_t
+.. doxygenstruct:: z_link_interfaces_iterator_t
 .. doxygenstruct:: z_info_links_options_t
     :members:
 .. doxygenstruct:: z_owned_transport_event_t
@@ -534,7 +553,8 @@ Functions
 .. doxygenfunction:: z_link_group
 .. doxygenfunction:: z_link_mtu
 .. doxygenfunction:: z_link_is_streamed
-.. doxygenfunction:: z_link_interfaces
+.. doxygenfunction:: z_link_get_interfaces_iterator
+.. doxygenfunction:: z_link_interfaces_iterator_next
 .. doxygenfunction:: z_link_auth_identifier
 .. doxygenfunction:: z_link_priorities
 .. doxygenfunction:: z_link_reliability
@@ -869,6 +889,7 @@ Types
 -----
 .. doxygenstruct:: z_owned_hello_t
 .. doxygenstruct:: z_loaned_hello_t
+.. doxygenstruct:: z_hello_locators_iterator_t
 .. doxygenstruct:: z_scout_options_t
     :members:
 .. doxygenstruct:: z_loaned_closure_hello_t
@@ -880,6 +901,8 @@ Functions
 
 .. doxygenfunction:: z_hello_whatami
 .. doxygenfunction:: z_hello_locators
+.. doxygenfunction:: z_hello_get_locators_iterator
+.. doxygenfunction:: z_hello_locators_iterator_next
 .. doxygenfunction:: z_hello_zid
 .. doxygenfunction:: z_hello_loan
 .. doxygenfunction:: z_hello_clone

@@ -62,11 +62,11 @@ void print_transport(z_loaned_transport_t* transport, void* ctx) {
 
 void print_link(z_loaned_link_t* link, void* ctx) {
     z_id_t zid = z_link_zid(link);
-    z_owned_string_t src, dst, group, auth_id;
-    z_link_src(link, &src);
-    z_link_dst(link, &dst);
-    z_link_group(link, &group);
-    z_link_auth_identifier(link, &auth_id);
+    z_view_string_t src, dst, group, auth_id;
+    z_locator_as_view_string(z_link_src(link), &src);
+    z_locator_as_view_string(z_link_dst(link), &dst);
+    const z_loaned_locator_t* group_locator = z_link_group(link);
+    bool has_auth_id = z_link_auth_identifier(link, &auth_id);
 
     uint16_t mtu = z_link_mtu(link);
     bool is_streamed = z_link_is_streamed(link);
@@ -86,29 +86,30 @@ void print_link(z_loaned_link_t* link, void* ctx) {
     printf("    src: %.*s\n", (int)z_string_len(z_loan(src)), z_string_data(z_loan(src)));
     printf("    dst: %.*s\n", (int)z_string_len(z_loan(dst)), z_string_data(z_loan(dst)));
 
-    if (z_string_len(z_loan(group)) > 0) {
+    if (group_locator != NULL) {
+        z_locator_as_view_string(group_locator, &group);
         printf("    group: %.*s\n", (int)z_string_len(z_loan(group)), z_string_data(z_loan(group)));
     }
 
     printf("    mtu: %u\n", mtu);
     printf("    is_streamed: %s\n", is_streamed ? "true" : "false");
 
-    z_owned_string_array_t interfaces;
-    z_link_interfaces(link, &interfaces);
-    size_t interfaces_len = z_string_array_len(z_loan(interfaces));
-    if (interfaces_len > 0) {
+    z_link_interfaces_iterator_t interfaces = z_link_get_interfaces_iterator(link);
+    z_view_string_t iface;
+    if (z_link_interfaces_iterator_next(&interfaces, &iface)) {
         printf("    interfaces: [");
-        for (size_t i = 0; i < interfaces_len; i++) {
-            const z_loaned_string_t* iface = z_string_array_get(z_loan(interfaces), i);
-            if (i > 0) printf(", ");
-            printf("%.*s", (int)z_string_len(iface), z_string_data(iface));
-        }
+        bool first = true;
+        do {
+            if (!first) printf(", ");
+            first = false;
+            printf("%.*s", (int)z_string_len(z_loan(iface)), z_string_data(z_loan(iface)));
+        } while (z_link_interfaces_iterator_next(&interfaces, &iface));
         printf("]\n");
     }
-    z_drop(z_move(interfaces));
 
-    if (z_string_len(z_loan(auth_id)) > 0) {
-        printf("    auth_id: %.*s\n", (int)z_string_len(z_loan(auth_id)), z_string_data(z_loan(auth_id)));
+    if (has_auth_id) {
+        const char* auth_id_data = z_string_data(z_loan(auth_id));
+        printf("    auth_id: %.*s\n", (int)z_string_len(z_loan(auth_id)), auth_id_data == NULL ? "" : auth_id_data);
     }
 
     if (has_priorities) {
@@ -118,11 +119,6 @@ void print_link(z_loaned_link_t* link, void* ctx) {
     if (has_reliability) {
         printf("    reliability: %s\n", reliability == Z_RELIABILITY_RELIABLE ? "Reliable" : "BestEffort");
     }
-
-    z_drop(z_move(src));
-    z_drop(z_move(dst));
-    z_drop(z_move(group));
-    z_drop(z_move(auth_id));
 }
 
 void transport_event_handler(z_loaned_transport_event_t* event, void* ctx) {

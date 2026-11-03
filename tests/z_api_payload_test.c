@@ -130,13 +130,13 @@ void test_append(void) {
     z_drop(z_move(payload));
 }
 
-void custom_deleter(void *data, void *context) {
+void custom_deleter(void* data, void* context) {
     (void)data;
-    size_t *cnt = (size_t *)context;
+    size_t* cnt = (size_t*)context;
     (*cnt)++;
 }
 
-bool z_check_and_drop_payload(z_owned_bytes_t *payload, uint8_t *data, size_t len) {
+bool z_check_and_drop_payload(z_owned_bytes_t* payload, uint8_t* data, size_t len) {
     z_owned_slice_t out;
     z_bytes_to_slice(z_loan(*payload), &out);
     z_drop(z_move(*payload));
@@ -151,7 +151,7 @@ void test_slice(void) {
 
     size_t cnt = 0;
     z_owned_bytes_t payload;
-    z_bytes_from_buf(&payload, data, 10, custom_deleter, (void *)&cnt);
+    z_bytes_from_buf(&payload, data, 10, custom_deleter, (void*)&cnt);
 
     z_owned_slice_t out;
     z_bytes_to_slice(z_loan(payload), &out);
@@ -211,13 +211,13 @@ void test_arithmetic(void) {
     TEST_ARITHMETIC(double, double, -105.001);
 }
 
-bool check_slice(const z_loaned_bytes_t *b, const uint8_t *data, size_t len) {
+bool check_slice(const z_loaned_bytes_t* b, const uint8_t* data, size_t len) {
     z_bytes_slice_iterator_t it = z_bytes_get_slice_iterator(b);
-    uint8_t *data_out = (uint8_t *)malloc(len);
+    uint8_t* data_out = (uint8_t*)malloc(len);
     z_view_slice_t v;
     size_t pos = 0;
     while (z_bytes_slice_iterator_next(&it, &v)) {
-        const uint8_t *slice_data = z_slice_data(z_loan(v));
+        const uint8_t* slice_data = z_slice_data(z_loan(v));
         size_t slice_len = z_slice_len(z_loan(v));
         memcpy(data_out + pos, slice_data, slice_len);
         pos += slice_len;
@@ -257,6 +257,114 @@ void test_slices(void) {
 #if defined(Z_FEATURE_UNSTABLE_API)
     assert(z_bytes_get_contiguous_view(z_loan(payload), &view) != Z_OK);
 #endif
+    z_drop(z_move(payload));
+}
+
+static void make_fragmented_bytes(z_owned_bytes_t* payload, const uint8_t* data, size_t len) {
+    z_owned_bytes_writer_t writer;
+    assert(z_bytes_writer_empty(&writer) == Z_OK);
+    for (size_t pos = 0; pos < len; pos += 2) {
+        size_t size = len - pos < 2 ? len - pos : 2;
+        z_owned_bytes_t part;
+        assert(z_bytes_copy_from_buf(&part, data + pos, size) == Z_OK);
+        assert(z_bytes_writer_append(z_loan_mut(writer), z_move(part)) == Z_OK);
+    }
+    z_bytes_writer_finish(z_move(writer), payload);
+}
+
+void test_reader_copies(void) {
+    const uint8_t data[] = {0, 1, 2, 3, 4, 5, 6, 7};
+    z_owned_bytes_t payload;
+    make_fragmented_bytes(&payload, data, sizeof(data));
+    z_bytes_reader_t reader = z_bytes_get_reader(z_loan(payload));
+    uint8_t prefix, original[3], copied[8];
+    assert(z_bytes_reader_read(&reader, &prefix, 1) == 1);
+    z_bytes_reader_t copy = reader;
+    assert(z_bytes_reader_read(&reader, original, sizeof(original)) == sizeof(original));
+    assert(z_bytes_reader_tell(&copy) == 1);
+    assert(z_bytes_reader_read(&copy, copied, 2) == 2);
+    assert(memcmp(copied, data + 1, 2) == 0);
+    assert(z_bytes_reader_tell(&reader) == 4);
+    assert(z_bytes_reader_seek(&copy, 0, SEEK_SET) == Z_OK);
+    assert(z_bytes_reader_tell(&reader) == 4);
+    assert(z_bytes_reader_read(&copy, copied, sizeof(copied)) == sizeof(copied));
+    assert(memcmp(copied, data, sizeof(data)) == 0);
+    assert(z_bytes_reader_read(&reader, copied, 4) == 4);
+    assert(memcmp(copied, data + 4, 4) == 0);
+    assert(z_bytes_reader_remaining(&reader) == 0);
+    assert(z_bytes_reader_remaining(&copy) == 0);
+    assert(prefix == data[0]);
+    assert(memcmp(original, data + 1, sizeof(original)) == 0);
+    z_drop(z_move(payload));
+}
+
+void test_slice_iterator_copies(void) {
+    const uint8_t data[] = {0, 1, 2, 3, 4, 5};
+    z_owned_bytes_t payload;
+    make_fragmented_bytes(&payload, data, sizeof(data));
+    z_bytes_slice_iterator_t iter = z_bytes_get_slice_iterator(z_loan(payload));
+    z_bytes_slice_iterator_t copy = iter;
+    z_view_slice_t first, out;
+    assert(z_bytes_slice_iterator_next(&iter, &first));
+    const uint8_t* first_data = z_slice_data(z_loan(first));
+    size_t first_len = z_slice_len(z_loan(first));
+    assert(first_len > 0 && first_len <= sizeof(data));
+    size_t total = first_len;
+    while (z_bytes_slice_iterator_next(&iter, &out)) {
+        size_t len = z_slice_len(z_loan(out));
+        assert(len <= sizeof(data) - total);
+        assert(memcmp(z_slice_data(z_loan(out)), data + total, len) == 0);
+        total += len;
+    }
+    assert(total == sizeof(data));
+    assert(z_bytes_slice_iterator_next(&copy, &out));
+    assert(z_slice_len(z_loan(out)) == first_len);
+    assert(z_slice_data(z_loan(out)) == first_data);
+    assert(!z_bytes_slice_iterator_next(&iter, &out));
+    total = first_len;
+    while (z_bytes_slice_iterator_next(&copy, &out)) {
+        size_t len = z_slice_len(z_loan(out));
+        assert(len <= sizeof(data) - total);
+        assert(memcmp(z_slice_data(z_loan(out)), data + total, len) == 0);
+        total += len;
+    }
+    assert(total == sizeof(data));
+    assert(z_slice_data(z_loan(first)) == first_data);
+    assert(memcmp(first_data, data, first_len) == 0);
+    z_drop(z_move(payload));
+}
+
+void test_deserializer_copies(void) {
+    ze_owned_serializer_t serializer;
+    assert(ze_serializer_empty(&serializer) == Z_OK);
+    assert(ze_serializer_serialize_uint8(z_loan_mut(serializer), 7) == Z_OK);
+    assert(ze_serializer_serialize_uint32(z_loan_mut(serializer), 1234) == Z_OK);
+    assert(ze_serializer_serialize_uint32(z_loan_mut(serializer), 5678) == Z_OK);
+    z_owned_bytes_t serialized;
+    ze_serializer_finish(z_move(serializer), &serialized);
+    z_owned_slice_t raw;
+    assert(z_bytes_to_slice(z_loan(serialized), &raw) == Z_OK);
+    z_owned_bytes_t payload;
+    make_fragmented_bytes(&payload, z_slice_data(z_loan(raw)), z_slice_len(z_loan(raw)));
+    z_drop(z_move(raw));
+    z_drop(z_move(serialized));
+    ze_deserializer_t deserializer = ze_deserializer_from_bytes(z_loan(payload));
+    uint8_t prefix;
+    uint32_t first, second, copied;
+    assert(ze_deserializer_deserialize_uint8(&deserializer, &prefix) == Z_OK);
+    ze_deserializer_t copy = deserializer;
+    assert(ze_deserializer_deserialize_uint32(&deserializer, &first) == Z_OK);
+    assert(ze_deserializer_deserialize_uint32(&deserializer, &second) == Z_OK);
+    assert(ze_deserializer_is_done(&deserializer));
+    assert(!ze_deserializer_is_done(&copy));
+    assert(ze_deserializer_deserialize_uint32(&copy, &copied) == Z_OK);
+    assert(copied == first && first == 1234);
+    assert(!ze_deserializer_is_done(&copy));
+    assert(ze_deserializer_is_done(&deserializer));
+    assert(ze_deserializer_deserialize_uint32(&copy, &copied) == Z_OK);
+    assert(copied == second && second == 5678);
+    assert(ze_deserializer_is_done(&copy));
+    assert(prefix == 7);
     z_drop(z_move(payload));
 }
 
@@ -323,6 +431,9 @@ int main(void) {
     test_arithmetic();
     test_append();
     test_slices();
+    test_reader_copies();
+    test_slice_iterator_copies();
+    test_deserializer_copies();
     test_serialize_simple();
     test_serialize_sequence();
 }

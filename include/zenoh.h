@@ -1,6 +1,18 @@
 #ifndef ZENOH_H
 #define ZENOH_H
 
+/**
+ * @defgroup borrowed_cursor_types Borrowed cursors
+ * @brief Copy and lifetime contract for borrowed cursor values.
+ *
+ * Copying a cursor preserves its position and creates an independent cursor. Advancing
+ * one copy does not advance another or invalidate previously returned borrowed views.
+ * The cursor, all its copies, and borrowed views share the original owner's storage. That owner (bytes,
+ * Hello message, or link) must remain alive and unchanged while any copy or view is used.
+ * Copying does not retain the owner or extend its lifetime. Neither these cursor values
+ * nor their borrowed views require drop.
+ */
+
 #include <assert.h>
 #include <stdint.h>
 
