@@ -145,6 +145,23 @@ macro_rules! validate_equivalence {
     };
 }
 
+// Only value mappings may implement Copy/Clone. Reference and owned mappings must
+// reject these traits even when the C wrapper is hand-written rather than generated.
+macro_rules! assert_noncopy_c_type {
+    ($c_type:ty) => {
+        const _: () = {
+            /// Owned, loaned and view C wrappers must not implement Clone or Copy.
+            /// E0283 intentionally rejects a wrapper that implements either trait.
+            trait NonCopyCTypeMustNotImplementCloneOrCopy<A> {
+                fn check() {}
+            }
+            impl<T> NonCopyCTypeMustNotImplementCloneOrCopy<()> for T {}
+            impl<T: Clone> NonCopyCTypeMustNotImplementCloneOrCopy<u8> for T {}
+            let _ = <$c_type as NonCopyCTypeMustNotImplementCloneOrCopy<_>>::check;
+        };
+    };
+}
+
 #[macro_export]
 macro_rules! impl_transmute {
     (as_c ($rust_type:ty, $c_type:ty)) => {
@@ -159,6 +176,7 @@ macro_rules! impl_transmute {
         }
     };
     (as_c_owned ($rust_type:ty, $c_type:ty)) => {
+        assert_noncopy_c_type!($c_type);
         impl $crate::transmute::OwnedCTypeRef for $rust_type {
             type OwnedCType = $c_type;
             fn as_owned_c_type_ref(&self) -> &Self::OwnedCType {
@@ -171,6 +189,7 @@ macro_rules! impl_transmute {
     };
 
     (as_c_loaned ($rust_type:ty, $c_type:ty)) => {
+        assert_noncopy_c_type!($c_type);
         impl $crate::transmute::LoanedCTypeRef for $rust_type {
             type LoanedCType = $c_type;
             fn as_loaned_c_type_ref(&self) -> &Self::LoanedCType {
@@ -182,6 +201,7 @@ macro_rules! impl_transmute {
         }
     };
     (as_c_view ($rust_type:ty, $c_type:ty)) => {
+        assert_noncopy_c_type!($c_type);
         impl $crate::transmute::ViewCTypeRef for $rust_type {
             type ViewCType = $c_type;
             fn as_view_c_type_ref(&self) -> &Self::ViewCType {
@@ -518,10 +538,32 @@ macro_rules! decl_c_type {
     };
 
     //
-    // Rust type is copyable plain data type, just allow to convert references or copy whole structure
+    // C value that can be copied without cleanup, including borrowed cursors.
+    // SAFETY: each mapping must permit bitwise duplication into independent valid values.
+    // Any borrowed storage must be shared, and advancing one copy must not invalidate
+    // another copy or its borrowed storage. Exclusive borrows must not be duplicated.
+    // The no-drop assertion checks cleanup only; it cannot establish this aliasing contract.
+    // Rust Copy/Clone is not required: the Zenoh byte cursors do not implement those traits.
     //
     (copy ($c_type:ty, $rust_type:ty $(,)?) $(,)?) => {
+        const _: () = {
+            assert!(
+                !std::mem::needs_drop::<$rust_type>(),
+                concat!(
+                    "Copyable C value ",
+                    stringify!($c_type),
+                    " must not require dropping its Rust type ",
+                    stringify!($rust_type)
+                )
+            );
+        };
         validate_equivalence!($c_type, $rust_type);
+        impl Copy for $c_type {}
+        impl Clone for $c_type {
+            fn clone(&self) -> Self {
+                *self
+            }
+        }
         impl_transmute!(as_c($rust_type, $c_type));
         impl_transmute!(as_rust($c_type, $rust_type));
         impl_transmute!(into_c($rust_type, $c_type));
@@ -529,7 +571,7 @@ macro_rules! decl_c_type {
     };
 
     //
-    // Specific case: no owned type exists
+    // Specific case: no owned type exists. Only pointer access is provided.
     //
     (loaned ($c_loaned_type:ty, $rust_loaned_type:ty $(,)?) $(,)?) => {
         validate_equivalence!($c_loaned_type, $rust_loaned_type);

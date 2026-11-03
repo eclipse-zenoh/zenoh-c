@@ -98,6 +98,8 @@ get_opaque_type_data!(Option<Sample>, z_owned_sample_t);
 get_opaque_type_data!(Sample, z_loaned_sample_t);
 
 /// A reader for payload.
+/// @ingroup borrowed_cursor_types
+/// See @ref borrowed_cursor_types for copy and lifetime requirements.
 get_opaque_type_data!(ZBytesReader<'static>, z_bytes_reader_t);
 
 /// An owned writer for payload.
@@ -106,18 +108,24 @@ get_opaque_type_data!(Option<ZBytesWriter>, z_owned_bytes_writer_t);
 get_opaque_type_data!(ZBytesWriter, z_loaned_bytes_writer_t);
 
 /// An iterator over slices of serialized data.
+/// @ingroup borrowed_cursor_types
+/// See @ref borrowed_cursor_types for copy and lifetime requirements.
 get_opaque_type_data!(ZBytesSliceIterator<'static>, z_bytes_slice_iterator_t);
 
 /// A borrowed locator. Its owner must remain alive and unchanged while it is used.
 get_opaque_type_data!(Locator, z_loaned_locator_t);
-/// A borrowed iterator over locators. Its owner must outlive it and returned locators. No drop is required.
+/// A borrowed iterator over locators.
+/// @ingroup borrowed_cursor_types
+/// See @ref borrowed_cursor_types for copy and lifetime requirements.
 get_opaque_type_data!(
     std::slice::Iter<'static, Locator>,
     z_hello_locators_iterator_t
 );
 #[cfg(feature = "unstable")]
 /// @warning This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
-/// A borrowed iterator over interface names. Its link must outlive it and its views. No drop is required.
+/// A borrowed iterator over interface names.
+/// @ingroup borrowed_cursor_types
+/// See @ref borrowed_cursor_types for copy and lifetime requirements.
 get_opaque_type_data!(
     std::slice::Iter<'static, String>,
     z_link_interfaces_iterator_t
@@ -660,7 +668,9 @@ get_opaque_type_data!(EntityGlobalId, z_entity_global_id_t);
 get_opaque_type_data!(Option<zenoh_ext::ZSerializer>, ze_owned_serializer_t);
 /// @brief A loaned Zenoh serializer.
 get_opaque_type_data!(zenoh_ext::ZSerializer, ze_loaned_serializer_t);
-/// @brief A Zenoh serializer.
+/// @brief A Zenoh deserializer.
+/// @ingroup borrowed_cursor_types
+/// See @ref borrowed_cursor_types for copy and lifetime requirements.
 get_opaque_type_data!(zenoh_ext::ZDeserializer<'static>, ze_deserializer_t);
 
 #[cfg(feature = "unstable")]
