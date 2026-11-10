@@ -18,7 +18,7 @@
 
 #include "zenoh.h"
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     // Check that constants really have the expected values. It was found that
     // in case of incorrect DLL linking (missing __declspec(dllimport) clause)
     // the constants becomes wrong without any warning or error

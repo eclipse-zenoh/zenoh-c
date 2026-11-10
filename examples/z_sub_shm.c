@@ -19,37 +19,37 @@
 #define DEFAULT_KEYEXPR "demo/example/**"
 
 struct args_t {
-    char *keyexpr;  // -k, --key
+    char* keyexpr;  // -k, --key
 };
-struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-const char *kind_to_str(z_sample_kind_t kind);
+const char* kind_to_str(z_sample_kind_t kind);
 
-void data_handler(z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t* sample, void* arg) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &key_string);
 
 // if Zenoh is built without SHM support, the only buffer type it can receive is RAW
 #if !defined(Z_FEATURE_SHARED_MEMORY)
-    char *payload_type = "RAW";
+    char* payload_type = "RAW";
 #endif
 
 // if Zenoh is built with SHM support but without SHM API (that is unstable), it can
 // receive buffers of any type, but there is no way to detect the buffer type
 #if defined(Z_FEATURE_SHARED_MEMORY) && !defined(Z_FEATURE_UNSTABLE_API)
-    char *payload_type = "UNKNOWN";
+    char* payload_type = "UNKNOWN";
 #endif
 
 // if Zenoh is built with SHM support and with SHM API, we can detect the exact buffer type
 #if defined(Z_FEATURE_SHARED_MEMORY) && defined(Z_FEATURE_UNSTABLE_API)
-    char *payload_type = "RAW";
+    char* payload_type = "RAW";
     {
         // try to convert sample payload into SHM buffer. The conversion will succeed
         // only if payload is carrying underlying SHM buffer
-        z_loaned_shm_t *shm = NULL;
+        z_loaned_shm_t* shm = NULL;
         if (z_bytes_as_mut_loaned_shm(z_sample_payload_mut(sample), &shm) == Z_OK) {
             // try to get mutable access to SHM buffer
-            z_loaned_shm_mut_t *shm_mut = z_shm_try_reloan_mut(shm);
+            z_loaned_shm_mut_t* shm_mut = z_shm_try_reloan_mut(shm);
             if (shm_mut) {
                 payload_type = "SHM (MUT)";
             } else {
@@ -66,7 +66,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
            (int)z_string_len(z_loan(key_string)), z_string_data(z_loan(key_string)),
            (int)z_string_len(z_loan(payload_string)), z_string_data(z_loan(payload_string)), payload_type);
 
-    const z_loaned_bytes_t *attachment = z_sample_attachment(sample);
+    const z_loaned_bytes_t* attachment = z_sample_attachment(sample);
     // checks if attachment exists
     if (attachment != NULL) {
         z_owned_string_t attachment_string;
@@ -79,7 +79,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     z_drop(z_move(payload_string));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     z_owned_config_t config;
     struct args_t args = parse_args(argc, argv, &config);
 
@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-const char *kind_to_str(z_sample_kind_t kind) {
+const char* kind_to_str(z_sample_kind_t kind) {
     switch (kind) {
         case Z_SAMPLE_KIND_PUT:
             return "PUT";
@@ -139,18 +139,18 @@ void print_help() {
     printf(COMMON_HELP);
 }
 
-struct args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char *), (char *)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
 
     parse_zenoh_common_args(argc, argv, config);
-    const char *arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
     }
-    char **pos_args = parse_pos_args(argc, argv, 1);
+    char** pos_args = parse_pos_args(argc, argv, 1);
     if (!pos_args || pos_args[0]) {
         printf("Unexpected positional arguments\n");
         free(pos_args);

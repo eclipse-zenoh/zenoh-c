@@ -25,7 +25,7 @@
 typedef struct custom_struct_t {
     float f;
     uint64_t u[2][3];
-    const char *c;
+    const char* c;
 } custom_struct_t;
 
 typedef struct kv_pair_t {
@@ -33,7 +33,7 @@ typedef struct kv_pair_t {
     z_owned_string_t value;
 } kv_pair_t;
 
-static void print_slice_data(z_view_slice_t *slice);
+static void print_slice_data(z_view_slice_t* slice);
 
 int main(void) {
     // Wrapping raw data into z_bytes_t
@@ -50,7 +50,7 @@ int main(void) {
         // const z_loaned_encoding* encoding = z_encoding_zenoh_bytes();
 
         // The same can be done for const char*
-        const char *input_str = "test";
+        const char* input_str = "test";
         z_owned_string_t output_string;
         z_bytes_copy_from_str(&payload, input_str);
         z_bytes_to_string(z_loan(payload), &output_string);
@@ -223,7 +223,7 @@ int main(void) {
     return 0;
 }
 
-static void print_slice_data(z_view_slice_t *slice) {
+static void print_slice_data(z_view_slice_t* slice) {
     for (size_t i = 0; i < z_slice_len(z_view_slice_loan(slice)); i++) {
         printf("0x%02x ", z_slice_data(z_view_slice_loan(slice))[i]);
     }

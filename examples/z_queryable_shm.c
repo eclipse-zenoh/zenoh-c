@@ -20,22 +20,22 @@
 #define DEFAULT_KEYEXPR "demo/example/zenoh-c-queryable"
 #define DEFAULT_VALUE "Queryable from C SHM!"
 z_view_keyexpr_t ke;
-const char *value;
+const char* value;
 
 typedef struct {
-    const char *keyexpr;
-    const z_loaned_shm_provider_t *provider;
+    const char* keyexpr;
+    const z_loaned_shm_provider_t* provider;
 } context_t;
 
 struct args_t {
-    char *keyexpr;  // -k, --key
-    char *value;    // -p, --payload
+    char* keyexpr;  // -k, --key
+    char* value;    // -p, --payload
     bool complete;  // --complete
 };
-struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-void query_handler(z_loaned_query_t *query, void *context) {
-    context_t *handler_context = (context_t *)context;
+void query_handler(z_loaned_query_t* query, void* context) {
+    context_t* handler_context = (context_t*)context;
 
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
@@ -43,10 +43,10 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_view_string_t params;
     z_query_parameters(query, &params);
 
-    const z_loaned_bytes_t *payload = z_query_payload(query);
+    const z_loaned_bytes_t* payload = z_query_payload(query);
     if (payload != NULL && z_bytes_len(payload) > 0) {
-        const z_loaned_shm_t *shm = NULL;
-        char *payload_type = z_bytes_as_loaned_shm(payload, &shm) == Z_OK ? "SHM" : "RAW";
+        const z_loaned_shm_t* shm = NULL;
+        char* payload_type = z_bytes_as_loaned_shm(payload, &shm) == Z_OK ? "SHM" : "RAW";
 
         z_owned_string_t payload_string;
         z_bytes_to_string(payload, &payload_string);
@@ -67,7 +67,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_shm_provider_alloc_gc_defrag_blocking(&alloc, handler_context->provider, value_len);
     if (alloc.status == ZC_BUF_LAYOUT_ALLOC_STATUS_OK) {
         {
-            uint8_t *buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
+            uint8_t* buf = z_shm_mut_data_mut(z_loan_mut(alloc.buf));
             memcpy(buf, value, value_len);
             printf(">> [Queryable] Responding ('%s': '%s')...\n", handler_context->keyexpr, buf);
         }
@@ -89,7 +89,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
     z_owned_config_t config;
@@ -116,7 +116,7 @@ int main(int argc, char **argv) {
     printf("Declaring Queryable on '%s'...\n", args.keyexpr);
     z_owned_closure_query_t callback;
     context_t context = (context_t){.keyexpr = args.keyexpr, .provider = z_loan(provider)};
-    z_closure(&callback, query_handler, NULL, (void *)&context);
+    z_closure(&callback, query_handler, NULL, (void*)&context);
     z_owned_queryable_t qable;
 
     z_queryable_options_t opts;
@@ -155,20 +155,20 @@ void print_help() {
     printf(COMMON_HELP);
 }
 
-struct args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char *), (char *)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.value, "p", "payload", (char *), (char *)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
     args.complete = _Z_CHECK_FLAG("complete");
 
     parse_zenoh_common_args(argc, argv, config);
-    const char *arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
     }
-    char **pos_args = parse_pos_args(argc, argv, 1);
+    char** pos_args = parse_pos_args(argc, argv, 1);
     if (!pos_args || pos_args[0]) {
         printf("Unexpected positional arguments\n");
         free(pos_args);
