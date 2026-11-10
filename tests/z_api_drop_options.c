@@ -18,8 +18,8 @@
 #undef NDEBUG
 #include <assert.h>
 
-void cb(struct z_loaned_reply_t *reply, void *context) {}
-void drop(void *context) {}
+void cb(struct z_loaned_reply_t* reply, void* context) {}
+void drop(void* context) {}
 
 void put() {
     z_owned_config_t config;
@@ -73,7 +73,7 @@ void get() {
     z_drop(z_move(s));
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     zc_try_init_log_from_env();
     put();
     get();

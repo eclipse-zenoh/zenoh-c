@@ -111,7 +111,7 @@ void relation_to() {
 }
 #endif
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     canonize();
     includes();
     intersects();

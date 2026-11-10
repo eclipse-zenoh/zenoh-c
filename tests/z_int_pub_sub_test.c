@@ -20,11 +20,11 @@
 
 #include "zenoh.h"
 
-const char *const SEM_NAME = "/z_int_test_sync_sem";
-sem_t *sem;
+const char* const SEM_NAME = "/z_int_test_sync_sem";
+sem_t* sem;
 
-const char *const keyexpr = "test/key";
-const char *const values[] = {"test_value_1", "test_value_2", "test_value_3"};
+const char* const keyexpr = "test/key";
+const char* const values[] = {"test_value_1", "test_value_2", "test_value_3"};
 const size_t values_count = sizeof(values) / sizeof(values[0]);
 
 const uint32_t TEST_EID = 42;
@@ -74,7 +74,7 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t* sample, void* arg) {
     static int val_num = 0;
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);
@@ -98,7 +98,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
         exit(-1);
     }
 #if defined(Z_FEATURE_UNSTABLE_API)
-    const z_source_info_t *source_info = z_sample_source_info(sample);
+    const z_source_info_t* source_info = z_sample_source_info(sample);
     assert(source_info == NULL);
 #endif
     // See https://github.com/eclipse-zenoh/zenoh/issues/1203
@@ -114,7 +114,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     //     exit(-1);
     // }
 
-    const z_timestamp_t *ts = z_sample_timestamp(sample);
+    const z_timestamp_t* ts = z_sample_timestamp(sample);
     assert(ts != NULL);
 
     // See https://github.com/eclipse-zenoh/zenoh/issues/1203

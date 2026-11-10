@@ -22,23 +22,23 @@
 z_view_keyexpr_t ke;
 
 struct args_t {
-    char *keyexpr;  // -k, --key
-    char *value;    // -p, --payload
+    char* keyexpr;  // -k, --key
+    char* value;    // -p, --payload
     bool complete;  // --complete
 };
 
-char *value;
+char* value;
 
-struct args_t parse_args(int argc, char **argv, z_owned_config_t *config);
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config);
 
-void query_handler(z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t* query, void* context) {
     z_view_string_t key_string;
     z_keyexpr_as_view_string(z_query_keyexpr(query), &key_string);
 
     z_view_string_t params;
     z_query_parameters(query, &params);
 
-    const z_loaned_bytes_t *payload = z_query_payload(query);
+    const z_loaned_bytes_t* payload = z_query_payload(query);
     if (payload != NULL && z_bytes_len(payload) > 0) {
         z_owned_string_t payload_string;
         z_bytes_to_string(payload, &payload_string);
@@ -55,16 +55,16 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_query_reply_options_default(&options);
 
     z_owned_bytes_t reply_payload;
-    z_bytes_from_static_str(&reply_payload, (char *)value);
+    z_bytes_from_static_str(&reply_payload, (char*)value);
 
     z_view_keyexpr_t reply_keyexpr;
-    z_view_keyexpr_from_str(&reply_keyexpr, (const char *)context);
-    printf(">> [Queryable ] Responding ('%s': '%s')\n", (const char *)context, value);
+    z_view_keyexpr_from_str(&reply_keyexpr, (const char*)context);
+    printf(">> [Queryable ] Responding ('%s': '%s')\n", (const char*)context, value);
 
     z_query_reply(query, z_loan(reply_keyexpr), z_move(reply_payload), &options);
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     zc_init_log_from_env_or("error");
 
     z_owned_config_t config;
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 
     printf("Declaring Queryable on '%s'...\n", args.keyexpr);
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, (void *)args.keyexpr);
+    z_closure(&callback, query_handler, NULL, (void*)args.keyexpr);
     z_owned_queryable_t qable;
 
     z_queryable_options_t opts;
@@ -119,20 +119,20 @@ void print_help() {
     printf(COMMON_HELP);
 }
 
-struct args_t parse_args(int argc, char **argv, z_owned_config_t *config) {
+struct args_t parse_args(int argc, char** argv, z_owned_config_t* config) {
     _Z_CHECK_HELP;
     struct args_t args;
-    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char *), (char *)DEFAULT_KEYEXPR);
-    _Z_PARSE_ARG(args.value, "p", "payload", (char *), (char *)DEFAULT_VALUE);
+    _Z_PARSE_ARG(args.keyexpr, "k", "key", (char*), (char*)DEFAULT_KEYEXPR);
+    _Z_PARSE_ARG(args.value, "p", "payload", (char*), (char*)DEFAULT_VALUE);
     args.complete = _Z_CHECK_FLAG("complete");
 
     parse_zenoh_common_args(argc, argv, config);
-    const char *arg = check_unknown_opts(argc, argv);
+    const char* arg = check_unknown_opts(argc, argv);
     if (arg) {
         printf("Unknown option %s\n", arg);
         exit(-1);
     }
-    char **pos_args = parse_pos_args(argc, argv, 1);
+    char** pos_args = parse_pos_args(argc, argv, 1);
     if (!pos_args || pos_args[0]) {
         printf("Unexpected positional arguments\n");
         free(pos_args);

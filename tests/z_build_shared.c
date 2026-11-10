@@ -14,7 +14,7 @@
 #include <assert.h>
 
 // This test should fail if built dependent on static zenoh library
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
 #ifndef ZENOHC_DYN_LIB
     assert(0);
 #endif

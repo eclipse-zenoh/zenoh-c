@@ -130,13 +130,13 @@ void test_append(void) {
     z_drop(z_move(payload));
 }
 
-void custom_deleter(void *data, void *context) {
+void custom_deleter(void* data, void* context) {
     (void)data;
-    size_t *cnt = (size_t *)context;
+    size_t* cnt = (size_t*)context;
     (*cnt)++;
 }
 
-bool z_check_and_drop_payload(z_owned_bytes_t *payload, uint8_t *data, size_t len) {
+bool z_check_and_drop_payload(z_owned_bytes_t* payload, uint8_t* data, size_t len) {
     z_owned_slice_t out;
     z_bytes_to_slice(z_loan(*payload), &out);
     z_drop(z_move(*payload));
@@ -151,7 +151,7 @@ void test_slice(void) {
 
     size_t cnt = 0;
     z_owned_bytes_t payload;
-    z_bytes_from_buf(&payload, data, 10, custom_deleter, (void *)&cnt);
+    z_bytes_from_buf(&payload, data, 10, custom_deleter, (void*)&cnt);
 
     z_owned_slice_t out;
     z_bytes_to_slice(z_loan(payload), &out);
@@ -211,13 +211,13 @@ void test_arithmetic(void) {
     TEST_ARITHMETIC(double, double, -105.001);
 }
 
-bool check_slice(const z_loaned_bytes_t *b, const uint8_t *data, size_t len) {
+bool check_slice(const z_loaned_bytes_t* b, const uint8_t* data, size_t len) {
     z_bytes_slice_iterator_t it = z_bytes_get_slice_iterator(b);
-    uint8_t *data_out = (uint8_t *)malloc(len);
+    uint8_t* data_out = (uint8_t*)malloc(len);
     z_view_slice_t v;
     size_t pos = 0;
     while (z_bytes_slice_iterator_next(&it, &v)) {
-        const uint8_t *slice_data = z_slice_data(z_loan(v));
+        const uint8_t* slice_data = z_slice_data(z_loan(v));
         size_t slice_len = z_slice_len(z_loan(v));
         memcpy(data_out + pos, slice_data, slice_len);
         pos += slice_len;

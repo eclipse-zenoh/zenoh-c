@@ -20,30 +20,30 @@
 
 #include "zenoh.h"
 
-const char *const SEM_NAME = "/z_int_test_sync_sem";
-sem_t *sem;
+const char* const SEM_NAME = "/z_int_test_sync_sem";
+sem_t* sem;
 
-const char *const keyexpr = "test/key";
-const char *const values[] = {"test_value_1", "test_value_2", "test_value_3"};
+const char* const keyexpr = "test/key";
+const char* const values[] = {"test_value_1", "test_value_2", "test_value_3"};
 const size_t values_count = sizeof(values) / sizeof(values[0]);
 
-const char *const K_VAR = "k_var";
-const char *const K_CONST = "k_const";
-const char *const V_CONST = "v const";
+const char* const K_VAR = "k_var";
+const char* const K_CONST = "k_const";
+const char* const V_CONST = "v const";
 
 typedef struct kv_pair_t {
     z_owned_string_t key;
     z_owned_string_t value;
 } kv_pair_t;
 
-void drop_attachment(kv_pair_t *kvp, size_t len) {
+void drop_attachment(kv_pair_t* kvp, size_t len) {
     for (size_t i = 0; i < len; i++) {
         z_drop(z_move(kvp[i].key));
         z_drop(z_move(kvp[i].value));
     }
 }
 
-z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *attachment) {
+z_result_t check_attachment(kv_pair_t* kvs, size_t len, const z_loaned_bytes_t* attachment) {
     if (attachment == NULL) {
         perror("Missing attachment!");
         return -1;
@@ -131,7 +131,7 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t* sample, void* arg) {
     static int val_num = 0;
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);

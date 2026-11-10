@@ -158,7 +158,7 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
 #define ASSERT_STR_SLICE_EQUAL(str, slice)                                                                        \
     do {                                                                                                          \
         if (strlen(str) != z_slice_len(slice) ||                                                                  \
-            strncmp(str, (const char *)z_slice_data(slice), (int)z_slice_len(slice))) {                           \
+            strncmp(str, (const char*)z_slice_data(slice), (int)z_slice_len(slice))) {                            \
             fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)z_slice_len(slice), z_slice_data(slice)); \
             exit(-1);                                                                                             \
         }                                                                                                         \
@@ -167,7 +167,7 @@ int run_timeouted_test(func_ptr_t functions[], int num_functions, int timeout_se
 #define ASSERT_STR_STRING_EQUAL(str, string)                                                                          \
     do {                                                                                                              \
         if (strlen(str) != z_string_len(string) ||                                                                    \
-            strncmp(str, (const char *)z_string_data(string), (int)z_string_len(string))) {                           \
+            strncmp(str, (const char*)z_string_data(string), (int)z_string_len(string))) {                            \
             fprintf(stderr, "Check failed: '%s' != '%.*s'\n", str, (int)z_string_len(string), z_string_data(string)); \
             exit(-1);                                                                                                 \
         }                                                                                                             \

@@ -20,13 +20,13 @@
 
 #include "zenoh.h"
 
-const char *const SEM_NAME_PUB = "/z_int_test_sync_sem_pub";
-sem_t *sem_pub;
-const char *const SEM_NAME_SUB = "/z_int_test_sync_sem_sub";
-sem_t *sem_sub;
+const char* const SEM_NAME_PUB = "/z_int_test_sync_sem_pub";
+sem_t* sem_pub;
+const char* const SEM_NAME_SUB = "/z_int_test_sync_sem_sub";
+sem_t* sem_sub;
 
-const char *const keyexpr = "test/key";
-const char *const values[] = {"test_value_1", "test_value_2", "test_value_3",
+const char* const keyexpr = "test/key";
+const char* const values[] = {"test_value_1", "test_value_2", "test_value_3",
                               "test_value_4", "test_value_5", "test_value_6"};
 const size_t values_count = sizeof(values) / sizeof(values[0]);
 
@@ -89,7 +89,7 @@ int run_publisher() {
     return 0;
 }
 
-void data_handler(z_loaned_sample_t *sample, void *arg) {
+void data_handler(z_loaned_sample_t* sample, void* arg) {
     static int val_num = 0;
     z_view_string_t keystr;
     z_keyexpr_as_view_string(z_sample_keyexpr(sample), &keystr);
@@ -100,7 +100,7 @@ void data_handler(z_loaned_sample_t *sample, void *arg) {
     z_owned_string_t payload_str;
     z_bytes_to_string(z_sample_payload(sample), &payload_str);
 
-    const z_source_info_t *info = z_sample_source_info(sample);
+    const z_source_info_t* info = z_sample_source_info(sample);
     assert(info != NULL);
     z_owned_string_t id_string;
     z_entity_global_id_t global_id = z_source_info_id(info);

@@ -83,7 +83,7 @@ void close_concurrent() {
 #endif
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     zc_try_init_log_from_env();
     close_drop();
     close_sync();

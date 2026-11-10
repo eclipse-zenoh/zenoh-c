@@ -18,30 +18,30 @@
 
 #include "zenoh.h"
 
-const char *const SEM_NAME = "/z_int_test_queryable_sync_sem";
-sem_t *sem;
+const char* const SEM_NAME = "/z_int_test_queryable_sync_sem";
+sem_t* sem;
 
-const char *const keyexpr = "test/key";
-const char *const values[] = {"test_value_1", "test_value_2", "test_value_3"};
+const char* const keyexpr = "test/key";
+const char* const values[] = {"test_value_1", "test_value_2", "test_value_3"};
 const size_t values_count = sizeof(values) / sizeof(values[0]);
 
-const char *const K_VAR = "k_var";
-const char *const K_CONST = "k_const";
-const char *const V_CONST = "v const";
+const char* const K_VAR = "k_var";
+const char* const K_CONST = "k_const";
+const char* const V_CONST = "v const";
 
 typedef struct kv_pair_t {
     z_owned_string_t key;
     z_owned_string_t value;
 } kv_pair_t;
 
-void drop_attachment(kv_pair_t *kvp, size_t len) {
+void drop_attachment(kv_pair_t* kvp, size_t len) {
     for (size_t i = 0; i < len; i++) {
         z_drop(z_move(kvp[i].key));
         z_drop(z_move(kvp[i].value));
     }
 }
 
-z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *attachment) {
+z_result_t check_attachment(kv_pair_t* kvs, size_t len, const z_loaned_bytes_t* attachment) {
     if (attachment == NULL) {
         perror("Missing attachment!");
         return -1;
@@ -78,7 +78,7 @@ z_result_t check_attachment(kv_pair_t *kvs, size_t len, const z_loaned_bytes_t *
     return 0;
 }
 
-void query_handler(z_loaned_query_t *query, void *context) {
+void query_handler(z_loaned_query_t* query, void* context) {
     static int value_num = 0;
 
     z_view_string_t params;
@@ -118,7 +118,7 @@ void query_handler(z_loaned_query_t *query, void *context) {
     z_bytes_from_static_str(&payload, values[value_num]);
 
     z_view_keyexpr_t reply_ke;
-    z_view_keyexpr_from_str(&reply_ke, (const char *)context);
+    z_view_keyexpr_from_str(&reply_ke, (const char*)context);
     z_query_reply(query, z_loan(reply_ke), z_move(payload), &options);
 
     if (++value_num == values_count) {
@@ -136,7 +136,7 @@ int run_queryable() {
     }
 
     z_owned_closure_query_t callback;
-    z_closure(&callback, query_handler, NULL, (void *)keyexpr);
+    z_closure(&callback, query_handler, NULL, (void*)keyexpr);
 
     z_view_keyexpr_t ke;
     z_view_keyexpr_from_str(&ke, keyexpr);
@@ -201,7 +201,7 @@ int run_get() {
         while (z_recv(z_loan(handler), &reply) == Z_OK) {
             assert(z_reply_is_ok(z_loan(reply)));
 
-            const z_loaned_sample_t *sample = z_reply_ok(z_loan(reply));
+            const z_loaned_sample_t* sample = z_reply_ok(z_loan(reply));
             z_owned_string_t payload_str;
             z_bytes_to_string(z_sample_payload(sample), &payload_str);
             if (strncmp(values[val_num], z_string_data(z_loan(payload_str)), z_string_len(z_loan(payload_str)))) {
